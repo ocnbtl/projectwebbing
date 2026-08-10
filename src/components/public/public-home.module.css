@@ -1,0 +1,285 @@
+.hero {
+  position: relative;
+  height: 270svh;
+  background: var(--black);
+}
+
+.stickyFrame {
+  position: sticky;
+  top: 0;
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  overflow: clip;
+  background: var(--black);
+  isolation: isolate;
+}
+
+.filmLayer,
+.filmFallback,
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.filmLayer {
+  z-index: -1;
+  overflow: hidden;
+  background: var(--black);
+}
+
+.video {
+  object-fit: cover;
+  filter: saturate(0.66) contrast(1.08);
+}
+
+.filmFallback {
+  background: var(--black);
+}
+
+.beamOne,
+.beamTwo,
+.aperture,
+.filmNoise {
+  position: absolute;
+  display: block;
+}
+
+.beamOne {
+  top: -18%;
+  left: 37%;
+  width: 13vw;
+  height: 142%;
+  background: var(--mineral-shadowblue);
+  opacity: 0.48;
+  transform: rotate(-38deg);
+}
+
+.beamTwo {
+  top: -26%;
+  right: 13%;
+  width: 3px;
+  height: 102%;
+  background: var(--sunlit-quartz);
+  opacity: 0.78;
+  transform: rotate(22deg);
+}
+
+.aperture {
+  right: 8%;
+  bottom: 18%;
+  width: min(28vw, 28rem);
+  height: min(18vw, 18rem);
+  border: 1px solid rgba(193, 215, 240, 0.34);
+  opacity: 0.55;
+}
+
+.filmNoise {
+  inset: -50%;
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.38'/%3E%3C/svg%3E");
+  transform: rotate(8deg);
+}
+
+.wordmark {
+  display: flex;
+  width: min(96vw, 112rem);
+  align-items: center;
+  justify-content: center;
+  color: var(--milk-white);
+  font-family: var(--font-plaster), Impact, sans-serif;
+  font-size: clamp(4rem, 16.7vw, 17rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.72;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.letter {
+  display: inline-block;
+  transform-origin: 50% 4%;
+  will-change: transform;
+}
+
+.srTitle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.scrollLine {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  width: 1px;
+  height: 3.5rem;
+  background: rgba(252, 252, 252, 0.68);
+  transform: translateX(-50%);
+}
+
+.reveal {
+  min-height: 160svh;
+  padding: clamp(5rem, 10vw, 10rem) clamp(1.25rem, 5vw, 5rem) 2rem;
+  background: var(--milk-white);
+}
+
+.revealLead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(16rem, 0.7fr);
+  gap: var(--space-8);
+  align-items: end;
+  padding-bottom: clamp(6rem, 14vw, 13rem);
+}
+
+.revealLead h2 {
+  max-width: 15ch;
+  margin: 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(3.6rem, 8.8vw, 9.8rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+  text-wrap: balance;
+}
+
+.revealLead p {
+  max-width: 31rem;
+  margin: 0 0 0.5rem;
+  color: var(--ink-secondary);
+  font-size: clamp(1rem, 1.35vw, 1.3rem);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.workRail {
+  display: grid;
+  min-height: 34rem;
+  grid-template-columns: 1fr auto;
+  align-content: space-between;
+  border-top: 1px solid var(--rule-dark);
+  border-bottom: 1px solid var(--rule-dark);
+  padding: 1.25rem 0;
+}
+
+.workRail h3,
+.workRail p {
+  margin: 0;
+}
+
+.workRail h3,
+.standardRail,
+.footer {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workRail p {
+  margin-top: 0.45rem;
+  color: var(--ink-tertiary);
+}
+
+.workRail > span {
+  color: var(--plumskin);
+  font-variant-numeric: tabular-nums;
+}
+
+.standardRail {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  padding: 1.5rem 0 8rem;
+}
+
+.standardRail span::after {
+  content: ".";
+  color: var(--plumskin);
+}
+
+.footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: var(--space-2);
+  border-top: 1px solid var(--rule-dark);
+  padding-top: 1rem;
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 760px) {
+  .hero {
+    height: 240svh;
+  }
+
+  .wordmark {
+    width: 97vw;
+    font-size: 18.1vw;
+    letter-spacing: -0.07em;
+  }
+
+  .beamOne {
+    left: 25%;
+    width: 24vw;
+  }
+
+  .aperture {
+    right: 7%;
+    bottom: 12%;
+    width: 46vw;
+    height: 34vw;
+  }
+
+  .reveal {
+    min-height: 135svh;
+    padding-inline: 1.25rem;
+  }
+
+  .revealLead {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    padding-bottom: 7rem;
+  }
+
+  .revealLead h2 {
+    font-size: clamp(3.4rem, 17vw, 6.6rem);
+  }
+
+  .workRail {
+    min-height: 24rem;
+  }
+
+  .standardRail {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 1rem;
+    padding-bottom: 5rem;
+  }
+
+  .footer {
+    grid-template-columns: 1fr auto;
+  }
+
+  .footer span:nth-child(2) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    height: 100svh;
+  }
+
+  .stickyFrame {
+    position: relative;
+  }
+
+  .scrollLine {
+    display: none;
+  }
+}

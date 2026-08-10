@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A private, exploratory verbal concept board for Madagin's Made Again story."
+    />
+    <title>Madagin — Made Again Verbal Concept Board</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f1eee6;
+        --paper-bright: #fffdf8;
+        --ink: #121212;
+        --muted: #666159;
+        --line: rgba(18, 18, 18, 0.22);
+        --orange: #ff542e;
+        --acid: #dbff55;
+        --blue: #3754ff;
+        --radius: 1.15rem;
+        --gutter: clamp(1rem, 3vw, 2.75rem);
+        --section: clamp(5rem, 12vw, 10rem);
+        --max: 92rem;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--paper);
+        color: var(--ink);
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-width: 20rem;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1rem;
+        line-height: 1.45;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      a:focus-visible,
+      summary:focus-visible {
+        outline: 0.2rem solid var(--blue);
+        outline-offset: 0.3rem;
+      }
+
+      .skip-link {
+        position: fixed;
+        z-index: 20;
+        top: 0.75rem;
+        left: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: var(--ink);
+        color: white;
+        transform: translateY(-160%);
+      }
+
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+
+      .status-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 3.5rem;
+        padding: 0.65rem var(--gutter);
+        border-bottom: 1px solid var(--line);
+        background: var(--paper-bright);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+      }
+
+      .status::before {
+        width: 0.65rem;
+        height: 0.65rem;
+        border-radius: 999px;
+        background: var(--orange);
+        content: "";
+      }
+
+      main,
+      footer {
+        overflow: hidden;
+      }
+
+      .wrap {
+        width: min(calc(100% - (2 * var(--gutter))), var(--max));
+        margin-inline: auto;
+      }
+
+      .eyebrow {
+        margin: 0 0 1rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        display: grid;
+        min-height: calc(100svh - 3.5rem);
+        align-items: end;
+        padding-block: clamp(3rem, 8vw, 7rem) var(--gutter);
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.55fr);
+        gap: clamp(2rem, 6vw, 7rem);
+        align-items: end;
+      }
+
+      .hero h1 {
+        max-width: 11ch;
+        margin: 0;
+        font-size: clamp(4.2rem, 10.5vw, 10rem);
+        font-weight: 700;
+        letter-spacing: -0.075em;
+        line-height: 0.82;
+      }
+
+      .hero h1 span {
+        display: block;
+      }
+
+      .hero h1 span:nth-child(2) {
+        color: var(--orange);
+      }
+
+      .hero h1 span:nth-child(3) {
+        margin-left: 0.48em;
+      }
+
+      .hero-note {
+        padding: 1.25rem 0 0;
+        border-top: 1px solid var(--ink);
+      }
+
+      .hero-note p {
+        max-width: 31rem;
+        margin: 0 0 1.5rem;
+        font-size: clamp(1.05rem, 1.8vw, 1.45rem);
+      }
+
+      .text-link {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        gap: 0.65rem;
+        font-weight: 700;
+        text-decoration-thickness: 0.1em;
+        text-underline-offset: 0.25em;
+      }
+
+      .text-link::after {
+        content: "↓";
+      }
+
+      .made-again {
+        padding-block: var(--section);
+        background: var(--ink);
+        color: var(--paper-bright);
+      }
+
+      .made-again-grid {
+        display: grid;
+        grid-template-columns: minmax(12rem, 0.45fr) minmax(0, 1.55fr);
+        gap: clamp(2rem, 7vw, 8rem);
+      }
+
+      .made-again h2 {
+        max-width: 17ch;
+        margin: 0;
+        font-size: clamp(3.1rem, 7.5vw, 7.6rem);
+        letter-spacing: -0.055em;
+        line-height: 0.94;
+      }
+
+      .made-again .accent {
+        color: var(--acid);
+      }
+
+      .made-again-copy {
+        align-self: end;
+      }
+
+      .made-again-copy p {
+        max-width: 42rem;
+        margin: 0;
+        font-size: clamp(1.1rem, 2.1vw, 1.65rem);
+      }
+
+      .sequence-section {
+        padding-block: var(--section);
+      }
+
+      .section-heading {
+        display: grid;
+        grid-template-columns: 0.55fr 1.45fr;
+        gap: 2rem;
+        margin-bottom: clamp(3rem, 7vw, 6rem);
+      }
+
+      .section-heading h2 {
+        max-width: 18ch;
+        margin: 0;
+        font-size: clamp(2.7rem, 6vw, 6.4rem);
+        letter-spacing: -0.055em;
+        line-height: 0.95;
+      }
+
+      .sequence-visual {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-top: 1px solid var(--ink);
+        border-left: 1px solid var(--ink);
+      }
+
+      .stage {
+        position: relative;
+        min-height: 24rem;
+        padding: 1.15rem;
+        overflow: hidden;
+        border-right: 1px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+        background: var(--paper-bright);
+      }
+
+      .stage-number {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .stage-art {
+        position: absolute;
+        inset: 4.25rem 1.2rem 6rem;
+      }
+
+      .shape {
+        position: absolute;
+        display: block;
+        border: 2px solid var(--ink);
+      }
+
+      .shape-a {
+        top: 12%;
+        left: 5%;
+        width: 38%;
+        height: 32%;
+        transform: rotate(-8deg);
+      }
+
+      .shape-b {
+        right: 5%;
+        bottom: 12%;
+        width: 48%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+      }
+
+      .shape-c {
+        top: 34%;
+        right: 13%;
+        width: 26%;
+        height: 46%;
+        border-color: var(--orange);
+        transform: rotate(18deg);
+      }
+
+      .lens {
+        position: absolute;
+        z-index: 3;
+        top: 24%;
+        left: 16%;
+        width: 56%;
+        aspect-ratio: 1;
+        border: 0.7rem solid var(--orange);
+        border-radius: 50%;
+        box-shadow: 0 0 0 999px rgba(255, 253, 248, 0.68);
+        animation: inspect 5s ease-in-out infinite alternate;
+      }
+
+      .axis {
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        left: -10%;
+        width: 120%;
+        height: 0.75rem;
+        background: var(--blue);
+        transform: rotate(-31deg);
+        transform-origin: center;
+      }
+
+      .stage-transform .shape-a {
+        top: 20%;
+        left: 21%;
+        width: 58%;
+        height: 24%;
+        border-width: 0;
+        background: var(--orange);
+        transform: rotate(-31deg);
+      }
+
+      .stage-transform .shape-b {
+        right: 17%;
+        bottom: 12%;
+        width: 52%;
+        border-width: 0;
+        background: var(--acid);
+      }
+
+      .stage-transform .shape-c {
+        top: 20%;
+        right: 17%;
+        width: 22%;
+        height: 68%;
+        border: 0;
+        background: var(--ink);
+        transform: rotate(0);
+      }
+
+      .resolved-mark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: min(78%, 15rem);
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+      }
+
+      .resolved-mark::before,
+      .resolved-mark::after {
+        position: absolute;
+        content: "";
+      }
+
+      .resolved-mark::before {
+        inset: 5% 25% 5% 5%;
+        border-radius: 50% 0 50% 50%;
+        background: var(--blue);
+        transform: rotate(28deg);
+      }
+
+      .resolved-mark::after {
+        right: 3%;
+        bottom: 8%;
+        width: 44%;
+        height: 44%;
+        border: 0.85rem solid var(--orange);
+        border-radius: 50%;
+      }
+
+      .stage h3 {
+        position: absolute;
+        z-index: 4;
+        right: 1.15rem;
+        bottom: 1.15rem;
+        left: 1.15rem;
+        margin: 0;
+        font-size: clamp(1.35rem, 2vw, 2rem);
+        letter-spacing: -0.035em;
+        line-height: 1;
+      }
+
+      .explanation {
+        padding-block: var(--section);
+        background: var(--orange);
+      }
+
+      .explanation blockquote {
+        max-width: 19ch;
+        margin: 0;
+        font-size: clamp(2.7rem, 6.5vw, 7rem);
+        font-weight: 700;
+        letter-spacing: -0.06em;
+        line-height: 0.94;
+      }
+
+      .criteria {
+        padding-block: var(--section);
+      }
+
+      .criteria-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-top: 1px solid var(--ink);
+        border-left: 1px solid var(--ink);
+      }
+
+      .criterion {
+        min-height: 13rem;
+        padding: clamp(1.25rem, 3vw, 2.5rem);
+        border-right: 1px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+      }
+
+      .criterion h3 {
+        margin: 0 0 2.8rem;
+        font-size: clamp(2.2rem, 5vw, 5.2rem);
+        letter-spacing: -0.055em;
+        line-height: 0.9;
+      }
+
+      .criterion p {
+        max-width: 32rem;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .copy-lab {
+        padding-block: var(--section);
+        background: var(--paper-bright);
+      }
+
+      .copy-list {
+        border-top: 1px solid var(--ink);
+      }
+
+      details {
+        border-bottom: 1px solid var(--ink);
+      }
+
+      summary {
+        display: grid;
+        min-height: 5rem;
+        grid-template-columns: 3rem 1fr auto;
+        align-items: center;
+        gap: 1rem;
+        cursor: pointer;
+        font-size: clamp(1.25rem, 2.5vw, 2rem);
+        font-weight: 700;
+        list-style: none;
+      }
+
+      summary::-webkit-details-marker {
+        display: none;
+      }
+
+      summary::after {
+        content: "+";
+        font-size: 1.5em;
+        font-weight: 400;
+      }
+
+      details[open] summary::after {
+        content: "−";
+      }
+
+      .copy-content {
+        display: grid;
+        grid-template-columns: 3rem minmax(0, 1fr);
+        gap: 1rem;
+        padding: 0 0 2rem;
+      }
+
+      .copy-content p {
+        grid-column: 2;
+        max-width: 58rem;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      footer {
+        padding-block: 2rem;
+        background: var(--ink);
+        color: var(--paper-bright);
+      }
+
+      .footer-grid {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 2rem;
+      }
+
+      footer p {
+        max-width: 40rem;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .wordmark {
+        font-size: clamp(2rem, 5vw, 5rem);
+        font-weight: 700;
+        letter-spacing: -0.06em;
+        line-height: 0.85;
+      }
+
+      @keyframes inspect {
+        from {
+          transform: translate(-8%, 2%);
+        }
+        to {
+          transform: translate(30%, 18%);
+        }
+      }
+
+      @media (max-width: 60rem) {
+        .hero-grid,
+        .made-again-grid,
+        .section-heading {
+          grid-template-columns: 1fr;
+        }
+
+        .hero h1 {
+          max-width: 9ch;
+        }
+
+        .hero-note {
+          max-width: 34rem;
+        }
+
+        .sequence-visual {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 38rem) {
+        .status-bar {
+          align-items: flex-start;
+          flex-direction: column;
+          padding-block: 0.8rem;
+        }
+
+        .hero {
+          min-height: auto;
+          padding-top: 5rem;
+        }
+
+        .hero h1 {
+          font-size: clamp(3.7rem, 19vw, 6rem);
+        }
+
+        .hero h1 span:nth-child(3) {
+          margin-left: 0;
+        }
+
+        .sequence-visual,
+        .criteria-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stage {
+          min-height: 22rem;
+        }
+
+        summary {
+          grid-template-columns: 2rem 1fr auto;
+        }
+
+        .copy-content {
+          grid-template-columns: 2rem 1fr;
+        }
+
+        .footer-grid {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      @media (prefers-contrast: more) {
+        :root {
+          --line: #121212;
+        }
+
+        .criterion p,
+        .copy-content p {
+          color: var(--ink);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to concept</a>
+
+    <header class="status-bar" aria-label="Concept board status">
+      <span>Madagin / Verbal exploration 05</span>
+      <span class="status">Awaiting Ocean's decision — not approved copy</span>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="wrap hero-grid">
+          <div>
+            <p class="eyebrow">Website strategy, design, and development</p>
+            <h1 id="hero-title">
+              <span>Sites people</span>
+              <span>remember, trust,</span>
+              <span>and choose.</span>
+            </h1>
+          </div>
+
+          <div class="hero-note">
+            <p>
+              A proposed promise for a founder-led studio creating distinctive digital presences through
+              fresh perspective, strategy, and intentional transformation.
+            </p>
+            <a class="text-link" href="#made-again">See what Made Again means</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="made-again" id="made-again" aria-labelledby="made-again-title">
+        <div class="wrap made-again-grid">
+          <p class="eyebrow">The name is the story</p>
+          <div>
+            <h2 id="made-again-title">
+              Made Again is the shift from what something is to <span class="accent">what it can become.</span>
+            </h2>
+          </div>
+          <div aria-hidden="true"></div>
+          <div class="made-again-copy">
+            <p>
+              Madagin brings an outside view, finds the direction with the most potential, and reshapes the
+              digital experience around it. The change is not cosmetic. It gives the work a stronger presence.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="sequence-section" aria-labelledby="sequence-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow">How the work moves</p>
+            <h2 id="sequence-title">One perspective can change the direction of the whole thing.</h2>
+          </div>
+
+          <figure style="margin: 0">
+            <div
+              class="sequence-visual"
+              role="img"
+              aria-label="Four-stage sequence: fresh perspective, strategic direction, intentional transformation, and distinctive presence."
+            >
+              <article class="stage">
+                <div class="stage-number"><span>01</span><span>See</span></div>
+                <div class="stage-art" aria-hidden="true">
+                  <i class="shape shape-a"></i>
+                  <i class="shape shape-b"></i>
+                  <i class="shape shape-c"></i>
+                  <i class="lens"></i>
+                </div>
+                <h3>Fresh perspective</h3>
+              </article>
+
+              <article class="stage">
+                <div class="stage-number"><span>02</span><span>Choose</span></div>
+                <div class="stage-art" aria-hidden="true">
+                  <i class="shape shape-a"></i>
+                  <i class="shape shape-b"></i>
+                  <i class="shape shape-c"></i>
+                  <i class="axis"></i>
+                </div>
+                <h3>Strategic direction</h3>
+              </article>
+
+              <article class="stage stage-transform">
+                <div class="stage-number"><span>03</span><span>Change</span></div>
+                <div class="stage-art" aria-hidden="true">
+                  <i class="shape shape-a"></i>
+                  <i class="shape shape-b"></i>
+                  <i class="shape shape-c"></i>
+                </div>
+                <h3>Intentional transformation</h3>
+              </article>
+
+              <article class="stage">
+                <div class="stage-number"><span>04</span><span>Become</span></div>
+                <div class="stage-art" aria-hidden="true"><i class="resolved-mark"></i></div>
+                <h3>Distinctive presence</h3>
+              </article>
+            </div>
+            <figcaption class="eyebrow" style="margin-top: 1rem">
+              Exploratory visual grammar — not a proposed logo or identity asset
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="explanation" aria-label="Plain-language explanation">
+        <div class="wrap">
+          <blockquote>
+            A fresh perspective reveals the opportunity. Strategy gives it direction. Creative work transforms
+            it into a distinctive presence.
+          </blockquote>
+        </div>
+      </section>
+
+      <section class="criteria" aria-labelledby="criteria-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow">What the site should become</p>
+            <h2 id="criteria-title">Four qualities. One coherent presence.</h2>
+          </div>
+
+          <div class="criteria-grid">
+            <article class="criterion">
+              <h3>Distinctive</h3>
+              <p>A recognizable idea and behavior that belong to the business—not a style that could fit anyone.</p>
+            </article>
+            <article class="criterion">
+              <h3>Resonant</h3>
+              <p>A story and experience that feel relevant enough to stay with the right people.</p>
+            </article>
+            <article class="criterion">
+              <h3>Trusted</h3>
+              <p>Clear claims, visible proof, dependable behavior, and no manufactured certainty.</p>
+            </article>
+            <article class="criterion">
+              <h3>Compelling</h3>
+              <p>A strong reason to keep exploring—and a clear next move when someone is ready.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="copy-lab" aria-labelledby="copy-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <p class="eyebrow">Copy lab</p>
+            <h2 id="copy-title">Three ways to explain the same transformation.</h2>
+          </div>
+
+          <div class="copy-list">
+            <details open>
+              <summary><span>A</span><span>The shift</span></summary>
+              <div class="copy-content">
+                <p>
+                  <strong>Madagin comes from “made again”—the shift from what something is to what it can become.</strong>
+                  Broad, human, and closest to the intended level-up meaning.
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary><span>B</span><span>The fresh way forward</span></summary>
+              <div class="copy-content">
+                <p>
+                  <strong>Made Again is what happens when a fresh perspective reveals a stronger way forward.</strong>
+                  More founder-specific, but slightly more consultative.
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary><span>C</span><span>The distinctive presence</span></summary>
+              <div class="copy-content">
+                <p>
+                  <strong>Made Again turns potential into a distinctive presence.</strong>
+                  The shortest option, but “potential” is more familiar agency language.
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap footer-grid">
+        <p>
+          Private concept evidence only. This board tests language, hierarchy, and symbolic causality. It does not
+          approve brand assets, claims, implementation, performance, accessibility conformance, or publication.
+        </p>
+        <span class="wordmark">Madagin</span>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,301 @@
+.page {
+  padding: 0 clamp(1.25rem, 3.6vw, 4rem) 4rem;
+}
+
+.header {
+  display: flex;
+  min-height: 10rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  border-bottom: 1px solid var(--rule-dark);
+}
+
+.header p {
+  margin: 0 0 0.35rem;
+  color: var(--plumskin);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(3.3rem, 6vw, 6rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.82;
+}
+
+.range {
+  border: 1px solid rgba(3, 46, 72, 0.26);
+  padding: 0.75rem 1rem;
+  color: var(--mineral-shadowblue);
+  font-size: 0.83rem;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr minmax(13rem, 0.72fr);
+  border-bottom: 1px solid var(--rule-dark);
+}
+
+.metrics > div {
+  display: grid;
+  min-height: 10.5rem;
+  align-content: space-between;
+  border-right: 1px solid var(--rule-dark);
+  padding: 1.3rem 2rem 1.25rem 0;
+}
+
+.metrics > div + div {
+  padding-left: 2rem;
+}
+
+.metrics > div:last-child {
+  border-right: 0;
+}
+
+.metrics span,
+.sectionHead h2,
+.breakdown h2,
+.privacyNote > span {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.metrics strong {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(3rem, 5vw, 5.4rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.78;
+}
+
+.sourceMetric strong {
+  font-family: var(--font-instrument-sans), Arial, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 570;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.sourceMetric small {
+  color: var(--ink-tertiary);
+}
+
+.plot {
+  padding-top: 2.5rem;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sectionHead > span {
+  color: var(--ink-tertiary);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.plotArea {
+  position: relative;
+  min-height: 23rem;
+  border: 1px solid rgba(3, 46, 72, 0.24);
+}
+
+.plotArea svg {
+  position: absolute;
+  inset: 1.5rem;
+  width: calc(100% - 3rem);
+  height: calc(100% - 3rem);
+  overflow: visible;
+}
+
+.plotArea line {
+  stroke: rgba(3, 46, 72, 0.14);
+  stroke-dasharray: 1 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.plotArea polyline {
+  fill: none;
+  stroke: var(--plumskin);
+  stroke-linecap: square;
+  stroke-linejoin: bevel;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.emptyPlot {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  max-width: 30rem;
+  align-content: center;
+  justify-self: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.emptyPlot strong {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.emptyPlot span {
+  margin-top: 0.9rem;
+  color: var(--ink-tertiary);
+  font-size: 0.88rem;
+}
+
+.breakdownGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--rule-dark);
+}
+
+.breakdown {
+  min-height: 15rem;
+  border-right: 1px solid var(--rule-dark);
+  padding: 1.5rem 1.5rem 1.5rem 0;
+}
+
+.breakdown + .breakdown {
+  padding-left: 1.5rem;
+}
+
+.breakdown:last-child {
+  border-right: 0;
+}
+
+.breakdown ol {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breakdown li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0.7rem 0;
+  font-size: 0.84rem;
+}
+
+.breakdown li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breakdown li strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown p {
+  margin: 3.8rem 0 0;
+  color: var(--ink-tertiary);
+  font-size: 0.86rem;
+}
+
+.privacyNote {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.35fr) minmax(16rem, 1fr) auto;
+  gap: 2rem;
+  align-items: start;
+  padding-top: 1.5rem;
+}
+
+.privacyNote p {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 0.86rem;
+}
+
+.privacyNote a {
+  color: var(--plumskin);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .metrics .sourceMetric {
+    grid-column: 1 / -1;
+    min-height: 6rem;
+    border-top: 1px solid var(--rule-dark);
+    padding-left: 0;
+  }
+
+  .breakdownGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .breakdown,
+  .breakdown + .breakdown {
+    min-height: 11rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule-dark);
+    padding-inline: 0;
+  }
+
+  .privacyNote {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    min-height: 8rem;
+    align-items: end;
+    padding-bottom: 1rem;
+  }
+
+  .range {
+    border: 0;
+    padding: 0 0 0.3rem;
+    font-size: 0.74rem;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics > div,
+  .metrics > div + div {
+    min-height: 8rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule-dark);
+    padding-inline: 0;
+  }
+
+  .metrics .sourceMetric {
+    grid-column: auto;
+    border-top: 0;
+  }
+
+  .plotArea {
+    min-height: 19rem;
+  }
+}
