@@ -153,6 +153,9 @@ export function PublicHome() {
             <span>Madagin</span>
             <span>Made again.</span>
             <span>{"\u00A9"} {new Date().getFullYear()}</span>
+            <a className={styles.adminLink} href="/internal">
+              Admin
+            </a>
           </footer>
         </section>
       </main>
