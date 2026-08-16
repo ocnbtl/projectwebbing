@@ -5,7 +5,7 @@ Project Webbing is the private repository name for Madagin's public website and 
 ## What is built
 
 - / - a sparse cinematic landing experience with an oversized Plaster wordmark, scroll-linked drag and stretch, a pale editorial reveal, the approved promise, and the four current standards.
-- /internal/login - owner authentication. Private content stays inaccessible until server-side credentials are configured.
+- /internal/login - password-only owner authentication. Private content stays inaccessible until server-side credentials are configured.
 - /internal - a concise Vercel Web Analytics dashboard. Missing or unavailable data is shown as unconfigured, never as invented metrics.
 - /internal/brand - the living Madagin identity system: palette, typography, verbal identity, motion specimen, and open decisions.
 - /robots.txt and /sitemap.xml - public indexing rules that exclude the private workspace.
@@ -45,7 +45,6 @@ No production secrets are committed. Copy .env.example to .env.local and provide
 | Variable | Visibility | Purpose |
 | --- | --- | --- |
 | MADAGIN_AUTH_SECRET | Server only | Random signing value of at least 32 characters |
-| MADAGIN_INTERNAL_USERNAME | Server only | Owner login name; defaults to owner |
 | MADAGIN_INTERNAL_PASSWORD | Server only | Owner login password |
 | VERCEL_ANALYTICS_TOKEN | Server only | Reads Vercel Web Analytics aggregate data |
 | VERCEL_ANALYTICS_PROJECT_ID | Server only | Vercel project identifier |

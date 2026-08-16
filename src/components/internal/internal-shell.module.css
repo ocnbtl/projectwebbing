@@ -88,13 +88,6 @@
   text-transform: uppercase;
 }
 
-.privateState small {
-  color: rgba(252, 252, 252, 0.48);
-  font-size: 0.72rem;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
 .publicExit,
 .sidebarFoot button {
   display: flex;

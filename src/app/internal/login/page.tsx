@@ -33,15 +33,6 @@ export default async function LoginPage({
         {configured ? (
           <form action={login} className={styles.form}>
             <label>
-              <span>Username</span>
-              <input
-                autoComplete="username"
-                name="username"
-                required
-                type="text"
-              />
-            </label>
-            <label>
               <span>Password</span>
               <input
                 autoComplete="current-password"
@@ -52,7 +43,7 @@ export default async function LoginPage({
             </label>
             {error === "invalid" ? (
               <p className={styles.error} role="alert">
-                Those credentials were not recognized.
+                That password was not recognized.
               </p>
             ) : null}
             <button type="submit">Enter workspace</button>

@@ -4,7 +4,7 @@ export const SESSION_COOKIE = "madagin_session";
 export const SESSION_DURATION_SECONDS = 60 * 60 * 12;
 
 export type MadaginSession = {
-  username: string;
+  access: "owner";
 };
 
 function getSigningKey() {
@@ -19,11 +19,11 @@ export function isInternalAuthConfigured() {
   );
 }
 
-export async function createSessionToken(username: string) {
+export async function createSessionToken() {
   const key = getSigningKey();
   if (!key) throw new Error("Internal authentication is not configured.");
 
-  return new SignJWT({ username })
+  return new SignJWT({ access: "owner" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_DURATION_SECONDS}s`)
@@ -44,9 +44,7 @@ export async function verifySessionToken(
       audience: "madagin-owner",
     });
 
-    return typeof payload.username === "string"
-      ? { username: payload.username }
-      : null;
+    return payload.access === "owner" ? { access: "owner" } : null;
   } catch {
     return null;
   }

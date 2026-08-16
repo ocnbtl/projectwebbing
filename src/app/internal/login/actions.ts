@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { credentialsMatch } from "@/lib/auth";
+import { passwordMatches } from "@/lib/auth";
 import {
   createSessionToken,
   isInternalAuthConfigured,
@@ -17,15 +17,14 @@ export async function login(formData: FormData) {
     redirect("/internal/login?error=unconfigured");
   }
 
-  const username = String(formData.get("username") || "").slice(0, 120);
   const password = String(formData.get("password") || "").slice(0, 512);
 
-  if (!credentialsMatch(username, password)) {
+  if (!passwordMatches(password)) {
     await new Promise((resolve) => setTimeout(resolve, FAILURE_DELAY_MS));
     redirect("/internal/login?error=invalid");
   }
 
-  const token = await createSessionToken(username);
+  const token = await createSessionToken();
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,

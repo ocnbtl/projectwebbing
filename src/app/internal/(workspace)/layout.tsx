@@ -12,5 +12,5 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
   const session = await getInternalSession();
   if (!session) redirect("/internal/login");
 
-  return <InternalShell username={session.username}>{children}</InternalShell>;
+  return <InternalShell>{children}</InternalShell>;
 }

@@ -3,13 +3,7 @@ import { logout } from "@/app/internal/login/actions";
 import { InternalNav } from "./internal-nav";
 import styles from "./internal-shell.module.css";
 
-export function InternalShell({
-  children,
-  username,
-}: {
-  children: React.ReactNode;
-  username: string;
-}) {
+export function InternalShell({ children }: { children: React.ReactNode }) {
   return (
     <div className={styles.shell}>
       <a className="skip-link" href="#workspace-content">
@@ -23,7 +17,6 @@ export function InternalShell({
         <div className={styles.sidebarFoot}>
           <div className={styles.privateState}>
             <span>Private workspace</span>
-            <small>{username}</small>
           </div>
           <Link className={styles.publicExit} href="/">
             Public site <span aria-hidden="true">{"\u2197"}</span>

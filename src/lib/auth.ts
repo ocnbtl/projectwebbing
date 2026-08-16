@@ -8,12 +8,10 @@ function digest(value: string) {
   return createHash("sha256").update(value).digest();
 }
 
-export function credentialsMatch(username: string, password: string) {
-  const expectedUsername = process.env.MADAGIN_INTERNAL_USERNAME || "owner";
+export function passwordMatches(password: string) {
   const expectedPassword = process.env.MADAGIN_INTERNAL_PASSWORD || "";
 
   return (
-    timingSafeEqual(digest(username), digest(expectedUsername)) &&
     timingSafeEqual(digest(password), digest(expectedPassword)) &&
     expectedPassword.length > 0
   );
