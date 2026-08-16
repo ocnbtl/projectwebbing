@@ -1,0 +1,474 @@
+.indexHero,
+.detailHero,
+.aboutHero,
+.indexList,
+.detailBody,
+.aboutStatement,
+.aboutMethod,
+.aboutStandards,
+.contact {
+  padding-right: clamp(1.25rem, 5vw, 5rem);
+  padding-left: clamp(1.25rem, 5vw, 5rem);
+}
+
+.indexHero,
+.aboutHero {
+  display: grid;
+  min-height: 75svh;
+  grid-template-columns: 1fr minmax(16rem, 0.38fr);
+  align-content: end;
+  gap: 2rem clamp(2rem, 7vw, 9rem);
+  padding-top: 12rem;
+  padding-bottom: 4rem;
+  background: var(--milk-white);
+}
+
+.indexHero > span,
+.aboutHero > span {
+  grid-column: 1 / -1;
+  align-self: start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.indexHero h1,
+.aboutHero h1 {
+  max-width: 12ch;
+  margin: 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(4.5rem, 10vw, 11rem);
+  font-weight: 400;
+  letter-spacing: -0.065em;
+  line-height: 0.8;
+}
+
+.indexHero p,
+.aboutHero p {
+  max-width: 27rem;
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--black);
+  font-size: clamp(1rem, 1.4vw, 1.3rem);
+}
+
+.indexList {
+  padding-top: 1px;
+  padding-bottom: clamp(6rem, 11vw, 12rem);
+}
+
+.indexItem {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1.4fr) minmax(18rem, 0.6fr);
+  align-items: end;
+  gap: clamp(1rem, 3vw, 3rem);
+  padding: clamp(4rem, 8vw, 8rem) 0;
+  border-top: 1px solid var(--black);
+}
+
+.itemNumber,
+.indexCopy > span {
+  align-self: start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.indexVisual,
+.indexVisual > div,
+.indexVisual img {
+  width: 100%;
+  min-height: clamp(20rem, 45vw, 42rem);
+}
+
+.indexVisual {
+  overflow: hidden;
+  background: var(--sunlit-quartz);
+}
+
+.indexVisual > div {
+  background: var(--black);
+  clip-path: polygon(0 44%, 15% 35%, 27% 53%, 43% 12%, 59% 50%, 70% 31%, 83% 56%, 100% 36%, 100% 100%, 0 100%);
+}
+
+.indexVisual img {
+  display: block;
+  object-fit: cover;
+}
+
+.indexCopy h2 {
+  margin: 1.2rem 0 1rem;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(3rem, 5vw, 6rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.87;
+}
+
+.indexCopy h2 a {
+  text-decoration: none;
+}
+
+.indexCopy h2 a:hover,
+.indexCopy h2 a:focus-visible {
+  color: var(--plumskin);
+}
+
+.indexCopy p {
+  color: var(--ink-secondary);
+}
+
+.emptyIndex {
+  display: grid;
+  min-height: 62svh;
+  grid-template-columns: minmax(0, 1.4fr) minmax(15rem, 0.6fr);
+  align-items: end;
+  gap: 3rem;
+  padding-top: 5rem;
+  border-top: 1px solid var(--black);
+}
+
+.emptyIndex > div {
+  min-height: 50svh;
+  background: var(--black);
+  clip-path: polygon(0 46%, 14% 35%, 27% 52%, 45% 11%, 61% 51%, 74% 29%, 87% 58%, 100% 43%, 100% 100%, 0 100%);
+}
+
+.emptyIndex p {
+  max-width: 14ch;
+  margin: 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(3rem, 5vw, 6rem);
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+}
+
+.detailHero {
+  display: grid;
+  min-height: 78svh;
+  grid-template-columns: 0.45fr 1.6fr;
+  align-content: end;
+  gap: 2rem clamp(2rem, 6vw, 8rem);
+  padding-top: 11rem;
+  padding-bottom: 4rem;
+}
+
+.detailHero > a,
+.detailHero > span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detailHero > span {
+  justify-self: end;
+}
+
+.detailHero h1,
+.detailHero > p {
+  grid-column: 2;
+}
+
+.detailHero h1 {
+  max-width: 13ch;
+  margin: 4rem 0 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(4rem, 9vw, 10rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 0.82;
+}
+
+.detailHero > p {
+  max-width: 45rem;
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.8rem);
+}
+
+.detailImage,
+.detailTerrain {
+  display: block;
+  width: 100%;
+  min-height: 72svh;
+  object-fit: cover;
+}
+
+.detailTerrain {
+  background: var(--black);
+  clip-path: polygon(0 49%, 13% 37%, 27% 54%, 43% 10%, 59% 53%, 71% 31%, 86% 57%, 100% 38%, 100% 100%, 0 100%);
+}
+
+.detailBody {
+  display: grid;
+  grid-template-columns: 0.45fr 1.6fr;
+  gap: clamp(2rem, 6vw, 8rem);
+  padding-top: clamp(5rem, 9vw, 10rem);
+  padding-bottom: clamp(7rem, 13vw, 15rem);
+}
+
+.detailBody > span {
+  padding-top: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detailBody > div {
+  max-width: 47rem;
+}
+
+.detailBody p {
+  margin: 0 0 1.5em;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(1.55rem, 2.7vw, 2.65rem);
+  letter-spacing: -0.025em;
+  line-height: 1.16;
+}
+
+.aboutStatement {
+  padding-top: clamp(6rem, 12vw, 14rem);
+  padding-bottom: clamp(6rem, 12vw, 14rem);
+  background: var(--black);
+  color: var(--milk-white);
+}
+
+.aboutStatement p {
+  max-width: 29ch;
+  margin: 0 0 0 auto;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(3rem, 6.4vw, 7rem);
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+}
+
+.aboutMethod {
+  display: grid;
+  grid-template-columns: 0.45fr 1.55fr;
+  gap: clamp(2rem, 6vw, 8rem);
+  padding-top: clamp(6rem, 10vw, 11rem);
+  padding-bottom: clamp(6rem, 10vw, 11rem);
+}
+
+.aboutLabel h2 {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.aboutMethod article {
+  display: grid;
+  grid-template-columns: 3rem minmax(12rem, 0.7fr) 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem 0 3rem;
+  border-top: 1px solid var(--black);
+}
+
+.aboutMethod article span {
+  color: var(--plumskin);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.aboutMethod article h3 {
+  margin: 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(2.3rem, 3.8vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+}
+
+.aboutMethod article p {
+  max-width: 26rem;
+  margin: 0;
+  color: var(--ink-secondary);
+}
+
+.aboutStandards {
+  padding-top: clamp(6rem, 10vw, 11rem);
+  padding-bottom: clamp(6rem, 10vw, 11rem);
+  background: var(--sunlit-quartz);
+}
+
+.aboutStandards > h2 {
+  max-width: 12ch;
+  margin: 0 0 clamp(4rem, 8vw, 9rem);
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(3.7rem, 8vw, 9rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 0.84;
+}
+
+.aboutStandards > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.aboutStandards article {
+  min-height: 19rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--black);
+}
+
+.aboutStandards article:nth-child(odd) {
+  border-right: 1px solid var(--black);
+  padding-left: 0;
+}
+
+.aboutStandards h3 {
+  margin: 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(2.8rem, 5vw, 6rem);
+  font-weight: 400;
+  letter-spacing: -0.05em;
+}
+
+.aboutStandards p {
+  max-width: 24rem;
+  margin: 6rem 0 0;
+}
+
+.contact {
+  display: grid;
+  min-height: 78svh;
+  grid-template-columns: 1.6fr 0.6fr;
+  align-items: end;
+  gap: clamp(2rem, 7vw, 9rem);
+  padding-top: 7rem;
+  padding-bottom: 4rem;
+  background: var(--plumskin);
+  color: var(--milk-white);
+}
+
+.contact h2 {
+  margin: 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(6rem, 15vw, 16rem);
+  font-weight: 400;
+  letter-spacing: -0.075em;
+  line-height: 0.68;
+}
+
+.contact > div {
+  display: grid;
+  gap: 2rem;
+}
+
+.contact p {
+  margin: 0;
+  font-size: clamp(1.05rem, 1.4vw, 1.3rem);
+}
+
+.contact a {
+  display: inline-flex;
+  min-height: 3.4rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+  background: var(--milk-white);
+  color: var(--black);
+  font-size: 0.83rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.contactPending {
+  padding-top: 1rem;
+  border-top: 1px solid currentColor;
+  font-size: 0.78rem !important;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 800px) {
+  .indexHero,
+  .aboutHero,
+  .indexItem,
+  .emptyIndex,
+  .detailHero,
+  .detailBody,
+  .aboutMethod,
+  .contact {
+    grid-template-columns: 1fr;
+  }
+
+  .indexHero,
+  .aboutHero {
+    min-height: 80svh;
+    padding-top: 10rem;
+  }
+
+  .indexHero h1,
+  .aboutHero h1 {
+    font-size: clamp(4rem, 19vw, 7rem);
+  }
+
+  .itemNumber {
+    margin-bottom: -1rem;
+  }
+
+  .indexVisual,
+  .indexVisual > div,
+  .indexVisual img {
+    min-height: 72vw;
+  }
+
+  .emptyIndex > div {
+    min-height: 65vw;
+  }
+
+  .detailHero {
+    padding-top: 10rem;
+  }
+
+  .detailHero > span {
+    justify-self: start;
+  }
+
+  .detailHero h1,
+  .detailHero > p {
+    grid-column: 1;
+  }
+
+  .detailHero h1 {
+    margin-top: 2rem;
+  }
+
+  .detailImage,
+  .detailTerrain {
+    min-height: 55svh;
+  }
+
+  .aboutMethod article {
+    grid-template-columns: 2rem 1fr;
+  }
+
+  .aboutMethod article p {
+    grid-column: 2;
+  }
+
+  .aboutStandards > div {
+    grid-template-columns: 1fr;
+  }
+
+  .aboutStandards article:nth-child(n) {
+    min-height: 16rem;
+    padding: 1.5rem 0;
+    border-right: 0;
+  }
+
+  .aboutStandards p {
+    margin-top: 4rem;
+  }
+
+  .contact {
+    min-height: 72svh;
+  }
+}

@@ -6,6 +6,8 @@ import styles from "./internal-shell.module.css";
 
 const items = [
   { href: "/internal", label: "Analytics" },
+  { href: "/internal/projects", label: "Projects" },
+  { href: "/internal/blog", label: "Blog" },
   { href: "/internal/brand", label: "Brand system" },
 ];
 

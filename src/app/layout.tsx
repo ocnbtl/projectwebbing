@@ -24,11 +24,23 @@ const plaster = Plaster({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://projectwebbing.vercel.app"),
   title: {
     default: "Madagin",
     template: "%s \u00B7 Madagin",
   },
-  description: "Strategy, design, and development for a distinctive digital presence.",
+  description: "Madagin creates distinctive websites people remember, trust, and choose.",
+  openGraph: {
+    type: "website",
+    siteName: "Madagin",
+    title: "Madagin",
+    description: "Distinctive websites people remember, trust, and choose.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Madagin",
+    description: "Distinctive websites people remember, trust, and choose.",
+  },
 };
 
 export const viewport: Viewport = {
