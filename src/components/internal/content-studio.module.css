@@ -80,6 +80,14 @@
   margin: 0;
 }
 
+.repositoryNote {
+  margin: 0;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule-dark);
+  color: var(--ink-tertiary);
+  font-size: 0.72rem;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(14rem, 0.43fr) minmax(0, 1.57fr);

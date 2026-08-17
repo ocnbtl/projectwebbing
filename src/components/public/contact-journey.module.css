@@ -1,0 +1,671 @@
+.journey {
+  --journey-progress: 0;
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  background: var(--black);
+  color: var(--milk-white);
+}
+
+.background {
+  position: fixed;
+  inset: -2rem;
+  background-image: url("/media/madagin-valley-reveal-v4.png");
+  background-position: center 52%;
+  background-size: cover;
+  filter: brightness(0.55) saturate(0.78) contrast(1.08);
+  transform: scale(1.04);
+  transition: filter 900ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 900ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.chrome {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: 100%;
+  min-height: 6.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem clamp(1.25rem, 3.4vw, 3.5rem);
+}
+
+.chrome > a {
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--milk-white);
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.chrome > a:last-child {
+  min-width: auto;
+  border-bottom: 1px solid transparent;
+}
+
+.chrome > a:last-child:hover,
+.chrome > a:last-child:focus-visible {
+  border-color: currentColor;
+}
+
+.form {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+}
+
+.progressText {
+  position: absolute;
+  top: 6rem;
+  left: clamp(1.25rem, 5vw, 5rem);
+  color: rgba(252, 252, 252, 0.7);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+}
+
+.progressText span {
+  color: var(--plumskin);
+}
+
+.questionPanel {
+  display: grid;
+  width: min(78rem, 100%);
+  min-height: 100svh;
+  align-content: center;
+  gap: 1.1rem;
+  margin: 0 auto;
+  padding: 10rem clamp(1.25rem, 5vw, 5rem) 11rem;
+  animation: question-in 480ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.questionPanel h1,
+.successMessage h1 {
+  max-width: 12ch;
+  margin: 0 0 clamp(1.5rem, 4vw, 3.5rem);
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(4rem, 7.8vw, 8.2rem);
+  font-weight: 400;
+  letter-spacing: -0.065em;
+  line-height: 0.83;
+  text-wrap: balance;
+}
+
+.questionPanel h1:focus {
+  outline: 0;
+}
+
+.reviewPanel {
+  align-content: start;
+  padding-top: 7.8rem;
+  padding-bottom: 2.5rem;
+}
+
+.reviewPanel h1 {
+  max-width: none;
+  margin-bottom: 1.5rem;
+  font-size: clamp(4.4rem, 7vw, 7rem);
+}
+
+.questionNote {
+  max-width: 34rem;
+  margin: -2.1rem 0 1.1rem;
+  color: rgba(252, 252, 252, 0.72);
+  font-size: 0.95rem;
+}
+
+.choices {
+  display: grid;
+  max-width: 67rem;
+  border-top: 1px solid rgba(252, 252, 252, 0.42);
+}
+
+.choices button {
+  display: grid;
+  min-height: 4.35rem;
+  grid-template-columns: minmax(0, 1fr) 3.5rem;
+  align-items: center;
+  gap: 1rem;
+  border: 0;
+  border-bottom: 1px solid rgba(252, 252, 252, 0.42);
+  border-radius: 0;
+  background: transparent;
+  color: var(--milk-white);
+  cursor: pointer;
+  padding: 0.35rem 0;
+  text-align: left;
+  transition: color 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    padding-left 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.choices button span {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(1.75rem, 2.65vw, 3rem);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.choices button svg,
+.continueButton svg,
+.sendButton svg,
+.successMessage > a svg {
+  width: 2.7rem;
+}
+
+.choices button svg {
+  opacity: 0;
+  transform: translateX(-0.6rem);
+  transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.choices button:hover,
+.choices button:focus-visible,
+.choices .choiceSelected {
+  color: var(--plumskin);
+  padding-left: 0.75rem;
+}
+
+.choices button:hover svg,
+.choices button:focus-visible svg,
+.choices .choiceSelected svg {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.longAnswer {
+  display: grid;
+  max-width: 67rem;
+  gap: 0.5rem;
+}
+
+.longAnswer > span,
+.contactFields label > span {
+  color: rgba(252, 252, 252, 0.68);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.longAnswer textarea,
+.contactFields input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(252, 252, 252, 0.5);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--milk-white);
+  outline: 0;
+}
+
+.longAnswer textarea {
+  min-height: 15rem;
+  padding: 1rem 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(1.55rem, 2.4vw, 2.5rem);
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  resize: vertical;
+}
+
+.longAnswer textarea::placeholder,
+.contactFields input::placeholder {
+  color: rgba(252, 252, 252, 0.42);
+}
+
+.longAnswer textarea:focus,
+.contactFields input:focus {
+  border-color: var(--plumskin);
+}
+
+.longAnswer small {
+  justify-self: end;
+  color: rgba(252, 252, 252, 0.54);
+  font-size: 0.7rem;
+}
+
+.contactFields {
+  display: grid;
+  max-width: 67rem;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.5rem, 3vw, 3.5rem);
+}
+
+.contactFields label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.contactFields label:last-child {
+  grid-column: 1 / -1;
+}
+
+.contactFields em {
+  color: rgba(252, 252, 252, 0.4);
+  font-style: normal;
+}
+
+.contactFields input {
+  min-height: 4.5rem;
+  padding: 0.45rem 0;
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(1.65rem, 2.5vw, 2.7rem);
+  letter-spacing: -0.03em;
+}
+
+.review {
+  display: grid;
+  max-width: 67rem;
+  border-top: 1px solid rgba(252, 252, 252, 0.42);
+}
+
+.reviewRow {
+  display: grid;
+  min-height: 3.15rem;
+  grid-template-columns: minmax(9rem, 0.42fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem 2rem;
+  border-bottom: 1px solid rgba(252, 252, 252, 0.32);
+}
+
+.reviewRow > span {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: 1.15rem;
+}
+
+.reviewRow p {
+  max-width: 48rem;
+  margin: 0;
+  overflow: hidden;
+  color: rgba(252, 252, 252, 0.82);
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reviewRow button {
+  min-width: 3rem;
+  min-height: 2.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--plumskin);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.sendArea {
+  display: grid;
+  max-width: 67rem;
+  grid-template-columns: minmax(12rem, 0.52fr) minmax(21rem, 1fr);
+  align-items: end;
+  gap: 0.75rem 2rem;
+  margin-top: 1rem;
+}
+
+.sendArea > p {
+  max-width: 22rem;
+  margin: 0;
+  color: rgba(252, 252, 252, 0.7);
+  font-size: 0.83rem;
+}
+
+.sendButton {
+  display: grid;
+  min-height: 6.5rem;
+  grid-template-columns: 1fr 4rem;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--milk-white);
+  border-radius: 0;
+  background: var(--plumskin);
+  box-shadow: 8px 8px 0 var(--milk-white);
+  color: var(--milk-white);
+  cursor: pointer;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  transition: box-shadow 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.sendButton span {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(2.7rem, 4.6vw, 5rem);
+  letter-spacing: -0.055em;
+  line-height: 0.85;
+}
+
+.sendButton:active {
+  box-shadow: 2px 2px 0 var(--milk-white);
+  transform: translate(6px, 6px);
+}
+
+.sendButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.sendArea > small {
+  grid-column: 2;
+  color: rgba(252, 252, 252, 0.55);
+  font-size: 0.68rem;
+}
+
+.submitError {
+  max-width: 67rem;
+  margin: 0.75rem 0 0;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--pearl-gardenia);
+  border-bottom: 1px solid var(--pearl-gardenia);
+  color: var(--pearl-gardenia);
+  font-size: 0.82rem;
+}
+
+.contourProgress {
+  position: fixed;
+  z-index: 3;
+  right: clamp(1.25rem, 5vw, 5rem);
+  bottom: 4.7rem;
+  left: clamp(1.25rem, 5vw, 5rem);
+  height: 3.5rem;
+  pointer-events: none;
+}
+
+.contourProgress svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.contourBase,
+.contourActive {
+  fill: none;
+  stroke: rgba(252, 252, 252, 0.74);
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.contourActive {
+  stroke: var(--plumskin);
+  stroke-dasharray: var(--journey-progress) 1;
+  transition: stroke-dasharray 700ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.stepControls {
+  position: fixed;
+  z-index: 4;
+  right: clamp(1.25rem, 5vw, 5rem);
+  bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.stepControls button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.85rem;
+  border: 0;
+  background: transparent;
+  color: var(--milk-white);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.stepControls button:disabled {
+  color: rgba(252, 252, 252, 0.34);
+  cursor: not-allowed;
+}
+
+.stepControls .continueButton:not(:disabled) {
+  color: var(--plumskin);
+}
+
+.continueButton svg {
+  width: 2.2rem;
+}
+
+.honeypot {
+  position: fixed;
+  top: -100vh;
+  left: -100vw;
+}
+
+.success .background {
+  filter: brightness(0.77) saturate(0.8) contrast(1.04);
+  transform: scale(1.02);
+}
+
+.successMessage {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  min-height: 100svh;
+  align-content: end;
+  padding: 10rem clamp(1.25rem, 5vw, 5rem) clamp(4rem, 8vw, 8rem);
+}
+
+.successMessage > span {
+  margin-bottom: 1.3rem;
+  color: var(--plumskin);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.successMessage h1 {
+  max-width: 10ch;
+  font-size: clamp(5rem, 12vw, 13rem);
+}
+
+.successMessage > p {
+  max-width: 34rem;
+  margin: 0 0 2rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem);
+}
+
+.successMessage > a {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 3rem;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid currentColor;
+  color: var(--milk-white);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@keyframes question-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 760px) {
+  .journey {
+    overflow-y: auto;
+  }
+
+  .chrome {
+    min-height: 5rem;
+    padding: 0.8rem 1.1rem;
+  }
+
+  .progressText {
+    top: 6rem;
+    left: 1.1rem;
+  }
+
+  .questionPanel {
+    min-height: 100svh;
+    align-content: start;
+    padding: 9rem 1.1rem 11rem;
+  }
+
+  .questionPanel h1 {
+    margin-bottom: 2rem;
+    font-size: clamp(3.7rem, 17vw, 6.2rem);
+    line-height: 0.86;
+  }
+
+  .questionNote {
+    margin-top: -1.1rem;
+  }
+
+  .choices button {
+    min-height: 4rem;
+    grid-template-columns: minmax(0, 1fr) 2.5rem;
+  }
+
+  .choices button span {
+    font-size: clamp(1.55rem, 7vw, 2.3rem);
+  }
+
+  .choices button svg {
+    opacity: 0.4;
+  }
+
+  .contactFields {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .contactFields label:last-child {
+    grid-column: 1;
+  }
+
+  .reviewRow {
+    grid-template-columns: 1fr auto;
+    gap: 0.25rem 1rem;
+    padding: 0.75rem 0;
+  }
+
+  .reviewPanel {
+    padding-top: 8.5rem;
+  }
+
+  .reviewPanel h1 {
+    font-size: clamp(3.7rem, 16vw, 5.8rem);
+  }
+
+  .reviewRow > span {
+    font-size: 1rem;
+  }
+
+  .reviewRow p {
+    grid-column: 1;
+    grid-row: 2;
+    white-space: normal;
+  }
+
+  .reviewRow button {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+
+  .sendArea {
+    grid-template-columns: 1fr;
+    margin-top: 1.75rem;
+  }
+
+  .sendArea > p,
+  .sendArea > small {
+    grid-column: 1;
+  }
+
+  .sendButton {
+    min-height: 6rem;
+  }
+
+  .sendButton span {
+    font-size: clamp(2.6rem, 12vw, 4rem);
+  }
+
+  .contourProgress {
+    right: 1.1rem;
+    bottom: 4.1rem;
+    left: 1.1rem;
+  }
+
+  .stepControls {
+    right: 1.1rem;
+    bottom: 0.75rem;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .questionPanel {
+    align-content: start;
+    padding-top: 8.5rem;
+  }
+
+  .questionPanel h1 {
+    margin-bottom: 1.4rem;
+    font-size: clamp(3.7rem, 6.4vw, 6.3rem);
+  }
+
+  .choices button {
+    min-height: 3.45rem;
+  }
+
+  .choices button span {
+    font-size: clamp(1.55rem, 2.3vw, 2.4rem);
+  }
+
+  .reviewPanel {
+    padding-top: 8rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .reviewPanel h1 {
+    margin-bottom: 0.9rem;
+    font-size: clamp(4rem, 6vw, 5.4rem);
+  }
+
+  .reviewRow {
+    min-height: 2.55rem;
+  }
+
+  .sendArea {
+    margin-top: 0.65rem;
+  }
+
+  .sendButton {
+    min-height: 5.5rem;
+  }
+
+  .sendButton span {
+    font-size: clamp(2.4rem, 3.8vw, 3.7rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .background,
+  .contourActive {
+    transition: none;
+  }
+
+  .questionPanel {
+    animation: none;
+  }
+}

@@ -5,8 +5,8 @@ import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform 
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import ridgeImage from "../../../public/media/madagin-ridge-approach-v1.png";
-import valleyImage from "../../../public/media/madagin-valley-reveal-v1.png";
+import ridgeImage from "../../../public/media/madagin-ridge-approach-v3.png";
+import valleyImage from "../../../public/media/madagin-valley-reveal-v4.png";
 import { MadaginMark, PublicFooter, PublicHeader } from "@/components/public/public-chrome";
 import type { ContentItem } from "@/lib/content-types";
 import { method, promise, standards } from "@/lib/brand";
@@ -69,7 +69,7 @@ function ContentPreview({ item, route }: { item: ContentItem; route: "projects" 
   return (
     <article className={styles.contentPreview}>
       {item.coverImageUrl ? (
-        // User-supplied CMS media is restricted to validated HTTPS URLs.
+        // Publishing accepts committed /media paths and public HTTPS images.
         // eslint-disable-next-line @next/next/no-img-element
         <img src={item.coverImageUrl} alt="" loading="lazy" />
       ) : <div className={styles.contentLandform} aria-hidden="true" />}
@@ -88,9 +88,10 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
   const filmRef = useRef<HTMLVideoElement>(null);
   const motionToggleUsed = useRef(false);
   const prefersReducedMotion = useReducedMotion();
+  const [filmFailed, setFilmFailed] = useState(false);
   const [useLessMotion, setUseLessMotion] = useState(false);
   const motionOff = Boolean(prefersReducedMotion || useLessMotion);
-  const heroFilm = process.env.NEXT_PUBLIC_MADAGIN_HERO_VIDEO;
+  const heroFilm = process.env.NEXT_PUBLIC_MADAGIN_HERO_VIDEO || "/media/madagin-mountain-journey-v1.mp4";
   const { scrollYProgress } = useScroll({ target: journeyRef, offset: ["start start", "end end"] });
   const approachScale = useTransform(scrollYProgress, [0, 0.28], [1, 1.22]);
   const approachY = useTransform(scrollYProgress, [0, 0.28], ["0%", "-11%"]);
@@ -129,11 +130,12 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
             </motion.div>
             <motion.div className={styles.valleyPlate} style={motionOff ? undefined : { filter: valleyFilter, scale: valleyScale, y: valleyY }}>
               <Image alt="" aria-hidden="true" fill priority sizes="100vw" src={valleyImage} />
-              {heroFilm ? (
+              {heroFilm && !filmFailed ? (
                 <video
                   aria-hidden="true"
                   className={styles.journeyFilm}
                   muted
+                  onError={() => setFilmFailed(true)}
                   playsInline
                   poster={valleyImage.src}
                   preload="metadata"
@@ -213,7 +215,7 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
 
           <section className={styles.closing} id="contact" aria-labelledby="closing-title">
             <h2 id="closing-title">Let&apos;s talk.</h2>
-            <div><p>If the business has moved forward and the site hasn&apos;t, that&apos;s a good place to start.</p><Link href="/about#contact">Start a conversation</Link></div>
+            <div><p>If the business has moved forward and the site hasn&apos;t, that&apos;s a good place to start.</p><Link href="/contact">Start a conversation</Link></div>
           </section>
         </div>
       </main>

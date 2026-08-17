@@ -16,7 +16,6 @@ export function MadaginMark({ compact = false }: { compact?: boolean }) {
 }
 
 export function PublicHeader({ tone = "dark" }: { tone?: "dark" | "light" }) {
-  const contactHref = process.env.NEXT_PUBLIC_MADAGIN_CONTACT_HREF || "/about#contact";
   return (
     <header className={`${styles.header} ${styles[tone]}`}>
       <Link className={styles.logoLink} href="/" aria-label="Madagin home">
@@ -29,9 +28,9 @@ export function PublicHeader({ tone = "dark" }: { tone?: "dark" | "light" }) {
           </Link>
         ))}
       </nav>
-      <a className={styles.talkLink} href={contactHref}>
+      <Link className={styles.talkLink} href="/contact">
         Let&apos;s Talk
-      </a>
+      </Link>
     </header>
   );
 }
@@ -52,6 +51,7 @@ export function PublicFooter() {
             {item.label}
           </Link>
         ))}
+        <Link href="/contact">Let&apos;s Talk</Link>
         <Link href="/internal">Admin</Link>
       </nav>
     </footer>

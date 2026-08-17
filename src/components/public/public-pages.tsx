@@ -57,7 +57,7 @@ export function ContentIndex({
               <span className={styles.itemNumber}>{String(index + 1).padStart(2, "0")}</span>
               <div className={styles.indexVisual}>
                 {item.coverImageUrl ? (
-                  // CMS cover URLs are validated as HTTPS before save.
+                  // Publishing accepts committed /media paths and public HTTPS images.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img alt="" src={item.coverImageUrl} />
                 ) : (
@@ -99,7 +99,7 @@ export function ContentDetail({ item }: { item: ContentItem }) {
           <p>{item.summary}</p>
         </header>
         {item.coverImageUrl ? (
-          // CMS cover URLs are validated as HTTPS before save.
+          // Publishing accepts committed /media paths and public HTTPS images.
           // eslint-disable-next-line @next/next/no-img-element
           <img className={styles.detailImage} alt="" src={item.coverImageUrl} />
         ) : (
@@ -115,8 +115,6 @@ export function ContentDetail({ item }: { item: ContentItem }) {
 }
 
 export function AboutPage() {
-  const contactHref = process.env.NEXT_PUBLIC_MADAGIN_CONTACT_HREF;
-
   return (
     <PublicFrame>
       <header className={styles.aboutHero}>
@@ -163,11 +161,7 @@ export function AboutPage() {
         <h2 id="contact-title">Let&apos;s talk.</h2>
         <div>
           <p>If the business has moved forward and the website hasn&apos;t, tell me what changed.</p>
-          {contactHref ? (
-            <a href={contactHref}>Start a conversation</a>
-          ) : (
-            <p className={styles.contactPending}>Direct inquiries are opening soon.</p>
-          )}
+          <Link href="/contact">Start a conversation</Link>
         </div>
       </section>
     </PublicFrame>

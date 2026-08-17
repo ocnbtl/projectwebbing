@@ -36,6 +36,7 @@ function validateDate(value: string) {
 
 function validateCoverUrl(value: string) {
   if (!value) return true;
+  if (/^\/media\/[A-Za-z0-9/_ .-]+$/.test(value) && !value.includes("..")) return true;
   try {
     return new URL(value).protocol === "https:";
   } catch {
@@ -80,7 +81,7 @@ export async function saveContentAction(
     return { state: "error", message: "Add a valid publication date." };
   }
   if (!validateCoverUrl(coverImageUrl)) {
-    return { state: "error", message: "Cover images must use a valid HTTPS URL." };
+    return { state: "error", message: "Use a committed /media path or a valid HTTPS image URL." };
   }
   if (status === "published" && (!summary || !body)) {
     return { state: "error", message: "Published content needs both a summary and a story." };
@@ -124,7 +125,10 @@ export async function saveContentAction(
 
   return {
     state: "success",
-    message: status === "published" ? "Published." : "Draft saved.",
+    message:
+      status === "published"
+        ? "Committed. Vercel will publish the new build shortly."
+        : "Draft committed to GitHub.",
     itemId: item.id,
   };
 }

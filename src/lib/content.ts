@@ -1,25 +1,39 @@
 import "server-only";
 
-import { get, put } from "@vercel/blob";
+import localContent from "@/content/madagin-content.json";
 import type { ContentItem, ContentKind, ContentStatus } from "@/lib/content-types";
 
 export type { ContentItem, ContentKind, ContentStatus } from "@/lib/content-types";
 
-const CONTENT_PATHNAME = "madagin/content.json";
+const CONTENT_REPOSITORY_PATH = "src/content/madagin-content.json";
+const GITHUB_API_VERSION = "2026-03-10";
 
 type ContentDatabase = {
   version: 1;
   items: ContentItem[];
 };
 
-type DatabaseRead = {
+type RepositoryFile = {
   database: ContentDatabase;
-  etag: string | null;
+  sha?: string;
+};
+
+type GitHubContentResponse = {
+  content?: string;
+  encoding?: string;
+  sha?: string;
+};
+
+type GitHubWriteResponse = {
+  commit?: {
+    html_url?: string;
+    sha?: string;
+  };
 };
 
 export type PublishingStatus = {
   configured: boolean;
-  label: "Ready" | "Storage needed";
+  label: "Ready" | "GitHub setup needed";
   detail: string;
 };
 
@@ -64,39 +78,77 @@ function parseDatabase(value: unknown): ContentDatabase {
   };
 }
 
+function repositoryCoordinates() {
+  const value = process.env.GITHUB_CONTENT_REPOSITORY?.trim() ?? "";
+  const match = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/.exec(value);
+  if (!match) return null;
+  return { owner: match[1], repo: match[2] };
+}
+
+function repositoryBranch() {
+  return process.env.GITHUB_CONTENT_BRANCH?.trim() || "main";
+}
+
+function githubHeaders() {
+  const token = process.env.GITHUB_CONTENT_TOKEN?.trim();
+  if (!token) throw new Error("GitHub publishing is not configured.");
+  return {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    "X-GitHub-Api-Version": GITHUB_API_VERSION,
+  };
+}
+
+function repositoryFileUrl() {
+  const coordinates = repositoryCoordinates();
+  if (!coordinates) throw new Error("GitHub publishing is not configured.");
+  const path = CONTENT_REPOSITORY_PATH.split("/").map(encodeURIComponent).join("/");
+  return `https://api.github.com/repos/${encodeURIComponent(coordinates.owner)}/${encodeURIComponent(coordinates.repo)}/contents/${path}`;
+}
+
 export function getPublishingStatus(): PublishingStatus {
-  const configured = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  const configured = Boolean(
+    process.env.GITHUB_CONTENT_TOKEN?.trim() && repositoryCoordinates(),
+  );
   return configured
     ? {
         configured: true,
         label: "Ready",
-        detail: "Drafts and published work are stored in the private Madagin content store.",
+        detail: "Saving creates a GitHub commit; Vercel publishes that commit automatically.",
       }
     : {
         configured: false,
-        label: "Storage needed",
-        detail: "Connect a private Vercel Blob store to save and publish content.",
+        label: "GitHub setup needed",
+        detail: "Add a fine-grained GitHub token with Contents write access to publish from here.",
       };
 }
 
-async function readDatabase(): Promise<DatabaseRead> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return { database: emptyDatabase(), etag: null };
+async function readRepositoryDatabase(): Promise<RepositoryFile> {
+  const response = await fetch(
+    `${repositoryFileUrl()}?ref=${encodeURIComponent(repositoryBranch())}`,
+    {
+      cache: "no-store",
+      headers: githubHeaders(),
+    },
+  );
+
+  if (response.status === 404) {
+    return { database: parseDatabase(localContent) };
+  }
+  if (!response.ok) {
+    throw new Error(`GitHub could not read the content file (${response.status}).`);
   }
 
-  const result = await get(CONTENT_PATHNAME, {
-    access: "private",
-    useCache: false,
-  });
-
-  if (!result || result.statusCode !== 200) {
-    return { database: emptyDatabase(), etag: null };
+  const file = (await response.json()) as GitHubContentResponse;
+  if (file.encoding !== "base64" || !file.content || !file.sha) {
+    throw new Error("GitHub returned an unreadable content file.");
   }
 
-  const payload = await new Response(result.stream).json();
+  const decoded = Buffer.from(file.content.replace(/\s/g, ""), "base64").toString("utf8");
   return {
-    database: parseDatabase(payload),
-    etag: result.blob.etag,
+    database: parseDatabase(JSON.parse(decoded) as unknown),
+    sha: file.sha,
   };
 }
 
@@ -108,7 +160,7 @@ export async function getContentItems(options?: {
   kind?: ContentKind;
   includeDrafts?: boolean;
 }) {
-  const { database } = await readDatabase();
+  const database = parseDatabase(localContent);
   return database.items
     .filter((item) => !options?.kind || item.kind === options.kind)
     .filter((item) => options?.includeDrafts || item.status === "published")
@@ -121,11 +173,11 @@ export async function getPublishedContentItem(kind: ContentKind, slug: string) {
 }
 
 export async function saveContentItem(item: ContentItem) {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    throw new Error("Publishing storage is not configured.");
+  if (!getPublishingStatus().configured) {
+    throw new Error("GitHub publishing is not configured.");
   }
 
-  const { database, etag } = await readDatabase();
+  const { database, sha } = await readRepositoryDatabase();
   const duplicate = database.items.find(
     (candidate) =>
       candidate.kind === item.kind &&
@@ -139,17 +191,34 @@ export async function saveContentItem(item: ContentItem) {
   if (existingIndex === -1) nextItems.push(item);
   else nextItems[existingIndex] = item;
 
-  await put(
-    CONTENT_PATHNAME,
-    JSON.stringify({ version: 1, items: nextItems } satisfies ContentDatabase),
-    {
-      access: "private",
-      allowOverwrite: Boolean(etag),
-      ...(etag ? { ifMatch: etag } : {}),
-      cacheControlMaxAge: 60,
-      contentType: "application/json; charset=utf-8",
-    },
+  const nextDatabase = JSON.stringify(
+    { version: 1, items: nextItems } satisfies ContentDatabase,
+    null,
+    2,
   );
+  const action = item.status === "published" ? "Publish" : "Save draft";
+  const response = await fetch(repositoryFileUrl(), {
+    method: "PUT",
+    headers: githubHeaders(),
+    body: JSON.stringify({
+      branch: repositoryBranch(),
+      content: Buffer.from(`${nextDatabase}\n`, "utf8").toString("base64"),
+      message: `${action} ${item.kind}: ${item.title}`,
+      ...(sha ? { sha } : {}),
+    }),
+  });
 
-  return item;
+  if (response.status === 409) {
+    throw new Error("The content file changed while you were editing. Refresh and try again.");
+  }
+  if (!response.ok) {
+    throw new Error(`GitHub could not save the content (${response.status}).`);
+  }
+
+  const result = (await response.json()) as GitHubWriteResponse;
+  return {
+    item,
+    commitSha: result.commit?.sha,
+    commitUrl: result.commit?.html_url,
+  };
 }

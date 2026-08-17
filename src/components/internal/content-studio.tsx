@@ -24,10 +24,10 @@ function FormButtons({ configured }: { configured: boolean }) {
   return (
     <div className={styles.formActions}>
       <button disabled={!configured || pending} name="intent" type="submit" value="draft">
-        {pending ? "Saving…" : "Save draft"}
+        {pending ? "Committing…" : "Save draft"}
       </button>
       <button className={styles.publishButton} disabled={!configured || pending} name="intent" type="submit" value="published">
-        {pending ? "Publishing…" : "Publish"}
+        {pending ? "Committing…" : "Publish"}
       </button>
     </div>
   );
@@ -129,15 +129,14 @@ function EditorForm({
       </label>
 
       <label>
-        <span>Cover image URL</span>
+        <span>Cover image</span>
         <input
           defaultValue={item?.coverImageUrl ?? ""}
-          inputMode="url"
           name="coverImageUrl"
-          placeholder="https://…"
-          type="url"
+          placeholder="/media/project-cover.jpg or https://…"
+          type="text"
         />
-        <small>Optional. Use a public HTTPS image URL.</small>
+        <small>Optional. Use a committed /media path or a public HTTPS image URL.</small>
       </label>
 
       <label>
@@ -199,6 +198,10 @@ export function ContentStudio({
         <strong>{publishing.label}</strong>
         <p>{publishing.detail}</p>
       </div>
+
+      <p className={styles.repositoryNote}>
+        Drafts stay off the public site, but they are still visible to anyone who can read the GitHub repository.
+      </p>
 
       <div className={styles.workspace}>
         <aside className={styles.itemRail} aria-label={`${title} list`}>
