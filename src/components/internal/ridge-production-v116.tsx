@@ -697,6 +697,24 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         }`,
       )
       .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+        float terrainMicroCenter = detailedTerrainFbm(vDetailedTerrainWorld.xz * ${zone === "alpine" ? "0.21" : "0.29"} + 91.7);
+        float terrainMicroX = detailedTerrainFbm((vDetailedTerrainWorld.xz + vec2(0.32, 0.0)) * ${zone === "alpine" ? "0.21" : "0.29"} + 91.7);
+        float terrainMicroZ = detailedTerrainFbm((vDetailedTerrainWorld.xz + vec2(0.0, 0.32)) * ${zone === "alpine" ? "0.21" : "0.29"} + 91.7);
+        float terrainMicroSlope = smoothstep(0.08, 0.82, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
+        vec3 terrainMicroWorldNormal = normalize(
+          normalize(vDetailedTerrainNormal)
+            + vec3(terrainMicroCenter - terrainMicroX, 0.0, terrainMicroCenter - terrainMicroZ)
+              * mix(1.45, 2.55, terrainMicroSlope)
+        );
+        normal = normalize(mix(
+          normal,
+          normalize(mat3(viewMatrix) * terrainMicroWorldNormal),
+          ${zone === "connected" ? "0.2" : zone === "valley" ? "0.24" : zone === "alpine" ? "0.28" : "0.23"}
+        ));`,
+      )
+      .replace(
         "#include <color_fragment>",
         `#include <color_fragment>
         float terrainValley = ${zone === "connected" ? "1.0 - smoothstep(-365.0, -275.0, vDetailedTerrainWorld.z)" : zone === "valley" ? "1.0" : "0.0"};
@@ -882,8 +900,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * (0.095 + basinDrainage * 0.05);`,
       );
   };
-  material.customProgramCacheKey = () => `madagin-v119-volcanic-surface-depth-${zone}`;
-  material.name = `Madagin v1.19 tri-scale volcanic PBR ${zone} terrain`;
+  material.customProgramCacheKey = () => `madagin-v120-volcanic-microrelief-${zone}`;
+  material.name = `Madagin v1.20 micro-relief volcanic PBR ${zone} terrain`;
   return material;
 }
 
@@ -3694,6 +3712,20 @@ function variantMaterials(source: Material | Material[]) {
   return Array.isArray(source) ? result : result[0];
 }
 
+const VOLUMETRIC_CROWN_FAMILIES = new Set([
+  "alpine_conifer",
+  "humid_sapling",
+  "koa_broad",
+  "kukui_round",
+  "ohia_emergent",
+  "ridge_wind_form",
+]);
+
+function volumetricCrownLobeCount(family: string, placement: PlacementTuple, mobile: boolean) {
+  if (mobile || placement[1] !== 0 || !VOLUMETRIC_CROWN_FAMILIES.has(family)) return 1;
+  return family === "alpine_conifer" || family === "ridge_wind_form" ? 2 : 3;
+}
+
 function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
   mobile?: boolean;
   part: SpeciesPart;
@@ -3706,6 +3738,10 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
     () => (Array.isArray(part.material) ? part.material : [part.material]).some((material) => /foliage|leaf|frond/i.test(material.name)),
     [part.material],
   );
+  const instances = useMemo(() => placements.flatMap((placement, placementIndex) => {
+    const lobeCount = foliage ? volumetricCrownLobeCount(part.family, placement, mobile) : 1;
+    return Array.from({ length: lobeCount }, (_, lobe) => ({ lobe, lobeCount, placement, placementIndex }));
+  }), [foliage, mobile, part.family, placements]);
   useFrame(({ clock }) => updateLivingWind(materials, clock.elapsedTime));
   useLayoutEffect(() => {
     const mesh = ref.current;
@@ -3714,23 +3750,37 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
     const matrix = new Matrix4();
     const crownScale = new Matrix4();
     const instanceColor = new Color();
-    placements.forEach((placement, index) => {
-      dummy.position.set(placement[2], placement[3], placement[4]);
-      dummy.rotation.set(0, placement[5], 0);
+    instances.forEach(({ lobe, lobeCount, placement, placementIndex }, index) => {
+      const signature = Math.abs(Math.round(placement[2] * 0.17 + placement[4] * 0.11 + placement[9] * 13 + placementIndex * 7));
+      const lobeAngle = placement[5] + lobe * 2.26 + (signature % 7) * 0.11;
+      const lateralOffset = lobe === 0 ? 0 : placement[6] * (lobeCount === 2 ? 1.08 : lobe === 1 ? 1.18 : 0.96);
+      const verticalOffset = lobe === 0 ? 0 : placement[7] * (lobe === 1 ? 0.52 : -0.08);
+      dummy.position.set(
+        placement[2] + Math.cos(lobeAngle) * lateralOffset,
+        placement[3] + verticalOffset,
+        placement[4] + Math.sin(lobeAngle) * lateralOffset,
+      );
+      dummy.rotation.set(0, placement[5] + lobe * 0.17, 0);
       dummy.scale.set(placement[6], placement[7], placement[8]);
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
       if (foliage) {
         const spread = placement[1] === 0 ? mobile ? 2.5 : 1.42 : placement[1] === 1 ? mobile ? 2.02 : 1.34 : mobile ? 1.52 : 1.18;
-        crownScale.makeScale(spread, placement[1] === 0 ? 1.12 : 1.06, spread);
+        const lobeWidth = lobe === 0 ? (lobeCount > 1 ? 0.86 : 1) : lobe === 1 ? 0.58 : 0.5;
+        const lobeHeight = lobe === 0 ? (lobeCount > 1 ? 0.96 : 1) : lobe === 1 ? 0.68 : 0.61;
+        const windPrunedDepth = part.family === "ridge_wind_form" ? 0.7 : lobe === 2 ? 0.83 : 0.92;
+        crownScale.makeScale(
+          spread * lobeWidth,
+          (placement[1] === 0 ? 1.12 : 1.06) * lobeHeight,
+          spread * lobeWidth * windPrunedDepth,
+        );
         matrix.multiply(crownScale);
       }
       mesh.setMatrixAt(index, matrix);
-      const signature = Math.abs(Math.round(placement[2] * 0.17 + placement[4] * 0.11 + placement[9] * 13 + index * 7));
       const foliagePalette = ["#50634f", "#60705a", "#6d7658", "#485c4c", "#747753", "#596b5c", "#667044", "#4b604f"];
       const barkPalette = ["#5a4333", "#674d3c", "#745845", "#806954"];
       instanceColor.set(foliage
-        ? foliagePalette[signature % foliagePalette.length]
+        ? foliagePalette[(signature + lobe * 3) % foliagePalette.length]
         : barkPalette[signature % barkPalette.length]);
       mesh.setColorAt(index, instanceColor);
     });
@@ -3738,13 +3788,13 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.computeBoundingBox();
     mesh.computeBoundingSphere();
-  }, [foliage, mobile, part.matrixWorld, placements]);
+  }, [foliage, instances, mobile, part.family, part.matrixWorld]);
   useEffect(() => () => {
     (Array.isArray(materials) ? materials : [materials]).forEach((material) => material.dispose());
   }, [materials]);
   return (
     <instancedMesh
-      args={[part.geometry, materials, placements.length]}
+      args={[part.geometry, materials, instances.length]}
       castShadow={shadows && !foliage}
       receiveShadow={!foliage}
       ref={ref}
@@ -3863,7 +3913,7 @@ function detailedSourceKey(object: Object3D, mode: DetailedVegetationMode) {
 
 function detailedVegetationTint(sourceKey: string, foliage: boolean) {
   if (!foliage) return "#755f4e";
-  const tints = ["#bdc8b5", "#acbca7", "#c4cbb8", "#a1b39f", "#b7bf9f", "#a7b9ac", "#c4c4a8", "#9eb09f"];
+  const tints = ["#f3f5ec", "#e4ecdf", "#f1f1e5", "#dbe7d8", "#ecebd7", "#dfe9df", "#efe9d5", "#d9e4d9"];
   const signature = [...sourceKey].reduce((total, character) => total + character.charCodeAt(0), 0);
   return tints[signature % tints.length];
 }
@@ -3883,10 +3933,10 @@ function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode
       material.color.set(detailedVegetationTint(sourceKey, foliage));
       material.vertexColors = true;
       material.depthWrite = true;
-      material.emissive.set(foliage ? "#2b4028" : "#080604");
-      material.emissiveIntensity = foliage ? 0.27 : 0.018;
+      material.emissive.set(foliage ? "#315d2d" : "#080604");
+      material.emissiveIntensity = foliage ? 0.34 : 0.018;
       material.emissiveMap = null;
-      material.envMapIntensity = foliage ? 0.3 : 0.18;
+      material.envMapIntensity = foliage ? 0.22 : 0.18;
       material.metalness = 0;
       material.roughness = Math.max(foliage ? 0.95 : 0.97, material.roughness ?? 0.94);
       material.side = foliage ? DoubleSide : FrontSide;
@@ -4821,6 +4871,15 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     if (mobile) return placement[1] === 0 ? index % 4 !== 1 : index % 2 === 0;
     return placement[1] === 0 ? index % 3 === 0 : index % 5 === 0;
   }), [detailedSet, manifest.instances, mobile, tier, zone]);
+  const volumetricCrownStats = useMemo(() => visible.reduce((stats, placement) => {
+    const family = manifest.families[placement[0]];
+    const lobes = volumetricCrownLobeCount(family, placement, mobile);
+    if (lobes > 1) {
+      stats.placements += 1;
+      stats.renderedLobes += lobes;
+    }
+    return stats;
+  }, { placements: 0, renderedLobes: 0 }), [manifest.families, mobile, visible]);
   const batches = useMemo(() => {
     const grouped = new Map<string, PlacementTuple[]>();
     visible.forEach((placement) => {
@@ -4868,13 +4927,15 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
             placement[1] === 0 && placement[0] < 8 && !detailedVegetationSet.has(placement)
           )).length
           : 0,
+        volumetricCrownPlacements: volumetricCrownStats.placements,
+        volumetricCrownRenderedLobes: volumetricCrownStats.renderedLobes,
         visibleInstances: visible.length,
       },
     };
     document.documentElement.dataset.madaginRidgeGroundingV116 = JSON.stringify(host.__MADAGIN_RIDGE_GROUNDING_V116__);
     document.documentElement.dataset.madaginEcologyDebugV116 = JSON.stringify(host.__MADAGIN_ECOLOGY_DEBUG_V116__);
     dispatchStage(2, `${zone}-ecology-ready`, zone);
-  }, [batches, contactTrailheadGroundcover.length, detailedPlacements.length, detailedVegetationSet, lakeBankSuccession.length, manifest.coverage.grounding, manifest.instances, mobile, parts, regionalHabitatGroundcover.length, riparianGroundcover.length, tier, visible.length, watershedGroundcover.length, zone]);
+  }, [batches, contactTrailheadGroundcover.length, detailedPlacements.length, detailedVegetationSet, lakeBankSuccession.length, manifest.coverage.grounding, manifest.instances, mobile, parts, regionalHabitatGroundcover.length, riparianGroundcover.length, tier, visible.length, volumetricCrownStats, watershedGroundcover.length, zone]);
 
   return (
     <group name={`Madagin v1.16 ${zone} spatial ecology · ${visible.length} visible instances`}>
@@ -4987,7 +5048,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           cos(phaseA) * 0.07 + cos(phaseB) * 0.125 + sin(capillary) * ${lake ? "0.014" : "0.0"}
         ));
         n = ${lake
-    ? "vec3(0.0, 1.0, 0.0)"
+    ? "normalize(mix(vec3(0.0, 1.0, 0.0), rippleNormal, 0.14))"
     : `normalize(mix(n, rippleNormal, ${directional ? "0.105" : "0.078"}))`};
         vec3 viewDirection = normalize(cameraPosition - vWorld);
         float fresnel = pow(
@@ -5003,6 +5064,13 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           ${lake ? "22.0" : directional ? "72.0" : "48.0"}
         );
         float lakeInterior = 1.0 - clamp(length((vWaterUv - 0.5) * 2.0), 0.0, 1.0);
+        float lakeSurfaceVariation = clamp(
+          0.5
+            + sin(vWorld.x * 0.041 + vWorld.z * 0.018 + uTime * 0.045) * 0.16
+            + sin(vWorld.x * -0.023 + vWorld.z * 0.052 - uTime * 0.034) * 0.12,
+          0.0,
+          1.0
+        );
         float bankSoftening = ${directional
     ? "smoothstep(0.025, 0.18, min(vWaterUv.x, 1.0 - vWaterUv.x))"
     : "smoothstep(0.0, 0.16, lakeInterior)"};
@@ -5034,9 +5102,10 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         color = mix(color, mix(vec3(0.075, 0.095, 0.058), vec3(0.15, 0.14, 0.086), submergedStone), shorelineTurbidity * 0.52);
         color += vec3(0.28, 0.34, 0.22) * littoralCaustic * ${lake ? "0.0" : directional ? "0.055" : "0.075"};
         color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.09" : "0.2 + broad * 0.11"});
-        color = mix(color, skyReflection, fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.62" : "0.4"});
+        color += vec3(0.025, 0.052, 0.057) * (lakeSurfaceVariation - 0.5) * lakeInterior * ${lake ? "0.44" : "0.0"};
+        color = mix(color, skyReflection, fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.7" : "0.4"});
         color += vec3(0.36, 0.47, 0.44) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.0" : "0.055"};
-        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.0" : "0.06"};
+        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.012" : "0.06"};
         float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "0.61, 0.92" : "0.66, 0.88"}, fresnel) * mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : lake ? "0.62" : "0.72"}, 1.0, bankSoftening) * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
         gl_FragColor = vec4(color, opacity);
         #include <tonemapping_fragment>
@@ -6189,6 +6258,37 @@ function createCloudMaterial(opacity: number, seed: number) {
   });
 }
 
+function createTerrainMistMaterial(opacity: number, seed: number) {
+  return new ShaderMaterial({
+    depthTest: true,
+    depthWrite: false,
+    side: DoubleSide,
+    toneMapped: true,
+    transparent: true,
+    uniforms: { uOpacity: { value: opacity }, uSeed: { value: seed }, uTime: { value: 0 } },
+    vertexShader: "varying vec3 vLocal; void main(){vLocal=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
+    fragmentShader: `
+      uniform float uOpacity; uniform float uSeed; uniform float uTime; varying vec3 vLocal;
+      float mistHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+      float mistNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(mistHash(i),mistHash(i+vec2(1,0)),f.x),mix(mistHash(i+vec2(0,1)),mistHash(i+vec2(1)),f.x),f.y);}
+      void main(){
+        vec3 q=abs(vLocal*2.0);
+        float envelope=1.0-smoothstep(0.18,1.0,max(max(q.x,q.z),q.y*2.8));
+        float drift=uTime*0.008;
+        float macro=mistNoise(vLocal.xz*3.4+vec2(drift,uSeed*5.7));
+        float breakup=mistNoise(vLocal.zx*8.1+vLocal.xy*1.8+uSeed*2.3-vec2(drift*1.7,0.0));
+        float floorFade=smoothstep(-0.48,-0.2,vLocal.y)*(1.0-smoothstep(0.1,0.5,vLocal.y));
+        float alpha=envelope*smoothstep(0.27,0.7,macro*0.68+breakup*0.32)*mix(0.62,1.0,floorFade)*uOpacity;
+        if(alpha<0.003)discard;
+        vec3 mistColor=mix(vec3(0.34,0.43,0.43),vec3(0.68,0.73,0.7),clamp(macro*0.72+vLocal.y*0.18,0.0,1.0));
+        gl_FragColor=vec4(mistColor,alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `,
+  });
+}
+
 const CLOUD_BANKS = [
   { position: [-165, 112, -285] as [number, number, number], scale: [230, 38, 82] as [number, number, number], opacity: 0.19 },
   { position: [172, 68, -650] as [number, number, number], scale: [310, 48, 116] as [number, number, number], opacity: 0.23 },
@@ -6198,19 +6298,50 @@ const CLOUD_BANKS = [
   { position: [610, 215, -1545] as [number, number, number], scale: [380, 34, 128] as [number, number, number], opacity: 0.09 },
 ];
 
+const TERRAIN_CONTACT_MIST_BANKS = [
+  { authority: "ridge-drainage", position: [-72, 48, -205] as [number, number, number], scale: [152, 32, 54] as [number, number, number], opacity: 0.12 },
+  { authority: "valley-catchment", position: [-88, 16, -720] as [number, number, number], scale: [258, 36, 88] as [number, number, number], opacity: 0.16 },
+  { authority: "waterfall-plunge", position: [146, -6, -700] as [number, number, number], scale: [106, 30, 58] as [number, number, number], opacity: 0.18 },
+  { authority: "lake-basin", position: [-8, -25, -888] as [number, number, number], scale: [188, 25, 68] as [number, number, number], opacity: 0.12 },
+];
+
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
   const cloudGroup = useRef<Group>(null);
+  const mistGroup = useRef<Group>(null);
   const clouds = useMemo(() => CLOUD_BANKS.slice(0, tier === "conservative" ? 1 : tier === "balanced" ? 4 : 6), [tier]);
+  const mistBanks = useMemo(() => tier === "conservative" ? [] : TERRAIN_CONTACT_MIST_BANKS, [tier]);
   const materials = useMemo(() => clouds.map((cloud, index) => createCloudMaterial(cloud.opacity, index + 1)), [clouds]);
+  const mistMaterials = useMemo(
+    () => mistBanks.map((mist, index) => createTerrainMistMaterial(mist.opacity, index + 11)),
+    [mistBanks],
+  );
   useFrame(({ clock }) => {
     const time = reducedMotion ? 0 : clock.elapsedTime;
     materials.forEach((material) => { material.uniforms.uTime.value = time; });
+    mistMaterials.forEach((material) => { material.uniforms.uTime.value = time; });
     if (cloudGroup.current) {
       cloudGroup.current.position.x = Math.sin(time * 0.018) * 9 + time * 0.12 % 18;
       cloudGroup.current.position.z = Math.sin(time * 0.011 + 0.8) * 7;
     }
+    if (mistGroup.current) {
+      mistGroup.current.position.x = Math.sin(time * 0.026 + 0.5) * 2.4;
+      mistGroup.current.position.z = Math.sin(time * 0.019) * 1.8;
+    }
   });
-  useEffect(() => () => materials.forEach((material) => material.dispose()), [materials]);
+  useEffect(() => {
+    const host = window as Window & { __MADAGIN_TERRAIN_MIST_V120__?: Record<string, unknown> };
+    host.__MADAGIN_TERRAIN_MIST_V120__ = {
+      authorities: mistBanks.map((mist) => mist.authority),
+      banks: mistBanks.length,
+      mobileExcluded: tier === "conservative",
+    };
+    document.documentElement.dataset.madaginTerrainMistV120 = JSON.stringify(host.__MADAGIN_TERRAIN_MIST_V120__);
+    if (mistBanks.length) dispatchStage(3, "terrain-contact-mist-ready", "valley");
+    return () => {
+      materials.forEach((material) => material.dispose());
+      mistMaterials.forEach((material) => material.dispose());
+    };
+  }, [materials, mistBanks, mistMaterials, tier]);
   return (
     <group name="Madagin v1.16 single physical atmosphere and lighting authority">
       <color attach="background" args={["#4f7582"]} />
@@ -6240,6 +6371,13 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       <group ref={cloudGroup}>
         {clouds.map((cloud, index) => (
           <mesh key={cloud.position.join(":")} material={materials[index]} position={cloud.position} scale={cloud.scale}>
+            <sphereGeometry args={[0.5, 24, 12]} />
+          </mesh>
+        ))}
+      </group>
+      <group name={`Madagin v1.20 terrain-contact weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
+        {mistBanks.map((mist, index) => (
+          <mesh key={mist.authority} material={mistMaterials[index]} position={mist.position} scale={mist.scale}>
             <sphereGeometry args={[0.5, 24, 12]} />
           </mesh>
         ))}
@@ -6407,7 +6545,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BN real-time spatial world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BO real-time spatial world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>

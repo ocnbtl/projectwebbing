@@ -51,6 +51,7 @@ for (const testCase of cases) {
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
+    terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
     videoElements: document.querySelectorAll("video").length,
     v115Marker: document.body.textContent?.includes("WORLD SLICE V1.15") ?? false,
     worldVersion: document.documentElement.dataset.madaginWorldVersion ?? null,

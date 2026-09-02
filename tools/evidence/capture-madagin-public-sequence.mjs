@@ -53,6 +53,7 @@ for (const checkpoint of checkpoints) {
     const cumulativeVegetation = window.__MADAGIN_CUMULATIVE_VEGETATION_V116__ ?? {};
     const ecologyDebug = window.__MADAGIN_ECOLOGY_DEBUG_V116__ ?? {};
     const regionalHabitat = window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? {};
+    const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
     return {
       canvasCount: document.querySelectorAll("canvas").length,
       chapter: document.querySelector("[data-world-chapter]")?.getAttribute("data-world-chapter") ?? null,
@@ -76,6 +77,12 @@ for (const checkpoint of checkpoints) {
         regionalHabitatAuthorities: Object.values(regionalHabitat)
           .map((habitat) => habitat?.habitatAuthority)
           .filter(Boolean),
+        terrainContactMistAuthorities: terrainMist.authorities ?? [],
+        terrainContactMistBanks: terrainMist.banks ?? 0,
+        volumetricCrownPlacements: Object.values(ecologyDebug)
+          .reduce((total, zone) => total + (zone?.volumetricCrownPlacements ?? 0), 0),
+        volumetricCrownRenderedLobes: Object.values(ecologyDebug)
+          .reduce((total, zone) => total + (zone?.volumetricCrownRenderedLobes ?? 0), 0),
       },
     };
   });
@@ -122,9 +129,13 @@ process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
   && result.structuralEcology?.releasedPrimaryCanopy > 0
+  && result.structuralEcology?.volumetricCrownPlacements > 0
+  && result.structuralEcology?.volumetricCrownRenderedLobes > result.structuralEcology?.volumetricCrownPlacements
 )) && results.some((result) => (
   result.structuralEcology?.regionalGroundcover > 0
   && result.structuralEcology?.regionalHabitatAuthorities.length > 0
+  && result.structuralEcology?.terrainContactMistBanks === 4
+  && result.structuralEcology?.terrainContactMistAuthorities.length === 4
 ));
 if (
   pageErrors.length
