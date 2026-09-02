@@ -41,6 +41,14 @@ for (const testCase of cases) {
   await page.goto(`${origin}/world-lab-review?${testCase.query}`, { waitUntil: "domcontentloaded" });
   await page.locator(`[data-renderer-state="${testCase.expectedState}"]`).waitFor({ timeout: 45_000 });
   if (testCase.expectedState === "live") await page.waitForTimeout(4_000);
+  if (testCase.expectedVersion === "v1.16" && !testCase.query.includes("mobile=1")) {
+    await page.waitForFunction(
+      () => Object.values(window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? {})
+        .some((zone) => (zone?.placements ?? 0) > 0),
+      undefined,
+      { timeout: 45_000 },
+    );
+  }
   const evidence = await page.evaluate(() => ({
     alpineGeology: window.__MADAGIN_ALPINE_GEOLOGY_V116__ ?? null,
     canvasCount: document.querySelectorAll("canvas").length,
@@ -53,7 +61,8 @@ for (const testCase of cases) {
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
-    realismBQ: window.__MADAGIN_REALISM_BQ__ ?? null,
+    realismBR: window.__MADAGIN_REALISM_BR__ ?? null,
+    sourceQualityVegetationBR: window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? null,
     terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
     videoElements: document.querySelectorAll("video").length,
     v115Marker: document.body.textContent?.includes("WORLD SLICE V1.15") ?? false,
@@ -102,6 +111,13 @@ for (const testCase of cases) {
     && evidence.detailedTerrain?.valley?.watershedIntegration?.subdivision?.triangles <= 1_500_000
     && evidence.terrainContactMist?.banks === 6
   );
+  const sourceQualityPachira = Object.values(evidence.sourceQualityVegetationBR ?? {});
+  const sourceQualityPachiraPassed = testCase.expectedVersion !== "v1.16"
+    || testCase.query.includes("mobile=1")
+    || (
+      sourceQualityPachira.reduce((total, zone) => total + (zone?.placements ?? 0), 0) > 0
+      && sourceQualityPachira.every((zone) => zone?.sourceTriangles === 76_914)
+    );
   const passed = evidence.rendererState === testCase.expectedState
     && evidence.videoElements === 0
     && (testCase.expectedVersion === null || evidence.worldVersion === testCase.expectedVersion)
@@ -112,10 +128,11 @@ for (const testCase of cases) {
     && alpineGeologyPassed
     && watershedReliefPassed
     && (testCase.expectedVersion !== "v1.16" || (
-      evidence.realismBQ?.candidate === "BQ"
-      && Object.keys(evidence.realismBQ?.categories ?? {}).length === 5
-      && evidence.realismBQ?.detachedTerrainShells === false
-      && evidence.realismBQ?.waterNetworkProtected === true
+      evidence.realismBR?.candidate === "BR"
+      && Object.keys(evidence.realismBR?.categories ?? {}).length === 5
+      && evidence.realismBR?.detachedTerrainShells === false
+      && evidence.realismBR?.waterNetworkProtected === true
+      && sourceQualityPachiraPassed
     ))
     && !forbiddenV115OnMobile
     && pageErrors.length === 0;

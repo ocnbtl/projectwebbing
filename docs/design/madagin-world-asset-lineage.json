@@ -369,6 +369,82 @@
     },
     "decisionBoundary": "BQ is a simultaneous structural, material, ecology, water, and atmosphere pass with measurable normal-view gains and no detached terrain shell or video substitution. It remains visibly synthetic: inherited low-resolution landform facets, repeated legacy vegetation sources, simplified basin reflection and refraction, a still-authored coastline, weak atmospheric depth, compact mobile ecology, and missing physical-device profiling prevent a photoreal or finished claim. Overall reference realism remains score 1."
   },
+  "tenthPostLaunchCandidate": {
+    "selected": "Candidate BR / v123-source-quality-vegetation-br-selected",
+    "commit": null,
+    "deploymentId": null,
+    "immutableUrl": null,
+    "status": "selected locally after source, visual, development, optimized-runtime, and motion verification; production release verification pending",
+    "changedCategories": [
+      "verified raw Poly Haven Pachira source geometry replacing 40 selected balanced-desktop decimated detailed-tree slots",
+      "calibrated detailed-canopy indirect fill and restrained procedural foliage response replacing the dominant black-card presentation without neon regression",
+      "broader terrain slope/material blending on the retained source surfaces",
+      "more transparent lake edge and depth response with wind-normal, reflection breakup, visible basin, and littoral cues",
+      "restrained sky-billow and six-authority terrain-contact mist visibility"
+    ],
+    "sourceAsset": {
+      "provider": "Poly Haven",
+      "asset": "Pachira Aquatica 01",
+      "license": "CC0 1.0 Universal",
+      "sourceUrl": "https://polyhaven.com/a/pachira_aquatica_01",
+      "licenseUrl": "https://polyhaven.com/license",
+      "provenance": "public/world/assets/polyhaven/pachira_aquatica_01/PROVENANCE.md",
+      "runtimeSource": "public/world/assets/polyhaven/pachira_aquatica_01/pachira_aquatica_01_1k.gltf",
+      "bytes": 5140529,
+      "vertices": 49228,
+      "triangles": 76914,
+      "architectures": ["pachira_a", "pachira_b", "pachira_c", "pachira_d"],
+      "policy": "balanced desktop Ridge, Valley, and Lake replacement anchors only; excluded from conservative/mobile and Alpine habitat"
+    },
+    "rejectedIterations": [
+      "candidate-br-local-01 retained near-black crowns and overlarge diffuse sky bodies",
+      "candidate-br-local-02 produced luminous lime procedural crowns while large detailed crowns remained black",
+      "candidate-br-local-03 restored restrained procedural color but retained the dark detailed-source response"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-br-local-04/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-br-local-05/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-br-local-05/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-br-local-05/motion/motion-evidence.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-br-optimized/runtime-gates.json",
+    "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-br-optimized/sequence.json",
+    "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-br-optimized/motion/motion-evidence.json",
+    "productionRuntimeEvidence": null,
+    "productionVisualEvidence": null,
+    "productionMotionEvidence": null,
+    "immutableRuntimeEvidence": null,
+    "immutableVisualEvidence": null,
+    "selectedTelemetry": {
+      "sourceQualityPachiraPlacements": 40,
+      "sourceQualityPachiraTriangles": 76914,
+      "watershedTriangles": 744535,
+      "regionalVolcanicAdjustedVertices": 219888,
+      "regionalGroundcoverOpening": 471,
+      "regionalGroundcoverAlpine": 539,
+      "regionalHabitatAuthorities": 3,
+      "openingVolumetricCrownPlacements": 1362,
+      "openingVolumetricCrownRenderedLobes": 3922,
+      "lakeVolumetricCrownPlacements": 1407,
+      "lakeVolumetricCrownRenderedLobes": 4028,
+      "waterNetworkProtected": true,
+      "terrainContactMistBanks": 6,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceSha256": {
+      "renderer": "DCBB0CF7F6C81CD70126F80DDE36BFD199A2E9C546EBEDF77AB5579F7B99AE60",
+      "publicSequenceVerifier": "DEB12B90C50F9111F64620BAFDA86A608621AE3125D6FE2C3864F693E84FE80E",
+      "internalRuntimeVerifier": "AAF5ED75FC28EEEC0B06FB45EE9F46749D0861D335178E528AD791BFD8E02121",
+      "pachiraGltf": "E73B77C0FFADD8B9FA686FAABFECF37799123FE4BC756F816145A4F8C9F53364",
+      "pachiraBinary": "A803777635A4744CC304BD936806242D8875430CC588295C9FA2792A64747C8E"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BQ",
+      "commit": "86d65a97a5d1e172a975ff81cc305edd96d1cf15",
+      "deploymentId": "dpl_G9hb7RfkzohAMSY9Pot5PzkK8BdP",
+      "immutableUrl": "https://projectwebbing-kxoud4vk8-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BR introduces a verified source-quality vegetation path and removes the dominant black-canopy presentation while preserving the retained terrain, watershed, streaming, motion, compact, and fallback contracts. One four-form Pachira package does not resolve species diversity, inherited terrain resolution, physical water reflection/refraction, coast and waterfall optics, terrain-weather contact, or physical-device profiling; overall reference realism remains score 1."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",

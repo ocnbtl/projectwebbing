@@ -41,6 +41,7 @@ const V115_MID_VEGETATION_URL = "/world/v115/madagin-ridge-vegetation-mid-v1.15.
 const V115_HERO_VEGETATION_URL = "/world/v115/madagin-ridge-vegetation-hero-v1.15.glb";
 const V115_HIGH_TERRAIN_URL = "/world/v115/madagin-ridge-to-valley-high-v1.15.glb";
 const ASSET_ROOT = "/world/assets/polyhaven";
+const SOURCE_QUALITY_PACHIRA_URL = `${ASSET_ROOT}/pachira_aquatica_01/pachira_aquatica_01_1k.gltf`;
 const WATERSHED_GROUNDCOVER_URLS = {
   fern: `${ASSET_ROOT}/fern_02/fern_02_1k.gltf`,
   rock: `${ASSET_ROOT}/rock_09/rock_09_1k.gltf`,
@@ -130,6 +131,9 @@ type PbrTextureSet = { albedo: Texture; arm: Texture; normal: Texture };
 type DetailedVegetationPart = SpeciesPart & {
   foliage: boolean;
   sourceKey: string;
+};
+type SourceQualityVegetationPart = DetailedVegetationPart & {
+  sourceKey: "pachira_a" | "pachira_b" | "pachira_c" | "pachira_d";
 };
 type WatershedGroundcoverKey = keyof typeof WATERSHED_GROUNDCOVER_URLS;
 type WatershedGroundcoverPart = SpeciesPart & { sourceKey: WatershedGroundcoverKey };
@@ -259,7 +263,7 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
         "#include <color_fragment>",
         `#include <color_fragment>
         vec3 worldNormal = normalize(vV116WorldNormal);
-        float slope = smoothstep(0.19, 0.74, 1.0 - abs(worldNormal.y));
+        float slope = smoothstep(0.08, 0.9, 1.0 - abs(worldNormal.y));
         float macro = v116Noise(vV116WorldPosition.xz * 0.035) * 0.68
           + v116Noise(vV116WorldPosition.xz * 0.071 + vec2(11.7, -4.3)) * 0.32;
         float micro = v116Noise(vV116WorldPosition.xz * 0.145 + vec2(-6.4, 13.8)) * 0.62
@@ -272,7 +276,7 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
           vec3(0.052, 0.158, 0.068),
           clamp(forestSample * 0.6 + moisture * 0.44, 0.0, 1.0)
         );
-        vec3 basalt = mix(vec3(0.075, 0.095, 0.087), vec3(0.265, 0.205, 0.135), rockSample * 0.72);
+        vec3 basalt = mix(vec3(0.075, 0.095, 0.087), vec3(0.235, 0.19, 0.135), rockSample * 0.62);
         float strataPhase = vV116WorldPosition.y * 0.125
           + vV116WorldPosition.x * 0.039
           - vV116WorldPosition.z * 0.017
@@ -290,7 +294,7 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
         float waterfallCatchment = 1.0 - smoothstep(0.72, 1.28, length(waterfallBasinCoordinate));
         float wetCliff = waterfallCatchment * smoothstep(0.3, 0.88, slope);
         basalt = mix(basalt, vec3(0.075, 0.105, 0.096), wetCliff * 0.68);
-        vec3 ground = mix(damp, basalt, clamp(slope * 1.08 + alpine * 0.54 + wetCliff * 0.58, 0.0, 1.0));
+        vec3 ground = mix(damp, basalt, clamp(slope * 0.92 + alpine * 0.5 + wetCliff * 0.52, 0.0, 1.0));
         float regionalExposure = slope * (0.12 + macro * 0.2 + fracture * 0.2) * (1.0 - waterfallCatchment * 0.36);
         ground = mix(ground, weatheredRock, clamp(regionalExposure + smoothstep(0.68, 0.9, rainStreak) * slope * 0.15, 0.0, 0.48));
         ground = mix(ground, vec3(0.04, 0.115, 0.052), (1.0 - slope) * moisture * smoothstep(0.46, 0.82, micro) * 0.24);
@@ -3933,12 +3937,12 @@ function variantMaterials(source: Material | Material[]) {
   const result = originals.map((original) => {
     const foliage = /foliage|leaf|frond/i.test(original.name);
     const material = new MeshStandardMaterial({
-      color: foliage ? "#a5afa0" : "#78604d",
-      emissive: foliage ? "#17291b" : "#070503",
-      emissiveIntensity: foliage ? 0.13 : 0.015,
-      envMapIntensity: foliage ? 0.34 : 0.18,
+      color: foliage ? "#718268" : "#78604d",
+      emissive: foliage ? "#203823" : "#070503",
+      emissiveIntensity: foliage ? 0.24 : 0.015,
+      envMapIntensity: foliage ? 0.4 : 0.18,
       metalness: 0,
-      roughness: foliage ? 0.95 : 0.97,
+      roughness: foliage ? 0.88 : 0.97,
       side: foliage ? DoubleSide : FrontSide,
     });
     material.name = `${original.name} · v1.16 instanced variation`;
@@ -4022,7 +4026,7 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
         matrix.multiply(crownScale);
       }
       mesh.setMatrixAt(index, matrix);
-      const foliagePalette = ["#50634f", "#60705a", "#6d7658", "#485c4c", "#747753", "#596b5c", "#667044", "#4b604f"];
+      const foliagePalette = ["#aab99e", "#9dac91", "#b3ae82", "#91a691", "#b8b28a", "#a6b2a2", "#aaa679", "#95aa98"];
       const barkPalette = ["#5a4333", "#674d3c", "#745845", "#806954"];
       instanceColor.set(foliage
         ? foliagePalette[(signature + lobe * 3) % foliagePalette.length]
@@ -4163,6 +4167,191 @@ function detailedVegetationTint(sourceKey: string, foliage: boolean) {
   return tints[signature % tints.length];
 }
 
+const SOURCE_QUALITY_PACHIRA_FAMILIES = ["pachira_a", "pachira_b", "pachira_c", "pachira_d"] as const;
+
+function sourceQualityPachiraKey(object: Object3D) {
+  const match = detailedHierarchyName(object).match(/pachira_aquatica_01_(?:bark|leaves)_([abcd])/);
+  return match ? `pachira_${match[1]}` as SourceQualityVegetationPart["sourceKey"] : null;
+}
+
+function prepareSourceQualityPachira(scene: Object3D) {
+  scene.updateMatrixWorld(true);
+  const parts: SourceQualityVegetationPart[] = [];
+  scene.traverse((child) => {
+    if (!(child instanceof Mesh)) return;
+    const sourceKey = sourceQualityPachiraKey(child);
+    if (!sourceKey) return;
+    const originals = Array.isArray(child.material) ? child.material : [child.material];
+    const materials = originals.map((original) => {
+      const material = (original as MeshStandardMaterial).clone();
+      const foliage = /leaves/i.test(`${original.name}/${child.name}`);
+      material.color.set(foliage ? "#c0d1af" : "#9a765b");
+      material.emissive.set(foliage ? "#29462a" : "#0c0805");
+      material.emissiveIntensity = foliage ? 0.26 : 0.025;
+      material.emissiveMap = null;
+      material.envMapIntensity = foliage ? 0.5 : 0.24;
+      material.metalness = 0;
+      material.roughness = foliage ? 0.82 : 0.96;
+      material.side = foliage ? DoubleSide : FrontSide;
+      material.transparent = false;
+      material.depthWrite = true;
+      if (foliage) enableLivingWind(material, 0.11);
+      material.needsUpdate = true;
+      return material;
+    });
+    const matrixWorld = child.matrixWorld.clone();
+    matrixWorld.setPosition(0, 0, 0);
+    parts.push({
+      family: sourceKey,
+      foliage: /leaves/i.test(child.name),
+      geometry: child.geometry,
+      material: Array.isArray(child.material) ? materials : materials[0],
+      matrixWorld,
+      sourceKey,
+    });
+  });
+  return parts;
+}
+
+function sourceQualityPachiraSignature(placement: PlacementTuple) {
+  return Math.abs(Math.round(
+    placement[2] * 0.73
+      + placement[3] * 1.37
+      + placement[4] * 0.47
+      + placement[0] * 23
+      + placement[9] * 31,
+  ));
+}
+
+function selectSourceQualityPachiraPlacements(
+  placements: PlacementTuple[],
+  mobile: boolean,
+  tier: WorldQualityTier,
+  zone: V116Zone,
+) {
+  if (mobile || tier === "conservative" || zone === "alpine") return [];
+  const limit = tier === "high" ? 18 : zone === "lake" ? 12 : 14;
+  return placements
+    .filter((placement) => placement[1] <= 1 && placement[3] < 112)
+    .sort((left, right) => sourceQualityPachiraSignature(left) - sourceQualityPachiraSignature(right))
+    .filter((placement, index) => index % (zone === "lake" ? 3 : 5) === 0)
+    .slice(0, limit);
+}
+
+function InstancedSourceQualityPachira({ part, placements, shadows, zone }: {
+  part: SourceQualityVegetationPart;
+  placements: PlacementTuple[];
+  shadows: boolean;
+  zone: V116Zone;
+}) {
+  const ref = useRef<InstancedMesh>(null);
+  useFrame(({ clock }) => updateLivingWind(part.material, clock.elapsedTime));
+  useLayoutEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const dummy = new Object3D();
+    const matrix = new Matrix4();
+    const instanceColor = new Color();
+    placements.forEach((placement, index) => {
+      const signature = sourceQualityPachiraSignature(placement) + index * 17;
+      const baseScale = zone === "lake" ? 8.8 : zone === "valley" ? 9.4 : 8.6;
+      const age = 0.78 + (signature % 9) * 0.055;
+      const crownWidth = 0.84 + ((signature * 5) % 11) * 0.035;
+      const crownDepth = 0.86 + ((signature * 7) % 9) * 0.04;
+      dummy.position.set(
+        placement[2],
+        placement[3] + (zone === "valley" ? contactTrailheadPlacementRelief(placement) : 0) - 0.08,
+        placement[4],
+      );
+      dummy.rotation.set(
+        ((signature % 7) - 3) * 0.012,
+        placement[5] + (signature % 13) * 0.17,
+        (((signature * 3) % 7) - 3) * 0.01,
+      );
+      dummy.scale.set(
+        placement[6] * baseScale * age * crownWidth,
+        placement[7] * baseScale * (0.9 + ((signature * 11) % 7) * 0.045),
+        placement[8] * baseScale * age * crownDepth,
+      );
+      dummy.updateMatrix();
+      matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
+      mesh.setMatrixAt(index, matrix);
+      const foliagePalette = ["#c5d4b5", "#b8caa5", "#ccd4b1", "#b0c4a8"];
+      const barkPalette = ["#75533d", "#896a50", "#604534", "#98765a"];
+      instanceColor.set(part.foliage
+        ? foliagePalette[signature % foliagePalette.length]
+        : barkPalette[signature % barkPalette.length]);
+      mesh.setColorAt(index, instanceColor);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.computeBoundingBox();
+    mesh.computeBoundingSphere();
+  }, [part.foliage, part.matrixWorld, placements, zone]);
+  return (
+    <instancedMesh
+      args={[part.geometry, part.material, placements.length]}
+      castShadow={shadows && !part.foliage}
+      receiveShadow={!part.foliage}
+      ref={ref}
+    />
+  );
+}
+
+function SourceQualityPachiraAnchors({ placements, shadows, zone }: {
+  placements: PlacementTuple[];
+  shadows: boolean;
+  zone: V116Zone;
+}) {
+  const gltf = useLoader(GLTFLoader, SOURCE_QUALITY_PACHIRA_URL);
+  const parts = useMemo(() => prepareSourceQualityPachira(gltf.scene), [gltf.scene]);
+  const bySource = useMemo(() => {
+    const result = new Map<SourceQualityVegetationPart["sourceKey"], PlacementTuple[]>();
+    placements.forEach((placement, index) => {
+      const sourceKey = SOURCE_QUALITY_PACHIRA_FAMILIES[
+        (placement[0] + placement[9] + sourceQualityPachiraSignature(placement) + index) % SOURCE_QUALITY_PACHIRA_FAMILIES.length
+      ];
+      result.set(sourceKey, [...(result.get(sourceKey) ?? []), placement]);
+    });
+    return result;
+  }, [placements]);
+  useEffect(() => {
+    const host = window as Window & { __MADAGIN_SOURCE_QUALITY_VEGETATION_BR__?: Record<string, unknown> };
+    host.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ = {
+      ...(host.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? {}),
+      [zone]: {
+        families: SOURCE_QUALITY_PACHIRA_FAMILIES,
+        placements: placements.length,
+        source: SOURCE_QUALITY_PACHIRA_URL,
+        sourceTriangles: 76914,
+      },
+    };
+    document.documentElement.dataset.madaginSourceQualityVegetationBr = JSON.stringify(
+      host.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__,
+    );
+    dispatchStage(3, `${zone}-source-quality-pachira-anchors-ready`, zone);
+    return () => parts.forEach((part) => {
+      (Array.isArray(part.material) ? part.material : [part.material]).forEach((material) => material.dispose());
+    });
+  }, [parts, placements.length, zone]);
+  return (
+    <group name={`Madagin Candidate BR ${zone} source-quality Pachira anchors · ${placements.length}`}>
+      {parts.flatMap((part, index) => {
+        const sourcePlacements = bySource.get(part.sourceKey) ?? [];
+        return sourcePlacements.length ? (
+          <InstancedSourceQualityPachira
+            key={`source-quality-${zone}-${part.sourceKey}-${index}`}
+            part={part}
+            placements={sourcePlacements}
+            shadows={shadows}
+            zone={zone}
+          />
+        ) : [];
+      })}
+    </group>
+  );
+}
+
 function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode) {
   scene.updateMatrixWorld(true);
   const parts: DetailedVegetationPart[] = [];
@@ -4178,12 +4367,12 @@ function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode
       material.color.set(detailedVegetationTint(sourceKey, foliage));
       material.vertexColors = true;
       material.depthWrite = true;
-      material.emissive.set(foliage ? "#152719" : "#080604");
-      material.emissiveIntensity = foliage ? 0.24 : 0.018;
+      material.emissive.set(foliage ? "#355436" : "#080604");
+      material.emissiveIntensity = foliage ? 0.38 : 0.018;
       material.emissiveMap = null;
-      material.envMapIntensity = foliage ? 0.22 : 0.18;
+      material.envMapIntensity = foliage ? 0.38 : 0.18;
       material.metalness = 0;
-      material.roughness = Math.max(foliage ? 0.95 : 0.97, material.roughness ?? 0.94);
+      material.roughness = Math.max(foliage ? 0.86 : 0.97, material.roughness ?? 0.86);
       material.side = foliage ? DoubleSide : FrontSide;
       material.transparent = false;
       if (foliage) enableLivingWind(material, mode === "hero" ? 0.2 : 0.14);
@@ -5076,11 +5265,26 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
   const manifest = useEcologyManifest(zone);
   const gltf = useLoader(GLTFLoader, SPECIES_URL, configureCompressedGltf);
   const parts = useMemo(() => prepareSpecies(gltf.scene), [gltf.scene]);
-  const detailedPlacements = useMemo(
+  const allDetailedPlacements = useMemo(
     () => selectDetailedPlacements(manifest.instances, mobile, tier, zone),
     [manifest.instances, mobile, tier, zone],
   );
-  const detailedVegetationSet = useMemo(() => new Set(detailedPlacements), [detailedPlacements]);
+  const sourceQualityPachiraPlacements = useMemo(
+    () => selectSourceQualityPachiraPlacements(allDetailedPlacements, mobile, tier, zone),
+    [allDetailedPlacements, mobile, tier, zone],
+  );
+  const sourceQualityPachiraSet = useMemo(
+    () => new Set(sourceQualityPachiraPlacements),
+    [sourceQualityPachiraPlacements],
+  );
+  const detailedPlacements = useMemo(
+    () => allDetailedPlacements.filter((placement) => !sourceQualityPachiraSet.has(placement)),
+    [allDetailedPlacements, sourceQualityPachiraSet],
+  );
+  const detailedVegetationSet = useMemo(
+    () => new Set([...detailedPlacements, ...sourceQualityPachiraPlacements]),
+    [detailedPlacements, sourceQualityPachiraPlacements],
+  );
   const watershedGroundcover = useMemo(
     () => zone === "lake"
       ? selectWatershedGroundcover(manifest.instances, mobile, tier)
@@ -5188,6 +5392,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
         restoredLakeBankSuccessionInstances: lakeBankSuccession.length,
         restoredRiparianInstances: riparianGroundcover.length,
         restoredDetailedInstances: detailedPlacements.length,
+        sourceQualityPachiraInstances: sourceQualityPachiraPlacements.length,
         releasedPrimaryCanopyInstances: tier === "balanced" && !mobile && zone !== "lake"
           ? manifest.instances.filter((placement) => (
             placement[1] === 0 && placement[0] < 8 && !detailedVegetationSet.has(placement)
@@ -5201,13 +5406,22 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     document.documentElement.dataset.madaginRidgeGroundingV116 = JSON.stringify(host.__MADAGIN_RIDGE_GROUNDING_V116__);
     document.documentElement.dataset.madaginEcologyDebugV116 = JSON.stringify(host.__MADAGIN_ECOLOGY_DEBUG_V116__);
     dispatchStage(2, `${zone}-ecology-ready`, zone);
-  }, [batches, contactTrailheadGroundcover.length, detailedPlacements.length, detailedVegetationSet, lakeBankSuccession.length, manifest.coverage.grounding, manifest.instances, mobile, parts, regionalHabitatGroundcover.length, riparianGroundcover.length, tier, visible.length, volumetricCrownStats, watershedGroundcover.length, zone]);
+  }, [batches, contactTrailheadGroundcover.length, detailedPlacements.length, detailedVegetationSet, lakeBankSuccession.length, manifest.coverage.grounding, manifest.instances, mobile, parts, regionalHabitatGroundcover.length, riparianGroundcover.length, sourceQualityPachiraPlacements.length, tier, visible.length, volumetricCrownStats, watershedGroundcover.length, zone]);
 
   return (
     <group name={`Madagin v1.16 ${zone} spatial ecology · ${visible.length} visible instances`}>
       {detailedPlacements.length ? (
         <Suspense fallback={null}>
           <DetailedVegetationLod placements={detailedPlacements} shadows={shadows} tier={tier} zone={zone} />
+        </Suspense>
+      ) : null}
+      {sourceQualityPachiraPlacements.length ? (
+        <Suspense fallback={null}>
+          <SourceQualityPachiraAnchors
+            placements={sourceQualityPachiraPlacements}
+            shadows={shadows}
+            zone={zone}
+          />
         </Suspense>
       ) : null}
       {watershedGroundcover.length ? (
@@ -5314,7 +5528,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           cos(phaseA) * 0.07 + cos(phaseB) * 0.125 + sin(capillary) * ${lake ? "0.014" : "0.0"}
         ));
         n = ${lake
-    ? "normalize(mix(vec3(0.0, 1.0, 0.0), rippleNormal, 0.2))"
+    ? "normalize(mix(vec3(0.0, 1.0, 0.0), rippleNormal, 0.34))"
     : `normalize(mix(n, rippleNormal, ${directional ? "0.105" : "0.078"}))`};
         vec3 viewDirection = normalize(cameraPosition - vWorld);
         float fresnel = pow(
@@ -5342,9 +5556,9 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     : "smoothstep(0.0, 0.16, lakeInterior)"};
         float basinDepth = ${directional ? "bankSoftening" : "smoothstep(0.12, 0.76, lakeInterior)"};
         float riverMouth = ${river ? "smoothstep(0.94, 1.0, vWaterUv.y)" : "0.0"};
-        vec3 depthColor = ${headwater ? "vec3(0.004, 0.021, 0.021)" : river ? "mix(vec3(0.005, 0.029, 0.03), vec3(0.003, 0.021, 0.028), riverMouth)" : lake ? "vec3(0.002, 0.012, 0.019)" : "vec3(0.007, 0.043, 0.05)"};
+        vec3 depthColor = ${headwater ? "vec3(0.004, 0.021, 0.021)" : river ? "mix(vec3(0.005, 0.029, 0.03), vec3(0.003, 0.021, 0.028), riverMouth)" : lake ? "vec3(0.006, 0.026, 0.035)" : "vec3(0.007, 0.043, 0.05)"};
         vec3 surfaceColor = ${headwater ? "vec3(0.019, 0.062, 0.052)" : river ? "mix(vec3(0.022, 0.086, 0.083), vec3(0.014, 0.064, 0.078), riverMouth)" : lake ? "vec3(0.012, 0.052, 0.066)" : "vec3(0.03, 0.11, 0.125)"};
-        vec3 shallowColor = ${headwater ? "vec3(0.042, 0.09, 0.07)" : river ? "mix(vec3(0.054, 0.12, 0.1), vec3(0.052, 0.13, 0.12), riverMouth)" : lake ? "vec3(0.055, 0.108, 0.086)" : "vec3(0.085, 0.17, 0.15)"};
+        vec3 shallowColor = ${headwater ? "vec3(0.042, 0.09, 0.07)" : river ? "mix(vec3(0.054, 0.12, 0.1), vec3(0.052, 0.13, 0.12), riverMouth)" : lake ? "vec3(0.082, 0.135, 0.102)" : "vec3(0.085, 0.17, 0.15)"};
         vec3 reflectionDirection = reflect(-viewDirection, n);
         float reflectedHeight = smoothstep(-0.12, 0.78, reflectionDirection.y);
         vec3 atmosphericReflection = mix(
@@ -5366,13 +5580,14 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         float littoralCaustic = pow(max(0.0, sin(vWorld.x * 0.19 - vWorld.z * 0.23 + uTime * 0.23)), 8.0)
           * (1.0 - basinDepth) * bankSoftening;
         color = mix(color, mix(vec3(0.075, 0.095, 0.058), vec3(0.15, 0.14, 0.086), submergedStone), shorelineTurbidity * 0.52);
-        color += vec3(0.28, 0.34, 0.22) * littoralCaustic * ${lake ? "0.0" : directional ? "0.055" : "0.075"};
+        color += vec3(0.28, 0.34, 0.22) * littoralCaustic * ${lake ? "0.035" : directional ? "0.055" : "0.075"};
         color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.12 + broad * 0.035" : "0.2 + broad * 0.11"});
         color += vec3(0.018, 0.046, 0.055) * (lakeSurfaceVariation - 0.5) * lakeInterior * ${lake ? "0.95" : "0.0"};
-        color = mix(color, skyReflection, fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.76" : "0.4"});
+        float reflectionBreakup = ${lake ? "smoothstep(0.38, 0.72, windBand) * (0.035 + fresnel * 0.08)" : "0.0"};
+        color = mix(color, skyReflection, clamp(fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.82" : "0.4"} + reflectionBreakup, 0.0, 0.88));
         color += vec3(0.32, 0.43, 0.42) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.048" : "0.055"};
         color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.055" : "0.06"};
-        float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "0.7, 0.93" : "0.66, 0.88"}, fresnel) * ${lake ? "mix(0.36, 1.0, bankSoftening)" : `mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : "0.72"}, 1.0, bankSoftening)`} * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
+        float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "0.5, 0.86" : "0.66, 0.88"}, fresnel) * ${lake ? "mix(0.34, 0.94, bankSoftening)" : `mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : "0.72"}, 1.0, bankSoftening)`} * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
         gl_FragColor = vec4(color, opacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -6268,7 +6483,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     [mobile, tier],
   );
   const lakeBedMaterial = useMemo(() => new MeshBasicMaterial({
-    color: "#18281f",
+    color: "#2d3d31",
     side: DoubleSide,
   }), []);
   const riverGeometry = useMemo(
@@ -6465,11 +6680,11 @@ function SkyDome({ reducedMotion }: { reducedMotion: boolean }) {
         float cloudFine = skyFbm(cloudUv * 8.4 + vec2(1.9, 6.2) + drift * 2.3);
         float cloudBody = cloudMacro * 0.68 + cloudMeso * 0.25 + cloudFine * 0.07;
         float cloudFloor = smoothstep(-0.1, 0.11, direction.y);
-        float cloud = smoothstep(0.47, 0.63, cloudBody) * cloudFloor;
+        float cloud = smoothstep(0.45, 0.61, cloudBody) * cloudFloor;
         float cloudCore = smoothstep(0.57, 0.72, cloudBody);
         float sunFacing = max(dot(direction, normalize(vec3(-0.72, 0.38, 0.58))), 0.0);
         vec3 cloudShade = mix(vec3(0.52, 0.58, 0.59), vec3(0.87, 0.86, 0.8), cloudCore * 0.72 + sunFacing * 0.22);
-        sky = mix(sky, cloudShade, cloud * (0.74 + cloudCore * 0.18));
+        sky = mix(sky, cloudShade, cloud * (0.66 + cloudCore * 0.15));
         float distantBank = smoothstep(0.02, 0.2, direction.y) * (1.0 - smoothstep(0.24, 0.48, direction.y));
         sky = mix(sky, vec3(0.46, 0.575, 0.6), distantBank * smoothstep(0.46, 0.68, cloudMeso) * 0.27);
         gl_FragColor = vec4(sky, 1.0);
@@ -6556,19 +6771,19 @@ function createTerrainMistMaterial(opacity: number, seed: number) {
 }
 
 const CLOUD_BANKS = [
-  { position: [-165, 112, -285] as [number, number, number], scale: [230, 38, 82] as [number, number, number], opacity: 0.19 },
-  { position: [172, 68, -650] as [number, number, number], scale: [310, 48, 116] as [number, number, number], opacity: 0.23 },
-  { position: [-260, 132, -980] as [number, number, number], scale: [390, 55, 148] as [number, number, number], opacity: 0.2 },
-  { position: [360, 338, -1040] as [number, number, number], scale: [330, 46, 126] as [number, number, number], opacity: 0.2 },
+  { position: [-165, 112, -285] as [number, number, number], scale: [230, 38, 82] as [number, number, number], opacity: 0.21 },
+  { position: [172, 68, -650] as [number, number, number], scale: [310, 48, 116] as [number, number, number], opacity: 0.25 },
+  { position: [-260, 132, -980] as [number, number, number], scale: [390, 55, 148] as [number, number, number], opacity: 0.22 },
+  { position: [360, 338, -1040] as [number, number, number], scale: [330, 46, 126] as [number, number, number], opacity: 0.22 },
   { position: [-515, 155, -1420] as [number, number, number], scale: [430, 39, 154] as [number, number, number], opacity: 0.1 },
   { position: [610, 215, -1545] as [number, number, number], scale: [380, 34, 128] as [number, number, number], opacity: 0.09 },
 ];
 
 const TERRAIN_CONTACT_MIST_BANKS = [
-  { authority: "ridge-drainage", position: [-72, 48, -205] as [number, number, number], scale: [172, 36, 62] as [number, number, number], opacity: 0.15 },
-  { authority: "valley-catchment", position: [-88, 16, -720] as [number, number, number], scale: [278, 40, 96] as [number, number, number], opacity: 0.22 },
-  { authority: "waterfall-plunge", position: [146, -6, -700] as [number, number, number], scale: [118, 34, 64] as [number, number, number], opacity: 0.2 },
-  { authority: "lake-basin", position: [-8, -25, -888] as [number, number, number], scale: [206, 28, 76] as [number, number, number], opacity: 0.17 },
+  { authority: "ridge-drainage", position: [-72, 48, -205] as [number, number, number], scale: [172, 36, 62] as [number, number, number], opacity: 0.17 },
+  { authority: "valley-catchment", position: [-88, 16, -720] as [number, number, number], scale: [278, 40, 96] as [number, number, number], opacity: 0.24 },
+  { authority: "waterfall-plunge", position: [146, -6, -700] as [number, number, number], scale: [118, 34, 64] as [number, number, number], opacity: 0.22 },
+  { authority: "lake-basin", position: [-8, -25, -888] as [number, number, number], scale: [206, 28, 76] as [number, number, number], opacity: 0.19 },
   { authority: "upper-valley-saddle", position: [84, 68, -522] as [number, number, number], scale: [224, 30, 78] as [number, number, number], opacity: 0.16 },
   { authority: "coastal-shoulder", position: [-388, -2, -132] as [number, number, number], scale: [248, 27, 82] as [number, number, number], opacity: 0.11 },
 ];
@@ -6803,7 +7018,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
   useEffect(() => {
     document.documentElement.dataset.madaginWorldVersion = "v1.16";
     const host = window as Window & {
-      __MADAGIN_REALISM_BQ__?: Record<string, unknown>;
+      __MADAGIN_REALISM_BR__?: Record<string, unknown>;
       __MADAGIN_WORLD_STREAM_V116__?: unknown;
     };
     host.__MADAGIN_WORLD_STREAM_V116__ = {
@@ -6813,24 +7028,24 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       terrainContinuityPolicy: "retain visible neighboring landforms; stream ecology by current and next chapter",
       updatedAt: new Date().toISOString(),
     };
-    host.__MADAGIN_REALISM_BQ__ = {
-      candidate: "BQ",
+    host.__MADAGIN_REALISM_BR__ = {
+      candidate: "BR",
       categories: {
-        atmosphereAndLighting: "neutral physical key light plus strengthened terrain-contact weather",
-        ecologyAndGrounding: "natural canopy response plus complete drainage succession and expanded resident basalt anchors",
+        atmosphereAndLighting: "more legible sky billows plus strengthened terrain-intersecting catchment weather",
+        ecologyAndGrounding: "verified 77K-triangle CC0 Pachira anchors replace selected decimated cards while preserving grounded drainage succession",
         materialScale: "mesoscale talus, mineral seams, damp concavities, and cooler volcanic hierarchy",
         terrainStructure: "asymmetric eroded Alpine crest plus paired Valley mass-wasting headwalls and runoff relief",
-        waterIntegration: "deeper wind-structured lake optics with a softened transparent littoral boundary",
+        waterIntegration: "more transparent depth-reading lake, stronger wind reflection breakup, littoral color, and visible basin response",
       },
       detachedTerrainShells: false,
-      sources: [V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
       waterNetworkProtected: true,
     };
-    document.documentElement.dataset.madaginRealismBq = JSON.stringify(host.__MADAGIN_REALISM_BQ__);
+    document.documentElement.dataset.madaginRealismBr = JSON.stringify(host.__MADAGIN_REALISM_BR__);
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BQ integrated realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BR integrated realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>
