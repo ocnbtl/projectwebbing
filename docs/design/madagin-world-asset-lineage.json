@@ -309,10 +309,10 @@
   },
   "ninthPostLaunchCandidate": {
     "selected": "Candidate BQ / v122-asymmetric-summit-canopy-bq-selected",
-    "commit": null,
-    "deploymentId": null,
-    "immutableUrl": null,
-    "status": "selected local cumulative realism candidate; optimized public matrix, seven-view sequence, and fixed-camera motion proof pass; production verification pending",
+    "commit": "86d65a97a5d1e172a975ff81cc305edd96d1cf15",
+    "deploymentId": "dpl_G9hb7RfkzohAMSY9Pot5PzkK8BdP",
+    "immutableUrl": "https://projectwebbing-kxoud4vk8-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative realism candidate; production matrix passes six of six on alias and immutable deployment, seven-view journey proof passes on both, and fixed-camera motion proof passes",
     "changedCategories": [
       "bounded asymmetric Alpine source-cone saddle, unequal crowns, descending crest spurs, upper-face headwall, terraces, talus breaks, and branching drainage on the existing detailed surface",
       "strengthened protected regional Valley interfluves, unequal mass-wasting headwalls, runoff incision, terrace relief, and retained lake, river, waterfall, Ridge, Alpine, and world boundaries",
@@ -331,6 +331,11 @@
     "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bq-optimized/runtime-gates.json",
     "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-bq-optimized/sequence.json",
     "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-bq-optimized/motion/motion-evidence.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bq-production-86d65a9/runtime-gates.json",
+    "productionVisualEvidence": "output/playwright/madagin-world-progress/candidate-bq-production-86d65a9/sequence.json",
+    "productionMotionEvidence": "output/playwright/madagin-world-progress/candidate-bq-production-86d65a9/motion/motion-evidence.json",
+    "immutableRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bq-immutable-dpl-G9hb7R/runtime-gates.json",
+    "immutableVisualEvidence": "output/playwright/madagin-world-progress/candidate-bq-immutable-dpl-G9hb7R/sequence.json",
     "selectedTelemetry": {
       "watershedTriangles": 744535,
       "regionalVolcanicAdjustedVertices": 219888,
