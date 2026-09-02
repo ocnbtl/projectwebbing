@@ -1526,3 +1526,30 @@ BI is selected because it produces a material simultaneous improvement across ca
 ## BJ cycle stop boundary
 
 BJ is selected because it produces simultaneous visible gains in canopy continuity, procedural-source suppression, lake shape/depth/optics, shoreline material response, and waterfall scale while preserving the public renderer and fallback contract. It is not a photoreal or completion milestone. The next high-value batch must replace the most visible authored mountain macroform and repeated vegetation silhouettes, improve terrain-cloud contact and water reflection/refraction, and collect physical-device evidence rather than continue tuning the accepted BJ parameters.
+
+## Candidate BK validation
+
+- BK is the third substantial post-launch batch and retains BI/BJ's public rail, lighting, atmosphere, terrain palette, canopy LOD, shared lake/bank/water system, waterfall, accessibility paths, and capability fallbacks.
+- The existing detailed and compact Alpine source surfaces now carry two unequal upper spires, an eroded saddle, and a rear crown in addition to the retained descending shoulders, headwall, ribs, and drainage. Every outer edge and the Valley adjacency remain protected; no summit shell, card, cap, or camera-facing cover is added.
+- Alpine soil/moss/litter and exposed basalt shift toward cooler volcanic neutrals with a lower oxidation ceiling. The already-loaded real `rock_09` source is reused for bounded high-altitude outcrops, adding no public resource or transferred byte.
+- The desktop public Summit camera moves from `[128,214,-310]` looking at `[600,90,-950]` to `[112,232,-510]` looking at `[598,158,-1320]`. The accepted C4 frame makes the split crown the dominant subject instead of leaving it small beyond an empty foreground slope. Mobile and Contact ascent cameras remain unchanged.
+- C1 through C3 tested the existing fourth cloud bank behind and then in front of the summit. It produced no readable terrain-cloud contact at accepted opacity, so all balanced-cloud changes were rejected and the BI/BJ atmosphere restored exactly before C4.
+- C4's five-view sequence reports one canvas, zero videos, correct semantic chapters, 26 to 29 world resources, and zero page errors. Public runtime passes 6/6, shared internal runtime passes 7/7 including detailed/compact Alpine invariants, `pnpm.cmd check` passes, and the optimized public runtime passes 6/6.
+- Source SHA-256: `ridge-production-v116.tsx` = `4DBA790C70C83543B48A39F832CB78E7671A04F31CD59A34EFFE0816B510D340`; `world-manifest.ts` = `2B7FD5CDA3F886E57BDE4ACAF6983066B534BD105FC9DBD5E6976AFEABA4BA26`.
+
+## BK perceptual delta
+
+| Category | Candidate BJ | Candidate BK | Decision boundary |
+| --- | ---: | ---: | --- |
+| Desktop Summit composition | 1 | 3 | The terminal view now frames the actual crown as its primary subject instead of a distant peak behind a broad empty grass slope. |
+| Alpine crown macroform | 1 | 2 | Two unequal spires and an eroded saddle break the inherited single-pyramid silhouette; finer source-scale geology remains synthetic. |
+| Alpine material response | 1 | 2 | Cooler soil/basalt and reduced oxidation remove part of the orange clay read, but repetition and simple lighting remain visible. |
+| High-altitude surface diversity | 1 | 2 | Bounded real basalt outcrops reuse the existing source; coverage remains secondary and does not establish full alpine ecology. |
+| Journey continuity | 4 | 4 | Ridge, Reveal, Lake, Waterfall, and Summit remain on one live semantic rail with one canvas and zero videos. |
+| Mobile composition | 2 | 2 | Mobile is deliberately unchanged; its distant Summit and compact ecology remain below the desktop result. |
+| Public fallback cost | 4 | 4 | All four fallback policies retain zero canvases and zero world requests. |
+| Reference realism | 1 | 1 | The closer crown makes remaining synthetic topology, material repetition, absent terrain-cloud contact, and limited dynamic range more candidly visible. |
+
+## BK cycle stop boundary
+
+BK is selected because it combines a major terminal composition correction with an actual source-surface silhouette change, cooler Alpine material hierarchy, and bounded real-rock diversity. It does not meet photoreal or completion criteria. The next material batch must improve fine geological structure and texture scale on the enlarged crown, introduce effective terrain-intersecting atmospheric depth without fog cover, diversify the repeated tree source set, and validate on physical mobile hardware.

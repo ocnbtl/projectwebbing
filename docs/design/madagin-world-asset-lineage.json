@@ -36,7 +36,10 @@
   },
   "nextPostLaunchCandidate": {
     "selected": "Candidate BJ / v117-public-reality-b5",
-    "status": "selected local cumulative realism candidate pending production release",
+    "commit": "2b056abd72f2c679c2427791add25746e3b26bb8",
+    "deploymentId": "dpl_Hrffxa8VA9xwndtn6K9y1CKHVtzF",
+    "immutableUrl": "https://projectwebbing-bztgxppby-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative realism candidate; production matrix passes six of six",
     "changedCategories": [
       "shared asymmetric lake and terrain-bank boundary",
       "deepened basin, atmospheric water reflection, shoreline turbidity, and littoral material response",
@@ -48,7 +51,23 @@
     "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-b5-runtime/runtime-gates.json",
     "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-b5-optimized/runtime-gates.json",
     "internalRuntimeEvidence": "output/playwright/madagin-world-progress/v117-public-reality-b5/runtime-gates.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/production-2b056ab/runtime-gates.json",
     "decisionBoundary": "Canopy continuity and water-system presentation improve materially without new resources or mobile asset cost. The authored terrain macroform, repeated detailed tree sources, simplified reflection model, distant waterfall landform, photographic dynamic range, and physical-device evidence remain below finish criteria."
+  },
+  "thirdPostLaunchCandidate": {
+    "selected": "Candidate BK / v117-public-reality-c4",
+    "status": "selected local cumulative realism candidate pending production release",
+    "changedCategories": [
+      "split asymmetric Alpine crown and eroded saddle on the active source surface",
+      "closer public desktop Summit composition aimed at the crown",
+      "cooler volcanic stratification and reduced orange oxidation",
+      "already-loaded real basalt outcrops in Alpine ecology"
+    ],
+    "visualEvidence": "output/playwright/madagin-world-progress/v117-public-reality-c4/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-c4-runtime/runtime-gates.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-c4-optimized/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/v117-public-reality-c4/runtime-gates.json",
+    "decisionBoundary": "The Summit changes from a distant single pyramid beyond an empty slope to a dominant multi-crown volcanic ridge. Cloud-contact experiments C1 through C3 were visually ineffective and are excluded. Rock material/source repetition, fine geological scale, compact composition, photographic atmosphere, and physical-device evidence remain below finish criteria."
   },
   "components": {
     "topologyAndStreaming": {

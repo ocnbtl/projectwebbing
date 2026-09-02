@@ -702,10 +702,10 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         float slope = smoothstep(${zone === "alpine" ? "0.16, 0.7" : "0.2, 0.74"}, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
         float elevation = smoothstep(${zone === "alpine" ? "18.0, 178.0" : "-34.0, 92.0"}, vDetailedTerrainWorld.y);
         float drainage = detailedTerrainNoise(vDetailedTerrainWorld.xz * 0.017 - vec2(9.1, 3.7));
-        vec3 dampSoil = ${zone === "alpine" ? "vec3(0.19, 0.18, 0.16)" : zone === "connected" ? "mix(vec3(0.085, 0.074, 0.052), vec3(0.052, 0.088, 0.052), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.088, 0.052)" : "vec3(0.085, 0.074, 0.052)"};
-        vec3 moss = ${zone === "alpine" ? "vec3(0.215, 0.22, 0.19)" : zone === "connected" ? "mix(vec3(0.085, 0.17, 0.062), vec3(0.052, 0.15, 0.07), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.15, 0.07)" : "vec3(0.085, 0.17, 0.062)"};
-        vec3 litter = ${zone === "alpine" ? "vec3(0.285, 0.255, 0.215)" : zone === "connected" ? "mix(vec3(0.235, 0.155, 0.078), vec3(0.205, 0.135, 0.07), terrainValley)" : zone === "ridge" ? "vec3(0.235, 0.155, 0.078)" : "vec3(0.205, 0.135, 0.07)"};
-        vec3 basalt = ${zone === "alpine" ? "vec3(0.285, 0.285, 0.27)" : "vec3(0.12, 0.14, 0.127)"};
+        vec3 dampSoil = ${zone === "alpine" ? "vec3(0.155, 0.155, 0.145)" : zone === "connected" ? "mix(vec3(0.085, 0.074, 0.052), vec3(0.052, 0.088, 0.052), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.088, 0.052)" : "vec3(0.085, 0.074, 0.052)"};
+        vec3 moss = ${zone === "alpine" ? "vec3(0.175, 0.19, 0.17)" : zone === "connected" ? "mix(vec3(0.085, 0.17, 0.062), vec3(0.052, 0.15, 0.07), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.15, 0.07)" : "vec3(0.085, 0.17, 0.062)"};
+        vec3 litter = ${zone === "alpine" ? "vec3(0.225, 0.215, 0.19)" : zone === "connected" ? "mix(vec3(0.235, 0.155, 0.078), vec3(0.205, 0.135, 0.07), terrainValley)" : zone === "ridge" ? "vec3(0.235, 0.155, 0.078)" : "vec3(0.205, 0.135, 0.07)"};
+        vec3 basalt = ${zone === "alpine" ? "vec3(0.235, 0.245, 0.235)" : "vec3(0.12, 0.14, 0.127)"};
         vec3 sourceSurface = diffuseColor.rgb;
         vec3 ground = mix(dampSoil, moss, smoothstep(0.32, 0.74, macro));
         ground = mix(ground, litter, smoothstep(0.76, 0.94, detail) * (1.0 - drainage * 0.48));
@@ -805,14 +805,14 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           0.9
         );
         vec3 alpineBasalt = mix(
-          vec3(0.075, 0.09, 0.085),
-          vec3(0.385, 0.275, 0.155),
+          vec3(0.06, 0.078, 0.076),
+          vec3(0.285, 0.245, 0.195),
           clamp(
             smoothstep(0.48, 0.82, alpineOxidation) * 0.58
               + strata * 0.17
               + erosionalRibs * 0.1,
             0.0,
-            0.8
+            0.64
           )
         );
         authoredGround = mix(authoredGround, alpineBasalt, alpineExposure);
@@ -1599,6 +1599,14 @@ function alpineVisibleSummitMacroRelief(x: number, y: number, z: number) {
   const outerButtress = ellipticalRelief(486, -1380, 145, 118) * 34;
   const rightButtress = ellipticalRelief(700, -1439, 105, 95) * 50;
 
+  // Separate the inherited single pyramidal crown into a weathered volcanic
+  // ridge. Two unequal source-surface spires flank an eroded saddle; a rear
+  // shoulder keeps the silhouette dimensional as the rail crosses Summit.
+  const westCrown = ellipticalRelief(506, -1425, 72, 76, 2.15) * 42;
+  const eastCrown = ellipticalRelief(686, -1450, 64, 72, 2.2) * 31;
+  const crownSaddle = ellipticalRelief(603, -1428, 52, 68, 2.3) * -38;
+  const rearCrown = ellipticalRelief(594, -1532, 92, 66, 2.0) * 24;
+
   // A broad upper-face hollow separates the near shoulder from the forested
   // foreground slope. Its low, wide falloff reads as an incised headwall on
   // the source terrain rather than another narrow decorative groove.
@@ -1625,7 +1633,16 @@ function alpineVisibleSummitMacroRelief(x: number, y: number, z: number) {
   ) * 12 * branchAuthority;
 
   return (
-    (nearShoulder + rearShoulder + outerButtress + rightButtress) * summitElevation
+    (
+      nearShoulder
+      + rearShoulder
+      + outerButtress
+      + rightButtress
+      + westCrown
+      + eastCrown
+      + crownSaddle
+      + rearCrown
+    ) * summitElevation
     + upperFaceHeadwall * headwallElevation
     + (mainDrainage + leftBranch + rightBranch) * drainageElevation
   ) * macroEnvelope;
@@ -1729,14 +1746,14 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
     adjustedVertices,
     detail,
     maximumReliefMeters: maximumRelief,
-    method: "shared-edge subdivision plus a measured asymmetric Alpine summit ridge, upper-face headwall, long-axis ribs, and branching source-surface drainage",
+    method: "shared-edge subdivision plus a split asymmetric Alpine crown, upper-face headwall, long-axis ribs, and branching source-surface drainage",
     sourceTriangles: geometry.userData.watershedSubdivision?.sourceTriangles ?? null,
     summitMacroform: {
       adjustedVertices: summitMacroAdjustedVertices,
       detachedGeometry: false,
       maximumIncisionMeters: summitMacroMaximumIncision,
       maximumUpliftMeters: summitMacroMaximumUplift,
-      method: "four descending source-summit shoulders around the preserved authored crown, one broad upper-face headwall, and branching drainage on the existing Alpine surface",
+      method: "four descending source-summit shoulders, two unequal spires around an eroded saddle, one broad upper-face headwall, and branching drainage on the existing Alpine surface",
     },
     triangles: geometry.userData.watershedSubdivision?.triangles ?? null,
     valleyBoundaryProtected: true,
@@ -3633,7 +3650,9 @@ function RidgeBasaltField({ placements, shadows, zone }: {
     return result;
   }, [gltf.scene]);
   const selected = useMemo(
-    () => placements.filter((placement, index) => placement[1] === 2 && index % (zone === "ridge" ? 31 : 43) === 0).slice(0, zone === "ridge" ? 58 : 42),
+    () => placements
+      .filter((placement, index) => placement[1] === 2 && index % (zone === "ridge" ? 31 : zone === "alpine" ? 17 : 43) === 0)
+      .slice(0, zone === "ridge" ? 58 : zone === "alpine" ? 76 : 42),
     [placements, zone],
   );
   const refs = useRef<Array<InstancedMesh | null>>([]);
@@ -3647,7 +3666,7 @@ function RidgeBasaltField({ placements, shadows, zone }: {
         // Poly Haven rock_09 is authored at hand-sample scale (~15 cm tall).
         // Landscape outcrops need metre-scale transforms to remain perceptible
         // from the aerial journey cameras.
-        const scale = (zone === "ridge" ? 34 : 42) + ((index * 17) % 13) * 2.4;
+        const scale = (zone === "ridge" ? 34 : zone === "alpine" ? 52 : 42) + ((index * 17) % 13) * 2.4;
         dummy.position.set(placement[2], placement[3] - 0.18, placement[4]);
         dummy.rotation.set((index % 5) * 0.07, placement[5], ((index + 2) % 7) * 0.045);
         dummy.scale.set(scale * (0.82 + (index % 3) * 0.13), scale * 0.62, scale);
@@ -4582,7 +4601,9 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
           />
         ));
       })}
-      {zone === "ridge" || zone === "valley" ? <RidgeBasaltField placements={visible} shadows={shadows} zone={zone} /> : null}
+      {zone === "ridge" || zone === "valley" || zone === "alpine" ? (
+        <RidgeBasaltField placements={visible} shadows={shadows} zone={zone} />
+      ) : null}
       {diagnosticMode === "grounding" ? visible.filter((_, index) => index % 20 === 0).slice(0, 140).map((placement, index) => (
         <mesh key={`root-${zone}-${index}`} position={[placement[2], placement[3] + 0.08, placement[4]]}>
           <sphereGeometry args={[0.16, 6, 4]} />
