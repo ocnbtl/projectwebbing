@@ -30,6 +30,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+__pycache__/
+*.py[cod]
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -46,5 +48,11 @@ next-env.d.ts
 
 # generated browser and prototype evidence retained locally
 /output/
+/.playwright-cli/
+/.npm-cache/
+
+# Blender recovery files are local editor backups, not source artifacts
+*.blend1
+/world-source/exports/
 
 !.env.example

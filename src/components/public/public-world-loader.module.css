@@ -1,0 +1,44 @@
+.shell,
+.renderer,
+.visualFallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.shell,
+.renderer {
+  overflow: hidden;
+  background: #071a26;
+}
+
+.visualFallback {
+  background:
+    linear-gradient(180deg, rgba(3, 12, 18, 0.12), rgba(3, 12, 18, 0.38)),
+    url("/media/madagin-ridge-approach-v3.png") center 58% / cover no-repeat;
+}
+
+.renderer canvas {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .visualFallback {
+    background-position: 48% 58%;
+  }
+}

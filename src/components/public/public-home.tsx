@@ -1,13 +1,11 @@
 "use client";
 
 import type { MotionValue } from "motion/react";
-import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "motion/react";
-import Image from "next/image";
+import { motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import ridgeImage from "../../../public/media/madagin-ridge-approach-v3.png";
-import valleyImage from "../../../public/media/madagin-valley-reveal-v4.png";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { MadaginMark, PublicFooter, PublicHeader } from "@/components/public/public-chrome";
+import { PublicWorldLoader } from "@/components/public/public-world-loader";
 import type { ContentItem } from "@/lib/content-types";
 import { method, promise, standards } from "@/lib/brand";
 import styles from "./public-home.module.css";
@@ -19,6 +17,30 @@ const valueWindows = [
   [0.6, 0.73],
   [0.75, 0.9],
 ] as const;
+
+const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
+
+function subscribeToReducedMotion(onChange: () => void) {
+  const mediaQuery = window.matchMedia(reducedMotionQuery);
+  mediaQuery.addEventListener("change", onChange);
+  return () => mediaQuery.removeEventListener("change", onChange);
+}
+
+function getReducedMotionPreference() {
+  return window.matchMedia(reducedMotionQuery).matches;
+}
+
+function getServerReducedMotionPreference() {
+  return false;
+}
+
+function useHydrationSafeReducedMotion() {
+  return useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotionPreference,
+    getServerReducedMotionPreference,
+  );
+}
 
 function DraggedLetter({ letter, index, progress, motionOff }: {
   letter: string;
@@ -85,20 +107,12 @@ function ContentPreview({ item, route }: { item: ContentItem; route: "projects" 
 
 export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts: ContentItem[] }) {
   const journeyRef = useRef<HTMLElement>(null);
-  const filmRef = useRef<HTMLVideoElement>(null);
   const motionToggleUsed = useRef(false);
-  const prefersReducedMotion = useReducedMotion();
-  const [filmFailed, setFilmFailed] = useState(false);
+  const prefersReducedMotion = useHydrationSafeReducedMotion();
   const [useLessMotion, setUseLessMotion] = useState(false);
   const motionOff = Boolean(prefersReducedMotion || useLessMotion);
-  const heroFilm = process.env.NEXT_PUBLIC_MADAGIN_HERO_VIDEO || "/media/madagin-mountain-journey-v1.mp4";
   const { scrollYProgress } = useScroll({ target: journeyRef, offset: ["start start", "end end"] });
-  const approachScale = useTransform(scrollYProgress, [0, 0.28], [1, 1.22]);
-  const approachY = useTransform(scrollYProgress, [0, 0.28], ["0%", "-11%"]);
-  const approachFilter = useTransform(scrollYProgress, [0, 0.12, 0.28, 1], ["opacity(1)", "opacity(1)", "opacity(0)", "opacity(0)"]);
-  const valleyFilter = useTransform(scrollYProgress, [0, 0.18, 0.31, 1], ["opacity(0)", "opacity(0)", "opacity(1)", "opacity(1)"]);
-  const valleyScale = useTransform(scrollYProgress, [0.2, 0.9], [1.18, 1.52]);
-  const valleyY = useTransform(scrollYProgress, [0.2, 0.9], ["3%", "-10%"]);
+  const worldProgress = useTransform(scrollYProgress, [0, 0.18, 0.9, 1], [0, 0, 1, 1]);
   const wordFilter = useTransform(scrollYProgress, [0, 0.12, 0.27, 1], ["opacity(1)", "opacity(1)", "opacity(0)", "opacity(0)"]);
   const shadeFilter = useTransform(scrollYProgress, [0, 0.22, 0.38, 0.92, 1], ["opacity(0.2)", "opacity(0.2)", "opacity(0.04)", "opacity(0.22)", "opacity(0.22)"]);
 
@@ -111,13 +125,6 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
     root.style.scrollBehavior = previousBehavior;
   }, [useLessMotion]);
 
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    const film = filmRef.current;
-    if (!film || motionOff || !Number.isFinite(film.duration)) return;
-    const filmProgress = Math.min(1, Math.max(0, (latest - 0.18) / 0.72));
-    film.currentTime = film.duration * filmProgress;
-  });
-
   return (
     <>
       <a className="skip-link" href="#site-content">Skip the mountain journey</a>
@@ -125,25 +132,9 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
         <section ref={journeyRef} className={`${styles.journey} ${motionOff ? styles.motionOff : ""}`} aria-labelledby="madagin-title">
           <div className={styles.stage}>
             <PublicHeader tone="dark" />
-            <motion.div className={styles.approachPlate} style={motionOff ? undefined : { filter: approachFilter, scale: approachScale, y: approachY }}>
-              <Image alt="" aria-hidden="true" fill priority sizes="100vw" src={ridgeImage} />
-            </motion.div>
-            <motion.div className={styles.valleyPlate} style={motionOff ? undefined : { filter: valleyFilter, scale: valleyScale, y: valleyY }}>
-              <Image alt="" aria-hidden="true" fill priority sizes="100vw" src={valleyImage} />
-              {heroFilm && !filmFailed ? (
-                <video
-                  aria-hidden="true"
-                  className={styles.journeyFilm}
-                  muted
-                  onError={() => setFilmFailed(true)}
-                  playsInline
-                  poster={valleyImage.src}
-                  preload="metadata"
-                  ref={filmRef}
-                  src={heroFilm}
-                />
-              ) : null}
-            </motion.div>
+            <div className={styles.worldPlate}>
+              <PublicWorldLoader motionOff={motionOff} progress={worldProgress} />
+            </div>
             <motion.div className={styles.stageShade} style={motionOff ? undefined : { filter: shadeFilter }} />
             <h1 id="madagin-title" className={styles.srTitle}>Madagin</h1>
             <p className={styles.heroPromise}>{promise}</p>

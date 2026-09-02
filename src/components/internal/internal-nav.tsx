@@ -9,6 +9,7 @@ const items = [
   { href: "/internal/projects", label: "Projects" },
   { href: "/internal/blog", label: "Blog" },
   { href: "/internal/brand", label: "Brand system" },
+  { href: "/internal/world-lab", label: "World lab" },
 ];
 
 export function InternalNav() {

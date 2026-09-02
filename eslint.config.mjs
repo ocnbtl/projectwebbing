@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "prototype/**",
     "concepts/**",
     "output/**",
+    "artifacts/**/chrome-profile/**",
   ]),
 ]);
 
