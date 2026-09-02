@@ -1499,3 +1499,30 @@ BH is the selected local cumulative candidate because it raises one exact score-
 ## BI cycle stop boundary
 
 BI is selected because it produces a material simultaneous improvement across camera composition, terrain response, lighting/environment, atmosphere, and canopy presentation, with the largest verified gain at the formerly occluded Valley/Lake transition. It preserves the deployed public semantic/fallback contract and the internal review controls. It does not justify a claim of photorealism or completion: the next batch must attack the visible water/terrain macrostructure and vegetation-source diversity/LOD rather than continue micro-calibrating the same surfaces.
+
+## Candidate BJ validation
+
+- BJ is the second substantial post-launch batch and retains BI's authored public rail, physical environment, balanced light, haze/cloud integration, terrain palette, public capability gates, and internal review controls.
+- The shared analytic lake/terrain authority receives stronger tens-of-metres coves and spurs rather than a detached shoreline mesh. The active Valley material adds a bounded wet-rock/silt littoral response on the source bank itself. The lake basin deepens from 2.18 to 8.75 metres, while an unlit depth-writing bed prevents the source terrain from showing through the transparent surface as illuminated underwater geometry.
+- The lake surface gains height-varying atmospheric reflection, shallower olive turbidity, stronger grazing Fresnel, continuous analytic wind normals, reduced physical displacement, and 256-by-34 balanced / 320-by-42 high tessellation. B1 through B4 exposed faceted reflection, excessive glint, and lit-bed artifacts; those rejected calibrations remain evidence only. B5 retains the continuous normal and unlit basin authority.
+- The connected waterfall body widens from a 4.8-to-10.4 metre base half-width to 7.2-to-15.3 metres before irregular fan terms, with higher aeration/opacity and brighter broken whitewater. The existing incised source channel, plunge pool, outflow join, mist, and water/terrain protections remain.
+- Balanced desktop now replaces every eligible layer-0 Ridge, Valley, and Alpine placement through the already-loaded safe mid source instead of stride 2/2/9 sampling. The remaining procedural layer-1/layer-2 foliage receives smaller crown-only spread and a darker, lower-chroma palette. High retains its bounded hero policy; compact/mobile still loads no v1.15 vegetation.
+- The five-view B5 sequence reports one live canvas, zero video elements, correct Ridge/Reveal/Lake/Waterfall/Summit semantics, 26 to 29 world resources, and zero page errors. Public runtime passes 6/6, shared internal runtime passes 7/7, `pnpm.cmd check` passes ESLint/TypeScript/optimized Next.js 16.3 build, and the optimized public runtime passes 6/6.
+- Active renderer SHA-256 is `47429F20A03ECD3B541CC48F8EBCD216D4A06BF390899AFF0186C7F709F9C486`; BJ adds no public asset file or new network request to BI's deployed package.
+
+## BJ perceptual delta
+
+| Category | Candidate BI | Candidate BJ | Decision boundary |
+| --- | ---: | ---: | --- |
+| Balanced canopy continuity | 2 | 3 | All eligible primary-canopy anchors use the detailed mid source, while smaller muted procedural understory no longer produces bright geometric crowns across the Ridge, Valley, and Summit views. |
+| Lake boundary/depth presentation | 1 | 2 | Stronger shared coves/spurs, a deepened dark basin, littoral response, and atmospheric surface variation replace the flat shallow teal-plate read. |
+| Waterfall prominence/material | 1 | 2 | A wider connected body and stronger aeration make the fall readable in the authored wide Waterfall view without adding a detached support or card. |
+| Terrain/water continuity | 3 | 3 | Lake, bank, river, source channel, waterfall, plunge pool, and outflow remain on their existing shared authorities with no new seam or world request. |
+| Mobile asset policy | 4 | 4 | The compact path retains its no-v1.15 policy and the public mobile runtime still loads 16 world resources. |
+| Public fallback cost | 4 | 4 | All four fallbacks retain zero canvases and zero world requests. |
+| Whole terrain / ecology | 2 / 2 | 2 / 2 | BJ improves visible presentation and balanced canopy coverage, but broad source macroform, species/age diversity, high/compact ecology, and natural succession remain incomplete. |
+| Reference realism | 1 | 1 | The result remains visibly synthetic beside the photographic references, especially in mountain geology, water optics, source diversity, and dynamic range. |
+
+## BJ cycle stop boundary
+
+BJ is selected because it produces simultaneous visible gains in canopy continuity, procedural-source suppression, lake shape/depth/optics, shoreline material response, and waterfall scale while preserving the public renderer and fallback contract. It is not a photoreal or completion milestone. The next high-value batch must replace the most visible authored mountain macroform and repeated vegetation silhouettes, improve terrain-cloud contact and water reflection/refraction, and collect physical-device evidence rather than continue tuning the accepted BJ parameters.

@@ -14,6 +14,7 @@ import {
   Material,
   Matrix4,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   Object3D,
   Points,
@@ -815,6 +816,30 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           )
         );
         authoredGround = mix(authoredGround, alpineBasalt, alpineExposure);
+        // Give the shared lake boundary a readable littoral transition on the
+        // source terrain itself. This is material response on the active bank,
+        // not a detached shoreline collar: the same broad basin harmonics used
+        // by the water/terrain authority locate damp rock and deposited silt.
+        vec2 lakeCoordinate = vec2(
+          (vDetailedTerrainWorld.x + 2.04) / 152.816,
+          (vDetailedTerrainWorld.z + 884.765) / 118.075
+        );
+        float lakeAngle = atan(lakeCoordinate.y, lakeCoordinate.x);
+        float lakeBoundaryApproximation = 1.0
+          + sin(lakeAngle * 2.0 - 0.4) * 0.135
+          + sin(lakeAngle * 3.0 + 0.9) * 0.082
+          + sin(lakeAngle * 5.0 - 1.3) * 0.034;
+        float lakeRadialDistance = length(lakeCoordinate) / max(0.72, lakeBoundaryApproximation);
+        float littoralBand = terrainValley
+          * smoothstep(0.9, 0.985, lakeRadialDistance)
+          * (1.0 - smoothstep(1.0, 1.17, lakeRadialDistance))
+          * (1.0 - smoothstep(-45.0, -18.0, vDetailedTerrainWorld.y));
+        vec3 wetLittoralRock = mix(
+          vec3(0.025, 0.052, 0.045),
+          vec3(0.115, 0.105, 0.068),
+          clamp(detail * 0.45 + drainage * 0.3, 0.0, 0.68)
+        );
+        authoredGround = mix(authoredGround, wetLittoralRock, littoralBand * (0.62 + slope * 0.2));
         float sourceLuminance = dot(sourceSurface, vec3(0.2126, 0.7152, 0.0722));
         vec3 microSurface = vec3(clamp(sourceLuminance * ${zone === "alpine" ? "1.12" : "1.3"}, 0.58, 1.2));
         diffuseColor.rgb = authoredGround * mix(vec3(0.88), microSurface, ${zone === "connected" ? "mix(0.28, 0.34, terrainValley)" : zone === "ridge" ? "0.28" : zone === "valley" ? "0.34" : "0.54"});`,
@@ -833,7 +858,7 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * (0.095 + basinDrainage * 0.05);`,
       );
   };
-  material.customProgramCacheKey = () => `madagin-v116-cumulative-v115-high-pbr-ap8-${zone}`;
+  material.customProgramCacheKey = () => `madagin-v117-public-reality-b-littoral-${zone}`;
   material.name = `Madagin v1.16 cumulative v1.15 high PBR ${zone} terrain`;
   return material;
 }
@@ -946,17 +971,18 @@ function lakeBoundaryScale(angle: number) {
   // each feature tens of metres wide, so this remains one erosion-shaped basin
   // rather than the serrated shoreline produced by the rejected AB3 pass.
   const erodedNearBank =
-    - lakeBoundaryFeature(angle, 0.15, 0.48) * 0.22
-    - lakeBoundaryFeature(angle, 1.15, 0.28) * 0.12
-    - lakeBoundaryFeature(angle, 2.45, 0.34) * 0.1;
+    - lakeBoundaryFeature(angle, 0.15, 0.48) * 0.24
+    - lakeBoundaryFeature(angle, 1.15, 0.28) * 0.15
+    - lakeBoundaryFeature(angle, 2.45, 0.34) * 0.12
+    + lakeBoundaryFeature(angle, 2.92, 0.22) * 0.07;
   const erodedFarBank =
-    - lakeBoundaryFeature(angle, -2.82, 0.2) * 0.14
-    + lakeBoundaryFeature(angle, -2.38, 0.19) * 0.15
-    - lakeBoundaryFeature(angle, -1.92, 0.21) * 0.16
-    + lakeBoundaryFeature(angle, -1.46, 0.2) * 0.14
-    - lakeBoundaryFeature(angle, -0.98, 0.22) * 0.13
-    + lakeBoundaryFeature(angle, -0.54, 0.19) * 0.08;
-  return Math.max(0.72, broadBasin + erodedNearBank + erodedFarBank);
+    - lakeBoundaryFeature(angle, -2.82, 0.22) * 0.17
+    + lakeBoundaryFeature(angle, -2.38, 0.2) * 0.17
+    - lakeBoundaryFeature(angle, -1.92, 0.23) * 0.2
+    + lakeBoundaryFeature(angle, -1.46, 0.21) * 0.16
+    - lakeBoundaryFeature(angle, -0.98, 0.24) * 0.16
+    + lakeBoundaryFeature(angle, -0.54, 0.2) * 0.1;
+  return Math.max(0.69, broadBasin + erodedNearBank + erodedFarBank);
 }
 
 function lakeBoundaryDistance(x: number, z: number) {
@@ -3549,15 +3575,15 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
       if (foliage) {
-        const spread = placement[1] === 0 ? mobile ? 2.5 : 2.3 : placement[1] === 1 ? mobile ? 2.02 : 1.85 : mobile ? 1.52 : 1.4;
+        const spread = placement[1] === 0 ? mobile ? 2.5 : 1.58 : placement[1] === 1 ? mobile ? 2.02 : 1.38 : mobile ? 1.52 : 1.18;
         crownScale.makeScale(spread, placement[1] === 0 ? 1.12 : 1.06, spread);
         matrix.multiply(crownScale);
       }
       mesh.setMatrixAt(index, matrix);
       const hue = placement[9];
       instanceColor.set(foliage
-        ? hue === 0 ? "#456e38" : hue === 2 ? "#668348" : "#3f6938"
-        : hue === 0 ? "#473222" : hue === 2 ? "#60452d" : "#503824");
+        ? hue === 0 ? "#31543a" : hue === 2 ? "#4b6440" : "#294b36"
+        : hue === 0 ? "#3c2d23" : hue === 2 ? "#51402f" : "#443127");
       mesh.setColorAt(index, instanceColor);
     });
     mesh.instanceMatrix.needsUpdate = true;
@@ -3929,7 +3955,7 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
   ) && placement[0] < 8);
   const stride = tier === "high"
     ? zone === "lake" ? 8 : zone === "alpine" ? 6 : zone === "ridge" ? 12 : 14
-    : zone === "lake" ? 1 : zone === "alpine" ? 9 : 2;
+    : 1;
   const baseline = baselineEligible.filter((_, index) => index % stride === 0);
   if (zone === "lake") return baseline;
   // Balanced can carry the denser mid LOD. High keeps a sparse hero review
@@ -4593,7 +4619,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         // by displacing individual radial rows.
         float lakeWaveA = sin(p.x * 0.034 + p.z * 0.021 + uTime * 0.18);
         float lakeWaveB = sin(p.x * -0.019 + p.z * 0.044 - uTime * 0.13 + sin(p.x * 0.008) * 0.9);
-        p.y += (lakeWaveA * 0.24 + lakeWaveB * 0.13) * lakeWaveEnvelope;
+        p.y += (lakeWaveA * 0.16 + lakeWaveB * 0.085) * lakeWaveEnvelope;
         vec4 world = modelMatrix * vec4(p, 1.0);
         vWorld = world.xyz;
         vWaterUv = uv;
@@ -4617,14 +4643,22 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           1.0,
           cos(phaseA) * 0.095 + cos(phaseB) * 0.2 + sin(capillary) * ${lake ? "0.018" : "0.0"}
         ));
-        n = normalize(mix(n, rippleNormal, ${lake ? "0.29" : directional ? "0.105" : "0.078"}));
+        n = ${lake
+    ? "normalize(mix(vec3(0.0, 1.0, 0.0), rippleNormal, 0.46))"
+    : `normalize(mix(n, rippleNormal, ${directional ? "0.105" : "0.078"}))`};
         vec3 viewDirection = normalize(cameraPosition - vWorld);
-        float fresnel = pow(1.0 - clamp(dot(n, viewDirection), 0.0, 1.0), 3.8);
+        float fresnel = pow(
+          1.0 - clamp(dot(n, viewDirection), 0.0, 1.0),
+          ${lake ? "2.35" : directional ? "3.1" : "3.4"}
+        );
         float broad = sin(vWorld.x * 0.025 + vWorld.z * 0.019 + uTime * 0.08) * 0.5 + 0.5;
         float windBand = ${lake
     ? "clamp(0.5 + sin(vWorld.x * 0.038 - vWorld.z * 0.029 + uTime * 0.14 + sin(vWorld.z * 0.011) * 1.6) * 0.18 + sin(vWorld.x * -0.017 + vWorld.z * 0.052 - uTime * 0.1 + sin(vWorld.x * 0.008) * 1.2) * 0.14 + sin(vWorld.x * 0.013 + vWorld.z * 0.016 + uTime * 0.045) * 0.08, 0.0, 1.0)"
     : "sin(vWorld.x * 0.071 - vWorld.z * 0.054 + uTime * 0.19 + sin(vWorld.z * 0.017) * 1.8) * 0.5 + 0.5"};
-        float glint = pow(max(dot(reflect(-normalize(vec3(-0.72, 0.48, 0.38)), n), viewDirection), 0.0), ${directional ? "72.0" : "48.0"});
+        float glint = pow(
+          max(dot(reflect(-normalize(vec3(-0.72, 0.48, 0.38)), n), viewDirection), 0.0),
+          ${lake ? "22.0" : directional ? "72.0" : "48.0"}
+        );
         float waveFacing = clamp(0.5 + dot(n.xz, normalize(vec2(-0.78, 0.62))) * 3.1, 0.0, 1.0);
         float lakeInterior = 1.0 - clamp(length((vWaterUv - 0.5) * 2.0), 0.0, 1.0);
         float bankSoftening = ${directional
@@ -4635,14 +4669,29 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         vec3 depthColor = ${headwater ? "vec3(0.005, 0.026, 0.025)" : river ? "mix(vec3(0.006, 0.035, 0.036), vec3(0.004, 0.025, 0.033), riverMouth)" : lake ? "vec3(0.004, 0.025, 0.033)" : "vec3(0.008, 0.052, 0.058)"};
         vec3 surfaceColor = ${headwater ? "vec3(0.022, 0.073, 0.061)" : river ? "mix(vec3(0.026, 0.105, 0.098), vec3(0.015, 0.075, 0.09), riverMouth)" : lake ? "vec3(0.015, 0.075, 0.09)" : "vec3(0.035, 0.135, 0.15)"};
         vec3 shallowColor = ${headwater ? "vec3(0.047, 0.105, 0.081)" : river ? "mix(vec3(0.065, 0.14, 0.112), vec3(0.065, 0.16, 0.14), riverMouth)" : lake ? "vec3(0.065, 0.16, 0.14)" : "vec3(0.105, 0.205, 0.175)"};
-        vec3 skyReflection = ${headwater ? "vec3(0.1, 0.17, 0.18)" : river ? "mix(vec3(0.155, 0.245, 0.26), vec3(0.12, 0.23, 0.28), riverMouth)" : lake ? "vec3(0.12, 0.23, 0.28)" : "vec3(0.205, 0.35, 0.405)"};
+        vec3 reflectionDirection = reflect(-viewDirection, n);
+        float reflectedHeight = smoothstep(-0.12, 0.78, reflectionDirection.y);
+        vec3 atmosphericReflection = mix(
+          vec3(0.31, 0.46, 0.51),
+          vec3(0.055, 0.18, 0.31),
+          reflectedHeight
+        );
+        vec3 skyReflection = ${headwater
+    ? "mix(vec3(0.075, 0.135, 0.14), atmosphericReflection, 0.24)"
+    : river
+      ? "mix(mix(vec3(0.12, 0.205, 0.21), vec3(0.09, 0.18, 0.24), riverMouth), atmosphericReflection, 0.34)"
+      : lake
+        ? "mix(vec3(0.095, 0.18, 0.2), atmosphericReflection, 0.72)"
+        : "mix(vec3(0.17, 0.28, 0.31), atmosphericReflection, 0.46)"};
         vec3 color = mix(shallowColor, depthColor, basinDepth * ${headwater ? "0.82" : river ? "0.72" : lake ? "0.9" : "0.88"});
+        float shorelineTurbidity = ${lake ? "(1.0 - bankSoftening) * (0.72 + windBand * 0.18)" : "0.0"};
+        color = mix(color, vec3(0.105, 0.12, 0.075), shorelineTurbidity * 0.48);
         color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.13 + broad * 0.08" : "0.2 + broad * 0.11"});
-        color = mix(color, skyReflection, fresnel * ${headwater ? "0.18" : river ? "0.28" : lake ? "0.28" : "0.38"});
+        color = mix(color, skyReflection, fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.62" : "0.4"});
         color += vec3(0.36, 0.47, 0.44) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.12" : "0.055"};
         color += vec3(0.08, 0.15, 0.16) * (waveFacing - 0.5) * ${lake ? "0.3" : "0.0"};
-        color += vec3(0.55, 0.61, 0.56) * glint * ${headwater ? "0.018" : river ? "0.045" : lake ? "0.07" : "0.055"};
-        float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "0.69, 0.9" : "0.66, 0.88"}, fresnel) * mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : lake ? "0.7" : "0.72"}, 1.0, bankSoftening) * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
+        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.055" : "0.06"};
+        float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "0.61, 0.92" : "0.66, 0.88"}, fresnel) * mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : lake ? "0.62" : "0.72"}, 1.0, bankSoftening) * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
         gl_FragColor = vec4(color, opacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -4653,7 +4702,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     ? "Madagin v1.16 dark incised headwater"
     : river
       ? "Madagin v1.16 darker directional river water"
-      : "Madagin v1.16 restrained Fresnel watershed";
+      : "Madagin v1.17 atmospheric Fresnel watershed";
   return material;
 }
 
@@ -4704,10 +4753,10 @@ function createWaterfallMaterial() {
         float faceLight = 0.58 + abs(dot(geometricNormal, normalize(vec3(-0.52, 0.58, 0.63)))) * 0.42;
         float fresnel = pow(1.0 - abs(dot(geometricNormal, viewDirection)), 2.2);
         float aeration = smoothstep(0.2, 0.92, vFallUv.y) * (0.32 + body * 0.68);
-        float alpha = edge * (0.12 + body * 0.44 + aeration * 0.16) * mix(0.68, 1.0, breakup);
-        vec3 deepWater = vec3(0.075, 0.19, 0.205);
-        vec3 whiteWater = vec3(0.68, 0.835, 0.84);
-        vec3 color = mix(deepWater, whiteWater, body * 0.46 + crossFlow * 0.08 + aeration * 0.2 + fresnel * 0.08);
+        float alpha = edge * (0.17 + body * 0.52 + aeration * 0.2) * mix(0.72, 1.0, breakup);
+        vec3 deepWater = vec3(0.055, 0.16, 0.18);
+        vec3 whiteWater = vec3(0.78, 0.89, 0.88);
+        vec3 color = mix(deepWater, whiteWater, body * 0.52 + crossFlow * 0.1 + aeration * 0.24 + fresnel * 0.1);
         color *= faceLight;
         if (alpha < 0.055) discard;
         gl_FragColor = vec4(color, alpha);
@@ -4716,7 +4765,7 @@ function createWaterfallMaterial() {
       }
     `,
   });
-  material.name = "Madagin v1.16 broad broken waterfall";
+  material.name = "Madagin v1.17 broad aerated waterfall";
   return material;
 }
 
@@ -4762,8 +4811,8 @@ function createCumulativeWaterfallGeometry() {
       + Math.sin(progress * 7.2 + 0.2) * (0.55 + progress * 0.5);
     const centerZ = WATERFALL_TOP.z + (WATERFALL_BOTTOM.z - WATERFALL_TOP.z) * Math.pow(progress, 1.42)
       + Math.sin(progress * 6.1) * 0.42;
-    const halfWidth = 4.8 + progress * 5.6 + Math.sin(progress * 8.7 + 0.6) * (0.36 + progress * 0.3)
-      + curtain.fan;
+    const halfWidth = 7.2 + progress * 8.1 + Math.sin(progress * 8.7 + 0.6) * (0.5 + progress * 0.42)
+      + curtain.fan * 1.28;
     for (let column = 0; column <= columns; column += 1) {
       const horizontal = column / columns;
       const across = horizontal * 2 - 1;
@@ -5436,16 +5485,17 @@ function createIntegratedLakeGeometry(angularSegments: number, radialSegments: n
 
 function createIntegratedLakeBedGeometry(angularSegments: number, radialSegments: number, edgeOverlap: number) {
   const geometry = new BufferGeometry();
-  const positions: number[] = [LAKE_CENTER.x, LAKE_WATER_LEVEL - 2.18, LAKE_CENTER.z];
+  const positions: number[] = [LAKE_CENTER.x, LAKE_WATER_LEVEL - 8.75, LAKE_CENTER.z];
   const indices: number[] = [];
   for (let ring = 1; ring <= radialSegments; ring += 1) {
     const radius = Math.pow(ring / radialSegments, 0.92);
     for (let segment = 0; segment < angularSegments; segment += 1) {
       const angle = (segment / angularSegments) * Math.PI * 2;
       const edge = lakeBoundaryScale(angle) * (1 + edgeOverlap * Math.pow(radius, 4));
-      const depth = 0.28
-        + Math.pow(1 - radius, 0.82) * 1.9
-        + Math.sin(angle * 3 - 0.6) * 0.08 * (1 - radius);
+      const depth = 0.34
+        + Math.pow(1 - radius, 0.72) * 8.35
+        + Math.sin(angle * 3 - 0.6) * 0.24 * (1 - radius)
+        + Math.sin(angle * 7 + radius * 4.2) * 0.1 * Math.pow(1 - radius, 0.6);
       positions.push(
         LAKE_CENTER.x + Math.cos(angle) * LAKE_RADIUS.x * edge * radius,
         LAKE_WATER_LEVEL - depth,
@@ -5479,9 +5529,9 @@ function createIntegratedLakeBedGeometry(angularSegments: number, radialSegments
   geometry.name = "Madagin v1.16 continuous irregular lake basin bed";
   geometry.userData.watershedBed = {
     angularSegments,
-    depthRangeMeters: [0.28, 2.18],
+    depthRangeMeters: [0.34, 8.75],
     edgeOverlap,
-    method: "continuous depth-writing radial basin above the carved source terrain",
+    method: "continuous deepened asymmetric radial basin above the carved source terrain",
     radialSegments,
     shorelineVertices: angularSegments,
   };
@@ -5519,24 +5569,22 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   );
   const lakeGeometry = useMemo(
     () => createIntegratedLakeGeometry(
-      mobile ? 320 : tier === "high" ? 256 : 192,
-      mobile ? 18 : tier === "high" ? 28 : 22,
+      mobile ? 320 : tier === "high" ? 320 : 256,
+      mobile ? 18 : tier === "high" ? 42 : 34,
       mobile ? 0.014 : 0.009,
     ),
     [mobile, tier],
   );
   const lakeBedGeometry = useMemo(
     () => createIntegratedLakeBedGeometry(
-      mobile ? 320 : tier === "high" ? 256 : 192,
-      mobile ? 18 : tier === "high" ? 28 : 22,
+      mobile ? 320 : tier === "high" ? 320 : 256,
+      mobile ? 18 : tier === "high" ? 42 : 34,
       mobile ? 0.014 : 0.009,
     ),
     [mobile, tier],
   );
-  const lakeBedMaterial = useMemo(() => new MeshStandardMaterial({
-    color: "#183a30",
-    metalness: 0,
-    roughness: 1,
+  const lakeBedMaterial = useMemo(() => new MeshBasicMaterial({
+    color: "#101f1c",
     side: DoubleSide,
   }), []);
   const riverGeometry = useMemo(

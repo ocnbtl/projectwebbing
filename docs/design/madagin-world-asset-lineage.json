@@ -16,7 +16,10 @@
   },
   "postLaunchCandidate": {
     "selected": "Candidate BI / v117-public-reality-a2",
-    "status": "selected local cumulative realism candidate pending production release",
+    "commit": "7aa1051b16eabba4b593093fe808d8d25a75cb63",
+    "deploymentId": "dpl_Ce12iHcgsTQgcND2TUeYNjGAcPeT",
+    "immutableUrl": "https://projectwebbing-dhopvt80k-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative realism candidate; production matrix passes six of six",
     "changedCategories": [
       "authored public camera composition and semantic rail timing",
       "physical sky environment and light balance",
@@ -28,7 +31,24 @@
     "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-a2-runtime/runtime-gates.json",
     "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-a2-optimized/runtime-gates.json",
     "internalRuntimeEvidence": "output/playwright/madagin-world-progress/v117-public-reality-a2/runtime-gates.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/production-7aa1051/runtime-gates.json",
     "decisionBoundary": "The full Valley and Lake compositions, aerial separation, terrain response, and canopy continuity improve materially together. Broad terrain macrostructure, water optics, species diversity, compact ecology, photographic dynamic range, and physical-device evidence remain below finish criteria."
+  },
+  "nextPostLaunchCandidate": {
+    "selected": "Candidate BJ / v117-public-reality-b5",
+    "status": "selected local cumulative realism candidate pending production release",
+    "changedCategories": [
+      "shared asymmetric lake and terrain-bank boundary",
+      "deepened basin, atmospheric water reflection, shoreline turbidity, and littoral material response",
+      "wider aerated connected waterfall body",
+      "complete balanced-desktop eligible canopy LOD replacement",
+      "muted and reduced procedural understory crowns"
+    ],
+    "visualEvidence": "output/playwright/madagin-world-progress/v117-public-reality-b5/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-b5-runtime/runtime-gates.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-b5-optimized/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/v117-public-reality-b5/runtime-gates.json",
+    "decisionBoundary": "Canopy continuity and water-system presentation improve materially without new resources or mobile asset cost. The authored terrain macroform, repeated detailed tree sources, simplified reflection model, distant waterfall landform, photographic dynamic range, and physical-device evidence remain below finish criteria."
   },
   "components": {
     "topologyAndStreaming": {
