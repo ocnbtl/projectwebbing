@@ -653,14 +653,14 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
     // full-strength AO crushed steep west-facing geometry to near black under
     // the retained v1.16 sun. Preserve the map, but keep dynamic shadow and
     // sky fill responsible for the broad cliff response.
-    aoMapIntensity: zone === "alpine" ? 0.96 : zone === "valley" ? 0.68 : zone === "connected" ? 0.9 : 0.92,
+    aoMapIntensity: zone === "alpine" ? 0.9 : zone === "valley" ? 0.64 : zone === "connected" ? 0.84 : 0.86,
     color: "#ffffff",
     map: textures.albedo,
     metalness: 0,
     normalMap: textures.normal,
     normalScale: new Vector2(
-      zone === "alpine" ? 0.92 : zone === "valley" ? 0.76 : zone === "connected" ? 0.68 : 0.72,
-      zone === "alpine" ? 0.92 : zone === "valley" ? 0.76 : zone === "connected" ? 0.68 : 0.72,
+      zone === "alpine" ? 1.02 : zone === "valley" ? 0.86 : zone === "connected" ? 0.76 : 0.8,
+      zone === "alpine" ? 1.02 : zone === "valley" ? 0.86 : zone === "connected" ? 0.76 : 0.8,
     ),
     roughness: zone === "alpine" ? 0.88 : zone === "ridge" ? 0.91 : zone === "connected" ? 0.92 : 0.93,
     roughnessMap: textures.arm,
@@ -724,10 +724,10 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         float slope = smoothstep(${zone === "alpine" ? "0.16, 0.7" : "0.2, 0.74"}, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
         float elevation = smoothstep(${zone === "alpine" ? "18.0, 178.0" : "-34.0, 92.0"}, vDetailedTerrainWorld.y);
         float drainage = detailedTerrainNoise(vDetailedTerrainWorld.xz * 0.017 - vec2(9.1, 3.7));
-        vec3 dampSoil = ${zone === "alpine" ? "vec3(0.155, 0.155, 0.145)" : zone === "connected" ? "mix(vec3(0.085, 0.074, 0.052), vec3(0.052, 0.088, 0.052), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.088, 0.052)" : "vec3(0.085, 0.074, 0.052)"};
-        vec3 moss = ${zone === "alpine" ? "vec3(0.175, 0.19, 0.17)" : zone === "connected" ? "mix(vec3(0.085, 0.17, 0.062), vec3(0.052, 0.15, 0.07), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.15, 0.07)" : "vec3(0.085, 0.17, 0.062)"};
-        vec3 litter = ${zone === "alpine" ? "vec3(0.225, 0.215, 0.19)" : zone === "connected" ? "mix(vec3(0.235, 0.155, 0.078), vec3(0.205, 0.135, 0.07), terrainValley)" : zone === "ridge" ? "vec3(0.235, 0.155, 0.078)" : "vec3(0.205, 0.135, 0.07)"};
-        vec3 basalt = ${zone === "alpine" ? "vec3(0.235, 0.245, 0.235)" : "vec3(0.12, 0.14, 0.127)"};
+        vec3 dampSoil = ${zone === "alpine" ? "vec3(0.095, 0.098, 0.09)" : zone === "connected" ? "mix(vec3(0.062, 0.054, 0.038), vec3(0.038, 0.067, 0.04), terrainValley)" : zone === "valley" ? "vec3(0.038, 0.067, 0.04)" : "vec3(0.062, 0.054, 0.038)"};
+        vec3 moss = ${zone === "alpine" ? "vec3(0.105, 0.122, 0.102)" : zone === "connected" ? "mix(vec3(0.06, 0.125, 0.048), vec3(0.034, 0.105, 0.046), terrainValley)" : zone === "valley" ? "vec3(0.034, 0.105, 0.046)" : "vec3(0.06, 0.125, 0.048)"};
+        vec3 litter = ${zone === "alpine" ? "vec3(0.145, 0.135, 0.112)" : zone === "connected" ? "mix(vec3(0.155, 0.102, 0.054), vec3(0.132, 0.085, 0.046), terrainValley)" : zone === "ridge" ? "vec3(0.155, 0.102, 0.054)" : "vec3(0.132, 0.085, 0.046)"};
+        vec3 basalt = ${zone === "alpine" ? "vec3(0.13, 0.142, 0.136)" : "vec3(0.078, 0.096, 0.087)"};
         vec3 sourceSurface = diffuseColor.rgb;
         vec3 ground = mix(dampSoil, moss, smoothstep(0.32, 0.74, macro));
         ground = mix(ground, litter, smoothstep(0.76, 0.94, detail) * (1.0 - drainage * 0.48));
@@ -754,8 +754,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           1.0
         );
         vec3 mesicGround = mix(
-          ${zone === "alpine" ? "vec3(0.17, 0.17, 0.135)" : "vec3(0.145, 0.155, 0.065)"},
-          ${zone === "alpine" ? "vec3(0.095, 0.125, 0.09)" : "vec3(0.035, 0.105, 0.046)"},
+          ${zone === "alpine" ? "vec3(0.11, 0.105, 0.078)" : "vec3(0.092, 0.106, 0.05)"},
+          ${zone === "alpine" ? "vec3(0.06, 0.09, 0.066)" : "vec3(0.026, 0.078, 0.036)"},
           windwardMoisture
         );
         authoredGround = mix(
@@ -791,8 +791,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           + detail * 3.0;
         float strata = smoothstep(0.36, 0.86, sin(strataPhase) * 0.5 + 0.5);
         float erosionalRibs = detailedTerrainNoise(vec2(vDetailedTerrainWorld.x * 0.024 + vDetailedTerrainWorld.y * 0.009, vDetailedTerrainWorld.z * 0.019 - vDetailedTerrainWorld.y * 0.004));
-        vec3 wetBasalt = vec3(0.075, 0.105, 0.092);
-        vec3 oxidizedRock = vec3(0.33, 0.235, 0.135);
+        vec3 wetBasalt = vec3(0.052, 0.073, 0.066);
+        vec3 oxidizedRock = vec3(0.205, 0.15, 0.092);
         vec3 exposedGeology = mix(wetBasalt, oxidizedRock, mix(strata, erosionalRibs, 0.74) * (0.42 + (1.0 - drainage) * 0.25));
         float regionalGeologyAuthority = smoothstep(0.18, 0.7, slope)
           * (0.075 + detail * 0.16 + smoothstep(0.58, 0.9, erosionalRibs) * 0.085)
@@ -814,8 +814,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * smoothstep(-58.0, -50.0, vDetailedTerrainWorld.y)
           * (1.0 - smoothstep(122.0, 158.0, vDetailedTerrainWorld.y))
           * smoothstep(0.22, 0.72, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
-        vec3 westernWetBasalt = vec3(0.16, 0.19, 0.17);
-        vec3 westernOxidizedRock = vec3(0.38, 0.275, 0.17);
+        vec3 westernWetBasalt = vec3(0.09, 0.118, 0.105);
+        vec3 westernOxidizedRock = vec3(0.235, 0.17, 0.105);
         vec3 westernCliffRock = mix(
           westernWetBasalt,
           westernOxidizedRock,
@@ -838,7 +838,7 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         ));
         vec3 basinHeadwallRock = mix(
           vec3(0.02, 0.033, 0.029),
-          vec3(0.225, 0.145, 0.078),
+          vec3(0.16, 0.105, 0.06),
           clamp(0.09 + strata * 0.26 + erosionalRibs * 0.15 + basinDrainage * 0.11, 0.0, 0.47)
         );
         basinHeadwallRock = mix(
@@ -871,7 +871,7 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         );
         vec3 alpineBasalt = mix(
           vec3(0.06, 0.078, 0.076),
-          vec3(0.235, 0.205, 0.165),
+          vec3(0.17, 0.145, 0.112),
           clamp(
             smoothstep(0.48, 0.82, alpineOxidation) * 0.58
               + strata * 0.17
@@ -881,6 +881,27 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           )
         );
         authoredGround = mix(authoredGround, alpineBasalt, alpineExposure);
+        // Candidate BQ adds a material-scale counterpart to the physical
+        // headwalls and runoff networks. Broad talus aprons, narrow mineral
+        // seams, and damp concavities break the former tan/green painted sheet
+        // without hiding the source texture or introducing overlay geometry.
+        float mesoTalus = detailedTerrainFbm(vec2(
+          vDetailedTerrainWorld.x * 0.033 - vDetailedTerrainWorld.z * 0.011,
+          vDetailedTerrainWorld.z * 0.029 + vDetailedTerrainWorld.y * 0.014
+        ) + 112.6);
+        float talusApron = smoothstep(0.54, 0.82, mesoTalus)
+          * smoothstep(0.12, 0.64, slope)
+          * (1.0 - smoothstep(0.78, 0.96, slope));
+        float mineralSeam = smoothstep(0.78, 0.92, abs(sin(
+          vDetailedTerrainWorld.y * 0.071
+            + vDetailedTerrainWorld.x * 0.012
+            - vDetailedTerrainWorld.z * 0.008
+            + fractureField * 2.2
+        ))) * smoothstep(0.24, 0.76, slope);
+        vec3 talusStone = mix(vec3(0.062, 0.073, 0.069), vec3(0.16, 0.135, 0.097), mesoTalus);
+        authoredGround = mix(authoredGround, talusStone, talusApron * ${zone === "alpine" ? "0.46" : "0.3"});
+        authoredGround = mix(authoredGround, vec3(0.035, 0.047, 0.044), mineralSeam * ${zone === "alpine" ? "0.34" : "0.22"});
+        authoredGround *= mix(0.84, 1.08, detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.071 + 141.3));
         // Give the shared lake boundary a readable littoral transition on the
         // source terrain itself. This is material response on the active bank,
         // not a detached shoreline collar: the same broad basin harmonics used
@@ -912,10 +933,10 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           vDetailedTerrainWorld.z * 0.17 + vDetailedTerrainWorld.y * 0.061
         ) + 63.2);
         vec3 microSurface = sourceChroma
-          * clamp(sourceLuminance * ${zone === "alpine" ? "1.18" : "1.34"}, 0.52, 1.28)
-          * mix(0.86, 1.11, mineralGrain);
-        float sourceAuthority = ${zone === "connected" ? "mix(0.32, 0.3, terrainValley)" : zone === "ridge" ? "0.32" : zone === "valley" ? "0.3" : "0.46"};
-        diffuseColor.rgb = authoredGround * mix(vec3(0.86), microSurface, sourceAuthority);`,
+          * clamp(sourceLuminance * ${zone === "alpine" ? "1.05" : "1.18"}, 0.46, 1.18)
+          * mix(0.84, 1.08, mineralGrain);
+        float sourceAuthority = ${zone === "connected" ? "mix(0.3, 0.28, terrainValley)" : zone === "ridge" ? "0.3" : zone === "valley" ? "0.28" : "0.38"};
+        diffuseColor.rgb = authoredGround * mix(vec3(0.84), microSurface, sourceAuthority);`,
       )
       .replace(
         "#include <lights_fragment_end>",
@@ -931,8 +952,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * (0.095 + basinDrainage * 0.05);`,
       );
   };
-  material.customProgramCacheKey = () => `madagin-v121-watershed-relief-${zone}`;
-  material.name = `Madagin v1.21 watershed-relief volcanic PBR ${zone} terrain`;
+  material.customProgramCacheKey = () => `madagin-candidate-bq-mesoscale-geology-${zone}`;
+  material.name = `Madagin Candidate BQ mesoscale volcanic PBR ${zone} terrain`;
   return material;
 }
 
@@ -1146,26 +1167,26 @@ function regionalVolcanicLandformRelief(x: number, z: number) {
     + flankDistance * 0.0054
     + Math.sin((z - flankDistance) * 0.0061) * 0.92
     + flankSide * 0.47;
-  const interfluves = Math.sin(warpedAxis) * (3.4 + upslope * 3.0);
+  const interfluves = Math.sin(warpedAxis) * (4.4 + upslope * 4.4);
   const secondaryShoulders = Math.sin(
     z * 0.037
       - flankDistance * 0.009
       + Math.sin((z + flankDistance) * 0.0083) * 0.48
       - flankSide * 0.68,
-  ) * (0.96 + upslope * 1.08);
+  ) * (1.2 + upslope * 1.5);
   const runoffPhase = Math.sin(
     z * 0.028
       + flankDistance * 0.013
       + Math.sin(z * 0.009 - flankDistance * 0.004) * 1.16
       + flankSide * 1.05,
   );
-  const narrowRunoff = -Math.pow(Math.max(0, runoffPhase), 8) * (3.15 + upslope * 2.95);
+  const narrowRunoff = -Math.pow(Math.max(0, runoffPhase), 8) * (4.3 + upslope * 4.2);
   const crossingRunoffPhase = Math.sin(
     z * 0.051
       - flankDistance * 0.017
       + Math.sin((z - x) * 0.011) * 0.62,
   );
-  const crossingRunoff = -Math.pow(Math.max(0, crossingRunoffPhase), 12) * (1.25 + upslope * 1.72);
+  const crossingRunoff = -Math.pow(Math.max(0, crossingRunoffPhase), 12) * (1.7 + upslope * 2.35);
   const terracePhase = Math.sin(
     flankDistance * 0.047
       + z * 0.0065
@@ -1173,12 +1194,35 @@ function regionalVolcanicLandformRelief(x: number, z: number) {
   );
   const weatheredTerraces = Math.sign(terracePhase)
     * Math.pow(Math.abs(terracePhase), 9)
-    * (0.64 + upslope * 1.08);
+    * (0.82 + upslope * 1.42);
+  // Two unequal mass-wasting hollows and their retained outer ribs give the
+  // long Valley walls a readable kilometre-scale history. Their broad falloff
+  // remains inside the already protected regional envelope, so the lake,
+  // river, waterfall, and chunk joins are unchanged.
+  const ellipticalRelief = (
+    centerX: number,
+    centerZ: number,
+    radiusX: number,
+    radiusZ: number,
+    falloff = 1.8,
+  ) => Math.exp(-((((x - centerX) / radiusX) ** 2 + ((z - centerZ) / radiusZ) ** 2) * falloff));
+  const westernHeadwall = ellipticalRelief(-315, -760, 176, 136, 1.45) * -13.5;
+  const westernRim = ellipticalRelief(-438, -748, 138, 154, 1.8) * 6.4;
+  const easternHeadwall = ellipticalRelief(372, -650, 158, 126, 1.55) * -11.2;
+  const easternRim = ellipticalRelief(492, -640, 132, 145, 1.9) * 5.6;
   return Math.max(
-    -14.4,
+    -22.5,
     Math.min(
-      10.5,
-      interfluves + secondaryShoulders + narrowRunoff + crossingRunoff + weatheredTerraces,
+      17.5,
+      interfluves
+        + secondaryShoulders
+        + narrowRunoff
+        + crossingRunoff
+        + weatheredTerraces
+        + westernHeadwall
+        + westernRim
+        + easternHeadwall
+        + easternRim,
     ),
   );
 }
@@ -1784,18 +1828,21 @@ function alpineVisibleSummitMacroRelief(x: number, y: number, z: number) {
   // ALPINE_VALLEY_V115_HIGH; the dominant crown itself remains authored data
   // while the lower shoulders broaden its silhouette. No shell or
   // camera-facing geometry is introduced.
-  const nearShoulder = ellipticalRelief(532, -1268, 112, 92) * 60;
-  const rearShoulder = ellipticalRelief(579, -1480, 118, 88) * 70;
-  const outerButtress = ellipticalRelief(486, -1380, 145, 118) * 34;
-  const rightButtress = ellipticalRelief(700, -1439, 105, 95) * 50;
+  const nearShoulder = ellipticalRelief(500, -1252, 148, 118) * 52;
+  const rearShoulder = ellipticalRelief(565, -1502, 142, 98) * 58;
+  const outerButtress = ellipticalRelief(438, -1375, 178, 148) * 40;
+  const rightButtress = ellipticalRelief(748, -1428, 142, 116) * 57;
 
   // Separate the inherited single pyramidal crown into a weathered volcanic
   // ridge. Two unequal source-surface spires flank an eroded saddle; a rear
   // shoulder keeps the silhouette dimensional as the rail crosses Summit.
-  const westCrown = ellipticalRelief(506, -1425, 72, 76, 2.15) * 42;
-  const eastCrown = ellipticalRelief(686, -1450, 64, 72, 2.2) * 31;
-  const crownSaddle = ellipticalRelief(603, -1428, 52, 68, 2.3) * -38;
-  const rearCrown = ellipticalRelief(594, -1532, 92, 66, 2.0) * 24;
+  const westCrown = ellipticalRelief(470, -1428, 92, 86, 2.0) * 68;
+  const eastCrown = ellipticalRelief(738, -1444, 88, 86, 2.05) * 61;
+  const crownSaddle = ellipticalRelief(606, -1418, 108, 102, 1.35) * -104;
+  const sourceConeErosion = ellipticalRelief(598, -1356, 164, 152, 1.14) * -92;
+  const rearCrown = ellipticalRelief(578, -1542, 112, 74, 1.9) * 31;
+  const westCrestSpur = ellipticalRelief(386, -1460, 136, 104, 1.7) * 30;
+  const eastCrestSpur = ellipticalRelief(825, -1470, 118, 98, 1.8) * 27;
 
   // A broad upper-face hollow separates the near shoulder from the forested
   // foreground slope. Its low, wide falloff reads as an incised headwall on
@@ -1831,7 +1878,10 @@ function alpineVisibleSummitMacroRelief(x: number, y: number, z: number) {
       + westCrown
       + eastCrown
       + crownSaddle
+      + sourceConeErosion
       + rearCrown
+      + westCrestSpur
+      + eastCrestSpur
     ) * summitElevation
     + upperFaceHeadwall * headwallElevation
     + (mainDrainage + leftBranch + rightBranch) * drainageElevation
@@ -1982,7 +2032,7 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
       detachedGeometry: false,
       maximumIncisionMeters: summitMacroMaximumIncision,
       maximumUpliftMeters: summitMacroMaximumUplift,
-      method: "four descending source-summit shoulders, two unequal spires around an eroded saddle, one broad upper-face headwall, terrace scarps, talus breaks, and branching drainage on the existing Alpine surface",
+      method: "six descending source-summit shoulders, two unequal spires around a deeply eroded source-cone saddle, one broad upper-face headwall, terrace scarps, talus breaks, and branching drainage on the existing Alpine surface",
     },
     triangles: (geometry.index?.count ?? geometry.getAttribute("position").count) / 3,
     valleyBoundaryProtected: true,
@@ -3908,8 +3958,9 @@ const VOLUMETRIC_CROWN_FAMILIES = new Set([
 ]);
 
 function volumetricCrownLobeCount(family: string, placement: PlacementTuple, mobile: boolean) {
-  if (mobile || placement[1] !== 0 || !VOLUMETRIC_CROWN_FAMILIES.has(family)) return 1;
-  return family === "alpine_conifer" || family === "ridge_wind_form" ? 2 : 3;
+  if (mobile || placement[1] > 1 || !VOLUMETRIC_CROWN_FAMILIES.has(family)) return 1;
+  if (placement[1] === 1) return 2;
+  return family === "alpine_conifer" || family === "ridge_wind_form" ? 2 : 4;
 }
 
 function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
@@ -3938,9 +3989,13 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
     const instanceColor = new Color();
     instances.forEach(({ lobe, lobeCount, placement, placementIndex }, index) => {
       const signature = Math.abs(Math.round(placement[2] * 0.17 + placement[4] * 0.11 + placement[9] * 13 + placementIndex * 7));
-      const lobeAngle = placement[5] + lobe * 2.26 + (signature % 7) * 0.11;
+      const lobeAngle = placement[5]
+        + lobe * (Math.PI * 2 / Math.max(1, lobeCount))
+        + (signature % 7) * 0.11;
       const lateralOffset = lobe === 0 ? 0 : placement[6] * (lobeCount === 2 ? 1.08 : lobe === 1 ? 1.18 : 0.96);
-      const verticalOffset = lobe === 0 ? 0 : placement[7] * (lobe === 1 ? 0.52 : -0.08);
+      const verticalOffset = lobe === 0
+        ? 0
+        : placement[7] * (lobe === 1 ? 0.46 : lobe === 3 ? 0.18 : -0.06);
       dummy.position.set(
         placement[2] + Math.cos(lobeAngle) * lateralOffset,
         placement[3] + verticalOffset,
@@ -3951,7 +4006,11 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
       if (foliage) {
-        const spread = placement[1] === 0 ? mobile ? 2.5 : 1.42 : placement[1] === 1 ? mobile ? 2.02 : 1.34 : mobile ? 1.52 : 1.18;
+        const spread = placement[1] === 0
+          ? mobile ? 2.5 : 1.68
+          : placement[1] === 1
+            ? mobile ? 2.02 : 1.52
+            : mobile ? 1.52 : 1.3;
         const lobeWidth = lobe === 0 ? (lobeCount > 1 ? 0.86 : 1) : lobe === 1 ? 0.58 : 0.5;
         const lobeHeight = lobe === 0 ? (lobeCount > 1 ? 0.96 : 1) : lobe === 1 ? 0.68 : 0.61;
         const windPrunedDepth = part.family === "ridge_wind_form" ? 0.7 : lobe === 2 ? 0.83 : 0.92;
@@ -4018,8 +4077,8 @@ function RidgeBasaltField({ placements, shadows, zone }: {
   }, [gltf.scene]);
   const selected = useMemo(
     () => placements
-      .filter((placement, index) => placement[1] === 2 && index % (zone === "ridge" ? 31 : zone === "alpine" ? 17 : 43) === 0)
-      .slice(0, zone === "ridge" ? 58 : zone === "alpine" ? 76 : 42),
+      .filter((placement, index) => placement[1] === 2 && index % (zone === "ridge" ? 17 : zone === "alpine" ? 11 : 23) === 0)
+      .slice(0, zone === "ridge" ? 92 : zone === "alpine" ? 110 : 78),
     [placements, zone],
   );
   const refs = useRef<Array<InstancedMesh | null>>([]);
@@ -4033,7 +4092,7 @@ function RidgeBasaltField({ placements, shadows, zone }: {
         // Poly Haven rock_09 is authored at hand-sample scale (~15 cm tall).
         // Landscape outcrops need metre-scale transforms to remain perceptible
         // from the aerial journey cameras.
-        const scale = (zone === "ridge" ? 34 : zone === "alpine" ? 52 : 42) + ((index * 17) % 13) * 2.4;
+        const scale = (zone === "ridge" ? 31 : zone === "alpine" ? 48 : 37) + ((index * 17) % 13) * 2.15;
         dummy.position.set(placement[2], placement[3] - 0.18, placement[4]);
         dummy.rotation.set((index % 5) * 0.07, placement[5], ((index + 2) % 7) * 0.045);
         dummy.scale.set(scale * (0.82 + (index % 3) * 0.13), scale * 0.62, scale);
@@ -4098,8 +4157,8 @@ function detailedSourceKey(object: Object3D, mode: DetailedVegetationMode) {
 }
 
 function detailedVegetationTint(sourceKey: string, foliage: boolean) {
-  if (!foliage) return "#755f4e";
-  const tints = ["#f3f5ec", "#e4ecdf", "#f1f1e5", "#dbe7d8", "#ecebd7", "#dfe9df", "#efe9d5", "#d9e4d9"];
+  if (!foliage) return "#866a52";
+  const tints = ["#d8e0cf", "#c5d3c0", "#d0d9c7", "#b9ccb8", "#d6d4b5", "#c4d4c5", "#d1cfaa", "#bdcebf"];
   const signature = [...sourceKey].reduce((total, character) => total + character.charCodeAt(0), 0);
   return tints[signature % tints.length];
 }
@@ -4119,8 +4178,8 @@ function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode
       material.color.set(detailedVegetationTint(sourceKey, foliage));
       material.vertexColors = true;
       material.depthWrite = true;
-      material.emissive.set(foliage ? "#315d2d" : "#080604");
-      material.emissiveIntensity = foliage ? 0.34 : 0.018;
+      material.emissive.set(foliage ? "#152719" : "#080604");
+      material.emissiveIntensity = foliage ? 0.24 : 0.018;
       material.emissiveMap = null;
       material.envMapIntensity = foliage ? 0.22 : 0.18;
       material.metalness = 0;
@@ -4168,7 +4227,9 @@ function isMultiSlopeSuccessionPlacement(placement: PlacementTuple, zone: V116Zo
   if (placement[0] >= 8) return false;
   if (zone === "ridge") return placement[1] === 1 && placement[3] >= -4;
   if (zone === "valley") return placement[1] === 1 && placement[3] >= 12;
-  if (zone === "alpine") return placement[1] === 2 && placement[3] >= 20 && placement[3] <= 185;
+  if (zone === "alpine") return placement[1] === 1
+    && placement[3] >= 20
+    && placement[3] <= 205;
   return false;
 }
 
@@ -4359,7 +4420,7 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
   if (zone === "lake") return baseline;
   // Balanced can carry the denser mid LOD. High keeps a sparse hero review
   // sample after the denser AW2 branch proved visually modest for its cost.
-  const successionDivisor = tier === "high" ? 8 : 2;
+  const successionDivisor = tier === "high" ? 8 : zone === "alpine" ? 1 : 2;
   const succession = instances.filter((placement) => (
     isMultiSlopeSuccessionPlacement(placement, zone)
     && multiSlopeSuccessionSignature(placement) % successionDivisor === 0
@@ -4504,8 +4565,8 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
       mesh.setMatrixAt(index, matrix);
-      const foliagePalette = ["#eef2df", "#d5e2cf", "#c3d2b9", "#e2e1c6", "#b6c9aa", "#cdd7b5", "#d8cfaa"];
-      const barkPalette = ["#f0dfca", "#d9c4ad", "#c9b29c", "#e5d0b7"];
+      const foliagePalette = ["#d4dfca", "#b8cfad", "#d8d0a8", "#a9c2a6", "#d4e0bd", "#c2c6a1", "#b4d0bf", "#e1d7aa"];
+      const barkPalette = ["#80624c", "#6e523e", "#8b6c52", "#5f4838", "#92785f"];
       instanceColor.set(part.foliage
         ? foliagePalette[signature % foliagePalette.length]
         : barkPalette[signature % barkPalette.length]);
@@ -4700,11 +4761,13 @@ function selectRegionalHabitatGroundcover(
     && (
       (zone === "ridge" && isRidgeDrainageSuccessionPlacement(placement))
       || (zone === "valley" && isEasternValleyCatchmentHabitatPlacement(placement))
+      || (zone === "alpine" && placement[0] < 8 && placement[3] >= 16 && placement[3] <= 215)
     )
   ));
-  return tier === "high" ? eligible : eligible.filter((placement) => (
-    multiSlopeSuccessionSignature(placement) % 4 !== 1
-  ));
+  // Balanced keeps the complete already-grounded drainage stratum. These
+  // anchors are habitat-gated and reuse resident instanced assets, so the gain
+  // is visible ground contact rather than uniform scene-wide density.
+  return eligible;
 }
 
 function watershedGroundcoverSource(placement: PlacementTuple, index: number): WatershedGroundcoverKey {
@@ -4715,6 +4778,19 @@ function watershedGroundcoverSource(placement: PlacementTuple, index: number): W
 
 function riparianGroundcoverSource(placement: PlacementTuple, index: number): WatershedGroundcoverKey {
   const signature = Math.abs(Math.round(placement[2] * 3 + placement[4] * 5 + index * 17));
+  return signature % 3 === 0 ? "shrub" : "fern";
+}
+
+function regionalGroundcoverSource(placement: PlacementTuple, index: number, zone: "ridge" | "valley" | "alpine"): WatershedGroundcoverKey {
+  const signature = Math.abs(Math.round(placement[2] * 2.7 + placement[4] * 4.3 + index * 19));
+  const drainageRatio = zone === "alpine"
+    ? 0.74 + (signature % 9) * 0.035
+    : zone === "ridge"
+    ? ridgeDrainageHabitatDistanceRatio(placement)
+    : easternValleyCatchmentHabitatDistanceRatio(placement);
+  // Exposed outer drainage shoulders carry restrained boulder anchors, while
+  // the wetter channel interiors remain fern/shrub succession.
+  if (drainageRatio > 0.68 && signature % 5 === 0) return "rock";
   return signature % 3 === 0 ? "shrub" : "fern";
 }
 
@@ -4929,33 +5005,40 @@ function DetailedContactTrailheadGroundcover({ placements, shadows }: {
 function DetailedRegionalHabitatGroundcover({ placements, shadows, zone }: {
   placements: PlacementTuple[];
   shadows: boolean;
-  zone: "ridge" | "valley";
+  zone: "ridge" | "valley" | "alpine";
 }) {
   const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern);
+  const rock = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.rock);
   const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub);
   const parts = useMemo(() => [
     ...prepareWatershedGroundcover(fern.scene, "fern"),
+    ...prepareWatershedGroundcover(rock.scene, "rock"),
     ...prepareWatershedGroundcover(shrub.scene, "shrub"),
-  ], [fern.scene, shrub.scene]);
+  ], [fern.scene, rock.scene, shrub.scene]);
   const bySource = useMemo(() => {
     const result = new Map<WatershedGroundcoverKey, PlacementTuple[]>();
     placements.forEach((placement, index) => {
-      const sourceKey = riparianGroundcoverSource(placement, index);
+      const sourceKey = regionalGroundcoverSource(placement, index, zone);
       result.set(sourceKey, [...(result.get(sourceKey) ?? []), placement]);
     });
     return result;
-  }, [placements]);
+  }, [placements, zone]);
   useEffect(() => {
     const host = window as Window & { __MADAGIN_REGIONAL_HABITAT_V116__?: Record<string, unknown> };
-    const key = zone === "ridge" ? "ridgeDrainage" : "easternValleyCatchment";
+    const key = zone === "ridge" ? "ridgeDrainage" : zone === "valley" ? "easternValleyCatchment" : "alpineSuccession";
     host.__MADAGIN_REGIONAL_HABITAT_V116__ = {
       ...(host.__MADAGIN_REGIONAL_HABITAT_V116__ ?? {}),
       [key]: {
         fern: bySource.get("fern")?.length ?? 0,
         groundedPlacements: placements.length,
-        habitatAuthority: zone === "ridge" ? "ridge-erosion-network" : "eastern-valley-catchment-network",
+        habitatAuthority: zone === "ridge"
+          ? "ridge-erosion-network"
+          : zone === "valley"
+            ? "eastern-valley-catchment-network"
+            : "alpine-elevation-and-exposure-band",
+        rock: bySource.get("rock")?.length ?? 0,
         shrub: bySource.get("shrub")?.length ?? 0,
-        sources: [WATERSHED_GROUNDCOVER_URLS.fern, WATERSHED_GROUNDCOVER_URLS.shrub],
+        sources: [WATERSHED_GROUNDCOVER_URLS.fern, WATERSHED_GROUNDCOVER_URLS.rock, WATERSHED_GROUNDCOVER_URLS.shrub],
       },
     };
     document.documentElement.dataset.madaginRegionalHabitatV116 = JSON.stringify(
@@ -4967,7 +5050,7 @@ function DetailedRegionalHabitatGroundcover({ placements, shadows, zone }: {
     });
   }, [bySource, parts, placements.length, zone]);
   return (
-    <group name={`Madagin v1.16 ${zone} drainage-coupled fern and shrub succession · ${placements.length}`}>
+    <group name={`Madagin Candidate BQ ${zone} drainage-coupled fern, shrub, and basalt succession · ${placements.length}`}>
       {parts.flatMap((part, index) => {
         const sourcePlacements = bySource.get(part.sourceKey) ?? [];
         return sourcePlacements.length ? (
@@ -5030,7 +5113,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     [detailedVegetationSet, manifest.instances, mobile, tier, zone],
   );
   const regionalHabitatGroundcover = useMemo(() => {
-    if (zone !== "ridge" && zone !== "valley") return [];
+    if (zone !== "ridge" && zone !== "valley" && zone !== "alpine") return [];
     const occupied = new Set([...detailedPlacements, ...contactTrailheadGroundcover]);
     return selectRegionalHabitatGroundcover(manifest.instances, mobile, tier, zone)
       .filter((placement) => !occupied.has(placement));
@@ -5049,7 +5132,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     if (detailedSet.has(placement)) return false;
     if (zone === "lake" && isLakeBankSuccessionPlacement(placement)) return false;
     if (tier === "high" && !mobile) return true;
-    if (tier === "balanced" && !mobile) return placement[1] < 2 || index % 4 !== 1;
+    if (tier === "balanced" && !mobile) return true;
     if (mobile && zone === "lake" && isRiparianHabitatPlacement(placement)) return true;
     if (mobile) return placement[1] === 0 ? index % 4 !== 1 : index % 2 === 0;
     return placement[1] === 0 ? index % 3 === 0 : index % 5 === 0;
@@ -5146,7 +5229,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
           <DetailedContactTrailheadGroundcover placements={contactTrailheadGroundcover} shadows={shadows} />
         </Suspense>
       ) : null}
-      {regionalHabitatGroundcover.length && (zone === "ridge" || zone === "valley") ? (
+      {regionalHabitatGroundcover.length && (zone === "ridge" || zone === "valley" || zone === "alpine") ? (
         <Suspense fallback={null}>
           <DetailedRegionalHabitatGroundcover
             placements={regionalHabitatGroundcover}
@@ -5231,7 +5314,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           cos(phaseA) * 0.07 + cos(phaseB) * 0.125 + sin(capillary) * ${lake ? "0.014" : "0.0"}
         ));
         n = ${lake
-    ? "normalize(mix(vec3(0.0, 1.0, 0.0), rippleNormal, 0.14))"
+    ? "normalize(mix(vec3(0.0, 1.0, 0.0), rippleNormal, 0.2))"
     : `normalize(mix(n, rippleNormal, ${directional ? "0.105" : "0.078"}))`};
         vec3 viewDirection = normalize(cameraPosition - vWorld);
         float fresnel = pow(
@@ -5259,9 +5342,9 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     : "smoothstep(0.0, 0.16, lakeInterior)"};
         float basinDepth = ${directional ? "bankSoftening" : "smoothstep(0.12, 0.76, lakeInterior)"};
         float riverMouth = ${river ? "smoothstep(0.94, 1.0, vWaterUv.y)" : "0.0"};
-        vec3 depthColor = ${headwater ? "vec3(0.004, 0.021, 0.021)" : river ? "mix(vec3(0.005, 0.029, 0.03), vec3(0.003, 0.021, 0.028), riverMouth)" : lake ? "vec3(0.003, 0.019, 0.028)" : "vec3(0.007, 0.043, 0.05)"};
-        vec3 surfaceColor = ${headwater ? "vec3(0.019, 0.062, 0.052)" : river ? "mix(vec3(0.022, 0.086, 0.083), vec3(0.014, 0.064, 0.078), riverMouth)" : lake ? "vec3(0.018, 0.064, 0.078)" : "vec3(0.03, 0.11, 0.125)"};
-        vec3 shallowColor = ${headwater ? "vec3(0.042, 0.09, 0.07)" : river ? "mix(vec3(0.054, 0.12, 0.1), vec3(0.052, 0.13, 0.12), riverMouth)" : lake ? "vec3(0.05, 0.125, 0.115)" : "vec3(0.085, 0.17, 0.15)"};
+        vec3 depthColor = ${headwater ? "vec3(0.004, 0.021, 0.021)" : river ? "mix(vec3(0.005, 0.029, 0.03), vec3(0.003, 0.021, 0.028), riverMouth)" : lake ? "vec3(0.002, 0.012, 0.019)" : "vec3(0.007, 0.043, 0.05)"};
+        vec3 surfaceColor = ${headwater ? "vec3(0.019, 0.062, 0.052)" : river ? "mix(vec3(0.022, 0.086, 0.083), vec3(0.014, 0.064, 0.078), riverMouth)" : lake ? "vec3(0.012, 0.052, 0.066)" : "vec3(0.03, 0.11, 0.125)"};
+        vec3 shallowColor = ${headwater ? "vec3(0.042, 0.09, 0.07)" : river ? "mix(vec3(0.054, 0.12, 0.1), vec3(0.052, 0.13, 0.12), riverMouth)" : lake ? "vec3(0.055, 0.108, 0.086)" : "vec3(0.085, 0.17, 0.15)"};
         vec3 reflectionDirection = reflect(-viewDirection, n);
         float reflectedHeight = smoothstep(-0.12, 0.78, reflectionDirection.y);
         vec3 atmosphericReflection = mix(
@@ -5284,12 +5367,12 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           * (1.0 - basinDepth) * bankSoftening;
         color = mix(color, mix(vec3(0.075, 0.095, 0.058), vec3(0.15, 0.14, 0.086), submergedStone), shorelineTurbidity * 0.52);
         color += vec3(0.28, 0.34, 0.22) * littoralCaustic * ${lake ? "0.0" : directional ? "0.055" : "0.075"};
-        color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.09" : "0.2 + broad * 0.11"});
-        color += vec3(0.025, 0.052, 0.057) * (lakeSurfaceVariation - 0.5) * lakeInterior * ${lake ? "0.7" : "0.0"};
-        color = mix(color, skyReflection, fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.7" : "0.4"});
-        color += vec3(0.36, 0.47, 0.44) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.028" : "0.055"};
-        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.028" : "0.06"};
-        float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "0.72, 0.94" : "0.66, 0.88"}, fresnel) * mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : lake ? "0.78" : "0.72"}, 1.0, bankSoftening) * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
+        color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.12 + broad * 0.035" : "0.2 + broad * 0.11"});
+        color += vec3(0.018, 0.046, 0.055) * (lakeSurfaceVariation - 0.5) * lakeInterior * ${lake ? "0.95" : "0.0"};
+        color = mix(color, skyReflection, fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.76" : "0.4"});
+        color += vec3(0.32, 0.43, 0.42) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.048" : "0.055"};
+        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.055" : "0.06"};
+        float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "0.7, 0.93" : "0.66, 0.88"}, fresnel) * ${lake ? "mix(0.36, 1.0, bankSoftening)" : `mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : "0.72"}, 1.0, bankSoftening)`} * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
         gl_FragColor = vec4(color, opacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -6185,7 +6268,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     [mobile, tier],
   );
   const lakeBedMaterial = useMemo(() => new MeshBasicMaterial({
-    color: "#263a31",
+    color: "#18281f",
     side: DoubleSide,
   }), []);
   const riverGeometry = useMemo(
@@ -6483,10 +6566,10 @@ const CLOUD_BANKS = [
 
 const TERRAIN_CONTACT_MIST_BANKS = [
   { authority: "ridge-drainage", position: [-72, 48, -205] as [number, number, number], scale: [172, 36, 62] as [number, number, number], opacity: 0.15 },
-  { authority: "valley-catchment", position: [-88, 16, -720] as [number, number, number], scale: [278, 40, 96] as [number, number, number], opacity: 0.19 },
+  { authority: "valley-catchment", position: [-88, 16, -720] as [number, number, number], scale: [278, 40, 96] as [number, number, number], opacity: 0.22 },
   { authority: "waterfall-plunge", position: [146, -6, -700] as [number, number, number], scale: [118, 34, 64] as [number, number, number], opacity: 0.2 },
-  { authority: "lake-basin", position: [-8, -25, -888] as [number, number, number], scale: [206, 28, 76] as [number, number, number], opacity: 0.15 },
-  { authority: "upper-valley-saddle", position: [84, 68, -522] as [number, number, number], scale: [224, 30, 78] as [number, number, number], opacity: 0.13 },
+  { authority: "lake-basin", position: [-8, -25, -888] as [number, number, number], scale: [206, 28, 76] as [number, number, number], opacity: 0.17 },
+  { authority: "upper-valley-saddle", position: [84, 68, -522] as [number, number, number], scale: [224, 30, 78] as [number, number, number], opacity: 0.16 },
   { authority: "coastal-shoulder", position: [-388, -2, -132] as [number, number, number], scale: [248, 27, 82] as [number, number, number], opacity: 0.11 },
 ];
 
@@ -6533,12 +6616,12 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       <fogExp2 attach="fog" args={["#78969e", tier === "conservative" ? 0.00042 : 0.00046]} />
       <SkyDome reducedMotion={reducedMotion} />
       <PhysicalSkyEnvironment intensityScale={0.7} tier={tier} />
-      <hemisphereLight args={["#c8dde0", "#17251e", 0.96]} />
-      <ambientLight color="#758d8c" intensity={0.12} />
+      <hemisphereLight args={["#bfd4d7", "#15221c", 0.9]} />
+      <ambientLight color="#718887" intensity={0.09} />
       <directionalLight
         castShadow={shadows}
-        color="#ffd0a0"
-        intensity={2.34}
+        color="#f4dac1"
+        intensity={2.16}
         position={[-420, 280, 360]}
         shadow-bias={-0.00012}
         shadow-normalBias={0.24}
@@ -6719,7 +6802,10 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
   const ecologyChunks = zone === "summit" ? chunks.filter((chunk) => chunk !== "ridge") : chunks;
   useEffect(() => {
     document.documentElement.dataset.madaginWorldVersion = "v1.16";
-    const host = window as Window & { __MADAGIN_WORLD_STREAM_V116__?: unknown };
+    const host = window as Window & {
+      __MADAGIN_REALISM_BQ__?: Record<string, unknown>;
+      __MADAGIN_WORLD_STREAM_V116__?: unknown;
+    };
     host.__MADAGIN_WORLD_STREAM_V116__ = {
       chapter: zone,
       currentAndNextChunks: chunks,
@@ -6727,10 +6813,24 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       terrainContinuityPolicy: "retain visible neighboring landforms; stream ecology by current and next chapter",
       updatedAt: new Date().toISOString(),
     };
+    host.__MADAGIN_REALISM_BQ__ = {
+      candidate: "BQ",
+      categories: {
+        atmosphereAndLighting: "neutral physical key light plus strengthened terrain-contact weather",
+        ecologyAndGrounding: "natural canopy response plus complete drainage succession and expanded resident basalt anchors",
+        materialScale: "mesoscale talus, mineral seams, damp concavities, and cooler volcanic hierarchy",
+        terrainStructure: "asymmetric eroded Alpine crest plus paired Valley mass-wasting headwalls and runoff relief",
+        waterIntegration: "deeper wind-structured lake optics with a softened transparent littoral boundary",
+      },
+      detachedTerrainShells: false,
+      sources: [V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      waterNetworkProtected: true,
+    };
+    document.documentElement.dataset.madaginRealismBq = JSON.stringify(host.__MADAGIN_REALISM_BQ__);
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BP real-time spatial world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BQ integrated realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>

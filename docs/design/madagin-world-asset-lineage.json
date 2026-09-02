@@ -307,6 +307,63 @@
     },
     "decisionBoundary": "BP materially improves protected Ridge and regional Valley structure, terrain climate/material response, the black lake-edge defect, live lake variation, and terrain-contact weather while rejecting both canopy regression and topology overbuild. It remains visibly synthetic: inherited macro-scale terrain and repeated tree sources dominate, water reflection/refraction and coast scale are simplified, visible cloud contact remains weak, mobile ecology is compact, and physical-device profiling is absent. Overall reference realism remains score 1."
   },
+  "ninthPostLaunchCandidate": {
+    "selected": "Candidate BQ / v122-asymmetric-summit-canopy-bq-selected",
+    "commit": null,
+    "deploymentId": null,
+    "immutableUrl": null,
+    "status": "selected local cumulative realism candidate; optimized public matrix, seven-view sequence, and fixed-camera motion proof pass; production verification pending",
+    "changedCategories": [
+      "bounded asymmetric Alpine source-cone saddle, unequal crowns, descending crest spurs, upper-face headwall, terraces, talus breaks, and branching drainage on the existing detailed surface",
+      "strengthened protected regional Valley interfluves, unequal mass-wasting headwalls, runoff incision, terrace relief, and retained lake, river, waterfall, Ridge, Alpine, and world boundaries",
+      "cooler volcanic material hierarchy with mesoscale talus, mineral seams, damp concavities, litter, moss, and world-space surface detail",
+      "expanded primary crown volume, Ridge basalt anchors, complete balanced layer-two groundcover, and a new altitude-and-exposure-coupled Alpine fern, shrub, and rock succession authority",
+      "deeper wind-structured lake surface and softened transparent littoral response plus stronger terrain-contact weather and neutralized physical key light"
+    ],
+    "rejectedIterations": [
+      "candidate-bq-local used an excessively dark foliage response that obscured crown structure and was rejected",
+      "candidate-bq-local-02 and candidate-bq-local-final retained underfilled crown mass and were superseded by the selected full layer-zero and layer-one volumetric hierarchy",
+      "an earlier summit profile remained too conical and was replaced by the bounded split-crown saddle, crest-spur, and headwall deformation"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bq-local-final2/sequence.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-bq-local-final2/runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-bq-local-final2/motion/motion-evidence.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bq-optimized/runtime-gates.json",
+    "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-bq-optimized/sequence.json",
+    "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-bq-optimized/motion/motion-evidence.json",
+    "selectedTelemetry": {
+      "watershedTriangles": 744535,
+      "regionalVolcanicAdjustedVertices": 219888,
+      "regionalGroundcoverOpening": 471,
+      "regionalGroundcoverAlpine": 539,
+      "regionalHabitatAuthorities": 3,
+      "openingVolumetricCrownPlacements": 1334,
+      "openingVolumetricCrownRenderedLobes": 3844,
+      "lakeVolumetricCrownPlacements": 1379,
+      "lakeVolumetricCrownRenderedLobes": 3950,
+      "detailedAlpineTriangles": 313292,
+      "detailedAlpineMaximumReliefMeters": 168.178686,
+      "summitMacroformMaximumIncisionMeters": 159.236952,
+      "summitMacroformMaximumUpliftMeters": 27.52896,
+      "detachedTerrainGeometry": false,
+      "waterNetworkProtected": true,
+      "terrainContactMistBanks": 6,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceSha256": {
+      "renderer": "01B6103388C7042D35309995E6B9254EFBEC19B84E4A39B95E9C9B0BAE04E712",
+      "publicSequenceVerifier": "865721294FCC639B78783E35EAD0D02A7D87B4663F56BFA322E694E54441ED46",
+      "internalRuntimeVerifier": "85BFAC1650F94D8E33EF26B7DF57397C0896AF1834532692C5C87AB53AC64F9D"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BP",
+      "commit": "68dae91e51a3f6cc1777cd3fe4632c03ed1a7aa0",
+      "deploymentId": "dpl_8PDT5fRHAb6fP5PjnftHhBNXcHsD",
+      "immutableUrl": "https://projectwebbing-ihf1kja3y-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BQ is a simultaneous structural, material, ecology, water, and atmosphere pass with measurable normal-view gains and no detached terrain shell or video substitution. It remains visibly synthetic: inherited low-resolution landform facets, repeated legacy vegetation sources, simplified basin reflection and refraction, a still-authored coastline, weak atmospheric depth, compact mobile ecology, and missing physical-device profiling prevent a photoreal or finished claim. Overall reference realism remains score 1."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",

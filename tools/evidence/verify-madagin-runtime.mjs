@@ -53,6 +53,7 @@ for (const testCase of cases) {
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
+    realismBQ: window.__MADAGIN_REALISM_BQ__ ?? null,
     terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
     videoElements: document.querySelectorAll("video").length,
     v115Marker: document.body.textContent?.includes("WORLD SLICE V1.15") ?? false,
@@ -77,6 +78,15 @@ for (const testCase of cases) {
       : alpineGeology?.triangles === baseAlpineTriangles)
     && alpineGeology?.valleyBoundaryProtected === true
     && alpineGeology?.worldBoundsProtected === true
+    && (testCase.expectsAlpineDetail !== "detailed" || (
+      alpineGeology?.maximumReliefMeters > 0
+      && alpineGeology?.maximumReliefMeters <= 180
+      && alpineGeology?.summitMacroform?.detachedGeometry === false
+      && alpineGeology?.summitMacroform?.maximumIncisionMeters > 0
+      && alpineGeology?.summitMacroform?.maximumIncisionMeters <= 170
+      && alpineGeology?.summitMacroform?.maximumUpliftMeters > 0
+      && alpineGeology?.summitMacroform?.maximumUpliftMeters <= 40
+    ))
   );
   const watershedRelief = testCase.expectsWatershedRelief
     ? evidence.detailedTerrain?.valley?.watershedIntegration?.regionalVolcanicLandform
@@ -86,9 +96,9 @@ for (const testCase of cases) {
     && watershedRelief?.lakeRiverAndWaterfallProtected === true
     && watershedRelief?.subdivisionPasses === 0
     && watershedRelief?.maximumIncisionMeters > 0
-    && watershedRelief?.maximumIncisionMeters <= 14.4
+    && watershedRelief?.maximumIncisionMeters <= 22.5
     && watershedRelief?.maximumUpliftMeters > 0
-    && watershedRelief?.maximumUpliftMeters <= 10.5
+    && watershedRelief?.maximumUpliftMeters <= 17.5
     && evidence.detailedTerrain?.valley?.watershedIntegration?.subdivision?.triangles <= 1_500_000
     && evidence.terrainContactMist?.banks === 6
   );
@@ -101,6 +111,12 @@ for (const testCase of cases) {
       || evidence.compactJourneySeam?.method === "exact-source-boundary-zipper-hermite-remesh")
     && alpineGeologyPassed
     && watershedReliefPassed
+    && (testCase.expectedVersion !== "v1.16" || (
+      evidence.realismBQ?.candidate === "BQ"
+      && Object.keys(evidence.realismBQ?.categories ?? {}).length === 5
+      && evidence.realismBQ?.detachedTerrainShells === false
+      && evidence.realismBQ?.waterNetworkProtected === true
+    ))
     && !forbiddenV115OnMobile
     && pageErrors.length === 0;
   results.push({ consoleMessages, evidence, failedRequests, id: testCase.id, pageErrors, passed });
