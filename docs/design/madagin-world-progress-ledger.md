@@ -1553,3 +1553,31 @@ BJ is selected because it produces simultaneous visible gains in canopy continui
 ## BK cycle stop boundary
 
 BK is selected because it combines a major terminal composition correction with an actual source-surface silhouette change, cooler Alpine material hierarchy, and bounded real-rock diversity. It does not meet photoreal or completion criteria. The next material batch must improve fine geological structure and texture scale on the enlarged crown, introduce effective terrain-intersecting atmospheric depth without fog cover, diversify the repeated tree source set, and validate on physical mobile hardware.
+
+## Candidate BL validation
+
+- BL is the first Continuous Living Journey release candidate and retains BK's cumulative terrain, water, Alpine, lighting, atmosphere, canopy, fallback, semantic, and one-canvas/no-video authorities.
+- The public camera is no longer driven by document scroll. It starts a deterministic 36-second Ridge-to-Summit rail only after the first Ridge ecology-ready stage, then guides through Ocean and Sky holds before settling. The document remains at `scrollY=0`; deliberate user controls pause the rail and expose Ocean, Sky, Continue, Resume, Replay, and Skip actions.
+- The opening activation set now includes Lake, so the integrated lake, basin bed, main river, headwater, waterfall, plunge pool, and outflow are resident before the crest reveal. The new telemetry declares the ordered hydrological chain and keeps the connected waterfall geometry mounted while its camera occlusion—not React activation—controls visibility.
+- Procedural and detailed foliage materials receive spatially phased, height-weighted vertex wind with placement-derived gust offsets. Cloud banks now translate slowly in addition to their retained shader evolution; existing river, lake, waterfall, sky, and ocean time uniforms remain active. Fixed-camera Ridge and Ocean frame pairs differ after 1.6 seconds while journey progress and `scrollY` remain exactly fixed.
+- Balanced desktop retains 75 percent instead of 50 percent of eligible layer-2 procedural groundcover, while procedural instance color expands from three foliage tones to a restrained six-tone habitat palette and four bark tones. High, conservative, and mobile source policies remain bounded; no new asset or external license is introduced.
+- Fresh local public verification passes 6/6 and the optimized `next start` public matrix independently passes 6/6. Supported desktop/mobile each mount one canvas, zero video elements, advance from Ridge to Reveal without scrolling, and complete Ocean/Sky/Continue checks. Reduced-motion, data-saver, low-power, and WebGL-unavailable cases mount zero canvases and request zero world assets. The internal development matrix passes 7/7.
+- Fresh `pnpm.cmd check` passes ESLint, TypeScript, and the optimized Next.js 16.3 build. `node --check` passes the new motion recorder; the seven-view sequence records one canvas, zero videos, `scrollY=0`, and zero page errors throughout.
+- Source SHA-256: renderer `E31B7EFD641993CDCEA05AAA1A4F865D7DB91E7202A0035B5CA746F62C8D8757`; World Lab `3C21493285AF47595F60F25F5E3387B6D74FA6BC8D1B587811DF517A7A86FBDD`; public home `E90C5538D763DC4D46A20DE373144CDB70842F387C2C77666D908490BD8F59B8`; public runtime verifier `9C2CAB2577FAA68276BB03696A9D5B6D36D695BD01A8527351A5EA0CD33DF242`; motion recorder `204A000DE2A998FE808C8A704A1E6F2C351E6B8F83F0B242667CB32F02A3E2C0`.
+
+## BL perceptual delta
+
+| Category | Candidate BK | Candidate BL | Decision boundary |
+| --- | ---: | ---: | --- |
+| Public journey autonomy | 1 | 4 | BL begins after a meaningful live frame and crosses Ridge, Valley, Lake, Waterfall, and Summit without click, drag, or page scroll. |
+| Ocean / Sky discoverability | 1 | 3 | Both are labeled public controls with pointer/touch/keyboard activation and a Continue path; the Ocean coast and Sky atmospheric composition remain synthetic. |
+| Environmental motion | 2 | 3 | Spatially phased foliage wind, translating/evolving clouds, and retained live water motion produce fixed-camera frame differences; physical-device smoothness remains unverified. |
+| Lake / waterfall reveal continuity | 1 | 3 | Lake and the entire connected water assembly are resident before reveal, removing activation-time emptiness; broader basin/coast optics remain authored. |
+| Balanced hillside density / variation | 2 | 3 | More grounded layer-2 coverage and six restrained foliage tones improve continuity, but repeated source silhouettes and simplified materials remain obvious. |
+| Accessibility / fallbacks | 3 | 4 | Public controls are labeled and keyboard reachable; reduced-motion/data-saver/low-power/no-WebGL retain zero world requests. Broader formal accessibility auditing is not claimed. |
+| Terrain / water photographic realism | 2 / 2 | 2 / 2 | BL improves continuity and life rather than the still-synthetic terrain texture scale, geological resolution, reflection/refraction, coast, or dynamic range. |
+| Reference realism | 1 | 1 | The live world remains decisively below the photographic references despite a more complete and living public experience. |
+
+## BL release boundary
+
+BL is selected for release because it simultaneously corrects the public journey authority, meaningful-load start, world continuity, environmental motion, public exploration controls, water residency, and balanced ecological density without weakening any fallback or reintroducing video. It is not a photoreal or finish milestone. The next substantial release must prioritize terrain/geology texture scale, non-repeated ecological source silhouettes, terrain-intersecting weather, and physically stronger lake/ocean/coast optics, followed by real-device profiling.

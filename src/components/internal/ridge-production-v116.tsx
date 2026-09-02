@@ -10,6 +10,7 @@ import {
   FileLoader,
   Float32BufferAttribute,
   FrontSide,
+  Group,
   InstancedMesh,
   Material,
   Matrix4,
@@ -164,7 +165,10 @@ function useEcologyManifest(zone: V116Zone) {
 }
 
 function activeChunks(zone: JourneyCheckpointId): V116Zone[] {
-  if (zone === "ridge") return ["ridge", "valley"];
+  // Lake and its connected water authority are resident before the opening
+  // crest. High-detail ecology can still change by chapter, but the visitor
+  // must never look through an unloaded basin while the camera reveals it.
+  if (zone === "ridge") return ["ridge", "valley", "lake"];
   if (zone === "reveal") return ["ridge", "valley", "lake"];
   if (zone === "lake") return ["valley", "lake", "alpine"];
   if (zone === "waterfall" || zone === "clearing") return ["valley", "lake"];
@@ -3549,6 +3553,49 @@ function prepareSpecies(scene: Object3D) {
   return parts;
 }
 
+type LivingWindUniform = { value: number };
+
+function enableLivingWind(material: MeshStandardMaterial, strength: number) {
+  const windTime: LivingWindUniform = { value: 0 };
+  material.userData.madaginWindTime = windTime;
+  material.userData.madaginWindStrength = strength;
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uMadaginWindTime = windTime;
+    shader.uniforms.uMadaginWindStrength = { value: strength };
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+uniform float uMadaginWindTime;
+uniform float uMadaginWindStrength;`,
+      )
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+vec3 madaginAnchor = vec3(modelMatrix[3]);
+#ifdef USE_INSTANCING
+  madaginAnchor = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+#endif
+float madaginHeight = 1.0 - exp(-max(position.y, 0.0) * 0.42);
+float madaginExposure = 0.72 + 0.28 * sin(madaginAnchor.x * 0.013 - madaginAnchor.z * 0.017);
+float madaginGust = sin(uMadaginWindTime * 0.74 + madaginAnchor.x * 0.021 + madaginAnchor.z * 0.014)
+  + sin(uMadaginWindTime * 0.31 - madaginAnchor.x * 0.008 + madaginAnchor.z * 0.019 + position.y * 0.38) * 0.46;
+float madaginFlutter = sin(uMadaginWindTime * 1.9 + madaginAnchor.x * 0.043 - madaginAnchor.z * 0.037 + position.y * 1.7) * 0.22;
+transformed.x += (madaginGust + madaginFlutter) * madaginHeight * madaginExposure * uMadaginWindStrength;
+transformed.z += (madaginGust * 0.34 - madaginFlutter * 0.58) * madaginHeight * madaginExposure * uMadaginWindStrength;`,
+      );
+  };
+  material.customProgramCacheKey = () => `madagin-living-wind-v2-${strength}`;
+  material.needsUpdate = true;
+}
+
+function updateLivingWind(source: Material | Material[], elapsedTime: number) {
+  (Array.isArray(source) ? source : [source]).forEach((material) => {
+    const windTime = material.userData.madaginWindTime as LivingWindUniform | undefined;
+    if (windTime) windTime.value = elapsedTime;
+  });
+}
+
 function variantMaterials(source: Material | Material[]) {
   const originals = Array.isArray(source) ? source : [source];
   const result = originals.map((original) => {
@@ -3561,6 +3608,7 @@ function variantMaterials(source: Material | Material[]) {
       side: foliage ? DoubleSide : FrontSide,
     });
     material.name = `${original.name} · v1.16 instanced variation`;
+    if (foliage) enableLivingWind(material, 0.16);
     return material;
   });
   return Array.isArray(source) ? result : result[0];
@@ -3578,6 +3626,7 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
     () => (Array.isArray(part.material) ? part.material : [part.material]).some((material) => /foliage|leaf|frond/i.test(material.name)),
     [part.material],
   );
+  useFrame(({ clock }) => updateLivingWind(materials, clock.elapsedTime));
   useLayoutEffect(() => {
     const mesh = ref.current;
     if (!mesh) return;
@@ -3597,10 +3646,12 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
         matrix.multiply(crownScale);
       }
       mesh.setMatrixAt(index, matrix);
-      const hue = placement[9];
+      const signature = Math.abs(Math.round(placement[2] * 0.17 + placement[4] * 0.11 + placement[9] * 13 + index * 7));
+      const foliagePalette = ["#294735", "#31543a", "#3b5b3c", "#496540", "#556c45", "#344f38"];
+      const barkPalette = ["#38291f", "#433127", "#4c382b", "#554332"];
       instanceColor.set(foliage
-        ? hue === 0 ? "#31543a" : hue === 2 ? "#4b6440" : "#294b36"
-        : hue === 0 ? "#3c2d23" : hue === 2 ? "#51402f" : "#443127");
+        ? foliagePalette[signature % foliagePalette.length]
+        : barkPalette[signature % barkPalette.length]);
       mesh.setColorAt(index, instanceColor);
     });
     mesh.instanceMatrix.needsUpdate = true;
@@ -3758,6 +3809,7 @@ function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode
       material.roughness = Math.max(foliage ? 0.88 : 0.94, material.roughness ?? 0.9);
       material.side = foliage ? DoubleSide : FrontSide;
       material.transparent = false;
+      if (foliage) enableLivingWind(material, mode === "hero" ? 0.2 : 0.14);
       material.needsUpdate = true;
       return material;
     });
@@ -4024,6 +4076,7 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
   zone: V116Zone;
 }) {
   const ref = useRef<InstancedMesh>(null);
+  useFrame(({ clock }) => updateLivingWind(part.material, clock.elapsedTime));
   useLayoutEffect(() => {
     const mesh = ref.current;
     if (!mesh) return;
@@ -4196,6 +4249,7 @@ function prepareWatershedGroundcover(scene: Object3D, sourceKey: WatershedGround
       material.roughness = Math.max(foliage ? 0.94 : 0.97, material.roughness ?? 0.94);
       material.side = foliage ? DoubleSide : FrontSide;
       material.transparent = false;
+      if (foliage) enableLivingWind(material, sourceKey === "fern" ? 0.22 : 0.15);
       material.needsUpdate = true;
       return material;
     });
@@ -4268,6 +4322,7 @@ function InstancedWatershedGroundcover({ part, placements, shadows }: {
   shadows: boolean;
 }) {
   const ref = useRef<InstancedMesh>(null);
+  useFrame(({ clock }) => updateLivingWind(part.material, clock.elapsedTime));
   useLayoutEffect(() => {
     const mesh = ref.current;
     if (!mesh) return;
@@ -4509,7 +4564,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     if (detailedSet.has(placement)) return false;
     if (zone === "lake" && isLakeBankSuccessionPlacement(placement)) return false;
     if (tier === "high" && !mobile) return true;
-    if (tier === "balanced" && !mobile) return placement[1] < 2 || index % 2 === 0;
+    if (tier === "balanced" && !mobile) return placement[1] < 2 || index % 4 !== 1;
     if (mobile && zone === "lake" && isRiparianHabitatPlacement(placement)) return true;
     if (mobile) return placement[1] === 0 ? index % 4 !== 1 : index % 2 === 0;
     return placement[1] === 0 ? index % 3 === 0 : index % 5 === 0;
@@ -5560,7 +5615,10 @@ function createIntegratedLakeBedGeometry(angularSegments: number, radialSegments
 }
 
 function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: boolean; reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier; zone: JourneyCheckpointId }) {
-  const waterfallVisible = zone === "clearing" || zone === "waterfall";
+  // The complete hydrological chain stays resident from the first Ridge frame;
+  // chapter visibility is determined by geography and camera occlusion rather
+  // than mounting the headwater only after the visitor has reached it.
+  const waterfallVisible = true;
   const gltf = useLoader(GLTFLoader, `${ROOT}/water-lake-waterfall-v1.16.glb`, configureCompressedGltf);
   const activeWaterMaterial = useRef<ShaderMaterial | null>(null);
   const activePoolMaterial = useRef<ShaderMaterial | null>(null);
@@ -5693,6 +5751,8 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     host.__MADAGIN_WATERFALL_LANDFORM_V116__ = {
       authority: "runtime remesh of active Valley terrain plus connected project-authored water surfaces",
       body: waterfallGeometry.userData.waterfallBody,
+      continuousHydrology: true,
+      networkOrder: ["headwater", "waterfall lip", "waterfall body", "plunge pool", "outflow", "main river", "lake inlet", "lake", "coastal outlet", "ocean"],
       outflowJoin: waterfallOutflowGeometry.userData.outflowJoin,
       outflowVertices: waterfallOutflowGeometry.getAttribute("position").count,
       plungeVertices: waterfallPlungeGeometry.getAttribute("position").count,
@@ -5863,9 +5923,17 @@ const CLOUD_BANKS = [
 ];
 
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
+  const cloudGroup = useRef<Group>(null);
   const clouds = useMemo(() => CLOUD_BANKS.slice(0, tier === "conservative" ? 1 : tier === "balanced" ? 3 : 4), [tier]);
   const materials = useMemo(() => clouds.map((cloud, index) => createCloudMaterial(cloud.opacity, index + 1)), [clouds]);
-  useFrame(({ clock }) => materials.forEach((material) => { material.uniforms.uTime.value = reducedMotion ? 0 : clock.elapsedTime; }));
+  useFrame(({ clock }) => {
+    const time = reducedMotion ? 0 : clock.elapsedTime;
+    materials.forEach((material) => { material.uniforms.uTime.value = time; });
+    if (cloudGroup.current) {
+      cloudGroup.current.position.x = Math.sin(time * 0.018) * 9 + time * 0.12 % 18;
+      cloudGroup.current.position.z = Math.sin(time * 0.011 + 0.8) * 7;
+    }
+  });
   useEffect(() => () => materials.forEach((material) => material.dispose()), [materials]);
   return (
     <group name="Madagin v1.16 single physical atmosphere and lighting authority">
@@ -5893,11 +5961,13 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
         shadow-mapSize-width={tier === "high" ? 1536 : 1024}
       />
       <directionalLight color="#a4c3c8" intensity={0.16} position={[170, 120, -250]} />
-      {clouds.map((cloud, index) => (
-        <mesh key={cloud.position.join(":")} material={materials[index]} position={cloud.position} scale={cloud.scale}>
-          <sphereGeometry args={[0.5, 24, 12]} />
-        </mesh>
-      ))}
+      <group ref={cloudGroup}>
+        {clouds.map((cloud, index) => (
+          <mesh key={cloud.position.join(":")} material={materials[index]} position={cloud.position} scale={cloud.scale}>
+            <sphereGeometry args={[0.5, 24, 12]} />
+          </mesh>
+        ))}
+      </group>
     </group>
   );
 }
@@ -6042,6 +6112,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       terrainContinuityPolicy: "retain visible neighboring landforms; stream ecology by current and next chapter",
       updatedAt: new Date().toISOString(),
     };
+    document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
     <group name={`Madagin Ridge-to-Valley v1.16 real-time spatial world · ${zone} · ${chunks.join("+")}`}>

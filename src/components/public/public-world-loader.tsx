@@ -3,6 +3,7 @@
 import type { MotionValue } from "motion/react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import type { WorldViewId } from "@/lib/world-manifest";
 import styles from "./public-world-loader.module.css";
 
 const PublicWorldExperience = dynamic(
@@ -41,10 +42,14 @@ function inspectEligibility(motionOff: boolean): Eligibility {
 }
 
 export function PublicWorldLoader({
+  activeView,
   motionOff,
+  onReady,
   progress,
 }: {
+  activeView: WorldViewId;
   motionOff: boolean;
+  onReady: () => void;
   progress: MotionValue<number>;
 }) {
   const [eligibility, setEligibility] = useState<Eligibility>({ live: false, reason: "checking" });
@@ -59,7 +64,7 @@ export function PublicWorldLoader({
   return (
     <div className={styles.shell} data-public-world-loader={eligibility.reason}>
       {eligibility.live ? (
-        <PublicWorldExperience className={styles.renderer} progress={progress} />
+        <PublicWorldExperience activeView={activeView} className={styles.renderer} onReady={onReady} progress={progress} />
       ) : (
         <div aria-hidden="true" className={styles.visualFallback} />
       )}

@@ -56,7 +56,10 @@
   },
   "thirdPostLaunchCandidate": {
     "selected": "Candidate BK / v117-public-reality-c4",
-    "status": "selected local cumulative realism candidate pending production release",
+    "commit": "d6016af2ce739b5d78d7080a1794a6fc6111d890",
+    "deploymentId": "dpl_6VYz6HmPjAXGnh6FB1TEGAhb3rT2",
+    "immutableUrl": "https://projectwebbing-njoi5osi2-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative realism candidate; production matrix passes six of six",
     "changedCategories": [
       "split asymmetric Alpine crown and eroded saddle on the active source surface",
       "closer public desktop Summit composition aimed at the crown",
@@ -68,6 +71,23 @@
     "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-c4-optimized/runtime-gates.json",
     "internalRuntimeEvidence": "output/playwright/madagin-world-progress/v117-public-reality-c4/runtime-gates.json",
     "decisionBoundary": "The Summit changes from a distant single pyramid beyond an empty slope to a dominant multi-crown volcanic ridge. Cloud-contact experiments C1 through C3 were visually ineffective and are excluded. Rock material/source repetition, fine geological scale, compact composition, photographic atmosphere, and physical-device evidence remain below finish criteria."
+  },
+  "fourthPostLaunchCandidate": {
+    "selected": "Candidate BL / v118-continuous-living-a3",
+    "status": "selected local continuous-living cumulative candidate pending production release",
+    "changedCategories": [
+      "meaningful-world-ready automatic 36-second Ridge-to-Summit rail with guided Ocean and Sky holds",
+      "public Pause, Resume, Replay, Ocean, Sky, Continue, Skip, pointer, and swipe affordances",
+      "opening-resident Lake/water network and permanently connected waterfall source, plunge, and outflow geometry",
+      "spatially phased vertex wind, cloud-bank translation, existing live water motion, and fixed-camera motion proof",
+      "denser balanced groundcover sampling and six-tone restrained vegetation variation"
+    ],
+    "visualEvidence": "output/playwright/madagin-world-progress/v118-continuous-living-a3/sequence.json",
+    "motionEvidence": "output/playwright/madagin-world-progress/v118-continuous-living-a3/motion/motion-evidence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v118-continuous-living-a3/runtime-gates.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v118-continuous-living-a3-optimized/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/latest/runtime-gates.json",
+    "decisionBoundary": "BL removes scroll as the public camera authority, starts only after a meaningful Ridge ecology frame, keeps the Lake and connected waterfall chain resident before reveal, proves environment motion while camera and scroll remain fixed, and exposes Ocean/Sky controls. Terrain texture scale, geological detail, terrain-cloud contact, ocean/coast optics, source diversity, physical-device evidence, and reference realism remain below finish criteria."
   },
   "components": {
     "topologyAndStreaming": {

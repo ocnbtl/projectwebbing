@@ -1,18 +1,19 @@
 .journey {
   position: relative;
-  height: 720svh;
+  height: 100svh;
   background: #020609;
   color: var(--milk-white);
 }
 
 .stage {
-  position: sticky;
+  position: relative;
   top: 0;
   height: 100svh;
   min-height: 36rem;
   overflow: hidden;
   isolation: isolate;
   background: #020609;
+  touch-action: pan-y;
 }
 
 .worldPlate {
@@ -149,7 +150,9 @@
 }
 
 .motionControl {
+  top: 7.25rem;
   right: clamp(1.25rem, 3.4vw, 3.5rem);
+  bottom: auto;
   min-height: 2.75rem;
   border: 0;
   border-bottom: 1px solid rgba(252, 252, 252, 0.48);
@@ -163,6 +166,7 @@
 }
 
 .scrollCue {
+  bottom: 5.6rem;
   left: clamp(1.25rem, 3.4vw, 3.5rem);
   display: flex;
   align-items: center;
@@ -174,6 +178,81 @@
   width: 2.5rem;
   height: 1px;
   background: currentColor;
+}
+
+.journeyControls {
+  position: absolute;
+  z-index: 9;
+  bottom: 1.2rem;
+  left: 50%;
+  display: grid;
+  width: min(44rem, calc(100% - 2.5rem));
+  gap: 0.55rem;
+  padding: 0.7rem 0.85rem 0.65rem;
+  border: 1px solid rgba(252, 252, 252, 0.2);
+  background: rgba(3, 10, 14, 0.68);
+  box-shadow: 0 0.8rem 3rem rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(14px);
+  transform: translateX(-50%);
+}
+
+.viewControls,
+.playbackControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.journeyControls button,
+.journeyControls a {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(252, 252, 252, 0.24);
+  background: rgba(252, 252, 252, 0.04);
+  color: rgba(252, 252, 252, 0.86);
+  font: inherit;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.journeyControls button:hover,
+.journeyControls button:focus-visible,
+.journeyControls a:hover,
+.journeyControls a:focus-visible,
+.journeyControls button[aria-pressed="true"] {
+  border-color: rgba(252, 252, 252, 0.76);
+  background: rgba(252, 252, 252, 0.13);
+  color: var(--milk-white);
+}
+
+.journeyProgress {
+  height: 1px;
+  overflow: hidden;
+  background: rgba(252, 252, 252, 0.2);
+}
+
+.journeyProgress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: rgba(252, 252, 252, 0.88);
+  transform-origin: 0 50%;
+}
+
+.gestureHint {
+  margin: 0;
+  color: rgba(252, 252, 252, 0.58);
+  font-size: 0.62rem;
+  letter-spacing: 0.045em;
+  text-align: center;
 }
 
 .editorial {
@@ -659,7 +738,7 @@
 
 @media (max-width: 720px) {
   .journey {
-    height: 620svh;
+    height: 100svh;
   }
 
   .stage {
@@ -697,11 +776,27 @@
   }
 
   .motionControl {
+    top: 8.4rem;
     right: 1.1rem;
   }
 
   .scrollCue {
-    left: 1.1rem;
+    display: none;
+  }
+
+  .journeyControls {
+    bottom: 0.8rem;
+    width: calc(100% - 1.4rem);
+    padding: 0.55rem;
+  }
+
+  .journeyControls button,
+  .journeyControls a {
+    min-height: 2.6rem;
+    flex: 1;
+    padding-right: 0.45rem;
+    padding-left: 0.45rem;
+    font-size: 0.61rem;
   }
 
   .promiseSection {

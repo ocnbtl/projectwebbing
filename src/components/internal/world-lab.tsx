@@ -2015,17 +2015,20 @@ export function WorldLab() {
 }
 
 type PublicWorldExperienceProps = {
+  activeView: WorldViewId;
   className?: string;
+  onReady?: () => void;
   progress: MotionValue<number>;
 };
 
-export function PublicWorldExperience({ className, progress }: PublicWorldExperienceProps) {
+export function PublicWorldExperience({ activeView, className, onReady, progress }: PublicWorldExperienceProps) {
   const [device] = useState<DeviceProfile | null>(() =>
     typeof document === "undefined" ? null : inspectDevice(false),
   );
   const [journeyCheckpoint, setJourneyCheckpoint] = useState(0);
   const [canvasReady, setCanvasReady] = useState(false);
   const [canvasFailed, setCanvasFailed] = useState(false);
+  const meaningfulReadySent = useRef(false);
   const handleRendererFailure = useCallback(() => {
     setCanvasReady(false);
     setCanvasFailed(true);
@@ -2042,6 +2045,27 @@ export function PublicWorldExperience({ className, progress }: PublicWorldExperi
     window.addEventListener("madagin:journey-chapter", handleJourneyChapter);
     return () => window.removeEventListener("madagin:journey-chapter", handleJourneyChapter);
   }, []);
+
+  useEffect(() => {
+    const markMeaningfulReady = () => {
+      if (meaningfulReadySent.current) return;
+      meaningfulReadySent.current = true;
+      document.documentElement.dataset.madaginMeaningfulWorldReady = "true";
+      onReady?.();
+    };
+    const handleRidgeStage = (event: Event) => {
+      const detail = (event as CustomEvent<{ stage?: number; zone?: JourneyCheckpointId }>).detail;
+      if (!meaningfulReadySent.current && detail?.zone === "ridge" && (detail.stage ?? 0) >= 2) {
+        markMeaningfulReady();
+      }
+    };
+    window.addEventListener("madagin:ridge-stage", handleRidgeStage);
+    const stages = (window as Window & {
+      __MADAGIN_RIDGE_STAGES_V116__?: Array<{ stage?: number; zone?: JourneyCheckpointId }>;
+    }).__MADAGIN_RIDGE_STAGES_V116__ ?? [];
+    if (stages.some((stage) => stage.zone === "ridge" && (stage.stage ?? 0) >= 2)) markMeaningfulReady();
+    return () => window.removeEventListener("madagin:ridge-stage", handleRidgeStage);
+  }, [onReady]);
 
   if (!device) {
     return (
@@ -2064,6 +2088,7 @@ export function PublicWorldExperience({ className, progress }: PublicWorldExperi
       data-public-world="true"
       data-quality-tier={device.tier}
       data-renderer-state={rendererAvailable ? (canvasReady ? "live" : "loading") : "fallback"}
+      data-world-view={activeView}
       data-world-chapter={JOURNEY_CHECKPOINTS[journeyCheckpoint].id}
     >
       <div
@@ -2084,7 +2109,7 @@ export function PublicWorldExperience({ className, progress }: PublicWorldExperi
             }}
           >
             <Scene
-              activeView="journey"
+              activeView={activeView}
               diagnosticMode={null}
               contactStep={0}
               device={device}

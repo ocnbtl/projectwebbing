@@ -18,15 +18,11 @@ const outputRoot = path.resolve(
   label,
 );
 const checkpoints = [
-  // The public journey intentionally holds its opening composition through
-  // the first 18 percent of the section, then maps the remaining 72 percent
-  // to the complete World Lab rail. These scroll positions therefore sample
-  // the authored world chapters rather than evenly spaced page positions.
-  { id: "opening", progress: 0 },
-  { id: "valley", progress: 0.419 },
-  { id: "lake", progress: 0.541 },
-  { id: "waterfall", progress: 0.721 },
-  { id: "summit", progress: 0.9 },
+  { id: "opening", progress: 0.01 },
+  { id: "valley", progress: 0.34 },
+  { id: "lake", progress: 0.5 },
+  { id: "waterfall", progress: 0.75 },
+  { id: "summit", progress: 0.98 },
 ];
 
 await fs.mkdir(outputRoot, { recursive: true });
@@ -39,22 +35,27 @@ const pageErrors = [];
 page.on("pageerror", (error) => pageErrors.push(error.message));
 await page.goto(origin, { waitUntil: "domcontentloaded", timeout: 60_000 });
 await page.locator('[data-renderer-state="live"]').waitFor({ timeout: 60_000 });
-await page.waitForTimeout(4_000);
+await page.waitForFunction(
+  () => document.documentElement.dataset.madaginMeaningfulWorldReady === "true",
+  undefined,
+  { timeout: 60_000 },
+);
 
 const results = [];
 for (const checkpoint of checkpoints) {
-  await page.evaluate((progress) => {
-    const loader = document.querySelector("[data-public-world-loader]");
-    const journey = loader?.closest("section");
-    if (!(journey instanceof HTMLElement)) throw new Error("Public journey section was not found.");
-    const travel = Math.max(0, journey.offsetHeight - window.innerHeight);
-    window.scrollTo({ behavior: "instant", top: journey.offsetTop + travel * progress });
-  }, checkpoint.progress);
-  await page.waitForTimeout(2_500);
+  await page.waitForFunction(
+    (target) => Number(document.documentElement.dataset.madaginJourneyProgress ?? 0) >= target,
+    checkpoint.progress,
+    { timeout: 60_000 },
+  );
+  await page.waitForTimeout(350);
   const evidence = await page.evaluate(() => ({
     canvasCount: document.querySelectorAll("canvas").length,
     chapter: document.querySelector("[data-world-chapter]")?.getAttribute("data-world-chapter") ?? null,
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
+    journeyState: document.documentElement.dataset.madaginJourneyState ?? null,
+    journeyView: document.documentElement.dataset.madaginJourneyView ?? null,
+    worldView: document.querySelector("[data-public-world]")?.getAttribute("data-world-view") ?? null,
     scrollY: window.scrollY,
     videoCount: document.querySelectorAll("video").length,
     worldResources: performance.getEntriesByType("resource")
@@ -67,6 +68,31 @@ for (const checkpoint of checkpoints) {
     fullPage: false,
   });
   results.push({ ...checkpoint, ...evidence });
+}
+
+for (const view of [
+  { action: "ocean", id: "ocean", expected: "about" },
+  { action: "sky", id: "sky", expected: "projects" },
+]) {
+  await page.locator(`[data-journey-action="${view.action}"]`).click();
+  await page.locator(`[data-public-world][data-world-view="${view.expected}"]`).waitFor({ timeout: 10_000 });
+  await page.waitForTimeout(2_500);
+  const evidence = await page.evaluate(() => ({
+    canvasCount: document.querySelectorAll("canvas").length,
+    chapter: document.querySelector("[data-world-chapter]")?.getAttribute("data-world-chapter") ?? null,
+    rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
+    journeyState: document.documentElement.dataset.madaginJourneyState ?? null,
+    journeyView: document.documentElement.dataset.madaginJourneyView ?? null,
+    worldView: document.querySelector("[data-public-world]")?.getAttribute("data-world-view") ?? null,
+    scrollY: window.scrollY,
+    videoCount: document.querySelectorAll("video").length,
+    worldResources: performance.getEntriesByType("resource")
+      .map((entry) => entry.name)
+      .filter((name) => name.includes("/world/"))
+      .length,
+  }));
+  await page.screenshot({ path: path.join(outputRoot, `${view.id}.png`), fullPage: false });
+  results.push({ id: view.id, progress: 1, ...evidence });
 }
 
 await browser.close();

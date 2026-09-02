@@ -24,8 +24,8 @@ const executablePath = process.env.MADAGIN_BROWSER_EXECUTABLE
   ?? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 
 const cases = [
-  { id: "desktop-live", viewport: { width: 1440, height: 900 }, expectedPolicy: "supported", expectedState: "live", expectedTier: "balanced", scroll: true },
-  { id: "mobile-compact", viewport: { width: 390, height: 844 }, expectedPolicy: "supported", expectedState: "live", expectedTier: "conservative", scroll: true },
+  { id: "desktop-live", viewport: { width: 1440, height: 900 }, expectedPolicy: "supported", expectedState: "live", expectedTier: "balanced", autoplay: true },
+  { id: "mobile-compact", viewport: { width: 390, height: 844 }, expectedPolicy: "supported", expectedState: "live", expectedTier: "conservative", autoplay: true },
   { id: "reduced-motion-fallback", viewport: { width: 1440, height: 900 }, reducedMotion: "reduce", expectedPolicy: "reduced-motion", expectedState: "fallback", expectedTier: null },
   { id: "data-saver-fallback", viewport: { width: 1440, height: 900 }, capability: "data-saver", expectedPolicy: "data-saver", expectedState: "fallback", expectedTier: null },
   { id: "low-power-fallback", viewport: { width: 390, height: 844 }, capability: "low-power", expectedPolicy: "low-power", expectedState: "fallback", expectedTier: null },
@@ -87,18 +87,24 @@ for (const testCase of cases) {
   await page.locator(`[data-public-world-loader="${testCase.expectedPolicy}"]`).waitFor({ timeout: 60_000 });
   if (testCase.expectedState === "live") {
     await page.locator('[data-public-world][data-renderer-state="live"]').waitFor({ timeout: 60_000 });
-    await page.waitForTimeout(4_000);
+    await page.waitForFunction(
+      () => document.documentElement.dataset.madaginMeaningfulWorldReady === "true",
+      undefined,
+      { timeout: 60_000 },
+    );
+    await page.waitForTimeout(750);
   }
 
   const readWorldChapter = () => page.evaluate(() =>
     document.querySelector("[data-public-world]")?.getAttribute("data-world-chapter") ?? null,
   );
+  const initialScrollY = await page.evaluate(() => window.scrollY);
   const initialChapter = await readWorldChapter();
-  if (testCase.scroll) {
-    await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight * 0.62, behavior: "instant" }));
-    await page.waitForTimeout(10_000);
+  if (testCase.autoplay) {
+    await page.waitForTimeout(12_000);
   }
   const finalChapter = await readWorldChapter();
+  const finalScrollY = await page.evaluate(() => window.scrollY);
 
   await page.keyboard.press("Home");
   await page.waitForTimeout(250);
@@ -107,6 +113,21 @@ for (const testCase of cases) {
     href: document.activeElement?.getAttribute("href") ?? null,
     text: document.activeElement?.textContent?.trim() ?? null,
   }));
+
+  const guidedViews = { continueReached: false, oceanReached: false, skyReached: false };
+  if (testCase.expectedState === "live") {
+    await page.locator('[data-journey-action="ocean"]').click();
+    await page.locator('[data-public-world][data-world-view="about"]').waitFor({ timeout: 10_000 });
+    guidedViews.oceanReached = true;
+    await page.waitForTimeout(750);
+    await page.locator('[data-journey-action="sky"]').click();
+    await page.locator('[data-public-world][data-world-view="projects"]').waitFor({ timeout: 10_000 });
+    guidedViews.skyReached = true;
+    await page.waitForTimeout(750);
+    await page.locator('[data-journey-action="continue"]').click();
+    await page.locator('[data-public-world][data-world-view="journey"]').waitFor({ timeout: 10_000 });
+    guidedViews.continueReached = true;
+  }
   await page.screenshot({ fullPage: false, path: path.join(outputRoot, `${testCase.id}.png`) });
 
   const evidence = await page.evaluate(() => {
@@ -119,6 +140,10 @@ for (const testCase of cases) {
         || document.body.textContent?.includes("Prototype diagnostics")
         || false,
       h1: document.querySelector("h1")?.textContent?.trim() ?? null,
+      journeyControls: document.querySelectorAll("[data-journey-action]").length,
+      journeyProgress: document.documentElement.dataset.madaginJourneyProgress ?? null,
+      journeyState: document.documentElement.dataset.madaginJourneyState ?? null,
+      journeyView: document.documentElement.dataset.madaginJourneyView ?? null,
       loaderPolicy: document.querySelector("[data-public-world-loader]")?.getAttribute("data-public-world-loader") ?? null,
       navigationLinks: primaryNavigation ? [...primaryNavigation.querySelectorAll("a")].map((link) => link.getAttribute("href")) : [],
       qualityTier: publicWorld?.getAttribute("data-quality-tier") ?? null,
@@ -133,9 +158,12 @@ for (const testCase of cases) {
   const requiredResponseFailures = worldResponses.filter(({ status }) => status < 200 || status >= 300);
   const videoRequests = requestedUrls.filter((url) => /\.(?:mp4|webm|mov)(?:$|\?)/i.test(new URL(url).pathname));
   const worldRequests = requestedUrls.filter((url) => new URL(url).pathname.startsWith("/world/"));
-  const chapterMoved = !testCase.scroll || (initialChapter !== null && finalChapter !== null && initialChapter !== finalChapter);
+  const chapterMoved = !testCase.autoplay || (initialChapter !== null && finalChapter !== null && initialChapter !== finalChapter);
+  const stayedAtLandingPosition = initialScrollY === 0 && finalScrollY === 0;
   const fallbackStayedLightweight = testCase.expectedState !== "fallback" || worldRequests.length === 0;
   const mobileAvoidedV115 = testCase.id !== "mobile-compact" || !worldRequests.some((url) => new URL(url).pathname.startsWith("/world/v115/"));
+  const controlsWorked = testCase.expectedState !== "live"
+    || (evidence.journeyControls >= 4 && guidedViews.oceanReached && guidedViews.skyReached && guidedViews.continueReached);
   const passed = evidence.canvasCount === (testCase.expectedState === "live" ? 1 : 0)
     && evidence.videoCount === 0
     && videoRequests.length === 0
@@ -151,6 +179,8 @@ for (const testCase of cases) {
     && pageErrors.length === 0
     && requiredResponseFailures.length === 0
     && chapterMoved
+    && stayedAtLandingPosition
+    && controlsWorked
     && fallbackStayedLightweight
     && mobileAvoidedV115;
 
@@ -161,13 +191,18 @@ for (const testCase of cases) {
     failedRequests,
     fallbackStayedLightweight,
     finalChapter,
+    finalScrollY,
+    guidedViews,
     id: testCase.id,
     initialChapter,
+    initialScrollY,
     keyboardFocus,
     mobileAvoidedV115,
     pageErrors,
     passed,
     requiredResponseFailures,
+    stayedAtLandingPosition,
+    controlsWorked,
     videoRequests,
     worldRequestCount: worldRequests.length,
   });

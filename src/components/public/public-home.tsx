@@ -1,13 +1,14 @@
 "use client";
 
 import type { MotionValue } from "motion/react";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useMotionValue, useTransform } from "motion/react";
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { MadaginMark, PublicFooter, PublicHeader } from "@/components/public/public-chrome";
 import { PublicWorldLoader } from "@/components/public/public-world-loader";
 import type { ContentItem } from "@/lib/content-types";
 import { method, promise, standards } from "@/lib/brand";
+import type { WorldViewId } from "@/lib/world-manifest";
 import styles from "./public-home.module.css";
 
 const letters = [..."MADAGIN"];
@@ -19,6 +20,18 @@ const valueWindows = [
 ] as const;
 
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
+const guidedJourneyDurationMs = 36_000;
+const oceanHoldDurationMs = 5_000;
+const skyHoldDurationMs = 5_000;
+
+type JourneyPlaybackState = "waiting" | "playing" | "paused" | "complete";
+
+type PublicJourneyTelemetry = {
+  elapsedMs: number;
+  progress: number;
+  state: JourneyPlaybackState;
+  view: WorldViewId;
+};
 
 function subscribeToReducedMotion(onChange: () => void) {
   const mediaQuery = window.matchMedia(reducedMotionQuery);
@@ -108,13 +121,133 @@ function ContentPreview({ item, route }: { item: ContentItem; route: "projects" 
 export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts: ContentItem[] }) {
   const journeyRef = useRef<HTMLElement>(null);
   const motionToggleUsed = useRef(false);
+  const elapsedJourneyMs = useRef(0);
+  const activeViewRef = useRef<WorldViewId>("journey");
+  const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
   const prefersReducedMotion = useHydrationSafeReducedMotion();
   const [useLessMotion, setUseLessMotion] = useState(false);
+  const [worldReady, setWorldReady] = useState(false);
+  const [activeView, setActiveView] = useState<WorldViewId>("journey");
+  const [playbackState, setPlaybackState] = useState<JourneyPlaybackState>("waiting");
   const motionOff = Boolean(prefersReducedMotion || useLessMotion);
-  const { scrollYProgress } = useScroll({ target: journeyRef, offset: ["start start", "end end"] });
-  const worldProgress = useTransform(scrollYProgress, [0, 0.18, 0.9, 1], [0, 0, 1, 1]);
-  const wordFilter = useTransform(scrollYProgress, [0, 0.12, 0.27, 1], ["opacity(1)", "opacity(1)", "opacity(0)", "opacity(0)"]);
-  const shadeFilter = useTransform(scrollYProgress, [0, 0.22, 0.38, 0.92, 1], ["opacity(0.2)", "opacity(0.2)", "opacity(0.04)", "opacity(0.22)", "opacity(0.22)"]);
+  const worldProgress = useMotionValue(0);
+  const wordFilter = useTransform(worldProgress, [0, 0.08, 0.2, 1], ["opacity(1)", "opacity(1)", "opacity(0)", "opacity(0)"]);
+  const shadeFilter = useTransform(worldProgress, [0, 0.05, 0.28, 0.92, 1], ["opacity(0.2)", "opacity(0.2)", "opacity(0.04)", "opacity(0.22)", "opacity(0.22)"]);
+
+  const publishJourneyTelemetry = useCallback((progress: number, state: JourneyPlaybackState, view: WorldViewId) => {
+    const detail: PublicJourneyTelemetry = {
+      elapsedMs: Math.round(elapsedJourneyMs.current),
+      progress: Math.round(progress * 10_000) / 10_000,
+      state,
+      view,
+    };
+    const host = window as Window & { __MADAGIN_PUBLIC_JOURNEY__?: PublicJourneyTelemetry };
+    host.__MADAGIN_PUBLIC_JOURNEY__ = detail;
+    document.documentElement.dataset.madaginJourneyProgress = detail.progress.toFixed(4);
+    document.documentElement.dataset.madaginJourneyState = state;
+    document.documentElement.dataset.madaginJourneyView = view;
+  }, []);
+
+  const selectView = useCallback((view: WorldViewId) => {
+    activeViewRef.current = view;
+    setActiveView(view);
+  }, []);
+
+  const pauseJourney = useCallback(() => {
+    setPlaybackState((current) => current === "complete" ? current : "paused");
+  }, []);
+
+  const replayJourney = useCallback(() => {
+    elapsedJourneyMs.current = 0;
+    worldProgress.set(0);
+    selectView("journey");
+    setPlaybackState(worldReady ? "playing" : "waiting");
+  }, [selectView, worldProgress, worldReady]);
+
+  const resumeJourney = useCallback(() => {
+    if (playbackState === "complete") {
+      replayJourney();
+      return;
+    }
+    selectView("journey");
+    setPlaybackState(worldReady ? "playing" : "waiting");
+  }, [playbackState, replayJourney, selectView, worldReady]);
+
+  const openGuidedView = useCallback((view: "about" | "projects") => {
+    pauseJourney();
+    selectView(view);
+  }, [pauseJourney, selectView]);
+
+  const handleWorldReady = useCallback(() => {
+    setWorldReady(true);
+    setPlaybackState((current) => current === "waiting" ? "playing" : current);
+  }, []);
+
+  const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest("a, button")) return;
+    pointerStart.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  }, []);
+
+  const handlePointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = pointerStart.current;
+    pointerStart.current = null;
+    if (!start || start.id !== event.pointerId || (event.target as HTMLElement).closest("a, button")) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (Math.abs(deltaX) < 48 && Math.abs(deltaY) < 48) return;
+    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < 0) openGuidedView("about");
+    if (Math.abs(deltaY) >= Math.abs(deltaX) && deltaY < 0) openGuidedView("projects");
+  }, [openGuidedView]);
+
+  useEffect(() => {
+    publishJourneyTelemetry(worldProgress.get(), playbackState, activeView);
+  }, [activeView, playbackState, publishJourneyTelemetry, worldProgress]);
+
+  useEffect(() => {
+    if (motionOff || playbackState !== "playing" || !worldReady) {
+      publishJourneyTelemetry(worldProgress.get(), playbackState, activeViewRef.current);
+      return;
+    }
+
+    let frame = 0;
+    let previousAt = performance.now();
+    let telemetryAt = previousAt;
+    const resetFrameClock = () => { previousAt = performance.now(); };
+    document.addEventListener("visibilitychange", resetFrameClock);
+    const totalDurationMs = guidedJourneyDurationMs + oceanHoldDurationMs + skyHoldDurationMs;
+    const tick = (now: number) => {
+      const delta = document.hidden ? 0 : Math.max(0, now - previousAt);
+      previousAt = now;
+      elapsedJourneyMs.current = Math.min(totalDurationMs, elapsedJourneyMs.current + delta);
+      const elapsed = elapsedJourneyMs.current;
+      if (elapsed < guidedJourneyDurationMs) {
+        if (activeViewRef.current !== "journey") selectView("journey");
+        worldProgress.set(elapsed / guidedJourneyDurationMs);
+      } else if (elapsed < guidedJourneyDurationMs + oceanHoldDurationMs) {
+        worldProgress.set(1);
+        if (activeViewRef.current !== "about") selectView("about");
+      } else if (elapsed < totalDurationMs) {
+        worldProgress.set(1);
+        if (activeViewRef.current !== "projects") selectView("projects");
+      } else {
+        worldProgress.set(1);
+        selectView("journey");
+        setPlaybackState("complete");
+        publishJourneyTelemetry(1, "complete", "journey");
+        return;
+      }
+      if (now - telemetryAt >= 200) {
+        telemetryAt = now;
+        publishJourneyTelemetry(worldProgress.get(), "playing", activeViewRef.current);
+      }
+      frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => {
+      document.removeEventListener("visibilitychange", resetFrameClock);
+      window.cancelAnimationFrame(frame);
+    };
+  }, [motionOff, playbackState, publishJourneyTelemetry, selectView, worldProgress, worldReady]);
 
   useEffect(() => {
     if (!motionToggleUsed.current) return;
@@ -130,20 +263,47 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
       <a className="skip-link" href="#site-content">Skip the mountain journey</a>
       <main>
         <section ref={journeyRef} className={`${styles.journey} ${motionOff ? styles.motionOff : ""}`} aria-labelledby="madagin-title">
-          <div className={styles.stage}>
+          <div
+            className={styles.stage}
+            data-public-journey-state={playbackState}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+          >
             <PublicHeader tone="dark" />
             <div className={styles.worldPlate}>
-              <PublicWorldLoader motionOff={motionOff} progress={worldProgress} />
+              <PublicWorldLoader activeView={activeView} motionOff={motionOff} onReady={handleWorldReady} progress={worldProgress} />
             </div>
             <motion.div className={styles.stageShade} style={motionOff ? undefined : { filter: shadeFilter }} />
             <h1 id="madagin-title" className={styles.srTitle}>Madagin</h1>
             <p className={styles.heroPromise}>{promise}</p>
             <motion.div className={styles.wordmark} role="img" aria-label="Madagin" style={motionOff ? undefined : { filter: wordFilter }}>
-              {letters.map((letter, index) => <DraggedLetter index={index} key={`${letter}-${index}`} letter={letter} motionOff={motionOff} progress={scrollYProgress} />)}
+              {letters.map((letter, index) => <DraggedLetter index={index} key={`${letter}-${index}`} letter={letter} motionOff={motionOff} progress={worldProgress} />)}
             </motion.div>
             <div className={styles.valueStack} aria-label="The standards Madagin works toward">
-              {standards.map((standard, index) => <ValueScene index={index} key={standard.name} motionOff={motionOff} name={standard.name} progress={scrollYProgress} question={standard.question} />)}
+              {standards.map((standard, index) => <ValueScene index={index} key={standard.name} motionOff={motionOff} name={standard.name} progress={worldProgress} question={standard.question} />)}
             </div>
+            {!motionOff && worldReady ? (
+              <div className={styles.journeyControls} aria-label="Mountain journey controls">
+                <div className={styles.viewControls}>
+                  <button aria-pressed={activeView === "about"} data-journey-action="ocean" onClick={() => openGuidedView("about")} type="button">← Ocean</button>
+                  <button aria-pressed={activeView === "projects"} data-journey-action="sky" onClick={() => openGuidedView("projects")} type="button">↑ Sky</button>
+                  {activeView !== "journey" ? <button data-journey-action="continue" onClick={resumeJourney} type="button">Continue</button> : null}
+                </div>
+                <div className={styles.playbackControls}>
+                  <button
+                    data-journey-action={playbackState === "playing" ? "pause" : "play"}
+                    onClick={playbackState === "playing" ? pauseJourney : resumeJourney}
+                    type="button"
+                  >
+                    {playbackState === "playing" ? "Pause" : playbackState === "complete" ? "Play again" : "Resume"}
+                  </button>
+                  <button data-journey-action="replay" onClick={replayJourney} type="button">Replay</button>
+                  <a href="#site-content">Skip</a>
+                </div>
+                <div className={styles.journeyProgress} aria-hidden="true"><motion.span style={{ scaleX: worldProgress }} /></div>
+                <p className={styles.gestureHint}>Swipe or drag left for the ocean · up for the sky</p>
+              </div>
+            ) : null}
             <button
               aria-pressed={useLessMotion}
               className={styles.motionControl}
@@ -155,7 +315,10 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
             >
               {useLessMotion ? "Use full motion" : "Use less motion"}
             </button>
-            <div className={styles.scrollCue} aria-hidden="true"><span /> Scroll to cross the ridge</div>
+            <div className={styles.scrollCue} aria-hidden="true"><span /> The journey begins automatically</div>
+            <p className={styles.srTitle} aria-live="polite">
+              {playbackState === "playing" ? "The guided mountain journey is playing." : playbackState === "complete" ? "The guided mountain journey is complete." : "The guided mountain journey is paused."}
+            </p>
           </div>
         </section>
 
