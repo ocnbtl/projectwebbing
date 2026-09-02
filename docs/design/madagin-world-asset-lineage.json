@@ -239,6 +239,69 @@
     },
     "decisionBoundary": "BO produces a clear production-visible gain in foliage color legibility, layered crown volume, opening-world exposure, and subtle surface/weather response without adding an asset or changing the compact/mobile resource boundary. It remains visibly synthetic: the same legacy tree source silhouettes still repeat, broad terrain forms remain faceted and materially uniform at photographic scale, the lake has a hard authored shoreline and limited optical depth, terrain-contact mist is subtle, waterfall/coast optics remain simplified, and no physical-device profile exists. Overall reference realism remains score 1."
   },
+  "eighthPostLaunchCandidate": {
+    "selected": "Candidate BP / v121-regional-volcanic-relief-bp-selected",
+    "commit": null,
+    "deploymentId": null,
+    "immutableUrl": null,
+    "status": "selected local cumulative realism candidate; release provenance and production verification pending",
+    "changedCategories": [
+      "protected Ridge second-order drainage, unequal buttress, and terrace-break deformation on the active detailed source surface",
+      "protected regional Valley interfluves, runoff incisions, cross-rills, shoulders, and weathered terraces without detached terrain geometry",
+      "weathered mantle, deposition, windward and mesic material mosaics, reduced inherited texture authority, and retained volcanic micro-normal response",
+      "denser non-black lake edge optics, muted wet-basalt basin response, stronger irregular moving surface variation, wind response, and bounded glint",
+      "six animated terrain-contact weather authorities spanning Ridge drainage, Valley catchment, waterfall plunge, lake basin, upper-Valley saddle, and coastal shoulder",
+      "runtime watershed telemetry and a 1.5-million-triangle ceiling that rejects disproportionate adaptive topology"
+    ],
+    "rejectedIterations": [
+      "candidate-bp-v2 combined a dark foliage palette with balanced alpha-tested canopy shadows and crushed vegetation into black silhouettes",
+      "candidate-bp-v3 retained an intermediate palette that remained visibly too dark; BO foliage response was restored exactly",
+      "candidate-bp-accepted-local-v2 allowed a broad adaptive pass to feed later waterfall refinements, producing 2,715,849 Valley triangles with no proportional visible gain; the selected source-surface deformation uses the accepted 744,535-triangle watershed"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bp-selected/sequence.json",
+    "topologyOptimizationComparison": "output/playwright/madagin-world-progress/candidate-bp-selected/comparison-topology-optimization.png",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bp-selected/runtime-gates.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bp-selected-optimized/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-bp-selected/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-bp-selected/motion/motion-evidence.json",
+    "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-bp-selected-optimized/motion/motion-evidence.json",
+    "selectedTelemetry": {
+      "watershedTriangles": 744535,
+      "watershedVertices": 373066,
+      "regionalVolcanicAdjustedVertices": 219888,
+      "regionalVolcanicMaximumIncisionMeters": 12.962127,
+      "regionalVolcanicMaximumUpliftMeters": 6.269461,
+      "ridgeAdjustedVertices": 98082,
+      "ridgeMaximumIncisionMeters": 10.393873,
+      "ridgeMaximumUpliftMeters": 4.741882,
+      "lakeRiverWaterfallProtected": true,
+      "ridgeAlpineBoundariesProtected": true,
+      "terrainContactMistBanks": 6,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "referenceReview": {
+      "reviewedAt": "2026-09-02",
+      "sources": [
+        "https://www.nps.gov/hale/learn/nature/naturalfeaturesandecosystems.htm",
+        "https://www.usgs.gov/observatories/hvo/evolution-hawaiian-volcanoes",
+        "https://www.usgs.gov/news/volcano-watch-you-can-see-history-landscape-kauai"
+      ],
+      "properties": "windward moisture and elevation bands, porous basalt weathering, deep erosional valleys, narrow ridges, steep canyons, and vegetation-coupled volcanic structure"
+    },
+    "sourceSha256": {
+      "renderer": "E603495AB5E8E84937EF4113FFC83463BFE770C152735A3955DE9E1F0F07CD75",
+      "publicSequenceVerifier": "865721294FCC639B78783E35EAD0D02A7D87B4663F56BFA322E694E54441ED46",
+      "internalRuntimeVerifier": "1ADD88C26D8D6D9A5A5D0289853FDC480E3F5DC25F570EC250A0D93A96AA57F8"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BO",
+      "commit": "00f56f91b6ea105e99cb40eafe018bfaabb972d2",
+      "deploymentId": "dpl_7hxYoCJSWHtL5zAdvteXqsdzsUdz",
+      "immutableUrl": "https://projectwebbing-4te2kc31y-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BP materially improves protected Ridge and regional Valley structure, terrain climate/material response, the black lake-edge defect, live lake variation, and terrain-contact weather while rejecting both canopy regression and topology overbuild. It remains visibly synthetic: inherited macro-scale terrain and repeated tree sources dominate, water reflection/refraction and coast scale are simplified, visible cloud contact remains weak, mobile ecology is compact, and physical-device profiling is absent. Overall reference realism remains score 1."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",

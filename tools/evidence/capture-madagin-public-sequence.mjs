@@ -51,6 +51,7 @@ for (const checkpoint of checkpoints) {
   await page.waitForTimeout(350);
   const evidence = await page.evaluate(() => {
     const cumulativeVegetation = window.__MADAGIN_CUMULATIVE_VEGETATION_V116__ ?? {};
+    const detailedTerrain = window.__MADAGIN_DETAILED_TERRAIN_V116__ ?? {};
     const ecologyDebug = window.__MADAGIN_ECOLOGY_DEBUG_V116__ ?? {};
     const regionalHabitat = window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
@@ -70,6 +71,13 @@ for (const checkpoint of checkpoints) {
       structuralEcology: {
         architectureProfiles: Math.max(0, ...Object.values(cumulativeVegetation)
           .map((zone) => zone?.architectureProfiles?.length ?? 0)),
+        regionalVolcanicAdjustedVertices: detailedTerrain.valley?.watershedIntegration
+          ?.regionalVolcanicLandform?.adjustedVertices ?? 0,
+        regionalVolcanicSubdivisionPasses: detailedTerrain.valley?.watershedIntegration
+          ?.regionalVolcanicLandform?.subdivisionPasses ?? 0,
+        regionalVolcanicWaterProtection: detailedTerrain.valley?.watershedIntegration
+          ?.regionalVolcanicLandform?.lakeRiverAndWaterfallProtected ?? false,
+        watershedTriangles: detailedTerrain.valley?.watershedIntegration?.subdivision?.triangles ?? 0,
         regionalGroundcover: Object.values(ecologyDebug)
           .reduce((total, zone) => total + (zone?.restoredRegionalHabitatGroundcoverInstances ?? 0), 0),
         releasedPrimaryCanopy: Object.values(ecologyDebug)
@@ -129,13 +137,18 @@ process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
   && result.structuralEcology?.releasedPrimaryCanopy > 0
+  && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
+  && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 0
+  && result.structuralEcology?.regionalVolcanicWaterProtection === true
+  && result.structuralEcology?.watershedTriangles > 0
+  && result.structuralEcology?.watershedTriangles <= 1_500_000
   && result.structuralEcology?.volumetricCrownPlacements > 0
   && result.structuralEcology?.volumetricCrownRenderedLobes > result.structuralEcology?.volumetricCrownPlacements
 )) && results.some((result) => (
   result.structuralEcology?.regionalGroundcover > 0
   && result.structuralEcology?.regionalHabitatAuthorities.length > 0
-  && result.structuralEcology?.terrainContactMistBanks === 4
-  && result.structuralEcology?.terrainContactMistAuthorities.length === 4
+  && result.structuralEcology?.terrainContactMistBanks === 6
+  && result.structuralEcology?.terrainContactMistAuthorities.length === 6
 ));
 if (
   pageErrors.length

@@ -17,6 +17,7 @@ const outputPath = path.resolve(
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
 const cases = [
   { id: "v116-live", query: "checkpoint=ridge&quality=balanced&world=116", expectedState: "live", expectedVersion: "v1.16" },
+  { id: "v116-watershed-relief", query: "checkpoint=lake&quality=balanced&world=116", expectedState: "live", expectedVersion: "v1.16", expectsWatershedRelief: true },
   { id: "forced-fallback", query: "checkpoint=ridge&quality=balanced&world=116&forceFallback=1", expectedState: "fallback", expectedVersion: null },
   { id: "reduced-motion", query: "checkpoint=ridge&quality=balanced&world=116&reducedMotion=1", expectedState: "live", expectedVersion: "v1.16" },
   { id: "v115-switch", query: "checkpoint=ridge&quality=balanced&world=115", expectedState: "live", expectedVersion: null, expectsV115Marker: true },
@@ -45,6 +46,7 @@ for (const testCase of cases) {
     canvasCount: document.querySelectorAll("canvas").length,
     compactJourneySeam: window.__MADAGIN_COMPACT_JOURNEY_SEAM_V116__ ?? null,
     cumulativeVegetation: window.__MADAGIN_CUMULATIVE_VEGETATION_V116__ ?? null,
+    detailedTerrain: window.__MADAGIN_DETAILED_TERRAIN_V116__ ?? null,
     ecologyDebug: window.__MADAGIN_ECOLOGY_DEBUG_V116__ ?? null,
     fallbackVisible: Boolean(document.querySelector('[data-renderer-state="fallback"]')),
     reducedMotionLabel: document.body.textContent?.includes("Calm rail") ?? false,
@@ -76,6 +78,20 @@ for (const testCase of cases) {
     && alpineGeology?.valleyBoundaryProtected === true
     && alpineGeology?.worldBoundsProtected === true
   );
+  const watershedRelief = testCase.expectsWatershedRelief
+    ? evidence.detailedTerrain?.valley?.watershedIntegration?.regionalVolcanicLandform
+    : null;
+  const watershedReliefPassed = !testCase.expectsWatershedRelief || (
+    watershedRelief?.adjustedVertices > 0
+    && watershedRelief?.lakeRiverAndWaterfallProtected === true
+    && watershedRelief?.subdivisionPasses === 0
+    && watershedRelief?.maximumIncisionMeters > 0
+    && watershedRelief?.maximumIncisionMeters <= 14.4
+    && watershedRelief?.maximumUpliftMeters > 0
+    && watershedRelief?.maximumUpliftMeters <= 10.5
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.subdivision?.triangles <= 1_500_000
+    && evidence.terrainContactMist?.banks === 6
+  );
   const passed = evidence.rendererState === testCase.expectedState
     && evidence.videoElements === 0
     && (testCase.expectedVersion === null || evidence.worldVersion === testCase.expectedVersion)
@@ -84,6 +100,7 @@ for (const testCase of cases) {
     && (testCase.id !== "v116-mobile-policy"
       || evidence.compactJourneySeam?.method === "exact-source-boundary-zipper-hermite-remesh")
     && alpineGeologyPassed
+    && watershedReliefPassed
     && !forbiddenV115OnMobile
     && pageErrors.length === 0;
   results.push({ consoleMessages, evidence, failedRequests, id: testCase.id, pageErrors, passed });
