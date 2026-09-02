@@ -745,15 +745,15 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         vec3 wetBasalt = vec3(0.075, 0.105, 0.092);
         vec3 oxidizedRock = vec3(0.33, 0.235, 0.135);
         vec3 exposedGeology = mix(wetBasalt, oxidizedRock, mix(strata, erosionalRibs, 0.74) * (0.42 + (1.0 - drainage) * 0.25));
-        float regionalGeologyAuthority = smoothstep(0.14, 0.67, slope)
-          * (0.11 + detail * 0.24 + smoothstep(0.56, 0.88, erosionalRibs) * 0.13)
+        float regionalGeologyAuthority = smoothstep(0.18, 0.7, slope)
+          * (0.075 + detail * 0.16 + smoothstep(0.58, 0.9, erosionalRibs) * 0.085)
           * (1.0 - waterfallCatchment * 0.42);
         float waterfallGeologyAuthority = clamp(
           cliffExposure * (0.5 + detail * 0.3)
             + waterfallCatchment * (0.18 + detail * 0.18)
             + regionalGeologyAuthority,
           0.0,
-          0.8
+          0.68
         );
         authoredGround = mix(authoredGround, exposedGeology, waterfallGeologyAuthority);
         authoredGround = mix(authoredGround, authoredGround * vec3(0.62, 0.75, 0.68), waterfallCatchment * (0.26 + slope * 0.3));
@@ -3679,12 +3679,12 @@ function variantMaterials(source: Material | Material[]) {
   const result = originals.map((original) => {
     const foliage = /foliage|leaf|frond/i.test(original.name);
     const material = new MeshStandardMaterial({
-      color: foliage ? "#90a989" : "#78604d",
+      color: foliage ? "#a5afa0" : "#78604d",
       emissive: foliage ? "#17291b" : "#070503",
-      emissiveIntensity: foliage ? 0.2 : 0.015,
+      emissiveIntensity: foliage ? 0.13 : 0.015,
       envMapIntensity: foliage ? 0.34 : 0.18,
       metalness: 0,
-      roughness: foliage ? 0.86 : 0.95,
+      roughness: foliage ? 0.95 : 0.97,
       side: foliage ? DoubleSide : FrontSide,
     });
     material.name = `${original.name} · v1.16 instanced variation`;
@@ -3721,13 +3721,13 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
       if (foliage) {
-        const spread = placement[1] === 0 ? mobile ? 2.5 : 1.58 : placement[1] === 1 ? mobile ? 2.02 : 1.38 : mobile ? 1.52 : 1.18;
+        const spread = placement[1] === 0 ? mobile ? 2.5 : 1.42 : placement[1] === 1 ? mobile ? 2.02 : 1.34 : mobile ? 1.52 : 1.18;
         crownScale.makeScale(spread, placement[1] === 0 ? 1.12 : 1.06, spread);
         matrix.multiply(crownScale);
       }
       mesh.setMatrixAt(index, matrix);
       const signature = Math.abs(Math.round(placement[2] * 0.17 + placement[4] * 0.11 + placement[9] * 13 + index * 7));
-      const foliagePalette = ["#53745a", "#628461", "#718a63", "#456a54", "#809064", "#5b7a67", "#6f8052", "#4c715c"];
+      const foliagePalette = ["#50634f", "#60705a", "#6d7658", "#485c4c", "#747753", "#596b5c", "#667044", "#4b604f"];
       const barkPalette = ["#5a4333", "#674d3c", "#745845", "#806954"];
       instanceColor.set(foliage
         ? foliagePalette[signature % foliagePalette.length]
@@ -3863,7 +3863,7 @@ function detailedSourceKey(object: Object3D, mode: DetailedVegetationMode) {
 
 function detailedVegetationTint(sourceKey: string, foliage: boolean) {
   if (!foliage) return "#755f4e";
-  const tints = ["#799070", "#647f63", "#879979", "#58725a", "#73845e", "#5e7b68", "#89946b", "#506d58"];
+  const tints = ["#bdc8b5", "#acbca7", "#c4cbb8", "#a1b39f", "#b7bf9f", "#a7b9ac", "#c4c4a8", "#9eb09f"];
   const signature = [...sourceKey].reduce((total, character) => total + character.charCodeAt(0), 0);
   return tints[signature % tints.length];
 }
@@ -3883,11 +3883,12 @@ function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode
       material.color.set(detailedVegetationTint(sourceKey, foliage));
       material.vertexColors = true;
       material.depthWrite = true;
-      material.emissive.set(foliage ? "#263a25" : "#080604");
-      material.emissiveIntensity = foliage ? 0.24 : 0.018;
-      material.envMapIntensity = foliage ? 0.42 : 0.2;
+      material.emissive.set(foliage ? "#2b4028" : "#080604");
+      material.emissiveIntensity = foliage ? 0.27 : 0.018;
+      material.emissiveMap = null;
+      material.envMapIntensity = foliage ? 0.3 : 0.18;
       material.metalness = 0;
-      material.roughness = Math.max(foliage ? 0.88 : 0.94, material.roughness ?? 0.9);
+      material.roughness = Math.max(foliage ? 0.95 : 0.97, material.roughness ?? 0.94);
       material.side = foliage ? DoubleSide : FrontSide;
       material.transparent = false;
       if (foliage) enableLivingWind(material, mode === "hero" ? 0.2 : 0.14);
@@ -4108,7 +4109,17 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
   const stride = tier === "high"
     ? zone === "lake" ? 8 : zone === "alpine" ? 6 : zone === "ridge" ? 12 : 14
     : 1;
-  const baseline = baselineEligible.filter((_, index) => index % stride === 0);
+  const baseline = baselineEligible.filter((placement, index) => {
+    if (index % stride !== 0) return false;
+    if (tier !== "balanced" || zone === "lake") return true;
+    // Candidate BN turns the detailed v1.15 inventory into an emergent anchor
+    // stratum instead of replacing the entire primary canopy. The released
+    // placements remain occupied by the ten grounded v1.16 species families,
+    // so silhouette diversity increases without thinning the forest.
+    const signature = multiSlopeSuccessionSignature(placement);
+    const retention = zone === "ridge" ? 76 : zone === "valley" ? 74 : 80;
+    return signature % 100 < retention;
+  });
   if (zone === "lake") return baseline;
   // Balanced can carry the denser mid LOD. High keeps a sparse hero review
   // sample after the denser AW2 branch proved visually modest for its cost.
@@ -4118,10 +4129,14 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
     && multiSlopeSuccessionSignature(placement) % successionDivisor === 0
   ));
   const drainageSuccession = zone === "ridge" && tier !== "high"
-    ? instances.filter(isAddedRidgeDrainageSuccessionPlacement)
+    ? instances.filter((placement) => (
+      placement[1] === 1 && isAddedRidgeDrainageSuccessionPlacement(placement)
+    ))
     : [];
   const easternValleyCatchmentHabitat = zone === "valley" && tier !== "high"
-    ? instances.filter(isAddedEasternValleyCatchmentHabitatPlacement)
+    ? instances.filter((placement) => (
+      placement[1] === 1 && isAddedEasternValleyCatchmentHabitatPlacement(placement)
+    ))
     : [];
   const contactTrailheadHabitat = zone === "valley"
     ? instances.filter(tier === "high"
@@ -4147,6 +4162,35 @@ function detailedPlacementSource(placement: PlacementTuple, index: number, mode:
   }
   const variant = V115_SAFE_MID_VARIANTS[(placement[0] * 2 + placement[9] + index) % V115_SAFE_MID_VARIANTS.length];
   return `mid_variant_${String(variant).padStart(2, "0")}`;
+}
+
+type CanopyArchitecture = "emergent" | "mature" | "umbrella" | "wind-pruned" | "columnar";
+
+function canopyArchitecture(placement: PlacementTuple, index: number, zone: V116Zone): CanopyArchitecture {
+  const signature = multiSlopeSuccessionSignature(placement) + index * 19;
+  if (zone === "ridge" && (placement[3] > 34 || signature % 11 < 3)) return "wind-pruned";
+  if ((zone === "valley" || zone === "lake") && signature % 9 < 3) return "umbrella";
+  if (placement[1] === 0 && signature % 7 < 2) return "emergent";
+  if (signature % 13 < 3) return "columnar";
+  return "mature";
+}
+
+function canopyArchitectureScale(architecture: CanopyArchitecture, foliage: boolean) {
+  if (architecture === "emergent") return foliage
+    ? { x: 0.8, y: 1.24, z: 0.86 }
+    : { x: 0.92, y: 1.24, z: 0.92 };
+  if (architecture === "umbrella") return foliage
+    ? { x: 1.36, y: 0.86, z: 1.22 }
+    : { x: 1.02, y: 0.9, z: 1.02 };
+  if (architecture === "wind-pruned") return foliage
+    ? { x: 1.23, y: 0.92, z: 0.72 }
+    : { x: 1.03, y: 0.95, z: 0.9 };
+  if (architecture === "columnar") return foliage
+    ? { x: 0.76, y: 1.16, z: 0.84 }
+    : { x: 0.9, y: 1.16, z: 0.9 };
+  return foliage
+    ? { x: 1.1, y: 1.04, z: 1.06 }
+    : { x: 1, y: 1.04, z: 1 };
 }
 
 function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: {
@@ -4180,6 +4224,8 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
       const crownWidthVariation = 0.82 + (signature % 13) * 0.034;
       const crownDepthVariation = 0.86 + ((signature * 7) % 11) * 0.032;
       const heightVariation = 0.88 + ((signature * 11) % 9) * 0.036;
+      const architecture = canopyArchitecture(placement, index, zone);
+      const architectureScale = canopyArchitectureScale(architecture, part.foliage);
       const lakeApproachMidstoryScale = mode === "mid" && isLakeApproachMidstoryPlacement(placement) ? 1.18 : 1;
       // Keep the promoted anchors subordinate to the retained canopy. The high
       // hero source needs less compensation than the compact balanced mid LOD.
@@ -4210,18 +4256,19 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
         placement[3] + (zone === "valley" ? contactTrailheadPlacementRelief(placement) : 0),
         placement[4],
       );
-      const leanX = (((signature % 9) - 4) / 4) * (mode === "hero" ? 0.035 : 0.052);
-      const leanZ = ((((signature * 5) % 11) - 5) / 5) * (mode === "hero" ? 0.03 : 0.047);
+      const architectureLean = architecture === "wind-pruned" ? 1.95 : architecture === "emergent" ? 0.72 : 1;
+      const leanX = (((signature % 9) - 4) / 4) * (mode === "hero" ? 0.035 : 0.052) * architectureLean;
+      const leanZ = ((((signature * 5) % 11) - 5) / 5) * (mode === "hero" ? 0.03 : 0.047) * architectureLean;
       dummy.rotation.set(leanX, placement[5] + (signature % 7) * 0.027, leanZ);
       dummy.scale.set(
-        placement[6] * scale * sourceCanopySpread * habitatCanopySpread * crownWidthVariation * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
-        placement[7] * scale * heightVariation * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
-        placement[8] * scale * sourceCanopySpread * habitatCanopySpread * crownDepthVariation * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
+        placement[6] * scale * sourceCanopySpread * habitatCanopySpread * crownWidthVariation * architectureScale.x * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
+        placement[7] * scale * heightVariation * architectureScale.y * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
+        placement[8] * scale * sourceCanopySpread * habitatCanopySpread * crownDepthVariation * architectureScale.z * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
       );
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
       mesh.setMatrixAt(index, matrix);
-      const foliagePalette = ["#f1f5e6", "#dce8d3", "#c6d9bf", "#e7e6c8", "#bfd0ac", "#d5ddba"];
+      const foliagePalette = ["#eef2df", "#d5e2cf", "#c3d2b9", "#e2e1c6", "#b6c9aa", "#cdd7b5", "#d8cfaa"];
       const barkPalette = ["#f0dfca", "#d9c4ad", "#c9b29c", "#e5d0b7"];
       instanceColor.set(part.foliage
         ? foliagePalette[signature % foliagePalette.length]
@@ -4298,6 +4345,7 @@ function DetailedVegetationLod({ placements, shadows, tier, zone }: {
             ? isHighContactTrailheadCanopyPlacement
             : isContactTrailheadHabitatPlacement).length
           : 0,
+        architectureProfiles: ["emergent", "mature", "umbrella", "wind-pruned", "columnar"],
         verticalSuccessionPlacements: placements.filter((placement) => (
           isMultiSlopeSuccessionPlacement(placement, zone)
         )).length,
@@ -4407,6 +4455,25 @@ function selectContactTrailheadGroundcover(instances: PlacementTuple[], mobile: 
   ));
 }
 
+function selectRegionalHabitatGroundcover(
+  instances: PlacementTuple[],
+  mobile: boolean,
+  tier: WorldQualityTier,
+  zone: V116Zone,
+) {
+  if (mobile || tier === "conservative") return [];
+  const eligible = instances.filter((placement) => (
+    placement[1] === 2
+    && (
+      (zone === "ridge" && isRidgeDrainageSuccessionPlacement(placement))
+      || (zone === "valley" && isEasternValleyCatchmentHabitatPlacement(placement))
+    )
+  ));
+  return tier === "high" ? eligible : eligible.filter((placement) => (
+    multiSlopeSuccessionSignature(placement) % 4 !== 1
+  ));
+}
+
 function watershedGroundcoverSource(placement: PlacementTuple, index: number): WatershedGroundcoverKey {
   void placement;
   void index;
@@ -4438,6 +4505,10 @@ function InstancedWatershedGroundcover({ part, placements, shadows }: {
       const widthVariation = 0.78 + ((signature * 5) % 13) * 0.041;
       const depthVariation = 0.82 + ((signature * 7) % 9) * 0.047;
       const habitatScale = isLakeBankSuccessionPlacement(placement) ? 2 : 1;
+      const regionalHabitatScale = (
+        isRidgeDrainageSuccessionPlacement(placement)
+        || isEasternValleyCatchmentHabitatPlacement(placement)
+      ) ? 1.42 : 1;
       dummy.position.set(placement[2], placement[3] - (part.sourceKey === "rock" ? 0.08 : 0.075), placement[4]);
       dummy.rotation.set(
         part.sourceKey === "rock" ? ((signature % 7) - 3) * 0.035 : ((signature % 5) - 2) * 0.018,
@@ -4445,9 +4516,9 @@ function InstancedWatershedGroundcover({ part, placements, shadows }: {
         part.sourceKey === "rock" ? (((signature * 3) % 7) - 3) * 0.03 : (((signature * 3) % 5) - 2) * 0.016,
       );
       dummy.scale.set(
-        placement[6] * baseScale * variation * widthVariation * habitatScale,
-        placement[7] * baseScale * (part.sourceKey === "rock" ? 0.68 : variation) * habitatScale,
-        placement[8] * baseScale * variation * depthVariation * habitatScale,
+        placement[6] * baseScale * variation * widthVariation * habitatScale * regionalHabitatScale,
+        placement[7] * baseScale * (part.sourceKey === "rock" ? 0.68 : variation) * habitatScale * regionalHabitatScale,
+        placement[8] * baseScale * variation * depthVariation * habitatScale * regionalHabitatScale,
       );
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
@@ -4622,6 +4693,63 @@ function DetailedContactTrailheadGroundcover({ placements, shadows }: {
   );
 }
 
+function DetailedRegionalHabitatGroundcover({ placements, shadows, zone }: {
+  placements: PlacementTuple[];
+  shadows: boolean;
+  zone: "ridge" | "valley";
+}) {
+  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern);
+  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub);
+  const parts = useMemo(() => [
+    ...prepareWatershedGroundcover(fern.scene, "fern"),
+    ...prepareWatershedGroundcover(shrub.scene, "shrub"),
+  ], [fern.scene, shrub.scene]);
+  const bySource = useMemo(() => {
+    const result = new Map<WatershedGroundcoverKey, PlacementTuple[]>();
+    placements.forEach((placement, index) => {
+      const sourceKey = riparianGroundcoverSource(placement, index);
+      result.set(sourceKey, [...(result.get(sourceKey) ?? []), placement]);
+    });
+    return result;
+  }, [placements]);
+  useEffect(() => {
+    const host = window as Window & { __MADAGIN_REGIONAL_HABITAT_V116__?: Record<string, unknown> };
+    const key = zone === "ridge" ? "ridgeDrainage" : "easternValleyCatchment";
+    host.__MADAGIN_REGIONAL_HABITAT_V116__ = {
+      ...(host.__MADAGIN_REGIONAL_HABITAT_V116__ ?? {}),
+      [key]: {
+        fern: bySource.get("fern")?.length ?? 0,
+        groundedPlacements: placements.length,
+        habitatAuthority: zone === "ridge" ? "ridge-erosion-network" : "eastern-valley-catchment-network",
+        shrub: bySource.get("shrub")?.length ?? 0,
+        sources: [WATERSHED_GROUNDCOVER_URLS.fern, WATERSHED_GROUNDCOVER_URLS.shrub],
+      },
+    };
+    document.documentElement.dataset.madaginRegionalHabitatV116 = JSON.stringify(
+      host.__MADAGIN_REGIONAL_HABITAT_V116__,
+    );
+    dispatchStage(3, `${zone}-regional-habitat-groundcover-ready`, zone);
+    return () => parts.forEach((part) => {
+      (Array.isArray(part.material) ? part.material : [part.material]).forEach((material) => material.dispose());
+    });
+  }, [bySource, parts, placements.length, zone]);
+  return (
+    <group name={`Madagin v1.16 ${zone} drainage-coupled fern and shrub succession · ${placements.length}`}>
+      {parts.flatMap((part, index) => {
+        const sourcePlacements = bySource.get(part.sourceKey) ?? [];
+        return sourcePlacements.length ? (
+          <InstancedWatershedGroundcover
+            key={`regional-${zone}-${part.sourceKey}-${index}`}
+            part={part}
+            placements={sourcePlacements}
+            shadows={shadows}
+          />
+        ) : [];
+      })}
+    </group>
+  );
+}
+
 function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
   diagnosticMode?: DiagnosticMode;
   mobile: boolean;
@@ -4668,14 +4796,21 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
       : [],
     [detailedVegetationSet, manifest.instances, mobile, tier, zone],
   );
+  const regionalHabitatGroundcover = useMemo(() => {
+    if (zone !== "ridge" && zone !== "valley") return [];
+    const occupied = new Set([...detailedPlacements, ...contactTrailheadGroundcover]);
+    return selectRegionalHabitatGroundcover(manifest.instances, mobile, tier, zone)
+      .filter((placement) => !occupied.has(placement));
+  }, [contactTrailheadGroundcover, detailedPlacements, manifest.instances, mobile, tier, zone]);
   const detailedSet = useMemo(
     () => new Set([
       ...detailedPlacements,
       ...watershedGroundcover,
       ...groundedRiparianEcology,
       ...contactTrailheadGroundcover,
+      ...regionalHabitatGroundcover,
     ]),
-    [contactTrailheadGroundcover, detailedPlacements, groundedRiparianEcology, watershedGroundcover],
+    [contactTrailheadGroundcover, detailedPlacements, groundedRiparianEcology, regionalHabitatGroundcover, watershedGroundcover],
   );
   const visible = useMemo(() => manifest.instances.filter((placement, index) => {
     if (detailedSet.has(placement)) return false;
@@ -4724,16 +4859,22 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
         sourceInstances: manifest.instances.length,
         restoredGroundcoverInstances: watershedGroundcover.length,
         restoredContactTrailheadGroundcoverInstances: contactTrailheadGroundcover.length,
+        restoredRegionalHabitatGroundcoverInstances: regionalHabitatGroundcover.length,
         restoredLakeBankSuccessionInstances: lakeBankSuccession.length,
         restoredRiparianInstances: riparianGroundcover.length,
         restoredDetailedInstances: detailedPlacements.length,
+        releasedPrimaryCanopyInstances: tier === "balanced" && !mobile && zone !== "lake"
+          ? manifest.instances.filter((placement) => (
+            placement[1] === 0 && placement[0] < 8 && !detailedVegetationSet.has(placement)
+          )).length
+          : 0,
         visibleInstances: visible.length,
       },
     };
     document.documentElement.dataset.madaginRidgeGroundingV116 = JSON.stringify(host.__MADAGIN_RIDGE_GROUNDING_V116__);
     document.documentElement.dataset.madaginEcologyDebugV116 = JSON.stringify(host.__MADAGIN_ECOLOGY_DEBUG_V116__);
     dispatchStage(2, `${zone}-ecology-ready`, zone);
-  }, [batches, contactTrailheadGroundcover.length, detailedPlacements.length, lakeBankSuccession.length, manifest.coverage.grounding, manifest.instances.length, parts, riparianGroundcover.length, visible.length, watershedGroundcover.length, zone]);
+  }, [batches, contactTrailheadGroundcover.length, detailedPlacements.length, detailedVegetationSet, lakeBankSuccession.length, manifest.coverage.grounding, manifest.instances, mobile, parts, regionalHabitatGroundcover.length, riparianGroundcover.length, tier, visible.length, watershedGroundcover.length, zone]);
 
   return (
     <group name={`Madagin v1.16 ${zone} spatial ecology · ${visible.length} visible instances`}>
@@ -4759,6 +4900,15 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
       {contactTrailheadGroundcover.length ? (
         <Suspense fallback={null}>
           <DetailedContactTrailheadGroundcover placements={contactTrailheadGroundcover} shadows={shadows} />
+        </Suspense>
+      ) : null}
+      {regionalHabitatGroundcover.length && (zone === "ridge" || zone === "valley") ? (
+        <Suspense fallback={null}>
+          <DetailedRegionalHabitatGroundcover
+            placements={regionalHabitatGroundcover}
+            shadows={shadows}
+            zone={zone}
+          />
         </Suspense>
       ) : null}
       {[...batches.entries()].flatMap(([key, placements]) => {
@@ -4812,7 +4962,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         // by displacing individual radial rows.
         float lakeWaveA = sin(p.x * 0.034 + p.z * 0.021 + uTime * 0.18);
         float lakeWaveB = sin(p.x * -0.019 + p.z * 0.044 - uTime * 0.13 + sin(p.x * 0.008) * 0.9);
-        p.y += (lakeWaveA * 0.16 + lakeWaveB * 0.085) * lakeWaveEnvelope;
+        p.y += (lakeWaveA * 0.045 + lakeWaveB * 0.026) * lakeWaveEnvelope;
         vec4 world = modelMatrix * vec4(p, 1.0);
         vWorld = world.xyz;
         vWaterUv = uv;
@@ -4832,12 +4982,12 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         float phaseB = vWorld.x * ${lake ? "-0.029" : directional ? "-1.31" : "-2.31"} + vWorld.z * ${lake ? "0.083" : directional ? "4.22" : "3.67"} - uTime * ${lake ? "0.16" : directional ? "0.71" : "0.54"} + sin(vWorld.x * 0.009 + vWorld.z * 0.006) * ${lake ? "1.25" : "0.0"};
         float capillary = vWorld.x * 0.31 - vWorld.z * 0.24 + uTime * 0.48 + sin(vWorld.z * 0.018) * 1.1;
         vec3 rippleNormal = normalize(vec3(
-          cos(phaseA) * 0.17 - cos(phaseB) * 0.09 + cos(capillary) * ${lake ? "0.024" : "0.0"},
+          cos(phaseA) * 0.105 - cos(phaseB) * 0.065 + cos(capillary) * ${lake ? "0.018" : "0.0"},
           1.0,
-          cos(phaseA) * 0.095 + cos(phaseB) * 0.2 + sin(capillary) * ${lake ? "0.018" : "0.0"}
+          cos(phaseA) * 0.07 + cos(phaseB) * 0.125 + sin(capillary) * ${lake ? "0.014" : "0.0"}
         ));
         n = ${lake
-    ? "normalize(mix(vec3(0.0, 1.0, 0.0), rippleNormal, 0.46))"
+    ? "vec3(0.0, 1.0, 0.0)"
     : `normalize(mix(n, rippleNormal, ${directional ? "0.105" : "0.078"}))`};
         vec3 viewDirection = normalize(cameraPosition - vWorld);
         float fresnel = pow(
@@ -4852,7 +5002,6 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           max(dot(reflect(-normalize(vec3(-0.72, 0.48, 0.38)), n), viewDirection), 0.0),
           ${lake ? "22.0" : directional ? "72.0" : "48.0"}
         );
-        float waveFacing = clamp(0.5 + dot(n.xz, normalize(vec2(-0.78, 0.62))) * 3.1, 0.0, 1.0);
         float lakeInterior = 1.0 - clamp(length((vWaterUv - 0.5) * 2.0), 0.0, 1.0);
         float bankSoftening = ${directional
     ? "smoothstep(0.025, 0.18, min(vWaterUv.x, 1.0 - vWaterUv.x))"
@@ -4883,12 +5032,11 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         float littoralCaustic = pow(max(0.0, sin(vWorld.x * 0.19 - vWorld.z * 0.23 + uTime * 0.23)), 8.0)
           * (1.0 - basinDepth) * bankSoftening;
         color = mix(color, mix(vec3(0.075, 0.095, 0.058), vec3(0.15, 0.14, 0.086), submergedStone), shorelineTurbidity * 0.52);
-        color += vec3(0.28, 0.34, 0.22) * littoralCaustic * ${lake ? "0.12" : directional ? "0.055" : "0.075"};
-        color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.13 + broad * 0.08" : "0.2 + broad * 0.11"});
+        color += vec3(0.28, 0.34, 0.22) * littoralCaustic * ${lake ? "0.0" : directional ? "0.055" : "0.075"};
+        color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.09" : "0.2 + broad * 0.11"});
         color = mix(color, skyReflection, fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.62" : "0.4"});
-        color += vec3(0.36, 0.47, 0.44) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.12" : "0.055"};
-        color += vec3(0.08, 0.15, 0.16) * (waveFacing - 0.5) * ${lake ? "0.3" : "0.0"};
-        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.055" : "0.06"};
+        color += vec3(0.36, 0.47, 0.44) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.0" : "0.055"};
+        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.0" : "0.06"};
         float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "0.61, 0.92" : "0.66, 0.88"}, fresnel) * mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : lake ? "0.62" : "0.72"}, 1.0, bankSoftening) * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
         gl_FragColor = vec4(color, opacity);
         #include <tonemapping_fragment>
@@ -5982,11 +6130,11 @@ function SkyDome({ reducedMotion }: { reducedMotion: boolean }) {
         float cloudFine = skyFbm(cloudUv * 8.4 + vec2(1.9, 6.2) + drift * 2.3);
         float cloudBody = cloudMacro * 0.68 + cloudMeso * 0.25 + cloudFine * 0.07;
         float cloudFloor = smoothstep(-0.1, 0.11, direction.y);
-        float cloud = smoothstep(0.47, 0.67, cloudBody) * cloudFloor;
-        float cloudCore = smoothstep(0.57, 0.79, cloudBody);
+        float cloud = smoothstep(0.47, 0.63, cloudBody) * cloudFloor;
+        float cloudCore = smoothstep(0.57, 0.72, cloudBody);
         float sunFacing = max(dot(direction, normalize(vec3(-0.72, 0.38, 0.58))), 0.0);
-        vec3 cloudShade = mix(vec3(0.31, 0.39, 0.41), vec3(0.76, 0.765, 0.71), cloudCore * 0.7 + sunFacing * 0.22);
-        sky = mix(sky, cloudShade, cloud * (0.58 + cloudCore * 0.18));
+        vec3 cloudShade = mix(vec3(0.52, 0.58, 0.59), vec3(0.87, 0.86, 0.8), cloudCore * 0.72 + sunFacing * 0.22);
+        sky = mix(sky, cloudShade, cloud * (0.74 + cloudCore * 0.18));
         float distantBank = smoothstep(0.02, 0.2, direction.y) * (1.0 - smoothstep(0.24, 0.48, direction.y));
         sky = mix(sky, vec3(0.46, 0.575, 0.6), distantBank * smoothstep(0.46, 0.68, cloudMeso) * 0.27);
         gl_FragColor = vec4(sky, 1.0);
@@ -6042,10 +6190,10 @@ function createCloudMaterial(opacity: number, seed: number) {
 }
 
 const CLOUD_BANKS = [
-  { position: [-165, 92, -285] as [number, number, number], scale: [230, 28, 82] as [number, number, number], opacity: 0.13 },
-  { position: [172, 48, -650] as [number, number, number], scale: [310, 36, 116] as [number, number, number], opacity: 0.16 },
-  { position: [-260, 112, -980] as [number, number, number], scale: [390, 44, 148] as [number, number, number], opacity: 0.14 },
-  { position: [345, 175, -1260] as [number, number, number], scale: [360, 42, 136] as [number, number, number], opacity: 0.12 },
+  { position: [-165, 112, -285] as [number, number, number], scale: [230, 38, 82] as [number, number, number], opacity: 0.19 },
+  { position: [172, 68, -650] as [number, number, number], scale: [310, 48, 116] as [number, number, number], opacity: 0.23 },
+  { position: [-260, 132, -980] as [number, number, number], scale: [390, 55, 148] as [number, number, number], opacity: 0.2 },
+  { position: [360, 338, -1040] as [number, number, number], scale: [330, 46, 126] as [number, number, number], opacity: 0.2 },
   { position: [-515, 155, -1420] as [number, number, number], scale: [430, 39, 154] as [number, number, number], opacity: 0.1 },
   { position: [610, 215, -1545] as [number, number, number], scale: [380, 34, 128] as [number, number, number], opacity: 0.09 },
 ];
@@ -6070,7 +6218,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       <SkyDome reducedMotion={reducedMotion} />
       <PhysicalSkyEnvironment intensityScale={0.7} tier={tier} />
       <hemisphereLight args={["#c8dde0", "#17251e", 0.96]} />
-      <ambientLight color="#6d8587" intensity={0.075} />
+      <ambientLight color="#758d8c" intensity={0.12} />
       <directionalLight
         castShadow={shadows}
         color="#ffd0a0"
@@ -6088,7 +6236,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
         shadow-mapSize-height={tier === "high" ? 1536 : 1024}
         shadow-mapSize-width={tier === "high" ? 1536 : 1024}
       />
-      <directionalLight color="#a4c3c8" intensity={0.16} position={[170, 120, -250]} />
+      <directionalLight color="#b2ccd0" intensity={0.36} position={[190, 150, -220]} />
       <group ref={cloudGroup}>
         {clouds.map((cloud, index) => (
           <mesh key={cloud.position.join(":")} material={materials[index]} position={cloud.position} scale={cloud.scale}>
@@ -6259,7 +6407,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BM real-time spatial world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BN real-time spatial world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>

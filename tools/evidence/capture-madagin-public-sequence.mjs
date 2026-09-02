@@ -49,20 +49,36 @@ for (const checkpoint of checkpoints) {
     { timeout: 60_000 },
   );
   await page.waitForTimeout(350);
-  const evidence = await page.evaluate(() => ({
-    canvasCount: document.querySelectorAll("canvas").length,
-    chapter: document.querySelector("[data-world-chapter]")?.getAttribute("data-world-chapter") ?? null,
-    rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
-    journeyState: document.documentElement.dataset.madaginJourneyState ?? null,
-    journeyView: document.documentElement.dataset.madaginJourneyView ?? null,
-    worldView: document.querySelector("[data-public-world]")?.getAttribute("data-world-view") ?? null,
-    scrollY: window.scrollY,
-    videoCount: document.querySelectorAll("video").length,
-    worldResources: performance.getEntriesByType("resource")
-      .map((entry) => entry.name)
-      .filter((name) => name.includes("/world/"))
-      .length,
-  }));
+  const evidence = await page.evaluate(() => {
+    const cumulativeVegetation = window.__MADAGIN_CUMULATIVE_VEGETATION_V116__ ?? {};
+    const ecologyDebug = window.__MADAGIN_ECOLOGY_DEBUG_V116__ ?? {};
+    const regionalHabitat = window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? {};
+    return {
+      canvasCount: document.querySelectorAll("canvas").length,
+      chapter: document.querySelector("[data-world-chapter]")?.getAttribute("data-world-chapter") ?? null,
+      rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
+      journeyState: document.documentElement.dataset.madaginJourneyState ?? null,
+      journeyView: document.documentElement.dataset.madaginJourneyView ?? null,
+      worldView: document.querySelector("[data-public-world]")?.getAttribute("data-world-view") ?? null,
+      scrollY: window.scrollY,
+      videoCount: document.querySelectorAll("video").length,
+      worldResources: performance.getEntriesByType("resource")
+        .map((entry) => entry.name)
+        .filter((name) => name.includes("/world/"))
+        .length,
+      structuralEcology: {
+        architectureProfiles: Math.max(0, ...Object.values(cumulativeVegetation)
+          .map((zone) => zone?.architectureProfiles?.length ?? 0)),
+        regionalGroundcover: Object.values(ecologyDebug)
+          .reduce((total, zone) => total + (zone?.restoredRegionalHabitatGroundcoverInstances ?? 0), 0),
+        releasedPrimaryCanopy: Object.values(ecologyDebug)
+          .reduce((total, zone) => total + (zone?.releasedPrimaryCanopyInstances ?? 0), 0),
+        regionalHabitatAuthorities: Object.values(regionalHabitat)
+          .map((habitat) => habitat?.habitatAuthority)
+          .filter(Boolean),
+      },
+    };
+  });
   await page.screenshot({
     path: path.join(outputRoot, `${checkpoint.id}.png`),
     fullPage: false,
@@ -103,6 +119,17 @@ await fs.writeFile(
   "utf8",
 );
 process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
-if (pageErrors.length || results.some((result) => result.canvasCount !== 1 || result.rendererState !== "live" || result.videoCount !== 0)) {
+const structuralEcologyPassed = results.some((result) => (
+  result.structuralEcology?.architectureProfiles === 5
+  && result.structuralEcology?.releasedPrimaryCanopy > 0
+)) && results.some((result) => (
+  result.structuralEcology?.regionalGroundcover > 0
+  && result.structuralEcology?.regionalHabitatAuthorities.length > 0
+));
+if (
+  pageErrors.length
+  || !structuralEcologyPassed
+  || results.some((result) => result.canvasCount !== 1 || result.rendererState !== "live" || result.videoCount !== 0)
+) {
   process.exitCode = 1;
 }
