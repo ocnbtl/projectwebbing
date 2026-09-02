@@ -5,14 +5,14 @@
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
   "publicRelease": {
-    "commit": "6ca02aa92fd1a1a32b78aa45c351bc779282ea1a",
-    "deploymentId": "dpl_6cooiZ4vtfGaANuGaomgsriumwNE",
-    "immutableUrl": "https://projectwebbing-napcui63p-unigentamos.vercel.app",
+    "commit": "00f56f91b6ea105e99cb40eafe018bfaabb972d2",
+    "deploymentId": "dpl_7hxYoCJSWHtL5zAdvteXqsdzsUdz",
+    "immutableUrl": "https://projectwebbing-4te2kc31y-unigentamos.vercel.app",
     "productionAlias": "https://projectwebbing.vercel.app",
     "providerState": "READY",
     "providerIdentityVerified": true,
-    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bn-production-6ca02aa/runtime-gates.json",
-    "status": "Candidate BN implementation is READY and alias-assigned from verified GitHub main; six of six production runtime cases pass"
+    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bo-production-00f56f9/runtime-gates.json",
+    "status": "Candidate BO implementation is READY and alias-assigned from verified GitHub main; six of six production runtime cases pass"
   },
   "postLaunchCandidate": {
     "selected": "Candidate BI / v117-public-reality-a2",
@@ -176,6 +176,68 @@
       "immutableUrl": "https://projectwebbing-oqaljdaiy-unigentamos.vercel.app"
     },
     "decisionBoundary": "BN produces a visible cumulative improvement in landing visibility, canopy hierarchy and silhouette diversity, drainage-grounded understory, foliage response, lake surface legibility, and cloud presence without changing the mobile asset boundary or introducing a new licensed asset. It remains visibly synthetic: broad faceted terrain, legacy tree cards and source repetition, flat water/reflection, weak terrain-contact weather, simplified coastline and waterfall optics, and absent physical-device profiling keep reference realism at score 1."
+  },
+  "seventhPostLaunchCandidate": {
+    "selected": "Candidate BO / v120-volumetric-ecology-bo-selected",
+    "commit": "00f56f91b6ea105e99cb40eafe018bfaabb972d2",
+    "deploymentId": "dpl_7hxYoCJSWHtL5zAdvteXqsdzsUdz",
+    "immutableUrl": "https://projectwebbing-4te2kc31y-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative realism candidate; production matrix passes six of six, seven-view journey proof passes, and fixed-camera motion proof passes",
+    "changedCategories": [
+      "desktop primary-canopy sources expanded into deterministic two- and three-lobe crowns across six grounded species families while retaining one trunk authority",
+      "source-albedo-preserving foliage calibration with greener indirect fill, restrained environment response, high roughness, and deterministic lobe color separation",
+      "zone-aware world-scale terrain micro-normal response coupled to slope authority without detached relief geometry",
+      "restrained lake ripple normal, low-amplitude surface variation, stronger sky reflection, and bounded glint",
+      "four animated terrain-contact weather banks aligned to ridge drainage, valley catchment, waterfall plunge, and lake basin authorities",
+      "smaller public landing wordmark that reveals more of the opening terrain and ecology"
+    ],
+    "rejectedIterations": [
+      "candidate-bo-v1 retained the gray canopy response and produced too little normal-view separation",
+      "candidate-bo-v2 made detailed foliage silver and dark through insufficient source-albedo recovery",
+      "candidate-bo-v3 introduced a black luminous lake rim through an over-strong shoreline opacity experiment; that experiment was fully reverted"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bo-v4/sequence.json",
+    "comparisonBoard": "output/playwright/madagin-world-progress/candidate-bo-production-comparison.png",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bo-final-dev/runtime-gates.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bo-optimized/runtime-gates.json",
+    "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-bo-optimized/motion/motion-evidence.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-bo-final-dev/internal-runtime-gates.json",
+    "productionVisualEvidence": "output/playwright/madagin-world-progress/candidate-bo-production-00f56f9/sequence.json",
+    "productionMotionEvidence": "output/playwright/madagin-world-progress/candidate-bo-production-00f56f9/motion/motion-evidence.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bo-production-00f56f9/runtime-gates.json",
+    "productionTelemetry": {
+      "architectureProfiles": 5,
+      "regionalGroundcoverPlacements": 349,
+      "releasedPrimaryCanopyPlacements": [930, 938],
+      "volumetricCrownPlacements": [670, 715],
+      "volumetricCrownRenderedLobes": [1928, 2026],
+      "terrainContactMistBanks": 4,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "referenceReview": {
+      "reviewedAt": "2026-09-02",
+      "sources": [
+        "https://www.nps.gov/hale/learn/nature/naturalfeaturesandecosystems.htm",
+        "https://commons.wikimedia.org/wiki/File:Na_Pali_Coast_taken_from_Helicopter.jpg",
+        "https://commons.wikimedia.org/wiki/File:Wailua_Falls,_Kauai,_Hawaii_(27893174267).jpg",
+        "https://commons.wikimedia.org/wiki/File:043_Matterhorn_reflecting_in_Stellisee_at_sunset_Photo_by_Giles_Laurent.jpg"
+      ],
+      "properties": "altitude- and moisture-shaped crown mass, broken canopy silhouettes, eroded terrain surface scale, waterfall-plunge weather contact, reflective basin separation, and atmospheric depth"
+    },
+    "sourceSha256": {
+      "renderer": "BDC6EEB8B3B61CC6A3C9B7CA99FCDC2F8D81FA934F181BE759410673971A2355",
+      "publicControlsCss": "8052661D593DD8140648F20C3539A04FF78AF3DB8D71F298D549BE734B867D8E",
+      "publicSequenceVerifier": "6809853275E5630FA85E86E0CD8CA8EC565E2A16BCAB5EF37979AB0094568980",
+      "internalRuntimeVerifier": "5BC6E33209130856BCB8F0BD85E290B8B2EB4C1A80FE36972542A7B2EF15C51D"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BN",
+      "commit": "6ca02aa92fd1a1a32b78aa45c351bc779282ea1a",
+      "deploymentId": "dpl_6cooiZ4vtfGaANuGaomgsriumwNE",
+      "immutableUrl": "https://projectwebbing-napcui63p-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BO produces a clear production-visible gain in foliage color legibility, layered crown volume, opening-world exposure, and subtle surface/weather response without adding an asset or changing the compact/mobile resource boundary. It remains visibly synthetic: the same legacy tree source silhouettes still repeat, broad terrain forms remain faceted and materially uniform at photographic scale, the lake has a hard authored shoreline and limited optical depth, terrain-contact mist is subtle, waterfall/coast optics remain simplified, and no physical-device profile exists. Overall reference realism remains score 1."
   },
   "components": {
     "topologyAndStreaming": {
