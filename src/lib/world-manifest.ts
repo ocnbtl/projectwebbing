@@ -147,15 +147,18 @@ export const JOURNEY_CHECKPOINTS: readonly JourneyCheckpoint[] = [
     label: "Summit horizon",
     role: "Compelling",
     story: "Rise above the clouds and hold on an open horizon.",
-    progress: 1,
+    // Enter the actual Summit chapter before the automatic ocean and sky
+    // holds begin. A 1.0 threshold was unreachable in practice because the
+    // public controller changed view on that same animation frame.
+    progress: 0.94,
     camera: [112, 232, -510],
     lookAt: [598, 158, -1320],
     mobileCamera: [68, 226, -292],
     mobileLookAt: [420, 135, -1020],
     oceanLookAt: [-780, 0, -340],
     mobileOceanLookAt: [-690, 6, -330],
-    skyLookAt: [80, 310, -520],
-    mobileSkyLookAt: [60, 305, -500],
+    skyLookAt: [540, 360, -1260],
+    mobileSkyLookAt: [400, 300, -1000],
   },
 ] as const;
 

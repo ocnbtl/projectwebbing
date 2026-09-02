@@ -14,6 +14,7 @@ const outputPath = path.resolve(
   process.env.MADAGIN_RUNTIME_OUTPUT
     ?? path.join("output", "playwright", "madagin-world-progress", "latest", "runtime-gates.json"),
 );
+await fs.mkdir(path.dirname(outputPath), { recursive: true });
 const cases = [
   { id: "v116-live", query: "checkpoint=ridge&quality=balanced&world=116", expectedState: "live", expectedVersion: "v1.16" },
   { id: "forced-fallback", query: "checkpoint=ridge&quality=balanced&world=116&forceFallback=1", expectedState: "fallback", expectedVersion: null },
@@ -55,10 +56,19 @@ for (const testCase of cases) {
   const alpineGeology = testCase.expectsAlpineDetail
     ? evidence.alpineGeology?.[testCase.expectsAlpineDetail]
     : null;
+  const baseAlpineTriangles = alpineGeology?.sourceTriangles * 4;
+  const detailedCrownSubdivisionPassed = testCase.expectsAlpineDetail !== "detailed" || (
+    alpineGeology?.crownSubdivision?.selectedTriangles > 0
+    && alpineGeology?.crownSubdivision?.sourceTriangles === baseAlpineTriangles
+    && alpineGeology?.crownSubdivision?.triangles === alpineGeology?.triangles
+    && alpineGeology?.triangles > baseAlpineTriangles
+  );
   const alpineGeologyPassed = !testCase.expectsAlpineDetail || (
     alpineGeology?.adjustedVertices > 0
     && alpineGeology?.sourceTriangles > 0
-    && alpineGeology?.triangles === alpineGeology.sourceTriangles * 4
+    && (testCase.expectsAlpineDetail === "detailed"
+      ? detailedCrownSubdivisionPassed
+      : alpineGeology?.triangles === baseAlpineTriangles)
     && alpineGeology?.valleyBoundaryProtected === true
     && alpineGeology?.worldBoundsProtected === true
   );
