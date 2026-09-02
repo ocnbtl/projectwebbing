@@ -205,6 +205,20 @@ const FULL_JOURNEY_MOBILE_LOOK = new CatmullRomCurve3(
   false,
   "centripetal",
 );
+
+function authoredJourneyCurveParameter(rawProgress: number) {
+  const bounded = Math.min(1, Math.max(0, rawProgress));
+  let segment = 0;
+  for (let index = 1; index < JOURNEY_CHECKPOINTS.length; index += 1) {
+    if (bounded >= JOURNEY_CHECKPOINTS[index].progress) segment = index;
+  }
+  if (segment >= JOURNEY_CHECKPOINTS.length - 1) return 1;
+  const start = JOURNEY_CHECKPOINTS[segment].progress;
+  const end = JOURNEY_CHECKPOINTS[segment + 1].progress;
+  const local = Math.min(1, Math.max(0, (bounded - start) / Math.max(0.0001, end - start)));
+  const eased = local * local * (3 - 2 * local);
+  return (segment + eased) / (JOURNEY_CHECKPOINTS.length - 1);
+}
 const SHOW_LEGACY_FIR_GROVE = false;
 
 function createFirCanopyGeometry(tier: DeviceProfile["tier"]) {
@@ -833,16 +847,16 @@ function CameraDirector({
 
     if (activeView === "journey" && publicJourneyProgress && !inspection.enabled) {
       const rawProgress = Math.min(1, Math.max(0, publicJourneyProgress.get()));
-      const progress = rawProgress * rawProgress * (3 - 2 * rawProgress);
-      (mobile ? FULL_JOURNEY_MOBILE_POSITION : FULL_JOURNEY_POSITION).getPointAt(progress, nextPosition);
-      (mobile ? FULL_JOURNEY_MOBILE_LOOK : FULL_JOURNEY_LOOK).getPointAt(progress, nextLook);
+      const curveParameter = authoredJourneyCurveParameter(rawProgress);
+      (mobile ? FULL_JOURNEY_MOBILE_POSITION : FULL_JOURNEY_POSITION).getPoint(curveParameter, nextPosition);
+      (mobile ? FULL_JOURNEY_MOBILE_LOOK : FULL_JOURNEY_LOOK).getPoint(curveParameter, nextLook);
       camera.position.copy(nextPosition);
       currentLook.current.copy(nextLook);
       camera.lookAt(currentLook.current);
-      const chapterIndex = Math.min(
-        JOURNEY_CHECKPOINTS.length - 1,
-        Math.floor(rawProgress * JOURNEY_CHECKPOINTS.length),
-      );
+      let chapterIndex = 0;
+      JOURNEY_CHECKPOINTS.forEach((item, index) => {
+        if (rawProgress >= item.progress) chapterIndex = index;
+      });
       if (chapterIndex !== lastFullJourneyChapter.current) {
         lastFullJourneyChapter.current = chapterIndex;
         window.dispatchEvent(new CustomEvent("madagin:journey-chapter", { detail: { chapterIndex, progress: rawProgress } }));
@@ -852,9 +866,9 @@ function CameraDirector({
 
     if (activeView === "journey" && fullJourneyPlaying && fullJourneyStartedAt.current !== null && !inspection.enabled) {
       const rawProgress = Math.min(1, (performance.now() - fullJourneyStartedAt.current) / FULL_JOURNEY_DURATION_MS);
-      const progress = rawProgress * rawProgress * (3 - 2 * rawProgress);
-      (mobile ? FULL_JOURNEY_MOBILE_POSITION : FULL_JOURNEY_POSITION).getPointAt(progress, nextPosition);
-      (mobile ? FULL_JOURNEY_MOBILE_LOOK : FULL_JOURNEY_LOOK).getPointAt(progress, nextLook);
+      const curveParameter = authoredJourneyCurveParameter(rawProgress);
+      (mobile ? FULL_JOURNEY_MOBILE_POSITION : FULL_JOURNEY_POSITION).getPoint(curveParameter, nextPosition);
+      (mobile ? FULL_JOURNEY_MOBILE_LOOK : FULL_JOURNEY_LOOK).getPoint(curveParameter, nextLook);
       camera.position.copy(nextPosition);
       currentLook.current.copy(nextLook);
       camera.lookAt(currentLook.current);
@@ -2065,7 +2079,7 @@ export function PublicWorldExperience({ className, progress }: PublicWorldExperi
             shadows={device.tier !== "conservative" && !device.mobile ? "basic" : false}
             onCreated={({ gl }) => {
               gl.toneMapping = ACESFilmicToneMapping;
-              gl.toneMappingExposure = device.mobile ? 1.02 : 1.12;
+              gl.toneMappingExposure = device.mobile ? 0.98 : 1.05;
               setCanvasReady(true);
             }}
           >

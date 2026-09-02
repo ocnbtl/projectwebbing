@@ -90,12 +90,15 @@ for (const testCase of cases) {
     await page.waitForTimeout(4_000);
   }
 
-  const initialChapter = await page.locator("[data-public-world]").getAttribute("data-world-chapter").catch(() => null);
+  const readWorldChapter = () => page.evaluate(() =>
+    document.querySelector("[data-public-world]")?.getAttribute("data-world-chapter") ?? null,
+  );
+  const initialChapter = await readWorldChapter();
   if (testCase.scroll) {
     await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight * 0.62, behavior: "instant" }));
     await page.waitForTimeout(10_000);
   }
-  const finalChapter = await page.locator("[data-public-world]").getAttribute("data-world-chapter").catch(() => null);
+  const finalChapter = await readWorldChapter();
 
   await page.keyboard.press("Home");
   await page.waitForTimeout(250);

@@ -31,6 +31,7 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
+import { PhysicalSkyEnvironment } from "./world-atmosphere";
 
 const ROOT = "/world/v116";
 const SPECIES_URL = `${ROOT}/species-core-v1.16.glb`;
@@ -212,7 +213,7 @@ function preparePbrTextureSet(source: Texture[], repeat: number): PbrTextureSet 
 
 function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
   const material = new MeshStandardMaterial({
-    color: zone === "alpine" ? "#8a887f" : "#5b624c",
+    color: zone === "alpine" ? "#807e77" : "#50574b",
     metalness: 0,
     roughness: zone === "alpine" ? 0.82 : 0.94,
     side: FrontSide,
@@ -262,11 +263,11 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
         vec3 rockSample = v116Triplanar(uV116Rock, vV116WorldPosition + vec3(19.0, 0.0, -7.0), worldNormal, 0.038);
         float moisture = smoothstep(0.24, 0.76, macro * 0.68 + micro * 0.32);
         vec3 damp = mix(
-          vec3(0.095, 0.082, 0.042),
-          vec3(0.045, 0.245, 0.065),
+          vec3(0.078, 0.07, 0.046),
+          vec3(0.052, 0.158, 0.068),
           clamp(forestSample * 0.6 + moisture * 0.44, 0.0, 1.0)
         );
-        vec3 basalt = mix(vec3(0.09, 0.115, 0.102), vec3(0.32, 0.225, 0.13), rockSample * 0.72);
+        vec3 basalt = mix(vec3(0.075, 0.095, 0.087), vec3(0.265, 0.205, 0.135), rockSample * 0.72);
         float strataPhase = vV116WorldPosition.y * 0.125
           + vV116WorldPosition.x * 0.039
           - vV116WorldPosition.z * 0.017
@@ -275,7 +276,7 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
         float strata = smoothstep(0.38, 0.86, sin(strataPhase) * 0.5 + 0.5);
         float fracture = v116Noise(vec2(vV116WorldPosition.x * 0.031 - vV116WorldPosition.y * 0.008, vV116WorldPosition.z * 0.025));
         float rainStreak = v116Noise(vec2(vV116WorldPosition.x * 0.018 + vV116WorldPosition.y * 0.009, vV116WorldPosition.z * 0.012));
-        vec3 weatheredRock = mix(vec3(0.08, 0.105, 0.092), vec3(0.39, 0.22, 0.095), mix(strata, fracture, 0.56));
+        vec3 weatheredRock = mix(vec3(0.07, 0.09, 0.082), vec3(0.31, 0.215, 0.12), mix(strata, fracture, 0.56));
         float alpine = smoothstep(90.0, 230.0, vV116WorldPosition.y) * ${zone === "alpine" ? "1.0" : "0.42"};
         vec2 waterfallBasinCoordinate = vec2(
           (vV116WorldPosition.x - 151.0) / 82.0,
@@ -287,7 +288,7 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
         vec3 ground = mix(damp, basalt, clamp(slope * 1.08 + alpine * 0.54 + wetCliff * 0.58, 0.0, 1.0));
         float regionalExposure = slope * (0.12 + macro * 0.2 + fracture * 0.2) * (1.0 - waterfallCatchment * 0.36);
         ground = mix(ground, weatheredRock, clamp(regionalExposure + smoothstep(0.68, 0.9, rainStreak) * slope * 0.15, 0.0, 0.48));
-        ground = mix(ground, vec3(0.035, 0.15, 0.052), (1.0 - slope) * moisture * smoothstep(0.46, 0.82, micro) * 0.24);
+        ground = mix(ground, vec3(0.04, 0.115, 0.052), (1.0 - slope) * moisture * smoothstep(0.46, 0.82, micro) * 0.24);
         ground = mix(ground, ground * vec3(0.68, 0.82, 0.75), waterfallCatchment * (0.2 + slope * 0.3));
         float westernCliff = smoothstep(-975.0, -948.0, vV116WorldPosition.z)
           * (1.0 - smoothstep(-746.0, -710.0, vV116WorldPosition.z))
@@ -298,7 +299,7 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
           * smoothstep(0.22, 0.72, 1.0 - abs(worldNormal.y));
         vec3 westernCliffRock = mix(
           vec3(0.15, 0.18, 0.16),
-          vec3(0.44, 0.27, 0.13),
+          vec3(0.36, 0.255, 0.155),
           clamp(0.16 + strata * 0.38 + fracture * 0.24, 0.0, 0.72)
         );
         ground = mix(ground, westernCliffRock, westernCliff * (0.66 + micro * 0.13));
@@ -317,7 +318,7 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
         ));
         vec3 basinHeadwallRock = mix(
           vec3(0.022, 0.035, 0.03),
-          vec3(0.24, 0.1, 0.036),
+          vec3(0.225, 0.135, 0.068),
           clamp(0.08 + strata * 0.25 + fracture * 0.15 + basinDrainage * 0.11, 0.0, 0.45)
         );
         basinHeadwallRock = mix(
@@ -350,7 +351,7 @@ function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
         );
         vec3 alpineBasalt = mix(
           vec3(0.075, 0.09, 0.085),
-          vec3(0.46, 0.205, 0.075),
+          vec3(0.39, 0.27, 0.14),
           clamp(
             smoothstep(0.48, 0.82, alpineOxidation) * 0.58
               + strata * 0.16
@@ -647,16 +648,16 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
     // full-strength AO crushed steep west-facing geometry to near black under
     // the retained v1.16 sun. Preserve the map, but keep dynamic shadow and
     // sky fill responsible for the broad cliff response.
-    aoMapIntensity: zone === "alpine" ? 1.08 : zone === "valley" ? 0.76 : zone === "connected" ? 1.18 : 1.22,
+    aoMapIntensity: zone === "alpine" ? 0.96 : zone === "valley" ? 0.68 : zone === "connected" ? 0.9 : 0.92,
     color: "#ffffff",
     map: textures.albedo,
     metalness: 0,
     normalMap: textures.normal,
     normalScale: new Vector2(
-      zone === "alpine" ? 0.62 : zone === "valley" ? 0.44 : zone === "connected" ? 0.38 : 0.34,
-      zone === "alpine" ? 0.62 : zone === "valley" ? 0.44 : zone === "connected" ? 0.38 : 0.34,
+      zone === "alpine" ? 0.7 : zone === "valley" ? 0.58 : zone === "connected" ? 0.5 : 0.52,
+      zone === "alpine" ? 0.7 : zone === "valley" ? 0.58 : zone === "connected" ? 0.5 : 0.52,
     ),
-    roughness: zone === "alpine" ? 0.78 : zone === "ridge" ? 0.84 : zone === "connected" ? 0.87 : 0.9,
+    roughness: zone === "alpine" ? 0.82 : zone === "ridge" ? 0.88 : zone === "connected" ? 0.9 : 0.92,
     roughnessMap: textures.arm,
     side: FrontSide,
   });
@@ -700,10 +701,10 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         float slope = smoothstep(${zone === "alpine" ? "0.16, 0.7" : "0.2, 0.74"}, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
         float elevation = smoothstep(${zone === "alpine" ? "18.0, 178.0" : "-34.0, 92.0"}, vDetailedTerrainWorld.y);
         float drainage = detailedTerrainNoise(vDetailedTerrainWorld.xz * 0.017 - vec2(9.1, 3.7));
-        vec3 dampSoil = ${zone === "alpine" ? "vec3(0.21, 0.18, 0.14)" : zone === "connected" ? "mix(vec3(0.095, 0.075, 0.04), vec3(0.052, 0.105, 0.048), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.105, 0.048)" : "vec3(0.095, 0.075, 0.04)"};
-        vec3 moss = ${zone === "alpine" ? "vec3(0.24, 0.23, 0.18)" : zone === "connected" ? "mix(vec3(0.075, 0.24, 0.06), vec3(0.045, 0.215, 0.062), terrainValley)" : zone === "valley" ? "vec3(0.045, 0.215, 0.062)" : "vec3(0.075, 0.24, 0.06)"};
-        vec3 litter = ${zone === "alpine" ? "vec3(0.31, 0.26, 0.19)" : zone === "connected" ? "mix(vec3(0.285, 0.155, 0.052), vec3(0.245, 0.13, 0.048), terrainValley)" : zone === "ridge" ? "vec3(0.285, 0.155, 0.052)" : "vec3(0.245, 0.13, 0.048)"};
-        vec3 basalt = ${zone === "alpine" ? "vec3(0.31, 0.295, 0.27)" : "vec3(0.135, 0.15, 0.128)"};
+        vec3 dampSoil = ${zone === "alpine" ? "vec3(0.19, 0.18, 0.16)" : zone === "connected" ? "mix(vec3(0.085, 0.074, 0.052), vec3(0.052, 0.088, 0.052), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.088, 0.052)" : "vec3(0.085, 0.074, 0.052)"};
+        vec3 moss = ${zone === "alpine" ? "vec3(0.215, 0.22, 0.19)" : zone === "connected" ? "mix(vec3(0.085, 0.17, 0.062), vec3(0.052, 0.15, 0.07), terrainValley)" : zone === "valley" ? "vec3(0.052, 0.15, 0.07)" : "vec3(0.085, 0.17, 0.062)"};
+        vec3 litter = ${zone === "alpine" ? "vec3(0.285, 0.255, 0.215)" : zone === "connected" ? "mix(vec3(0.235, 0.155, 0.078), vec3(0.205, 0.135, 0.07), terrainValley)" : zone === "ridge" ? "vec3(0.235, 0.155, 0.078)" : "vec3(0.205, 0.135, 0.07)"};
+        vec3 basalt = ${zone === "alpine" ? "vec3(0.285, 0.285, 0.27)" : "vec3(0.12, 0.14, 0.127)"};
         vec3 sourceSurface = diffuseColor.rgb;
         vec3 ground = mix(dampSoil, moss, smoothstep(0.32, 0.74, macro));
         ground = mix(ground, litter, smoothstep(0.76, 0.94, detail) * (1.0 - drainage * 0.48));
@@ -725,7 +726,7 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         float strata = smoothstep(0.36, 0.86, sin(strataPhase) * 0.5 + 0.5);
         float erosionalRibs = detailedTerrainNoise(vec2(vDetailedTerrainWorld.x * 0.024 + vDetailedTerrainWorld.y * 0.009, vDetailedTerrainWorld.z * 0.019 - vDetailedTerrainWorld.y * 0.004));
         vec3 wetBasalt = vec3(0.075, 0.105, 0.092);
-        vec3 oxidizedRock = vec3(0.42, 0.225, 0.09);
+        vec3 oxidizedRock = vec3(0.33, 0.235, 0.135);
         vec3 exposedGeology = mix(wetBasalt, oxidizedRock, mix(strata, erosionalRibs, 0.74) * (0.42 + (1.0 - drainage) * 0.25));
         float regionalGeologyAuthority = smoothstep(0.14, 0.67, slope)
           * (0.11 + detail * 0.24 + smoothstep(0.56, 0.88, erosionalRibs) * 0.13)
@@ -748,7 +749,7 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * (1.0 - smoothstep(122.0, 158.0, vDetailedTerrainWorld.y))
           * smoothstep(0.22, 0.72, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
         vec3 westernWetBasalt = vec3(0.16, 0.19, 0.17);
-        vec3 westernOxidizedRock = vec3(0.48, 0.29, 0.14);
+        vec3 westernOxidizedRock = vec3(0.38, 0.275, 0.17);
         vec3 westernCliffRock = mix(
           westernWetBasalt,
           westernOxidizedRock,
@@ -771,7 +772,7 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         ));
         vec3 basinHeadwallRock = mix(
           vec3(0.02, 0.033, 0.029),
-          vec3(0.25, 0.105, 0.038),
+          vec3(0.225, 0.145, 0.078),
           clamp(0.09 + strata * 0.26 + erosionalRibs * 0.15 + basinDrainage * 0.11, 0.0, 0.47)
         );
         basinHeadwallRock = mix(
@@ -804,7 +805,7 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         );
         vec3 alpineBasalt = mix(
           vec3(0.075, 0.09, 0.085),
-          vec3(0.475, 0.21, 0.075),
+          vec3(0.385, 0.275, 0.155),
           clamp(
             smoothstep(0.48, 0.82, alpineOxidation) * 0.58
               + strata * 0.17
@@ -3684,6 +3685,13 @@ function detailedSourceKey(object: Object3D, mode: DetailedVegetationMode) {
   return name.match(/hero_(pachira_[abcd]|island_0[123]|small_02)/)?.[1] ?? null;
 }
 
+function detailedVegetationTint(sourceKey: string, foliage: boolean) {
+  if (!foliage) return "#675548";
+  const tints = ["#8da083", "#7f9578", "#98a88b", "#718a6d", "#899977", "#788d73"];
+  const signature = [...sourceKey].reduce((total, character) => total + character.charCodeAt(0), 0);
+  return tints[signature % tints.length];
+}
+
 function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode) {
   scene.updateMatrixWorld(true);
   const parts: DetailedVegetationPart[] = [];
@@ -3696,12 +3704,13 @@ function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode
       const material = (original as MeshStandardMaterial).clone();
       const foliage = /lea|twig|branch/i.test(`${original.name}/${child.name}`);
       material.alphaTest = foliage ? Math.max(mode === "hero" ? 0.46 : 0.42, material.alphaTest || 0) : material.alphaTest;
-      material.color.set(foliage ? "#c4d4bd" : "#765f4c");
+      material.color.set(detailedVegetationTint(sourceKey, foliage));
       material.depthWrite = true;
-      material.emissive.set(foliage ? "#294027" : "#080604");
-      material.emissiveIntensity = foliage ? 0.28 : 0.022;
+      material.emissive.set(foliage ? "#172317" : "#080604");
+      material.emissiveIntensity = foliage ? 0.12 : 0.018;
+      material.envMapIntensity = foliage ? 0.2 : 0.16;
       material.metalness = 0;
-      material.roughness = Math.max(foliage ? 0.82 : 0.9, material.roughness ?? 0.9);
+      material.roughness = Math.max(foliage ? 0.88 : 0.94, material.roughness ?? 0.9);
       material.side = foliage ? DoubleSide : FrontSide;
       material.transparent = false;
       material.needsUpdate = true;
@@ -3975,7 +3984,11 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
     if (!mesh) return;
     const dummy = new Object3D();
     const matrix = new Matrix4();
-    const scale = mode === "hero" ? 1.08 : 1.58;
+    const scale = mode === "hero" ? 1.08 : 1.62;
+    const sourceCanopySpread = part.foliage ? mode === "hero" ? 1.2 : 1.3 : 1.04;
+    const habitatCanopySpread = part.foliage
+      ? zone === "ridge" ? 1.12 : zone === "valley" || zone === "lake" ? 1.08 : 1
+      : 1;
     placements.forEach((placement, index) => {
       const lakeApproachMidstoryScale = mode === "mid" && isLakeApproachMidstoryPlacement(placement) ? 1.18 : 1;
       // Keep the promoted anchors subordinate to the retained canopy. The high
@@ -4009,9 +4022,9 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
       );
       dummy.rotation.set(0, placement[5], 0);
       dummy.scale.set(
-        placement[6] * scale * 1.16 * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
+        placement[6] * scale * sourceCanopySpread * habitatCanopySpread * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
         placement[7] * scale * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
-        placement[8] * scale * 1.16 * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
+        placement[8] * scale * sourceCanopySpread * habitatCanopySpread * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
       );
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
@@ -4020,7 +4033,7 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
     mesh.instanceMatrix.needsUpdate = true;
     mesh.computeBoundingBox();
     mesh.computeBoundingSphere();
-  }, [mode, part.matrixWorld, placements, zone]);
+  }, [mode, part.foliage, part.matrixWorld, placements, zone]);
   return (
     <instancedMesh
       args={[part.geometry, part.material, placements.length]}
@@ -4128,11 +4141,12 @@ function prepareWatershedGroundcover(scene: Object3D, sourceKey: WatershedGround
       const foliage = sourceKey !== "rock";
       material.alphaTest = foliage ? Math.max(0.44, material.alphaTest || 0) : material.alphaTest;
       material.color.multiply(new Color(
-        sourceKey === "fern" ? "#afbeaa" : sourceKey === "shrub" ? "#a4b39f" : "#727b73",
+        sourceKey === "fern" ? "#8f9f84" : sourceKey === "shrub" ? "#81957c" : "#70766f",
       ));
       material.depthWrite = true;
-      material.emissive.set(foliage ? "#1d2d1c" : "#0b0e0c");
-      material.emissiveIntensity = foliage ? 0.18 : 0.03;
+      material.emissive.set(foliage ? "#141f14" : "#0b0e0c");
+      material.emissiveIntensity = foliage ? 0.09 : 0.025;
+      material.envMapIntensity = foliage ? 0.38 : 0.28;
       material.metalness = 0;
       material.roughness = Math.max(foliage ? 0.94 : 0.97, material.roughness ?? 0.94);
       material.side = foliage ? DoubleSide : FrontSide;
@@ -5706,8 +5720,8 @@ function SkyDome({ reducedMotion }: { reducedMotion: boolean }) {
       void main() {
         vec3 direction = normalize(vDirection);
         float h = smoothstep(-0.08, 0.82, direction.y);
-        vec3 horizon = vec3(0.13, 0.3, 0.43);
-        vec3 zenith = vec3(0.022, 0.105, 0.245);
+        vec3 horizon = vec3(0.23, 0.405, 0.49);
+        vec3 zenith = vec3(0.032, 0.145, 0.285);
         float sun = pow(max(dot(direction, normalize(vec3(-0.78, 0.24, 0.56))), 0.0), 180.0);
         vec3 sky = mix(horizon, zenith, h) + vec3(1.0, 0.48, 0.18) * sun * 0.86;
         vec2 cloudUv = direction.xz / max(0.28, 0.48 + direction.y * 0.58);
@@ -5720,10 +5734,10 @@ function SkyDome({ reducedMotion }: { reducedMotion: boolean }) {
         float cloud = smoothstep(0.47, 0.67, cloudBody) * cloudFloor;
         float cloudCore = smoothstep(0.57, 0.79, cloudBody);
         float sunFacing = max(dot(direction, normalize(vec3(-0.72, 0.38, 0.58))), 0.0);
-        vec3 cloudShade = mix(vec3(0.28, 0.37, 0.4), vec3(0.73, 0.75, 0.69), cloudCore * 0.74 + sunFacing * 0.18);
-        sky = mix(sky, cloudShade, cloud * (0.66 + cloudCore * 0.2));
+        vec3 cloudShade = mix(vec3(0.31, 0.39, 0.41), vec3(0.76, 0.765, 0.71), cloudCore * 0.7 + sunFacing * 0.22);
+        sky = mix(sky, cloudShade, cloud * (0.58 + cloudCore * 0.18));
         float distantBank = smoothstep(0.02, 0.2, direction.y) * (1.0 - smoothstep(0.24, 0.48, direction.y));
-        sky = mix(sky, vec3(0.42, 0.53, 0.55), distantBank * smoothstep(0.48, 0.69, cloudMeso) * 0.28);
+        sky = mix(sky, vec3(0.46, 0.555, 0.57), distantBank * smoothstep(0.48, 0.69, cloudMeso) * 0.22);
         gl_FragColor = vec4(sky, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -5757,11 +5771,14 @@ function createCloudMaterial(opacity: number, seed: number) {
       float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
       float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1)),f.x),f.y);}
       void main(){
-        vec3 q=abs(vLocal*2.0); float edge=1.0-smoothstep(0.28,1.0,max(max(q.x,q.y*1.9),q.z));
-        float body=noise(vLocal.xz*3.2+vec2(uTime*0.008,uSeed*7.1))*0.64+noise(vLocal.xz*7.1-uSeed)*0.36;
-        float alpha=edge*smoothstep(0.32,0.78,body+edge*0.23)*uOpacity;
+        vec3 q=abs(vLocal*2.0); float edge=1.0-smoothstep(0.28,1.0,max(max(q.x,q.y*1.8),q.z));
+        float macro=noise(vLocal.xz*2.6+vec2(uTime*0.006,uSeed*7.1));
+        float billow=noise(vLocal.xz*6.8+vLocal.xy*1.7-uSeed+vec2(uTime*0.009,0.0));
+        float body=macro*0.68+billow*0.32;
+        float alpha=edge*smoothstep(0.34,0.76,body+edge*0.2)*uOpacity;
         if(alpha<0.004)discard;
-        gl_FragColor=vec4(mix(vec3(0.42,0.5,0.5),vec3(0.68,0.7,0.66),body),alpha);
+        float sunward=clamp(0.42+vLocal.x*0.22+vLocal.y*0.34,0.0,1.0);
+        gl_FragColor=vec4(mix(vec3(0.39,0.48,0.49),vec3(0.72,0.735,0.7),body*0.72+sunward*0.28),alpha);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
@@ -5770,27 +5787,29 @@ function createCloudMaterial(opacity: number, seed: number) {
 }
 
 const CLOUD_BANKS = [
-  { position: [-90, 36, -360] as [number, number, number], scale: [240, 25, 82] as [number, number, number], opacity: 0.22 },
-  { position: [160, -6, -690] as [number, number, number], scale: [390, 38, 125] as [number, number, number], opacity: 0.18 },
-  { position: [-210, 14, -1080] as [number, number, number], scale: [520, 46, 170] as [number, number, number], opacity: 0.15 },
+  { position: [-95, 76, -245] as [number, number, number], scale: [250, 21, 78] as [number, number, number], opacity: 0.12 },
+  { position: [155, 22, -695] as [number, number, number], scale: [350, 30, 118] as [number, number, number], opacity: 0.15 },
+  { position: [-185, 82, -1060] as [number, number, number], scale: [500, 40, 160] as [number, number, number], opacity: 0.13 },
+  { position: [330, 148, -1320] as [number, number, number], scale: [420, 34, 140] as [number, number, number], opacity: 0.1 },
 ];
 
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
-  const clouds = useMemo(() => CLOUD_BANKS.slice(0, tier === "conservative" ? 1 : tier === "balanced" ? 2 : 3), [tier]);
+  const clouds = useMemo(() => CLOUD_BANKS.slice(0, tier === "conservative" ? 1 : tier === "balanced" ? 3 : 4), [tier]);
   const materials = useMemo(() => clouds.map((cloud, index) => createCloudMaterial(cloud.opacity, index + 1)), [clouds]);
   useFrame(({ clock }) => materials.forEach((material) => { material.uniforms.uTime.value = reducedMotion ? 0 : clock.elapsedTime; }));
   useEffect(() => () => materials.forEach((material) => material.dispose()), [materials]);
   return (
     <group name="Madagin v1.16 single physical atmosphere and lighting authority">
-      <color attach="background" args={["#1d4d6b"]} />
-      <fogExp2 attach="fog" args={["#466673", 0.00036]} />
+      <color attach="background" args={["#5f7e8a"]} />
+      <fogExp2 attach="fog" args={["#78939a", tier === "conservative" ? 0.00046 : 0.00053]} />
       <SkyDome reducedMotion={reducedMotion} />
-      <hemisphereLight args={["#c9e0e5", "#293529", 1.62]} />
-      <ambientLight color="#718788" intensity={0.2} />
+      <PhysicalSkyEnvironment intensityScale={0.7} tier={tier} />
+      <hemisphereLight args={["#c3d8dc", "#202b22", 1.1]} />
+      <ambientLight color="#708586" intensity={0.1} />
       <directionalLight
         castShadow={shadows}
         color="#ffd0a0"
-        intensity={2.12}
+        intensity={2.34}
         position={[-420, 280, 360]}
         shadow-bias={-0.00012}
         shadow-normalBias={0.24}
@@ -5804,7 +5823,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
         shadow-mapSize-height={tier === "high" ? 1536 : 1024}
         shadow-mapSize-width={tier === "high" ? 1536 : 1024}
       />
-      <directionalLight color="#9ec4ce" intensity={0.25} position={[170, 120, -250]} />
+      <directionalLight color="#a4c3c8" intensity={0.16} position={[170, 120, -250]} />
       {clouds.map((cloud, index) => (
         <mesh key={cloud.position.join(":")} material={materials[index]} position={cloud.position} scale={cloud.scale}>
           <sphereGeometry args={[0.5, 24, 12]} />

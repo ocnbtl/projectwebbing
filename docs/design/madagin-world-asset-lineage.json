@@ -3,7 +3,33 @@
   "lastReverified": "2026-09-01",
   "activeRuntime": "v1.16",
   "wholeWorldAcceptedBaseline": null,
-  "wholeWorldStatus": "not accepted as photoreal or production-ready",
+  "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
+  "publicRelease": {
+    "commit": "87a36d848cfe1073b79fafb4c4f22953c8860d20",
+    "deploymentId": "dpl_H3DErxKYqxqC3YQ4VkeoV2uB8Kcy",
+    "immutableUrl": "https://projectwebbing-babdu8o9l-unigentamos.vercel.app",
+    "productionAlias": "https://projectwebbing.vercel.app",
+    "providerState": "READY",
+    "providerIdentityVerified": true,
+    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/production-87a36d8/runtime-gates.json",
+    "status": "selected public baseline; six of six production runtime cases pass, with one live canvas on supported desktop/mobile and zero world requests in every fallback"
+  },
+  "postLaunchCandidate": {
+    "selected": "Candidate BI / v117-public-reality-a2",
+    "status": "selected local cumulative realism candidate pending production release",
+    "changedCategories": [
+      "authored public camera composition and semantic rail timing",
+      "physical sky environment and light balance",
+      "distance fog and cloud-bank integration",
+      "terrain palette, roughness, ambient occlusion, and normal response",
+      "canopy material variation, crown spread, and habitat continuity"
+    ],
+    "visualEvidence": "output/playwright/madagin-world-progress/v117-public-reality-a2/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-a2-runtime/runtime-gates.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/v117-public-reality-a2-optimized/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/v117-public-reality-a2/runtime-gates.json",
+    "decisionBoundary": "The full Valley and Lake compositions, aerial separation, terrain response, and canopy continuity improve materially together. Broad terrain macrostructure, water optics, species diversity, compact ecology, photographic dynamic range, and physical-device evidence remain below finish criteria."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",

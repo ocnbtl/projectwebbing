@@ -62,7 +62,10 @@ function DaylightSky() {
   return <primitive object={sky} renderOrder={-20} />;
 }
 
-function PhysicalSkyEnvironment({ tier }: Pick<WorldAtmosphereProps, "tier">) {
+export function PhysicalSkyEnvironment({
+  intensityScale = 1,
+  tier,
+}: Pick<WorldAtmosphereProps, "tier"> & { intensityScale?: number }) {
   const { gl, scene } = useThree();
 
   useEffect(() => {
@@ -79,7 +82,7 @@ function PhysicalSkyEnvironment({ tier }: Pick<WorldAtmosphereProps, "tier">) {
     try {
       target = generator.fromScene(environmentScene, 0.045, 0.1, 100, { size });
       scene.environment = target.texture;
-      scene.environmentIntensity = tier === "conservative" ? 0.54 : 0.68;
+      scene.environmentIntensity = (tier === "conservative" ? 0.54 : 0.68) * intensityScale;
     } finally {
       generator.dispose();
       environmentScene.remove(environmentSky);
@@ -92,7 +95,7 @@ function PhysicalSkyEnvironment({ tier }: Pick<WorldAtmosphereProps, "tier">) {
       scene.environmentIntensity = previousIntensity;
       target?.dispose();
     };
-  }, [gl, scene, tier]);
+  }, [gl, intensityScale, scene, tier]);
 
   return null;
 }

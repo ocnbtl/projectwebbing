@@ -1471,3 +1471,31 @@ BG is the selected local cumulative candidate because it raises one exact score-
 ## BH cycle stop boundary
 
 BH is the selected local cumulative candidate because it raises one exact score-1 terrain residual—the under-resolved second-order hierarchy inside the broad eastern-Valley catchments—to score 3 through eight nested rills and modestly strengthened unequal buttresses on the existing protected source surface. It preserves BG's Contact hierarchy, every protected terrain/water boundary, topology, camera, ecology selector, mobile path, fallback, reduced motion, semantic content, transfer totals, and the no-video renderer. This does not justify higher whole-world, whole-terrain, overall-water, overall-ecology, mobile-composition, reference-realism, photorealism, physical-device, provider, publication, owner-approval, or production-readiness scores. The next material gain still requires larger authored landform/water macrostructure, greater source diversity and canopy continuity, terrain-intersecting atmosphere, richer water/coast optics, and physical-device profiling.
+
+## Public release baseline and Candidate BI validation
+
+- Commit `87a36d848cfe1073b79fafb4c4f22953c8860d20` replaced the public prerecorded homepage path with the live v1.16 renderer while retaining the semantic site, skip path, capability fallbacks, and development-only review route. GitHub `main` and Vercel deployment `dpl_H3DErxKYqxqC3YQ4VkeoV2uB8Kcy` identify that exact source; `https://projectwebbing.vercel.app` reached provider state `READY`.
+- The production public matrix passes 6/6. Supported 1440x900 and 390x844 runs mount one canvas, zero video elements, load 29 and 16 world resources respectively, and reach Summit. Reduced-motion, data-saver, low-power, and WebGL-unavailable cases mount zero canvases and request zero world assets. All cases report zero page errors and zero failed required world responses.
+- BI is the first substantial post-launch cumulative realism batch. It changes five coupled visible categories in one cycle: semantic camera composition, physical environment/light, haze/cloud integration, terrain material response, and canopy material/coverage. It does not add a second renderer, video cover, screenshot plate, detached landscape shell, or fallback asset cost.
+- The rail now interpolates against the authored checkpoint parameters rather than equal Catmull-Rom arc length. The public Valley and Lake progress positions therefore hit the authored controls instead of being occluded by the foreground hillside; chapter reporting remains tied to the manifest's semantic progress.
+- A generated physical-sky environment now contributes bounded PBR reflections. Direct, hemispheric, ambient, and cool fill light are rebalanced; distance fog and cloud banks separate terrain planes without concealing silhouettes. Terrain albedo is less saturated and orange, normals carry more readable relief, roughness is more physical, and ambient occlusion is less crushed.
+- Detailed canopy sources receive deterministic source-key tint variation, lower emissive/environment response, higher foliage roughness, wider crown-only spread, and a modest balanced mid-canopy scale increase. Trunks are not widened with crowns; the compact/mobile source policy is retained.
+- The final five-view evidence at `v117-public-reality-a2` records Ridge, Reveal, Lake, Waterfall, and Summit with one live canvas, zero videos, 26 to 29 loaded world resources, and zero page errors. The local public matrix passes 6/6, the shared internal matrix passes 7/7, `pnpm.cmd check` passes ESLint, TypeScript, and optimized Next.js 16.3 build, and the optimized public matrix passes 6/6.
+- Source SHA-256: `ridge-production-v116.tsx` = `BF3C718DE98287F6EC8BE4ED68A549B232A9A0147C8924D2A2E78159C28B404F`; `world-atmosphere.tsx` = `A96D54EBE24E672F1BF7A1C1BDA8DAF03CB02796FC04838CCFE10E2F71D143E2`; `world-lab.tsx` = `3C8BB65AAC1C29E327A4D0ECA14265008FEAEDA4AD2A1FCFEED7BD3C85F11EFD`; public sequence recorder = `5DC1D50BDE203DB3ABAFE42CF2EC5DE91F9BAFCBB571EA6837E59F01BC430DE8`; public runtime verifier = `1CAAC4CA3C09AB99C0973B8E23F081386B6C1AE1BC87933B6D65A737F53CC3A1`.
+
+## BI perceptual delta
+
+| Category | Public baseline | Candidate BI | Decision boundary |
+| --- | ---: | ---: | --- |
+| Valley/Lake composition | 1 | 3 | The public rail now reaches the authored controls and exposes the valley floor, lake, and enclosing slopes instead of the foreground wall. |
+| Terrain material response | 1 | 2 | Reduced saturation, less orange soil, stronger normals, and physical roughness improve surface reading; broad material repetition and authored geology remain. |
+| Aerial separation | 1 | 2 | Rebalanced light, fog, physical environment, and layered clouds distinguish near, middle, and distant terrain without erasing silhouettes. |
+| Canopy continuity/materials | 2 | 2 | Coverage and crown response improve visibly, but repeated source forms and limited species/age diversity prevent a whole-ecology promotion. |
+| Motion and semantic continuity | 4 | 4 | Authored timing reaches all five semantic views, one live canvas persists, and no prerecorded renderer path returns. |
+| Public fallback cost | 4 | 4 | All four fallback policies continue requesting zero world assets. |
+| Overall water realism | 2 | 2 | BI changes the framing and environment around water, not the still-simplified lake, river, waterfall, or coast optical system. |
+| Reference realism | 1 | 1 | The photographic references remain decisively ahead in landform scale, source diversity, water optics, terrain-cloud interaction, and dynamic range. |
+
+## BI cycle stop boundary
+
+BI is selected because it produces a material simultaneous improvement across camera composition, terrain response, lighting/environment, atmosphere, and canopy presentation, with the largest verified gain at the formerly occluded Valley/Lake transition. It preserves the deployed public semantic/fallback contract and the internal review controls. It does not justify a claim of photorealism or completion: the next batch must attack the visible water/terrain macrostructure and vegetation-source diversity/LOD rather than continue micro-calibrating the same surfaces.
