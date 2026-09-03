@@ -58,7 +58,9 @@ for (const checkpoint of checkpoints) {
     const sourceQualityGeology = window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? {};
     const sourceIslandTree = window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
-    const realism = window.__MADAGIN_REALISM_BT__ ?? null;
+    const realism = window.__MADAGIN_REALISM_BU__ ?? null;
+    const waterRealism = window.__MADAGIN_WATER_REALISM_BU__ ?? null;
+    const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BU__ ?? null;
     const watershedSurface = window.__MADAGIN_WATERSHED_SURFACE_V116__ ?? {};
     return {
       canvasCount: document.querySelectorAll("canvas").length,
@@ -108,6 +110,12 @@ for (const checkpoint of checkpoints) {
           .filter(Boolean),
         terrainContactMistAuthorities: terrainMist.authorities ?? [],
         terrainContactMistBanks: terrainMist.banks ?? 0,
+        waterfallLowerHalfWidthMeters: waterRealism?.waterfall?.body?.lowerHalfWidthMeters ?? 0,
+        waterfallBraidedTransparentGaps: waterRealism?.waterfall?.braidedTransparentGaps ?? false,
+        lakeBedShorelineBands: waterRealism?.lakeBed?.shorelineBands ?? 0,
+        oceanBreakerBands: oceanRealism?.breakerBands ?? 0,
+        oceanDisplacedPrimaryBreaker: oceanRealism?.displacedPrimaryBreaker ?? false,
+        oceanNearshoreBackwash: oceanRealism?.nearshoreBackwash ?? false,
         volumetricCrownPlacements: Object.values(ecologyDebug)
           .reduce((total, zone) => total + (zone?.volumetricCrownPlacements ?? 0), 0),
         volumetricCrownRenderedLobes: Object.values(ecologyDebug)
@@ -157,7 +165,7 @@ await fs.writeFile(
 process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
-  && result.structuralEcology?.candidate === "BT"
+  && result.structuralEcology?.candidate === "BU"
   && result.structuralEcology?.releasedPrimaryCanopy > 0
   && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
   && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 0
@@ -172,6 +180,12 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.sourceIslandTreeLicenses.every((license) => license === "CC0 1.0 Universal")
   && result.structuralEcology?.volcanicTarnFootprint === true
   && result.structuralEcology?.volcanicTarnRadiusMeters?.join(",") === "132.4,94.6"
+  && result.structuralEcology?.waterfallLowerHalfWidthMeters === 21.2
+  && result.structuralEcology?.waterfallBraidedTransparentGaps === true
+  && result.structuralEcology?.lakeBedShorelineBands === 3
+  && result.structuralEcology?.oceanBreakerBands === 2
+  && result.structuralEcology?.oceanDisplacedPrimaryBreaker === true
+  && result.structuralEcology?.oceanNearshoreBackwash === true
   && result.structuralEcology?.volumetricCrownPlacements > 0
   && result.structuralEcology?.volumetricCrownRenderedLobes > result.structuralEcology?.volumetricCrownPlacements
 )) && results.some((result) => (

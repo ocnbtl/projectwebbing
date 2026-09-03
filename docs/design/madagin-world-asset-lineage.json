@@ -5,14 +5,14 @@
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
   "publicRelease": {
-    "commit": "73d06ff1f935d8eebe873d06179f285d196318d6",
-    "deploymentId": "dpl_4SrDyzJsRWc6NxnfqYeZm8S8LqDj",
-    "immutableUrl": "https://projectwebbing-5g5371q2d-unigentamos.vercel.app",
+    "commit": "e2c85f48702375ff347abc8d94d7ff0d69fe80c2",
+    "deploymentId": "dpl_DN2tNd8CDduykzL2eRNCPoDwgvN5",
+    "immutableUrl": "https://projectwebbing-eogsbdpjg-unigentamos.vercel.app",
     "productionAlias": "https://projectwebbing.vercel.app",
     "providerState": "READY",
     "providerIdentityVerified": true,
-    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bt-production-alias/runtime-gates.json",
-    "status": "Candidate BT implementation is READY and alias-assigned from independently verified GitHub main; six of six production runtime cases pass on both the public alias and immutable deployment"
+    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bt-metadata-final-alias/runtime-gates.json",
+    "status": "Candidate BT metadata release is READY and alias-assigned from independently verified GitHub main; six of six production runtime cases pass on the final public alias"
   },
   "postLaunchCandidate": {
     "selected": "Candidate BI / v117-public-reality-a2",
@@ -601,6 +601,55 @@
       "immutableUrl": "https://projectwebbing-o820ah6f4-unigentamos.vercel.app"
     },
     "decisionBoundary": "BT visibly reduces the oversized lake footprint and changes summit, terrain-surface, and atmospheric presentation across fixed public views while adding one bounded licensed vegetation family. It remains reference realism score 1: broad faceting, repeated ecology, authored waterfall/lake/ocean optics, weak terrain-weather contact, and missing physical-device evidence remain unresolved."
+  },
+  "thirteenthPostLaunchCandidate": {
+    "selected": "Candidate BU / v126-watershed-contact-bu-selected",
+    "commit": null,
+    "deploymentId": null,
+    "immutableUrl": null,
+    "status": "selected locally after visual, runtime, capability, and motion gates; production release pending",
+    "changedCategories": [
+      "wider continuous waterfall curtain with braided transparent runnels and asymmetric fans",
+      "broken plunge foam and broader deterministic impact mist",
+      "depth-graded volcanic tarn substrate and stronger shore-damped wind response",
+      "shared-coastline long swell, displaced breaker, secondary foam, backwash, and volcanic shallows"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bu-local-selected/sequence.json",
+    "comparisonBoard": "output/playwright/madagin-world-progress/candidate-bu-local-selected/candidate-bt-vs-bu-board.png",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bu-local-selected/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-bu-local-selected/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-bu-local-selected/motion/motion-evidence.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bu-optimized/runtime-gates.json",
+    "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-bu-optimized/sequence.json",
+    "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-bu-optimized/motion/motion-evidence.json",
+    "selectedTelemetry": {
+      "waterfallLipHalfWidthMeters": 9.4,
+      "waterfallLowerHalfWidthMeters": 21.2,
+      "waterfallFanCount": 2,
+      "waterfallBraidedTransparentGaps": true,
+      "lakeRadiusMeters": [132.4, 94.6],
+      "lakeBedDepthRangeMeters": [0.34, 8.75],
+      "lakeBedShorelineBands": 3,
+      "oceanBreakerBands": 2,
+      "oceanDisplacedPrimaryBreaker": true,
+      "oceanNearshoreBackwash": true,
+      "waterNetworkProtected": true,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceSha256": {
+      "renderer": "CF79157AB43CA5237BFE8F9377C6421A35E38884869E01B91D0555D7870B9568",
+      "publicSequenceVerifier": "501FFF1870FBA8B94B5A967FBFAF0D69D426DCFF1F28DCAB77524051250BEA8D",
+      "internalRuntimeVerifier": "DEFF46FC4DB7977A845234C4E5F240D4B406F5584CE62E7196C84362D5089CA7",
+      "checkpointCapture": "39411B5991D35CEB94F47DF76EA6EF00F64B455E663BC8F66B18FEAB7AB7BD4E"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BT",
+      "commit": "e2c85f48702375ff347abc8d94d7ff0d69fe80c2",
+      "deploymentId": "dpl_DN2tNd8CDduykzL2eRNCPoDwgvN5",
+      "immutableUrl": "https://projectwebbing-eogsbdpjg-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BU materially improves the exact waterfall, plunge, lake-edge, and surf residuals promised by BT without changing the public journey composition. Coarse terrain, repeated ecology, simplified coast and weather, compact-path limits, and missing physical-device evidence keep overall reference realism at score 1."
   },
   "components": {
     "topologyAndStreaming": {

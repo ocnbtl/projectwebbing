@@ -65,11 +65,13 @@ for (const testCase of cases) {
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
-    realismBT: window.__MADAGIN_REALISM_BT__ ?? null,
+    oceanRealismBU: window.__MADAGIN_OCEAN_REALISM_BU__ ?? null,
+    realismBU: window.__MADAGIN_REALISM_BU__ ?? null,
     sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
     sourceQualityVegetationBR: window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? null,
     terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
+    waterRealismBU: window.__MADAGIN_WATER_REALISM_BU__ ?? null,
     videoElements: document.querySelectorAll("video").length,
     v115Marker: document.body.textContent?.includes("WORLD SLICE V1.15") ?? false,
     worldVersion: document.documentElement.dataset.madaginWorldVersion ?? null,
@@ -151,11 +153,19 @@ for (const testCase of cases) {
     && alpineGeologyPassed
     && watershedReliefPassed
     && (testCase.expectedVersion !== "v1.16" || (
-      evidence.realismBT?.candidate === "BT"
-      && Object.keys(evidence.realismBT?.categories ?? {}).length === 5
-      && evidence.realismBT?.detachedTerrainShells === false
-      && evidence.realismBT?.waterNetworkProtected === true
-      && evidence.realismBT?.lakeRadiusMeters?.join(",") === "132.4,94.6"
+      evidence.realismBU?.candidate === "BU"
+      && Object.keys(evidence.realismBU?.categories ?? {}).length === 5
+      && evidence.realismBU?.detachedTerrainShells === false
+      && evidence.realismBU?.waterNetworkProtected === true
+      && evidence.realismBU?.lakeRadiusMeters?.join(",") === "132.4,94.6"
+      && evidence.waterRealismBU?.candidate === "BU"
+      && evidence.waterRealismBU?.waterfall?.body?.lowerHalfWidthMeters === 21.2
+      && evidence.waterRealismBU?.waterfall?.braidedTransparentGaps === true
+      && evidence.waterRealismBU?.lakeBed?.proceduralWorldScale === true
+      && evidence.waterRealismBU?.lakeBed?.shorelineBands === 3
+      && evidence.oceanRealismBU?.breakerBands === 2
+      && evidence.oceanRealismBU?.displacedPrimaryBreaker === true
+      && evidence.oceanRealismBU?.nearshoreBackwash === true
       && sourceQualityPachiraPassed
       && sourceQualityGeologyPassed
       && sourceIslandTreePassed
