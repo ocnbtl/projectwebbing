@@ -44,7 +44,9 @@ for (const testCase of cases) {
   if (testCase.expectedVersion === "v1.16" && !testCase.query.includes("mobile=1")) {
     await page.waitForFunction(
       () => Object.values(window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? {})
-        .some((zone) => (zone?.placements ?? 0) > 0),
+        .some((zone) => (zone?.placements ?? 0) > 0)
+        && Object.values(window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? {})
+          .some((zone) => (zone?.placements ?? 0) > 0),
       undefined,
       { timeout: 45_000 },
     );
@@ -61,7 +63,8 @@ for (const testCase of cases) {
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
-    realismBR: window.__MADAGIN_REALISM_BR__ ?? null,
+    realismBS: window.__MADAGIN_REALISM_BS__ ?? null,
+    sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
     sourceQualityVegetationBR: window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? null,
     terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
     videoElements: document.querySelectorAll("video").length,
@@ -118,6 +121,13 @@ for (const testCase of cases) {
       sourceQualityPachira.reduce((total, zone) => total + (zone?.placements ?? 0), 0) > 0
       && sourceQualityPachira.every((zone) => zone?.sourceTriangles === 76_914)
     );
+  const sourceQualityGeology = Object.values(evidence.sourceQualityGeologyBS ?? {});
+  const sourceQualityGeologyPassed = testCase.expectedVersion !== "v1.16"
+    || testCase.query.includes("mobile=1")
+    || (
+      sourceQualityGeology.reduce((total, zone) => total + (zone?.placements ?? 0), 0) > 0
+      && sourceQualityGeology.every((zone) => zone?.forms === 7)
+    );
   const passed = evidence.rendererState === testCase.expectedState
     && evidence.videoElements === 0
     && (testCase.expectedVersion === null || evidence.worldVersion === testCase.expectedVersion)
@@ -128,11 +138,12 @@ for (const testCase of cases) {
     && alpineGeologyPassed
     && watershedReliefPassed
     && (testCase.expectedVersion !== "v1.16" || (
-      evidence.realismBR?.candidate === "BR"
-      && Object.keys(evidence.realismBR?.categories ?? {}).length === 5
-      && evidence.realismBR?.detachedTerrainShells === false
-      && evidence.realismBR?.waterNetworkProtected === true
+      evidence.realismBS?.candidate === "BS"
+      && Object.keys(evidence.realismBS?.categories ?? {}).length === 5
+      && evidence.realismBS?.detachedTerrainShells === false
+      && evidence.realismBS?.waterNetworkProtected === true
       && sourceQualityPachiraPassed
+      && sourceQualityGeologyPassed
     ))
     && !forbiddenV115OnMobile
     && pageErrors.length === 0;

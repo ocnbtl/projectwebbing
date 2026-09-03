@@ -55,8 +55,9 @@ for (const checkpoint of checkpoints) {
     const ecologyDebug = window.__MADAGIN_ECOLOGY_DEBUG_V116__ ?? {};
     const regionalHabitat = window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? {};
     const sourceQualityVegetation = window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? {};
+    const sourceQualityGeology = window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
-    const realism = window.__MADAGIN_REALISM_BR__ ?? null;
+    const realism = window.__MADAGIN_REALISM_BS__ ?? null;
     return {
       canvasCount: document.querySelectorAll("canvas").length,
       chapter: document.querySelector("[data-world-chapter]")?.getAttribute("data-world-chapter") ?? null,
@@ -89,6 +90,10 @@ for (const checkpoint of checkpoints) {
           .reduce((total, zone) => total + (zone?.placements ?? 0), 0),
         sourceQualityPachiraTriangles: Math.max(0, ...Object.values(sourceQualityVegetation)
           .map((zone) => zone?.sourceTriangles ?? 0)),
+        sourceQualityGeology: Object.values(sourceQualityGeology)
+          .reduce((total, zone) => total + (zone?.placements ?? 0), 0),
+        sourceQualityGeologyForms: Math.max(0, ...Object.values(sourceQualityGeology)
+          .map((zone) => zone?.forms ?? 0)),
         regionalHabitatAuthorities: Object.values(regionalHabitat)
           .map((habitat) => habitat?.habitatAuthority)
           .filter(Boolean),
@@ -143,7 +148,7 @@ await fs.writeFile(
 process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
-  && result.structuralEcology?.candidate === "BR"
+  && result.structuralEcology?.candidate === "BS"
   && result.structuralEcology?.releasedPrimaryCanopy > 0
   && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
   && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 0
@@ -152,6 +157,8 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.watershedTriangles <= 1_500_000
   && result.structuralEcology?.sourceQualityPachira > 0
   && result.structuralEcology?.sourceQualityPachiraTriangles === 76_914
+  && result.structuralEcology?.sourceQualityGeology > 0
+  && result.structuralEcology?.sourceQualityGeologyForms === 7
   && result.structuralEcology?.volumetricCrownPlacements > 0
   && result.structuralEcology?.volumetricCrownRenderedLobes > result.structuralEcology?.volumetricCrownPlacements
 )) && results.some((result) => (
