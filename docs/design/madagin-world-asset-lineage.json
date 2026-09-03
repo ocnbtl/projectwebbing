@@ -445,6 +445,82 @@
     },
     "decisionBoundary": "BR introduces a verified source-quality vegetation path and removes the dominant black-canopy presentation while preserving the retained terrain, watershed, streaming, motion, compact, and fallback contracts. One four-form Pachira package does not resolve species diversity, inherited terrain resolution, physical water reflection/refraction, coast and waterfall optics, terrain-weather contact, or physical-device profiling; overall reference realism remains score 1."
   },
+  "eleventhPostLaunchCandidate": {
+    "selected": "Candidate BS / v124-source-quality-geology-bs-selected",
+    "commit": "3b82ede880b09589d625af960bdf8dc546cb5c3d",
+    "deploymentId": "dpl_78HjMeacmr7mygAuYr9SHMYMvHKt",
+    "immutableUrl": "https://projectwebbing-1mjcfhhda-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative source-realism candidate; production matrix passes six of six on alias and immutable deployment, seven-view journey proof passes on both, and fixed-camera motion proof passes on both",
+    "changedCategories": [
+      "verified raw Poly Haven Rock Moss Set 02 geometry at 34 selected balanced-desktop grounded anchors across seven forms",
+      "smaller, brighter, more deeply seated source geology replacing the rejected perched-prop iterations",
+      "lower inherited UV-face authority and moderated terrain normals",
+      "lower-amplitude lake cross-wave reflection and glint response with retained transparent littoral edge",
+      "restrained six-authority terrain-contact mist strengthening and brighter physical sky/cool fill"
+    ],
+    "sourceAsset": {
+      "provider": "Poly Haven",
+      "asset": "Rock Moss Set 02",
+      "license": "CC0 1.0 Universal",
+      "sourceUrl": "https://polyhaven.com/a/rock_moss_set_02",
+      "licenseUrl": "https://polyhaven.com/license",
+      "provenance": "public/world/assets/polyhaven/rock_moss_set_02/PROVENANCE.md",
+      "runtimeSource": "public/world/assets/polyhaven/rock_moss_set_02/rock_moss_set_02_1k.gltf",
+      "bytes": 1943342,
+      "forms": 7,
+      "policy": "balanced desktop Ridge, Valley, and Lake grounded anchors only; excluded from conservative/mobile and Alpine habitat"
+    },
+    "rejectedIterations": [
+      "candidate-bs-local-01 used 54 to 66 overlarge dark anchors that read as perched or floating props",
+      "candidate-bs-local-02 made the lake bright and plate-like without eliminating the procedural streak field"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bs-local-03/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bs-local-03/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-bs-local-03/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-bs-local-03/motion/motion-evidence.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bs-optimized/runtime-gates.json",
+    "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-bs-optimized/sequence.json",
+    "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-bs-optimized/motion/motion-evidence.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bs-production-alias/runtime-gates.json",
+    "productionVisualEvidence": "output/playwright/madagin-world-progress/candidate-bs-production-alias/sequence.json",
+    "productionMotionEvidence": "output/playwright/madagin-world-progress/candidate-bs-production-alias/motion/motion-evidence.json",
+    "immutableRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bs-production-immutable/runtime-gates.json",
+    "immutableVisualEvidence": "output/playwright/madagin-world-progress/candidate-bs-production-immutable/sequence.json",
+    "immutableMotionEvidence": "output/playwright/madagin-world-progress/candidate-bs-production-immutable/motion/motion-evidence.json",
+    "selectedTelemetry": {
+      "sourceQualityGeologyPlacements": 34,
+      "sourceQualityGeologyForms": 7,
+      "sourceQualityPachiraPlacements": 40,
+      "sourceQualityPachiraTriangles": 76914,
+      "watershedTriangles": 744535,
+      "regionalVolcanicAdjustedVertices": 219888,
+      "regionalGroundcoverOpening": 471,
+      "regionalGroundcoverAlpine": 539,
+      "regionalHabitatAuthorities": 3,
+      "openingVolumetricCrownPlacements": 1362,
+      "openingVolumetricCrownRenderedLobes": 3922,
+      "lakeVolumetricCrownPlacements": 1407,
+      "lakeVolumetricCrownRenderedLobes": 4028,
+      "waterNetworkProtected": true,
+      "terrainContactMistBanks": 6,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceSha256": {
+      "renderer": "CF4466D2D62BB6BD4C130C015C9D0DE88CCA3D4A95684AA0C8B1067B1DD19D48",
+      "publicSequenceVerifier": "9F053434DB2F75E0FB0728732F65AAB107621B7997F15FBF1BBB9C874ABA93EB",
+      "internalRuntimeVerifier": "714285891664F02356DE29B62BB770ACB128FEC19FAEBEAB8CE238005C866485",
+      "geologyGltf": "C3B992A7622E94F7D8DA97A47277A2A5177A513AF0312A127EC908D4056C97DB",
+      "geologyBinary": "2DF9D8EAACA4207529B0F613D4886D3962D0B9FFC0CDFD2BC4BF35DBCD391CB5"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BR",
+      "commit": "e97cfabd6d192d763c71c9b8637de536a36a1002",
+      "deploymentId": "dpl_2KXYmr5P1capb75SdH14ZL9sqBop",
+      "immutableUrl": "https://projectwebbing-g2dqrq2pz-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BS adds verified seven-form source geology and materially reduces a false lake-pattern artifact while preserving BR vegetation and the retained terrain, watershed, streaming, motion, compact, and fallback contracts. It does not resolve species diversity, inherited macro-landform resolution, physical water reflection and refraction, coast and waterfall optics, terrain-weather contact, or physical-device profiling; overall reference realism remains score 1."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",
