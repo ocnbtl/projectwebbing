@@ -521,6 +521,87 @@
     },
     "decisionBoundary": "BS adds verified seven-form source geology and materially reduces a false lake-pattern artifact while preserving BR vegetation and the retained terrain, watershed, streaming, motion, compact, and fallback contracts. It does not resolve species diversity, inherited macro-landform resolution, physical water reflection and refraction, coast and waterfall optics, terrain-weather contact, or physical-device profiling; overall reference realism remains score 1."
   },
+  "twelfthPostLaunchCandidate": {
+    "selected": "Candidate BT / v125-volcanic-tarn-surface-bt-selected",
+    "commit": null,
+    "deploymentId": null,
+    "immutableUrl": null,
+    "status": "selected and locally verified cumulative structural-realism candidate; production release and immutable/public-alias verification pending",
+    "changedCategories": [
+      "world-projected terrain source material and micro-normal response replacing face-oriented legacy atlas dominance",
+      "paired negative Alpine amphitheaters and bounded post-incision source-heightfield relaxation",
+      "one smaller shared volcanic-tarn terrain, bed, surface, bank, and inlet authority",
+      "verified CC0 Island Tree 03 scan derivatives at 60 selected grounded Ridge and Valley placements",
+      "deeper humid sky, fog, cloud, and water separation"
+    ],
+    "sourceAsset": {
+      "provider": "Poly Haven",
+      "asset": "Island Tree 03",
+      "authors": ["Rico Cilliers", "Rob Tuytel"],
+      "license": "CC0 1.0 Universal",
+      "sourceUrl": "https://polyhaven.com/a/island_tree_03",
+      "licenseUrl": "https://polyhaven.com/license",
+      "provenance": "world-source/assets/polyhaven/island_tree_03/PROVENANCE.md",
+      "reproductionScript": "tools/blender/build_island_tree_03_impostors_v110.py",
+      "runtimeSources": [
+        "public/world/v110/island-tree-03-impostors/island-tree-03-side-1.png",
+        "public/world/v110/island-tree-03-impostors/island-tree-03-side-2.png",
+        "public/world/v110/island-tree-03-impostors/island-tree-03-side-3.png",
+        "public/world/v110/island-tree-03-impostors/island-tree-03-side-4.png"
+      ],
+      "runtimeBytes": 1121316,
+      "sourceTrianglesApproximate": 5000000,
+      "policy": "two crossed planes per grounded placement at 26 Ridge and 34 Valley balanced/high-desktop anchors; excluded from compact/mobile and Alpine habitat"
+    },
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bt-local-selected/sequence.json",
+    "comparisonBoard": "output/playwright/madagin-world-progress/candidate-bt-local-selected/candidate-bs-vs-bt-board.png",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bt-local-selected/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-bt-local-selected/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-bt-local-selected/motion/motion-evidence.json",
+    "optimizedPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bt-optimized/runtime-gates.json",
+    "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-bt-optimized/sequence.json",
+    "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-bt-optimized/motion/motion-evidence.json",
+    "productionRuntimeEvidence": null,
+    "productionVisualEvidence": null,
+    "productionMotionEvidence": null,
+    "immutableRuntimeEvidence": null,
+    "immutableVisualEvidence": null,
+    "immutableMotionEvidence": null,
+    "selectedTelemetry": {
+      "sourceIslandTreePlacements": 60,
+      "sourceIslandTreeRidgePlacements": 26,
+      "sourceIslandTreeValleyPlacements": 34,
+      "crossedPlanesPerPlacement": 2,
+      "lakeRadiusMeters": [132.4, 94.6],
+      "alpineSurfaceRelaxationIterations": 5,
+      "alpineSurfaceRelaxationAdjustedVertices": 277700,
+      "alpineSurfaceRelaxationMaximumAdjustmentMeters": 5.5,
+      "alpineTriangles": 313292,
+      "watershedTriangles": 648520,
+      "regionalVolcanicAdjustedVertices": 191773,
+      "waterNetworkProtected": true,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceSha256": {
+      "renderer": "6F87E23EAAC7649C26ADA43C40C7D2236A32705955D158A53C130D83824E37BA",
+      "publicSequenceVerifier": "29B8D7245D88BCFCC80B1DFC05A85960E1E911DE535A8ABCD498EEBD47373BD6",
+      "internalRuntimeVerifier": "C350CA93CE7B591C184C90214CC1EC9C163CA324E3773001B5D48C6EABB833A7",
+      "islandTreeGltf": "5EFBE24AD6FC769DB55AC771EEC7A2EE7AA389C5667656F279D0743E455EF04A",
+      "islandTreeBinary": "AC0631F236502155307AC0320B53201A0D3BAB6348699AD9EDD3172322AAF08B",
+      "islandTreeSide1": "4EC766B7CD7873AE0B2E4A247D40B4239AD4D12FC386589822452E9879CCF951",
+      "islandTreeSide2": "34096B96CBF99B1C4C0B177593AB09F709D2A25B14168A2CF1D958B76888C75F",
+      "islandTreeSide3": "F183BE1F61F50D308BE3EB881FAE635C5D3BDE1C7DBC46FF3E5A5A27CC5A194F",
+      "islandTreeSide4": "73A71E4F16290A1EF9676FBA497AC061D11F677D030E199E53A5BF7293A9F545"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BS",
+      "commit": "54633ce007ffdcb8ef35eb1a30f1f167f5a504e1",
+      "deploymentId": "dpl_HJ4HPXQdq32LF8QYB31oE5su69tW",
+      "immutableUrl": "https://projectwebbing-o820ah6f4-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BT visibly reduces the oversized lake footprint and changes summit, terrain-surface, and atmospheric presentation across fixed public views while adding one bounded licensed vegetation family. It remains reference realism score 1: broad faceting, repeated ecology, authored waterfall/lake/ocean optics, weak terrain-weather contact, and missing physical-device evidence remain unresolved."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",

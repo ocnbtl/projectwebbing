@@ -118,6 +118,7 @@ const evidence = await page.evaluate(() => ({
   contactTrailheadHabitat: window.__MADAGIN_CONTACT_TRAILHEAD_HABITAT_V116__ ?? null,
   detailedTerrain: window.__MADAGIN_DETAILED_TERRAIN_V116__ ?? null,
   riparianEcology: window.__MADAGIN_RIPARIAN_ECOLOGY_V116__ ?? null,
+  sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
   stream: window.__MADAGIN_WORLD_STREAM_V116__ ?? null,
   waterfallSpray: window.__MADAGIN_WATERFALL_SPRAY_V116__ ?? null,
   videoElements: document.querySelectorAll("video").length,

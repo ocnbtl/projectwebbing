@@ -46,6 +46,8 @@ for (const testCase of cases) {
       () => Object.values(window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? {})
         .some((zone) => (zone?.placements ?? 0) > 0)
         && Object.values(window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? {})
+          .some((zone) => (zone?.placements ?? 0) > 0)
+        && Object.values(window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? {})
           .some((zone) => (zone?.placements ?? 0) > 0),
       undefined,
       { timeout: 45_000 },
@@ -63,7 +65,8 @@ for (const testCase of cases) {
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
-    realismBS: window.__MADAGIN_REALISM_BS__ ?? null,
+    realismBT: window.__MADAGIN_REALISM_BT__ ?? null,
+    sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
     sourceQualityVegetationBR: window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? null,
     terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
@@ -98,6 +101,8 @@ for (const testCase of cases) {
       && alpineGeology?.summitMacroform?.maximumIncisionMeters <= 170
       && alpineGeology?.summitMacroform?.maximumUpliftMeters > 0
       && alpineGeology?.summitMacroform?.maximumUpliftMeters <= 40
+      && alpineGeology?.summitSurfaceRelaxation?.adjustedVertices > 0
+      && alpineGeology?.summitSurfaceRelaxation?.iterations === 5
     ))
   );
   const watershedRelief = testCase.expectsWatershedRelief
@@ -128,6 +133,14 @@ for (const testCase of cases) {
       sourceQualityGeology.reduce((total, zone) => total + (zone?.placements ?? 0), 0) > 0
       && sourceQualityGeology.every((zone) => zone?.forms === 7)
     );
+  const sourceIslandTree = Object.values(evidence.sourceIslandTreeBT ?? {});
+  const sourceIslandTreePassed = testCase.expectedVersion !== "v1.16"
+    || testCase.query.includes("mobile=1")
+    || (
+      sourceIslandTree.reduce((total, zone) => total + (zone?.placements ?? 0), 0) > 0
+      && sourceIslandTree.every((zone) => zone?.sourceLicense === "CC0 1.0 Universal")
+      && sourceIslandTree.every((zone) => zone?.crossedPlanesPerPlacement === 2)
+    );
   const passed = evidence.rendererState === testCase.expectedState
     && evidence.videoElements === 0
     && (testCase.expectedVersion === null || evidence.worldVersion === testCase.expectedVersion)
@@ -138,12 +151,14 @@ for (const testCase of cases) {
     && alpineGeologyPassed
     && watershedReliefPassed
     && (testCase.expectedVersion !== "v1.16" || (
-      evidence.realismBS?.candidate === "BS"
-      && Object.keys(evidence.realismBS?.categories ?? {}).length === 5
-      && evidence.realismBS?.detachedTerrainShells === false
-      && evidence.realismBS?.waterNetworkProtected === true
+      evidence.realismBT?.candidate === "BT"
+      && Object.keys(evidence.realismBT?.categories ?? {}).length === 5
+      && evidence.realismBT?.detachedTerrainShells === false
+      && evidence.realismBT?.waterNetworkProtected === true
+      && evidence.realismBT?.lakeRadiusMeters?.join(",") === "132.4,94.6"
       && sourceQualityPachiraPassed
       && sourceQualityGeologyPassed
+      && sourceIslandTreePassed
     ))
     && !forbiddenV115OnMobile
     && pageErrors.length === 0;
