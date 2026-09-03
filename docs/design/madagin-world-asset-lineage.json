@@ -663,6 +663,57 @@
     },
     "decisionBoundary": "BU materially improves the exact waterfall, plunge, lake-edge, and surf residuals promised by BT without changing the public journey composition. Coarse terrain, repeated ecology, simplified coast and weather, compact-path limits, and missing physical-device evidence keep overall reference realism at score 1."
   },
+  "fourteenthPostLaunchCandidate": {
+    "selected": "Candidate BV / v127-continuous-surface-bv-selected",
+    "commit": null,
+    "deploymentId": null,
+    "immutableUrl": null,
+    "status": "selected locally after seven-view, eight-profile internal, six-profile public, fixed-camera motion, and production-build verification; production release pending",
+    "changedCategories": [
+      "position-welded shared terrain sources with reconciled coincident Valley normals",
+      "bounded selective regional volcanic subdivision and continuous world-space slope material response",
+      "expanded source-quality Pachira ecology with natural crown color and age variation",
+      "clustered licensed tarn-shore geology and irregular volcanic littoral response",
+      "deeper lake and ocean response with stronger retained terrain-contact atmosphere"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bv-local-07/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bv-local-final/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/latest/runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-bv-local-final/motion/motion-evidence.json",
+    "productionRuntimeEvidence": null,
+    "productionVisualEvidence": null,
+    "productionMotionEvidence": null,
+    "immutableRuntimeEvidence": null,
+    "immutableVisualEvidence": null,
+    "immutableMotionEvidence": null,
+    "localProductionComparisonBoard": null,
+    "selectedTelemetry": {
+      "regionalVolcanicAdjustedVertices": 428006,
+      "regionalVolcanicSubdivisionPasses": 1,
+      "watershedBaseTriangles": 1352020,
+      "watershedRenderedTriangles": 1354608,
+      "valleyNormalReconciledVertices": 1308,
+      "sourceQualityPachiraPlacements": 60,
+      "sourceQualityGeologyPlacements": 46,
+      "lakeShoreSourceGeologyPlacements": 18,
+      "terrainContactMistBanks": 6,
+      "oceanBreakerBands": 2,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceSha256": {
+      "renderer": "A84701224A187488F7A2400A4312E7F2E79A043A48C7C11B49B29C228DC17618",
+      "publicSequenceVerifier": "E19D6F3AB5FA3AC66D1AE33740820B9BE7227CB624F2DB34CB10B6B31B56602D",
+      "internalRuntimeVerifier": "1EEFA9AA7DC7628180C6B66B2BE3936562E831168CBD40FD8CCD902C31C63105"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BU metadata",
+      "commit": "20352a76195b8298e7397bb0cb01f5b4d981967b",
+      "deploymentId": "dpl_5Qr39w5mn45qYVikNg5HfSwmcCdr",
+      "immutableUrl": "https://projectwebbing-3nvf7khs4-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BV makes bounded source-surface, topology, ecology, shoreline, water, ocean, and atmosphere corrections while preserving public continuity. Inherited coarse macroforms, repeated species/silhouettes, procedural water/coast/weather, and missing physical-device evidence keep overall reference realism at score 1."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",

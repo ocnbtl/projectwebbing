@@ -58,9 +58,9 @@ for (const checkpoint of checkpoints) {
     const sourceQualityGeology = window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? {};
     const sourceIslandTree = window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
-    const realism = window.__MADAGIN_REALISM_BU__ ?? null;
-    const waterRealism = window.__MADAGIN_WATER_REALISM_BU__ ?? null;
-    const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BU__ ?? null;
+    const realism = window.__MADAGIN_REALISM_BV__ ?? null;
+    const waterRealism = window.__MADAGIN_WATER_REALISM_BV__ ?? null;
+    const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BV__ ?? null;
     const watershedSurface = window.__MADAGIN_WATERSHED_SURFACE_V116__ ?? {};
     return {
       canvasCount: document.querySelectorAll("canvas").length,
@@ -85,7 +85,14 @@ for (const checkpoint of checkpoints) {
           ?.regionalVolcanicLandform?.subdivisionPasses ?? 0,
         regionalVolcanicWaterProtection: detailedTerrain.valley?.watershedIntegration
           ?.regionalVolcanicLandform?.lakeRiverAndWaterfallProtected ?? false,
+        valleyNormalReconciledVertices: detailedTerrain.valley?.watershedIntegration
+          ?.surfaceNormalReconciliation?.reconciledVertices ?? 0,
+        ridgeNormalReconciledVertices: detailedTerrain.ridge?.ridgeErosion
+          ?.surfaceNormalReconciliation?.reconciledVertices ?? 0,
+        alpineNormalReconciledVertices: detailedTerrain.alpine?.alpineGeology
+          ?.surfaceNormalReconciliation?.reconciledVertices ?? 0,
         watershedTriangles: detailedTerrain.valley?.watershedIntegration?.subdivision?.triangles ?? 0,
+        watershedRenderedTriangles: detailedTerrain.valley?.watershedIntegration?.renderedTriangles ?? 0,
         regionalGroundcover: Object.values(ecologyDebug)
           .reduce((total, zone) => total + (zone?.restoredRegionalHabitatGroundcoverInstances ?? 0), 0),
         releasedPrimaryCanopy: Object.values(ecologyDebug)
@@ -113,6 +120,7 @@ for (const checkpoint of checkpoints) {
         waterfallLowerHalfWidthMeters: waterRealism?.waterfall?.body?.lowerHalfWidthMeters ?? 0,
         waterfallBraidedTransparentGaps: waterRealism?.waterfall?.braidedTransparentGaps ?? false,
         lakeBedShorelineBands: waterRealism?.lakeBed?.shorelineBands ?? 0,
+        lakeShoreSourceGeology: waterRealism?.lakeBed?.sourceGeologyPlacements ?? 0,
         oceanBreakerBands: oceanRealism?.breakerBands ?? 0,
         oceanDisplacedPrimaryBreaker: oceanRealism?.displacedPrimaryBreaker ?? false,
         oceanNearshoreBackwash: oceanRealism?.nearshoreBackwash ?? false,
@@ -165,13 +173,16 @@ await fs.writeFile(
 process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
-  && result.structuralEcology?.candidate === "BU"
+  && result.structuralEcology?.candidate === "BV"
   && result.structuralEcology?.releasedPrimaryCanopy > 0
   && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
-  && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 0
+  && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 1
   && result.structuralEcology?.regionalVolcanicWaterProtection === true
+  && result.structuralEcology?.valleyNormalReconciledVertices > 0
   && result.structuralEcology?.watershedTriangles > 0
   && result.structuralEcology?.watershedTriangles <= 1_500_000
+  && result.structuralEcology?.watershedRenderedTriangles > result.structuralEcology?.watershedTriangles
+  && result.structuralEcology?.watershedRenderedTriangles <= 1_500_000
   && result.structuralEcology?.sourceQualityPachira > 0
   && result.structuralEcology?.sourceQualityPachiraTriangles === 76_914
   && result.structuralEcology?.sourceQualityGeology > 0
@@ -183,6 +194,7 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.waterfallLowerHalfWidthMeters === 21.2
   && result.structuralEcology?.waterfallBraidedTransparentGaps === true
   && result.structuralEcology?.lakeBedShorelineBands === 3
+  && result.structuralEcology?.lakeShoreSourceGeology >= 18
   && result.structuralEcology?.oceanBreakerBands === 2
   && result.structuralEcology?.oceanDisplacedPrimaryBreaker === true
   && result.structuralEcology?.oceanNearshoreBackwash === true
