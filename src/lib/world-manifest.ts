@@ -133,10 +133,13 @@ export const JOURNEY_CHECKPOINTS: readonly JourneyCheckpoint[] = [
     role: "Trusted",
     story: "Follow the mountain river through broken water, wet basalt, and localized spray.",
     progress: 0.75,
-    camera: [-360, 170, -380],
-    lookAt: [160, -20, -730],
-    mobileCamera: [-390, 188, -350],
-    mobileLookAt: [160, -18, -730],
+    // Candidate BY removes the inherited extreme western pull-back. The
+    // connected two-stage water body, plunge contact, and headwall now occupy
+    // enough of the normal journey frame to be judged without a debug camera.
+    camera: [5, 80, -500],
+    lookAt: [168, -20, -730],
+    mobileCamera: [-2, 94, -486],
+    mobileLookAt: [166, -16, -730],
     oceanLookAt: [-740, -4, -590],
     mobileOceanLookAt: [-650, 3, -580],
     skyLookAt: [170, 215, -650],

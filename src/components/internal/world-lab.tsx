@@ -936,8 +936,8 @@ function CameraDirector({
       nextPosition.y += Math.sin(ascent * Math.PI) * (mobile ? 34 : 42);
       nextLook.lerp(contactSummitLook.current, ascent);
     } else if (activeView === "journey" && worldVersion === "v116" && checkpoint.id === "waterfall") {
-      nextPosition.set(mobile ? -45 : -20, mobile ? 98 : 82, mobile ? -455 : -475);
-      nextLook.set(170, -14, -730);
+      nextPosition.set(mobile ? -2 : 5, mobile ? 94 : 80, mobile ? -486 : -500);
+      nextLook.set(mobile ? 166 : 168, mobile ? -16 : -20, -730);
     } else if (activeView === "journey" && checkpoint.id === "ridge") {
       nextPosition.set(mobile ? 110 : 112, mobile ? 90 : 82, mobile ? 260 : 280);
       nextLook.set(mobile ? 4 : 10, mobile ? 52 : 48, mobile ? 116 : 128);
