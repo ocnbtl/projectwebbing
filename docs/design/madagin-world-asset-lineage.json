@@ -5,14 +5,14 @@
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
   "publicRelease": {
-    "commit": "aecd4c929d63ec3406b9138a8e7f7fefeecefb4e",
-    "deploymentId": "dpl_2DAG4M7gW7UGAhYjScyJEkp1pCv7",
-    "immutableUrl": "https://projectwebbing-4gqn72oa0-unigentamos.vercel.app",
+    "commit": "8c1189e73e63e94cc196c65506ddc23d5350a886",
+    "deploymentId": "dpl_Zrmq1MU4SEGXXRF7LP3aKgeuikCR",
+    "immutableUrl": "https://projectwebbing-9lztwrwhu-unigentamos.vercel.app",
     "productionAlias": "https://projectwebbing.vercel.app",
     "providerState": "READY",
-    "providerIdentityVerified": true,
-    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cd-production-alias/runtime-gates.json",
-    "status": "Candidate CD implementation is READY and alias-assigned from independently verified GitHub main provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
+    "providerIdentityVerified": false,
+    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cf-implementation/runtime-gates.json",
+    "status": "Candidate CF implementation is READY and alias-assigned from a clean temporary clone independently verified at the exact pushed implementation commit; Vercel records a CLI source without Git SHA metadata, so provider Git identity is intentionally not claimed; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
   },
   "postLaunchCandidate": {
     "selected": "Candidate BI / v117-public-reality-a2",
@@ -1313,6 +1313,66 @@
       "immutableUrl": "https://projectwebbing-3hvoc80n2-unigentamos.vercel.app"
     },
     "decisionBoundary": "CD visibly improves ocean depth, swell structure, moving reflection, surf contact, connected coastal material, and coastal habitat density without changing the public cameras or journey. Vegetation and terrain remain visibly procedural, cloud/spray effects stay subtle, optics are shader approximations rather than simulation, and missing physical-device evidence keeps overall reference realism at score 2 and blocks any photoreal or final claim."
+  },
+  "twentyThirdPostLaunchCandidate": {
+    "selected": "Candidate CF / basin-to-water-realism-cf-selected",
+    "commit": "8c1189e73e63e94cc196c65506ddc23d5350a886",
+    "deploymentId": "dpl_Zrmq1MU4SEGXXRF7LP3aKgeuikCR",
+    "immutableUrl": "https://projectwebbing-9lztwrwhu-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative basin-to-water candidate; production matrix passes six of six on alias and immutable deployment, seven-view journey proof passes on both, and fixed-camera motion proof passes on both",
+    "changedCategories": [
+      "world-space basalt, colluvium, drainage, talus, and mesoscopic normal response with lower broad source-UV chroma authority",
+      "bounded dual-frequency physical weathering on the connected Ridge, Valley, and Alpine surfaces with seams and water corridors protected",
+      "open shoreline reaches with sparse clustered littoral geology and licensed fern, shrub, and rock succession instead of a continuous rock necklace",
+      "four-lobe low-opacity breakup of each retained cloud bank plus stronger directional terrain relief and reduced broad fill",
+      "normal-desktop thinning of repeated legacy canopy only while source-quality, drainage, riparian, and littoral layers remain full",
+      "depth-graded translucent lake shore substrate and a lower-authority, more broken connected waterfall body"
+    ],
+    "rejectedCalibrationEvidence": "output/playwright/madagin-world-progress/candidate-ce-local-01/sequence.json",
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-cf-local-01/sequence.json",
+    "localRuntimeTelemetry": "output/playwright/madagin-world-progress/candidate-cf-local-01/runtime-telemetry.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-cf-local-01/motion/motion-evidence.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cf-implementation/runtime-gates.json",
+    "productionVisualEvidence": "output/playwright/madagin-world-progress/candidate-cf-production-alias-01/sequence.json",
+    "productionMotionEvidence": "output/playwright/madagin-world-progress/candidate-cf-production-alias-01/motion/motion-evidence.json",
+    "immutableVisualEvidence": "output/playwright/madagin-world-progress/candidate-cf-production-immutable-01/sequence.json",
+    "immutableMotionEvidence": "output/playwright/madagin-world-progress/candidate-cf-production-immutable-01/motion/motion-evidence.json",
+    "implementationSource": {
+      "type": "clean-clone-of-pushed-github-main",
+      "organization": "ocnbtl",
+      "repository": "projectwebbing",
+      "ref": "main",
+      "sha": "8c1189e73e63e94cc196c65506ddc23d5350a886",
+      "providerMetadataBoundary": "The Vercel deployment records source=cli and no provider Git SHA metadata; exact input identity is proven by the clean clone HEAD and the candidate-specific runtime telemetry, not by provider Git metadata."
+    },
+    "selectedTelemetry": {
+      "candidate": "CF",
+      "ridgeWeatheredVertices": 93780,
+      "ridgeMaximumWeatheringReliefMeters": 0.9128584857847265,
+      "valleyWeatheredVertices": 265347,
+      "valleyMaximumWeatheringReliefMeters": 2.0806751314323173,
+      "detachedTerrainShells": false,
+      "lakeLittoralOpacity": 0.7,
+      "lakeInteriorOpacity": 0.94,
+      "lakeSubstrateVisibleAtShore": true,
+      "waterfallBraidedTransparentGaps": true,
+      "cloudBanks": 5,
+      "cloudLobes": 20,
+      "normalDesktopLegacyCoreThinning": true,
+      "visibleEcologyInstances": { "lake": 244, "ridge": 1466, "valley": 880 },
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceSha256": {
+      "renderer": "C51F01287622FE7D4C5E3E404EFB8DE6071674B9D0C7F70AA161FA9CE76BC9F6"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate CD metadata",
+      "commit": "517d7cb1c4c0f0ad74e75f257f17382e35e5eaf3",
+      "deploymentId": "dpl_HyumC5x7hR77ZqFrQQfkXWqbNaB8",
+      "immutableUrl": "https://projectwebbing-l0o9ohdv8-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "CF visibly removes the lake's rock necklace, reduces legacy-canopy repetition, breaks cloud shells into lower-opacity lobes, deepens world-scale terrain weathering, exposes more lake substrate at the shore, and lowers continuous waterfall whiteness without changing the public camera rail or fallback contract. Broad faceted macroforms, repeated vegetation, plate-like lake optics, simplified waterfall turbulence, and missing physical-device evidence keep reference realism at score 2 and block any photoreal or final claim."
   },
   "components": {
     "topologyAndStreaming": {
