@@ -1008,6 +1008,73 @@
     },
     "decisionBoundary": "BZ removes the production Ocean view's dominant sky-colored coast void and advances shared terrain/surf authority, shoreline water response, coastal source quality, and grounded atmosphere while preserving the cumulative world. The new shelf remains broad and smooth; repeated ecology, procedural water/weather, coarse inherited macroforms, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
   },
+  "nineteenthPostLaunchCandidate": {
+    "selected": "Candidate CA / v132-western-watershed-ca-selected",
+    "commit": null,
+    "deploymentId": null,
+    "immutableUrl": null,
+    "status": "selected locally; optimized public-route and production verification pending",
+    "changedCategories": [
+      "four asymmetric western Valley trunk catchments and eight second-order rills cut into the connected source surface",
+      "retained interfluve buttresses and four colluvial toes with exact lake, river, waterfall, seam, and bounds protection",
+      "wet channel, mineral shoulder, and colluvial material response aligned to the structural catchment equations",
+      "western drainage-coupled canopy and licensed fern, shrub, and basalt groundcover plus Alpine source-geology continuation",
+      "two restrained western terrain-contact weather banks under the retained physical sky"
+    ],
+    "rejectedIterations": [
+      {
+        "id": "CA1",
+        "reason": "normal-direction wall displacement amplified source triangles into artificial fins and an opaque tall mist bank read as a grey vertical veil"
+      }
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-ca-local-04/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-ca-optimized/runtime-gates.json",
+    "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-ca-optimized/sequence.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-ca-local-04/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-ca-optimized/motion/motion-evidence.json",
+    "productionBaselineEvidence": "output/playwright/madagin-world-progress/candidate-bz-production-baseline-20260904-r5/sequence.json",
+    "comparisonBoard": "output/playwright/madagin-world-progress/candidate-ca-optimized/candidate-bz-vs-ca-optimized-board.png",
+    "selectedTelemetry": {
+      "candidate": "CA",
+      "westernCatchments": 4,
+      "westernSecondOrderRills": 8,
+      "westernColluvialToes": 4,
+      "westernAdjustedVertices": 130966,
+      "westernMaximumAppliedIncisionMeters": 24.029002,
+      "westernDetachedGeometry": false,
+      "waterNetworkProtected": true,
+      "westernCatchmentCanopyPlacements": 87,
+      "westernGroundcoverPlacements": 134,
+      "alpineSourceGeologyPlacements": 22,
+      "terrainContactMistBanks": 16,
+      "watershedSourceTriangles": 703618,
+      "watershedRenderedTriangles": 706206,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "referenceReview": {
+      "reviewedAt": "2026-09-04",
+      "policy": "view-only; no reference media copied into the product",
+      "sources": [
+        "https://www.usgs.gov/media/images/march-31-2026-erosion-tephra-deposit",
+        "https://www.usgs.gov/volcanoes/mauna-loa/multimedia",
+        "https://www.nps.gov/places/kuloa-point.htm",
+        "https://pubs.nps.gov/eTIC/HACA-HOPA/HALE_162_110519_0058pg.pdf"
+      ]
+    },
+    "sourceSha256": {
+      "renderer": "2C3A3D8399564469614F35EE0F732145B377C8C31B1984E196A16EB5B4FC4382",
+      "publicSequenceVerifier": "6D10E44918C64753B757625740767A7952CBEAD52E3B0E325974A58C3BC2FDED",
+      "internalRuntimeVerifier": "41B849A6C4FE00AEC4A6A351C1772B3974D6F98FD17775030790E7CFFBBED91D"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BZ metadata",
+      "commit": "3af616d5558ba0a8e624098ecb4c84505ddf349c",
+      "deploymentId": "dpl_2u4TAYEZJWSBZKN8g3FMnFQpXGjZ",
+      "immutableUrl": "https://projectwebbing-or24jorf3-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "CA adds a visible but restrained watershed-scale improvement to the western Valley and couples its terrain, material, ecology, geology, and atmosphere without changing the public composition or accepted water network. Coarse inherited terrain, repeated ecology, simplified water, procedural weather, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",

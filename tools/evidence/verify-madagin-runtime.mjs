@@ -73,8 +73,10 @@ for (const testCase of cases) {
     oceanRealismBZ: window.__MADAGIN_OCEAN_REALISM_BZ__ ?? null,
     orographicWeatherBX: window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null,
     orographicWeatherBZ: window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? null,
+    orographicWeatherCA: window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? null,
     realismBY: window.__MADAGIN_REALISM_BY__ ?? null,
     realismBZ: window.__MADAGIN_REALISM_BZ__ ?? null,
+    realismCA: window.__MADAGIN_REALISM_CA__ ?? null,
     sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
     sourceIslandTree01BW: window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
@@ -133,12 +135,22 @@ for (const testCase of cases) {
     && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.adjustedVertices > 0
     && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.detachedGeometry === false
     && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.lakeRiverAndWaterfallProtected === true
-    && evidence.terrainContactMist?.banks === 14
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.adjustedVertices > 0
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.detachedGeometry === false
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.lakeRiverAndWaterfallProtected === true
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.maximumIncisionMeters > 0
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.maximumIncisionMeters <= 39
+    && evidence.terrainContactMist?.banks === 16
     && evidence.orographicWeatherBX?.candidate === "BX"
-    && evidence.orographicWeatherBX?.groundedBanks === 14
+    && evidence.orographicWeatherBX?.groundedBanks === 16
     && evidence.orographicWeatherBZ?.candidate === "BZ"
-    && evidence.orographicWeatherBZ?.groundedBanks === 14
+    && evidence.orographicWeatherBZ?.groundedBanks === 16
     && evidence.orographicWeatherBZ?.coastalContactBanks === 2
+    && evidence.orographicWeatherCA?.candidate === "CA"
+    && evidence.orographicWeatherCA?.groundedBanks === 16
+    && evidence.orographicWeatherCA?.westernCatchmentBanks === 2
+    && evidence.regionalHabitat?.easternValleyCatchment?.habitatAuthority === "paired-eastern-western-valley-catchment-networks"
+    && evidence.regionalHabitat?.easternValleyCatchment?.westernGroundedPlacements > 0
   );
   const sourceQualityPachira = Object.values(evidence.sourceQualityVegetationBR ?? {});
   const sourceQualityPachiraPassed = testCase.expectedVersion !== "v1.16"
@@ -153,6 +165,7 @@ for (const testCase of cases) {
     || (
       sourceQualityGeology.reduce((total, zone) => total + (zone?.placements ?? 0), 0) > 0
       && sourceQualityGeology.every((zone) => zone?.forms === 7)
+      && (testCase.id !== "v116-alpine-detailed" || (evidence.sourceQualityGeologyBS?.alpine?.placements ?? 0) > 0)
     );
   const sourceIslandTree = Object.values(evidence.sourceIslandTreeBT ?? {});
   const sourceIslandTreePassed = testCase.expectedVersion !== "v1.16"
@@ -222,6 +235,12 @@ for (const testCase of cases) {
       && evidence.realismBZ?.detachedTerrainShells === false
       && evidence.realismBZ?.exposedCoastalVoidClosed === true
       && evidence.realismBZ?.waterNetworkProtected === true
+      && evidence.realismCA?.candidate === "CA"
+      && Object.keys(evidence.realismCA?.categories ?? {}).length === 5
+      && evidence.realismCA?.detachedTerrainShells === false
+      && evidence.realismCA?.waterNetworkProtected === true
+      && evidence.realismCA?.westernCatchments === 4
+      && evidence.realismCA?.westernSecondOrderRills === 8
       && evidence.oceanRealismBZ?.candidate === "BZ"
       && evidence.oceanRealismBZ?.breakerBands === 4
       && evidence.oceanRealismBZ?.coastalVoidClosed === true

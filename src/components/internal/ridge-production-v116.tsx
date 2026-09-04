@@ -864,6 +864,85 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           clamp(0.18 + strata * 0.36 + erosionalRibs * 0.24, 0.0, 0.72)
         );
         authoredGround = mix(authoredGround, westernCliffRock, westernCliff * (0.72 + detail * 0.14));
+        // Candidate CA gives the new west-wall catchments a material response
+        // tied to their broad source-surface footprint: damp channel floors,
+        // mineral ribs, and lighter colluvial toes. This follows the physical
+        // relief rather than painting a screen-facing stripe over the Valley.
+        float westernWatershedEnvelope = terrainValley
+          * smoothstep(-646.0, -590.0, vDetailedTerrainWorld.x)
+          * (1.0 - smoothstep(-96.0, -54.0, vDetailedTerrainWorld.x))
+          * smoothstep(-958.0, -922.0, vDetailedTerrainWorld.z)
+          * (1.0 - smoothstep(-556.0, -512.0, vDetailedTerrainWorld.z));
+        float westernFlankDistance = -vDetailedTerrainWorld.x;
+        float westernUpslope = smoothstep(92.0, 610.0, westernFlankDistance);
+        float westernTrunkA = -902.0
+          + sin((westernFlankDistance - 148.0) * 0.0117 + 0.82) * 21.0
+          + sin((westernFlankDistance + 96.0) * 0.0044 - 0.82 * 0.57) * 10.0;
+        float westernTrunkB = -806.0
+          + sin((westernFlankDistance - 148.0) * 0.0117 + 2.18) * 21.0
+          + sin((westernFlankDistance + 96.0) * 0.0044 - 2.18 * 0.57) * 10.0;
+        float westernTrunkC = -704.0
+          + sin((westernFlankDistance - 148.0) * 0.0117 + 3.62) * 21.0
+          + sin((westernFlankDistance + 96.0) * 0.0044 - 3.62 * 0.57) * 10.0;
+        float westernTrunkD = -604.0
+          + sin((westernFlankDistance - 148.0) * 0.0117 + 5.08) * 21.0
+          + sin((westernFlankDistance + 96.0) * 0.0044 - 5.08 * 0.57) * 10.0;
+        float westernTrunkDistance = min(
+          min(abs(vDetailedTerrainWorld.z - westernTrunkA), abs(vDetailedTerrainWorld.z - westernTrunkB)),
+          min(abs(vDetailedTerrainWorld.z - westernTrunkC), abs(vDetailedTerrainWorld.z - westernTrunkD))
+        );
+        float westernChannelWidth = 29.0 - westernUpslope * 10.0;
+        float westernChannelCore = westernWatershedEnvelope
+          * (1.0 - smoothstep(westernChannelWidth * 0.31, westernChannelWidth * 0.98, westernTrunkDistance))
+          * (0.72 + detailedTerrainFbm(vec2(
+            vDetailedTerrainWorld.z * 0.033,
+            westernFlankDistance * 0.026
+          ) + 173.8) * 0.28);
+        float westernChannelShoulder = westernWatershedEnvelope
+          * (1.0 - smoothstep(westernChannelWidth * 0.92, westernChannelWidth * 1.72, westernTrunkDistance))
+          * (1.0 - westernChannelCore * 0.76)
+          * smoothstep(0.16, 0.72, slope);
+        float westernCatchmentPhaseA = sin(
+          vDetailedTerrainWorld.z * 0.039
+            - abs(vDetailedTerrainWorld.x) * 0.018
+            + sin(abs(vDetailedTerrainWorld.x) * 0.011) * 1.3
+        ) * 0.5 + 0.5;
+        float westernCatchmentPhaseB = sin(
+          vDetailedTerrainWorld.z * 0.071
+            + abs(vDetailedTerrainWorld.x) * 0.026
+            + 1.8
+        ) * 0.5 + 0.5;
+        float westernIncisionMoisture = westernWatershedEnvelope
+          * max(
+            smoothstep(0.71, 0.94, westernCatchmentPhaseA),
+            smoothstep(0.8, 0.965, westernCatchmentPhaseB) * 0.72
+          )
+          * (0.38 + slope * 0.62);
+        float westernInterfluve = westernWatershedEnvelope
+          * smoothstep(0.56, 0.84, 1.0 - westernCatchmentPhaseA)
+          * smoothstep(0.18, 0.7, slope);
+        float westernFanToe = westernWatershedEnvelope
+          * smoothstep(-286.0, -242.0, vDetailedTerrainWorld.x)
+          * (1.0 - smoothstep(-118.0, -82.0, vDetailedTerrainWorld.x))
+          * smoothstep(0.48, 0.82, detailedTerrainFbm(vec2(
+            vDetailedTerrainWorld.z * 0.024,
+            vDetailedTerrainWorld.x * 0.031
+          ) + 216.4))
+          * (1.0 - smoothstep(0.46, 0.78, slope));
+        vec3 westernWetChannel = mix(
+          vec3(0.024, 0.047, 0.039),
+          vec3(0.052, 0.102, 0.055),
+          smoothstep(0.34, 0.76, moistureMosaic)
+        );
+        vec3 westernMineralRib = mix(
+          vec3(0.058, 0.068, 0.062),
+          vec3(0.19, 0.137, 0.084),
+          strata * 0.52 + erosionalRibs * 0.24
+        );
+        vec3 westernColluvium = mix(vec3(0.108, 0.086, 0.054), moss, 0.22);
+        authoredGround = mix(authoredGround, westernWetChannel, max(westernIncisionMoisture * 0.68, westernChannelCore * 0.9));
+        authoredGround = mix(authoredGround, westernMineralRib, max(westernInterfluve * 0.44, westernChannelShoulder * 0.58));
+        authoredGround = mix(authoredGround, westernColluvium, westernFanToe * 0.42);
         vec2 basinHeadwallCoordinate = vec2(
           (vDetailedTerrainWorld.x + 40.0) / 390.0,
           (vDetailedTerrainWorld.z + 805.0) / 240.0
@@ -1006,9 +1085,9 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         // as giant painted polygons despite the low sourceAuthority below.
         // Keep real PBR chroma and grain, but stop those UV faces from becoming
         // the dominant landform signal in distant vistas.
-        float sourceAuthority = ${zone === "connected" ? "mix(0.38, 0.44, terrainValley)" : zone === "ridge" ? "0.38" : zone === "valley" ? "0.44" : "0.48"};
+        float sourceAuthority = ${zone === "connected" ? "mix(0.36, 0.4, terrainValley)" : zone === "ridge" ? "0.36" : zone === "valley" ? "0.4" : "0.44"};
         diffuseColor.rgb = clamp(
-          authoredGround * mix(vec3(0.88), microSurface, sourceAuthority) * 1.18,
+          authoredGround * mix(vec3(0.9), microSurface, sourceAuthority) * 1.26,
           vec3(0.0),
           vec3(1.0)
         );`,
@@ -1027,8 +1106,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * (0.095 + basinDrainage * 0.05);`,
       );
   };
-  material.customProgramCacheKey = () => `madagin-candidate-bx-geologic-hierarchy-${zone}`;
-  material.name = `Madagin Candidate BX world-projected cross-bedded volcanic PBR ${zone} terrain`;
+  material.customProgramCacheKey = () => `madagin-candidate-ca-western-watershed-${zone}`;
+  material.name = `Madagin Candidate CA world-projected weathered volcanic PBR ${zone} terrain`;
   return material;
 }
 
@@ -1415,6 +1494,130 @@ const EASTERN_VALLEY_CATCHMENTS = [
   { baseZ: -674, branchSide: -1, depth: 21.6, phase: 3.05, spread: 74 },
   { baseZ: -578, branchSide: 1, depth: 17.2, phase: 4.45, spread: 61 },
 ] as const;
+
+const WESTERN_VALLEY_CATCHMENTS = [
+  { baseZ: -902, branchSide: 1, depth: 24.2, phase: 0.82, spread: 72 },
+  { baseZ: -806, branchSide: -1, depth: 20.4, phase: 2.18, spread: 64 },
+  { baseZ: -704, branchSide: 1, depth: 22.6, phase: 3.62, spread: 79 },
+  { baseZ: -604, branchSide: -1, depth: 18.9, phase: 5.08, spread: 68 },
+] as const;
+
+function westernValleyCatchmentEnvelope(x: number, y: number, z: number, normalY: number) {
+  // Candidate CA completes the visible watershed on the broad western wall.
+  // The accepted eastern network already proved the source-surface method;
+  // this asymmetric authority gives the opposite wall its own rainfall history
+  // without mirroring the eastern silhouette or touching any water boundary.
+  const longitudinal = smoothRange(-958, -922, z) * (1 - smoothRange(-556, -512, z));
+  const flankDistance = -x;
+  const lateral = smoothRange(54, 96, flankDistance) * (1 - smoothRange(590, 646, flankDistance));
+  const elevation = smoothRange(-46, -20, y) * (1 - smoothRange(158, 196, y));
+  const steepness = 1 - Math.abs(normalY);
+  const slopeAuthority = 0.44 + smoothRange(0.025, 0.62, steepness) * 0.56;
+  const lakeProtection = y < LAKE_WATER_LEVEL + 30
+    ? smoothRange(1.14, 1.54, lakeBoundaryDistance(x, z))
+    : 1;
+  const riverProtection = z >= -818 && z <= -315
+    ? smoothRange(
+        v116RiverHalfWidth(z) + 20,
+        v116RiverHalfWidth(z) + 70,
+        Math.abs(x - v116RiverCenter(z)),
+      )
+    : 1;
+  const waterfallProtection = smoothRange(
+    0.98,
+    1.48,
+    Math.hypot((x - 162) / 204, (z + 714) / 166),
+  );
+  return longitudinal
+    * lateral
+    * elevation
+    * slopeAuthority
+    * lakeProtection
+    * riverProtection
+    * waterfallProtection;
+}
+
+function westernValleyCatchmentRelief(x: number, z: number) {
+  const flankDistance = -x;
+  const upslope = smoothRange(92, 610, flankDistance);
+  const branchAuthority = smoothRange(206, 292, flankDistance)
+    * (1 - smoothRange(558, 638, flankDistance));
+  let drainage = 0;
+  let depositionalFans = 0;
+
+  WESTERN_VALLEY_CATCHMENTS.forEach((catchment, catchmentIndex) => {
+    const trunkCenter = catchment.baseZ
+      + Math.sin((flankDistance - 148) * 0.0117 + catchment.phase) * 21
+      + Math.sin((flankDistance + 96) * 0.0044 - catchment.phase * 0.57) * 10;
+    const trunkWidth = 29 - upslope * 10;
+    const trunkShape = 1 - smoothRange(
+      trunkWidth * 0.26,
+      trunkWidth,
+      Math.abs(z - trunkCenter),
+    );
+    drainage -= Math.pow(Math.max(0, trunkShape), 1.58)
+      * catchment.depth
+      * (0.94 - upslope * 0.16);
+
+    const branchSpread = catchment.spread * smoothRange(184, 540, flankDistance);
+    const branchCenter = trunkCenter
+      + catchment.branchSide * branchSpread
+      + Math.sin(flankDistance * 0.016 + catchment.phase * 0.73) * 6.5;
+    const branchWidth = 19 - upslope * 4.5;
+    const branchShape = 1 - smoothRange(
+      branchWidth * 0.25,
+      branchWidth,
+      Math.abs(z - branchCenter),
+    );
+    drainage -= Math.pow(Math.max(0, branchShape), 1.7)
+      * (9.4 + catchmentIndex * 0.72)
+      * branchAuthority;
+
+    const secondOrderAuthority = smoothRange(158, 238, flankDistance)
+      * (1 - smoothRange(552, 630, flankDistance));
+    const secondOrderSpan = (14 + catchmentIndex * 2.4)
+      * (0.5 + smoothRange(182, 512, flankDistance) * 0.5);
+    ([-1, 1] as const).forEach((side) => {
+      const secondOrderCenter = trunkCenter
+        + side * secondOrderSpan
+        + Math.sin(flankDistance * (0.021 + catchmentIndex * 0.0012) + catchment.phase + side * 0.76) * 4;
+      const secondOrderWidth = (9.8 - upslope * 2.8) * (0.94 + catchmentIndex * 0.022);
+      const secondOrderShape = 1 - smoothRange(
+        secondOrderWidth * 0.23,
+        secondOrderWidth,
+        Math.abs(z - secondOrderCenter),
+      );
+      drainage -= Math.pow(Math.max(0, secondOrderShape), 2.04)
+        * (5.8 + catchmentIndex * 0.48)
+        * secondOrderAuthority
+        * (side === catchment.branchSide ? 1.06 : 0.82);
+    });
+
+    // Low convex toes sit between the protected channel and the incised
+    // trunks. They read as retained colluvial fans rather than a flat bank.
+    const fanAuthority = (1 - smoothRange(196, 292, flankDistance))
+      * smoothRange(108, 156, flankDistance);
+    const fanShape = 1 - smoothRange(12, 48, Math.abs(z - (trunkCenter + catchment.branchSide * 8)));
+    depositionalFans += Math.pow(Math.max(0, fanShape), 1.34)
+      * (3.8 + catchmentIndex * 0.42)
+      * fanAuthority;
+  });
+
+  const primaryButtresses = Math.sin(
+    z * 0.0172
+      - flankDistance * 0.0051
+      + Math.sin((flankDistance + z) * 0.0054) * 0.86,
+  ) * 9.4;
+  const secondaryButtresses = Math.sin(
+    z * 0.041
+      + flankDistance * 0.0087
+      + Math.sin((flankDistance - z) * 0.0077) * 0.46,
+  ) * 3.1;
+  return Math.max(
+    -22,
+    Math.min(10.5, primaryButtresses + secondaryButtresses + drainage + depositionalFans),
+  );
+}
 
 function easternValleyCatchmentEnvelope(x: number, y: number, z: number, normalY: number) {
   // Keep both independently authored terrain joins and the exterior source
@@ -2663,6 +2866,9 @@ function createIntegratedWatershedTerrainGeometry(
   let easternCatchmentVertices = 0;
   let maximumEasternCatchmentIncision = 0;
   let maximumEasternCatchmentUplift = 0;
+  let westernCatchmentVertices = 0;
+  let maximumWesternCatchmentIncision = 0;
+  let maximumWesternCatchmentUplift = 0;
   let easternLakeApproachBankVertices = 0;
   let maximumEasternLakeApproachBankIncision = 0;
   let maximumEasternLakeApproachBankUplift = 0;
@@ -2735,6 +2941,21 @@ function createIntegratedWatershedTerrainGeometry(
       easternCatchmentVertices += 1;
       maximumEasternCatchmentIncision = Math.max(maximumEasternCatchmentIncision, -relief);
       maximumEasternCatchmentUplift = Math.max(maximumEasternCatchmentUplift, relief);
+    }
+
+    const westernCatchmentEnvelope = westernValleyCatchmentEnvelope(x, y, z, normalY);
+    if (westernCatchmentEnvelope > 0.001) {
+      const relief = westernValleyCatchmentRelief(x, z) * westernCatchmentEnvelope;
+      const steepness = 1 - Math.abs(normalY);
+      // Keep this rainfall erosion heightfield-like. Lateral normal offsets on
+      // the inherited steep wall amplified source triangles into sharp fins in
+      // the rejected CA1 comparison; vertical relief retains drainage and
+      // buttress scale without manufacturing overhangs or detached facets.
+      const appliedRelief = relief * (1.02 + steepness * 0.08);
+      nextY += appliedRelief;
+      westernCatchmentVertices += 1;
+      maximumWesternCatchmentIncision = Math.max(maximumWesternCatchmentIncision, -appliedRelief);
+      maximumWesternCatchmentUplift = Math.max(maximumWesternCatchmentUplift, appliedRelief);
     }
 
     const easternBankEnvelope = easternLakeApproachBankEnvelope(x, y, z, normalY);
@@ -3000,6 +3221,15 @@ function createIntegratedWatershedTerrainGeometry(
       maximumIncisionMeters: maximumEasternCatchmentIncision,
       maximumUpliftMeters: maximumEasternCatchmentUplift,
       method: "four branching east-shoulder catchments with eight second-order rills separated by two non-repeating source-surface buttress wavelengths",
+      ridgeAndAlpineBoundariesProtected: true,
+    },
+    westernValleyCatchments: {
+      adjustedVertices: westernCatchmentVertices,
+      detachedGeometry: false,
+      lakeRiverAndWaterfallProtected: true,
+      maximumIncisionMeters: maximumWesternCatchmentIncision,
+      maximumUpliftMeters: maximumWesternCatchmentUplift,
+      method: "four asymmetric west-wall catchments with eight second-order rills, retained interfluves, and four source-surface colluvial toes",
       ridgeAndAlpineBoundariesProtected: true,
     },
     easternLakeApproachBank: {
@@ -5245,7 +5475,7 @@ function selectSourceQualityGeologyPlacements(
   tier: WorldQualityTier,
   zone: V116Zone,
 ) {
-  if (mobile || tier === "conservative" || zone === "alpine") return [];
+  if (mobile || tier === "conservative") return [];
   const grounded = instances.filter((placement) => placement[1] === 2);
   const candidates = zone === "lake"
     ? grounded.filter((placement) => {
@@ -5257,12 +5487,12 @@ function selectSourceQualityGeologyPlacements(
       if (zone === "valley") return placement[3] >= -28
         && placement[3] <= 46
         && lakeBoundaryDistance(placement[2], placement[4]) >= 1.2;
-      return placement[3] >= 36;
+      return placement[3] >= 36 && placement[3] <= 218;
     });
   const limit = tier === "high"
-    ? zone === "lake" ? 16 : 18
-    : zone === "lake" ? 12 : 14;
-  const stride = zone === "lake" ? 2 : 13;
+    ? zone === "valley" ? 30 : zone === "alpine" ? 28 : zone === "lake" ? 18 : 24
+    : zone === "valley" ? 24 : zone === "alpine" ? 22 : zone === "lake" ? 14 : 20;
+  const stride = zone === "lake" ? 2 : zone === "alpine" ? 5 : zone === "valley" ? 7 : 9;
   return candidates
     .sort((left, right) => sourceQualityGeologySignature(left) - sourceQualityGeologySignature(right))
     .filter((_, index) => index % stride === 0)
@@ -5285,7 +5515,7 @@ function InstancedSourceQualityGeology({ part, placements, shadows, zone }: {
     placements.forEach((placement, index) => {
       const signature = sourceQualityGeologySignature(placement) + index * 31;
       const nearLake = lakeBoundaryDistance(placement[2], placement[4]) < 1.32;
-      const baseScale = nearLake ? 4.65 : zone === "valley" ? 4.15 : 4.05;
+      const baseScale = nearLake ? 4.65 : zone === "alpine" ? 5.25 : zone === "valley" ? 4.4 : 4.15;
       const size = baseScale * (0.72 + (signature % 13) * 0.045);
       dummy.position.set(placement[2], placement[3] - (nearLake ? 0.48 : 0.62), placement[4]);
       dummy.rotation.set(
@@ -5303,7 +5533,9 @@ function InstancedSourceQualityGeology({ part, placements, shadows, zone }: {
       mesh.setMatrixAt(index, matrix);
       const palettes = nearLake
         ? ["#d4d8ce", "#c4cdc1", "#dde0d3", "#b9c7bc"]
-        : ["#d2d2c8", "#c1c7bc", "#dcdbcd", "#b8c1b7"];
+        : zone === "alpine"
+          ? ["#bbb9ae", "#9fa8a0", "#cbc3b2", "#8f9c91"]
+          : ["#d2d2c8", "#c1c7bc", "#dcdbcd", "#b8c1b7"];
       instanceColor.set(palettes[signature % palettes.length]);
       mesh.setColorAt(index, instanceColor);
     });
@@ -5563,6 +5795,60 @@ function isAddedEasternValleyCatchmentHabitatPlacement(placement: PlacementTuple
   return !alreadyPromoted;
 }
 
+function westernValleyCatchmentHabitatDistanceRatio(placement: PlacementTuple) {
+  const x = placement[2];
+  const y = placement[3];
+  const z = placement[4];
+  const flankDistance = -x;
+  if (
+    (placement[1] !== 1 && placement[1] !== 2)
+    || placement[0] >= 8
+    || flankDistance < 96
+    || flankDistance > 638
+    || y < -20
+    || y > 158
+    || z < -922
+    || z > -512
+  ) return Number.POSITIVE_INFINITY;
+
+  const upslope = smoothRange(92, 610, flankDistance);
+  const branchAuthority = smoothRange(206, 292, flankDistance)
+    * (1 - smoothRange(558, 638, flankDistance));
+  let nearestRatio = Number.POSITIVE_INFINITY;
+
+  WESTERN_VALLEY_CATCHMENTS.forEach((catchment) => {
+    const trunkCenter = catchment.baseZ
+      + Math.sin((flankDistance - 148) * 0.0117 + catchment.phase) * 21
+      + Math.sin((flankDistance + 96) * 0.0044 - catchment.phase * 0.57) * 10;
+    const trunkWidth = 29 - upslope * 10;
+    nearestRatio = Math.min(nearestRatio, Math.abs(z - trunkCenter) / trunkWidth);
+
+    if (branchAuthority <= 0.15) return;
+    const branchSpread = catchment.spread * smoothRange(184, 540, flankDistance);
+    const branchCenter = trunkCenter
+      + catchment.branchSide * branchSpread
+      + Math.sin(flankDistance * 0.016 + catchment.phase * 0.73) * 6.5;
+    const branchWidth = 19 - upslope * 4.5;
+    nearestRatio = Math.min(
+      nearestRatio,
+      Math.abs(z - branchCenter) / (branchWidth * Math.max(0.45, branchAuthority)),
+    );
+  });
+
+  return nearestRatio;
+}
+
+function isWesternValleyCatchmentHabitatPlacement(placement: PlacementTuple) {
+  return westernValleyCatchmentHabitatDistanceRatio(placement) <= 1.5;
+}
+
+function isAddedWesternValleyCatchmentHabitatPlacement(placement: PlacementTuple) {
+  if (!isWesternValleyCatchmentHabitatPlacement(placement)) return false;
+  const alreadyPromoted = isMultiSlopeSuccessionPlacement(placement, "valley")
+    && multiSlopeSuccessionSignature(placement) % 2 === 0;
+  return !alreadyPromoted;
+}
+
 function isWithinContactTrailheadHabitatBounds(placement: PlacementTuple) {
   // Candidate BF reuses only the manifest's already-grounded safe families in
   // the near-camera Contact corridor. The bounds stop before the lake and keep
@@ -5644,6 +5930,11 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
       placement[1] === 1 && isAddedEasternValleyCatchmentHabitatPlacement(placement)
     ))
     : [];
+  const westernValleyCatchmentHabitat = zone === "valley" && tier !== "high"
+    ? instances.filter((placement) => (
+      placement[1] === 1 && isAddedWesternValleyCatchmentHabitatPlacement(placement)
+    ))
+    : [];
   const contactTrailheadHabitat = zone === "valley"
     ? instances.filter(tier === "high"
       ? isHighContactTrailheadCanopyPlacement
@@ -5655,6 +5946,7 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
     ...succession,
     ...drainageSuccession,
     ...easternValleyCatchmentHabitat,
+    ...westernValleyCatchmentHabitat,
     ...contactTrailheadHabitat,
   ];
 }
@@ -5748,6 +6040,11 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
           ? 1
           : placement[1] === 1 ? 1.14 : 1.48
         : 1;
+      const westernValleyCatchmentScale = zone === "valley" && isWesternValleyCatchmentHabitatPlacement(placement)
+        ? mode === "hero"
+          ? 1
+          : placement[1] === 1 ? 1.16 : 1.5
+        : 1;
       const contactTrailheadScale = zone === "valley" && (
         mode === "hero"
           ? isHighContactTrailheadCanopyPlacement(placement)
@@ -5767,9 +6064,9 @@ function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: 
       const leanZ = ((((signature * 5) % 11) - 5) / 5) * (mode === "hero" ? 0.03 : 0.047) * architectureLean;
       dummy.rotation.set(leanX, placement[5] + (signature % 7) * 0.027, leanZ);
       dummy.scale.set(
-        placement[6] * scale * sourceCanopySpread * habitatCanopySpread * crownWidthVariation * architectureScale.x * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
-        placement[7] * scale * heightVariation * architectureScale.y * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
-        placement[8] * scale * sourceCanopySpread * habitatCanopySpread * crownDepthVariation * architectureScale.z * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * contactTrailheadScale,
+        placement[6] * scale * sourceCanopySpread * habitatCanopySpread * crownWidthVariation * architectureScale.x * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * westernValleyCatchmentScale * contactTrailheadScale,
+        placement[7] * scale * heightVariation * architectureScale.y * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * westernValleyCatchmentScale * contactTrailheadScale,
+        placement[8] * scale * sourceCanopySpread * habitatCanopySpread * crownDepthVariation * architectureScale.z * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * westernValleyCatchmentScale * contactTrailheadScale,
       );
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
@@ -5837,6 +6134,12 @@ function DetailedVegetationLod({ placements, shadows, tier, zone }: {
           : 0,
         easternValleyCatchmentHabitatPlacements: zone === "valley"
           ? placements.filter(isEasternValleyCatchmentHabitatPlacement).length
+          : 0,
+        westernValleyCatchmentAddedPlacements: zone === "valley"
+          ? placements.filter(isAddedWesternValleyCatchmentHabitatPlacement).length
+          : 0,
+        westernValleyCatchmentHabitatPlacements: zone === "valley"
+          ? placements.filter(isWesternValleyCatchmentHabitatPlacement).length
           : 0,
         contactTrailheadAddedPlacements: zone === "valley"
           ? placements.filter(mode === "hero"
@@ -5969,7 +6272,10 @@ function selectRegionalHabitatGroundcover(
     placement[1] === 2
     && (
       (zone === "ridge" && isRidgeDrainageSuccessionPlacement(placement))
-      || (zone === "valley" && isEasternValleyCatchmentHabitatPlacement(placement))
+      || (zone === "valley" && (
+        isEasternValleyCatchmentHabitatPlacement(placement)
+        || isWesternValleyCatchmentHabitatPlacement(placement)
+      ))
       || (zone === "alpine" && placement[0] < 8 && placement[3] >= 16 && placement[3] <= 215)
     )
   ));
@@ -5996,7 +6302,10 @@ function regionalGroundcoverSource(placement: PlacementTuple, index: number, zon
     ? 0.74 + (signature % 9) * 0.035
     : zone === "ridge"
     ? ridgeDrainageHabitatDistanceRatio(placement)
-    : easternValleyCatchmentHabitatDistanceRatio(placement);
+    : Math.min(
+        easternValleyCatchmentHabitatDistanceRatio(placement),
+        westernValleyCatchmentHabitatDistanceRatio(placement),
+      );
   // Exposed outer drainage shoulders carry restrained boulder anchors, while
   // the wetter channel interiors remain fern/shrub succession.
   if (drainageRatio > 0.68 && signature % 5 === 0) return "rock";
@@ -6026,6 +6335,7 @@ function InstancedWatershedGroundcover({ part, placements, shadows }: {
       const regionalHabitatScale = (
         isRidgeDrainageSuccessionPlacement(placement)
         || isEasternValleyCatchmentHabitatPlacement(placement)
+        || isWesternValleyCatchmentHabitatPlacement(placement)
       ) ? 1.42 : 1;
       dummy.position.set(placement[2], placement[3] - (part.sourceKey === "rock" ? 0.08 : 0.075), placement[4]);
       dummy.rotation.set(
@@ -6240,14 +6550,20 @@ function DetailedRegionalHabitatGroundcover({ placements, shadows, zone }: {
       [key]: {
         fern: bySource.get("fern")?.length ?? 0,
         groundedPlacements: placements.length,
+        habitatAuthorities: zone === "valley"
+          ? ["eastern-valley-catchment-network", "western-valley-catchment-network"]
+          : undefined,
         habitatAuthority: zone === "ridge"
           ? "ridge-erosion-network"
           : zone === "valley"
-            ? "eastern-valley-catchment-network"
+            ? "paired-eastern-western-valley-catchment-networks"
             : "alpine-elevation-and-exposure-band",
         rock: bySource.get("rock")?.length ?? 0,
         shrub: bySource.get("shrub")?.length ?? 0,
         sources: [WATERSHED_GROUNDCOVER_URLS.fern, WATERSHED_GROUNDCOVER_URLS.rock, WATERSHED_GROUNDCOVER_URLS.shrub],
+        westernGroundedPlacements: zone === "valley"
+          ? placements.filter(isWesternValleyCatchmentHabitatPlacement).length
+          : 0,
       },
     };
     document.documentElement.dataset.madaginRegionalHabitatV116 = JSON.stringify(
@@ -6257,7 +6573,7 @@ function DetailedRegionalHabitatGroundcover({ placements, shadows, zone }: {
     return () => parts.forEach((part) => {
       (Array.isArray(part.material) ? part.material : [part.material]).forEach((material) => material.dispose());
     });
-  }, [bySource, parts, placements.length, zone]);
+  }, [bySource, parts, placements, zone]);
   return (
     <group name={`Madagin Candidate BQ ${zone} drainage-coupled fern, shrub, and basalt succession · ${placements.length}`}>
       {parts.flatMap((part, index) => {
@@ -6481,10 +6797,11 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
       ...groundedRiparianEcology,
       ...contactTrailheadGroundcover,
       ...regionalHabitatGroundcover,
+      ...sourceQualityGeologyPlacements,
       ...sourceQualityIslandTreePlacements,
       ...sourceQualityIslandTree01Placements,
     ]),
-    [contactTrailheadGroundcover, detailedPlacements, groundedRiparianEcology, regionalHabitatGroundcover, sourceQualityIslandTree01Placements, sourceQualityIslandTreePlacements, watershedGroundcover],
+    [contactTrailheadGroundcover, detailedPlacements, groundedRiparianEcology, regionalHabitatGroundcover, sourceQualityGeologyPlacements, sourceQualityIslandTree01Placements, sourceQualityIslandTreePlacements, watershedGroundcover],
   );
   const visible = useMemo(() => manifest.instances.filter((placement, index) => {
     if (detailedSet.has(placement)) return false;
@@ -8157,6 +8474,8 @@ const TERRAIN_CONTACT_MIST_BANKS = [
   { authority: "lake-inlet-confluence", position: [42, -15, -792] as [number, number, number], scale: [128, 24, 68] as [number, number, number], opacity: 0.18 },
   { authority: "southern-coastal-shelf", position: [-520, -5, -520] as [number, number, number], scale: [252, 24, 132] as [number, number, number], opacity: 0.11 },
   { authority: "surf-headland-contact", position: [-652, -12, -280] as [number, number, number], scale: [168, 18, 116] as [number, number, number], opacity: 0.09 },
+  { authority: "western-upper-catchments", position: [-414, 74, -846] as [number, number, number], scale: [214, 22, 78] as [number, number, number], opacity: 0.08 },
+  { authority: "western-colluvial-toes", position: [-196, 7, -642] as [number, number, number], scale: [184, 18, 86] as [number, number, number], opacity: 0.075 },
 ];
 
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
@@ -8186,6 +8505,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
     const host = window as Window & {
       __MADAGIN_OROGRAPHIC_WEATHER_BX__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_BZ__?: Record<string, unknown>;
+      __MADAGIN_OROGRAPHIC_WEATHER_CA__?: Record<string, unknown>;
       __MADAGIN_TERRAIN_MIST_V120__?: Record<string, unknown>;
     };
     host.__MADAGIN_TERRAIN_MIST_V120__ = {
@@ -8213,6 +8533,17 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       method: "terrain-coupled inland and coast-contact anisotropic weather under one sky and lighting authority",
     };
     document.documentElement.dataset.madaginOrographicWeatherBz = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_BZ__);
+    host.__MADAGIN_OROGRAPHIC_WEATHER_CA__ = {
+      candidate: "CA",
+      authorities: mistBanks.map((mist) => mist.authority),
+      cloudBanks: clouds.length,
+      groundedBanks: mistBanks.length,
+      westernCatchmentBanks: mistBanks.filter((mist) => (
+        mist.authority === "western-upper-catchments" || mist.authority === "western-colluvial-toes"
+      )).length,
+      method: "terrain-coupled western catchment and retained coast/inland weather under one sky and lighting authority",
+    };
+    document.documentElement.dataset.madaginOrographicWeatherCa = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CA__);
     if (mistBanks.length) dispatchStage(3, "terrain-contact-mist-ready", "valley");
     return () => {
       materials.forEach((material) => material.dispose());
@@ -8252,7 +8583,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
           </mesh>
         ))}
       </group>
-      <group name={`Madagin Candidate BZ terrain-and-coast-contact weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
+      <group name={`Madagin Candidate CA watershed-and-coast-contact weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
         {mistBanks.map((mist, index) => (
           <mesh key={mist.authority} material={mistMaterials[index]} position={mist.position} scale={mist.scale}>
             <sphereGeometry args={[0.5, 24, 12]} />
@@ -8486,6 +8817,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
     const host = window as Window & {
       __MADAGIN_REALISM_BY__?: Record<string, unknown>;
       __MADAGIN_REALISM_BZ__?: Record<string, unknown>;
+      __MADAGIN_REALISM_CA__?: Record<string, unknown>;
       __MADAGIN_WORLD_STREAM_V116__?: unknown;
     };
     host.__MADAGIN_WORLD_STREAM_V116__ = {
@@ -8526,12 +8858,31 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
       waterNetworkProtected: true,
     };
+    host.__MADAGIN_REALISM_CA__ = {
+      candidate: "CA",
+      categories: {
+        atmosphereAndLighting: "sixteen terrain-contact authorities including two rain-fed western catchment banks under the retained physical sky",
+        ecologyAndGrounding: "western and eastern drainage-coupled canopy, fern, shrub, and basalt succession plus deduplicated source-quality geology anchors",
+        materialScale: "world-projected wet channel floors, mineral interfluves, and colluvial toes aligned to the western structural watershed",
+        terrainStructure: "four asymmetric west-wall catchments, eight second-order rills, retained buttresses, and four colluvial toes on the connected Valley source surface",
+        waterIntegration: "the lake, river, waterfall, coast, and ocean boundaries remain protected while the surrounding watershed gains physical relief",
+      },
+      coastlineAuthority: "retained Candidate BZ four-octave analytic western coastline",
+      detachedTerrainShells: false,
+      exposedCoastalVoidClosed: true,
+      lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      waterNetworkProtected: true,
+      westernCatchments: WESTERN_VALLEY_CATCHMENTS.length,
+      westernSecondOrderRills: WESTERN_VALLEY_CATCHMENTS.length * 2,
+    };
     document.documentElement.dataset.madaginRealismBy = JSON.stringify(host.__MADAGIN_REALISM_BY__);
     document.documentElement.dataset.madaginRealismBz = JSON.stringify(host.__MADAGIN_REALISM_BZ__);
+    document.documentElement.dataset.madaginRealismCa = JSON.stringify(host.__MADAGIN_REALISM_CA__);
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BZ cumulative coast-ocean realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CA cumulative watershed realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>
