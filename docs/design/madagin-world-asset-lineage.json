@@ -5,14 +5,14 @@
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
   "publicRelease": {
-    "commit": "27817f6668a76907e91b260fd9d494918b46b9fb",
-    "deploymentId": "dpl_GWr7oGHhY63XLPfQEQ1qmK827q7g",
-    "immutableUrl": "https://projectwebbing-3qseojhn5-unigentamos.vercel.app",
+    "commit": "bf4a74445c8c08ebf415c2144d873f95c56ff191",
+    "deploymentId": "dpl_9FFM1Dw7Kr6gC6nd51f3wrZGkgNk",
+    "immutableUrl": "https://projectwebbing-dzammwzvd-unigentamos.vercel.app",
     "productionAlias": "https://projectwebbing.vercel.app",
     "providerState": "READY",
     "providerIdentityVerified": true,
-    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bx-production-alias/runtime-gates.json",
-    "status": "Candidate BX implementation is READY and alias-assigned from independently verified GitHub main and clean-archive provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
+    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-by-production-alias/runtime-gates.json",
+    "status": "Candidate BY implementation is READY and alias-assigned from independently verified GitHub main and clean-archive provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
   },
   "postLaunchCandidate": {
     "selected": "Candidate BI / v117-public-reality-a2",
@@ -864,6 +864,76 @@
       "immutableUrl": "https://projectwebbing-r8k12h9gi-unigentamos.vercel.app"
     },
     "decisionBoundary": "BX is visibly less smooth, flat, and repetitive across the exact seven-view production board while preserving public continuity. Coarse inherited macroforms, legacy ecology, procedural water/coast/weather, a faint tarn chord, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
+  },
+  "seventeenthPostLaunchCandidate": {
+    "selected": "Candidate BY / v130-cumulative-water-realism-by-selected",
+    "commit": "bf4a74445c8c08ebf415c2144d873f95c56ff191",
+    "deploymentId": "dpl_9FFM1Dw7Kr6gC6nd51f3wrZGkgNk",
+    "immutableUrl": "https://projectwebbing-dzammwzvd-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative water-realism candidate; production matrix passes six of six on alias and immutable deployment, seven-view journey proof passes on both, and fixed-camera motion proof passes on both",
+    "changedCategories": [
+      "closer normal-journey waterfall composition showing source, two-stage body, plunge, and outflow together",
+      "continuous widened two-stage waterfall geometry with darker braided material and denser cascade mist",
+      "three broken plunge-impact foam arcs",
+      "denser irregular tarn topology, cellular reflection breakup, and expanded littoral source geology",
+      "three displaced ocean breaker authorities, foam tongues, and finer balanced/high surface topology"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-by-optimized/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-by-optimized-public/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-by-local-selected/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-by-optimized/motion/motion-evidence.json",
+    "productionBaselineEvidence": "output/playwright/madagin-world-progress/candidate-bx-metadata-production-alias/sequence.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-by-production-alias/runtime-gates.json",
+    "productionVisualEvidence": "output/playwright/madagin-world-progress/candidate-by-production-alias/sequence.json",
+    "productionMotionEvidence": "output/playwright/madagin-world-progress/candidate-by-production-alias/motion/motion-evidence.json",
+    "immutableRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-by-production-immutable/runtime-gates.json",
+    "immutableVisualEvidence": "output/playwright/madagin-world-progress/candidate-by-production-immutable/sequence.json",
+    "immutableMotionEvidence": "output/playwright/madagin-world-progress/candidate-by-production-immutable/motion/motion-evidence.json",
+    "productionBaselineComparisonBoard": "output/playwright/madagin-world-progress/candidate-by-production-alias/candidate-bx-vs-by-production-board.png",
+    "localProductionComparisonBoard": "output/playwright/madagin-world-progress/candidate-by-production-alias/candidate-by-optimized-vs-production-board.png",
+    "implementationArchive": {
+      "trackedFiles": 225,
+      "extractedFilesWithProjectLink": 226,
+      "vercelDeploymentFiles": 224,
+      "payloadBytes": 131398208,
+      "archiveBytes": 121130999,
+      "sha256": "F934697961417FD5140251EF6203BE442D2103F181823B2064D7C520EF1C8F99",
+      "gitTree": "227540cdac83180b2e8cac8c9d6e0f3b779242a5"
+    },
+    "supersededDeployment": {
+      "deploymentId": "dpl_7siXnT1e8XSe9w27UXgVqeMAKKYd",
+      "immutableUrl": "https://projectwebbing-fpfxmv9q2-unigentamos.vercel.app",
+      "reason": "the tracked payload was correct but the manually supplied custom Git SHA metadata was not the verified commit; this deployment was superseded before acceptance and is not release evidence"
+    },
+    "selectedTelemetry": {
+      "candidate": "BY",
+      "waterfallLowerHalfWidthMeters": 25.6,
+      "waterfallCascadeShelves": 2,
+      "plungeBrokenFoamArcs": 3,
+      "balancedLakeAngularSegments": 320,
+      "balancedLakeRadialSegments": 40,
+      "balancedLittoralGeologyPlacements": 24,
+      "balancedOceanSurfaceSegments": 384,
+      "oceanBreakerBands": 3,
+      "oceanFoamTongues": true,
+      "terrainContactMistBanks": 12,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceSha256": {
+      "renderer": "B950781369AF28FCB2E6C72D075C2442A0FB3C7DC90D42FA92DD3698F5E39F64",
+      "worldLab": "18DA3A2287D7114B607DCFA80D2E1C2CCB29EDA29E0D94991615B22497D4CAD4",
+      "worldManifest": "D0A1A2088BE7D8855ECD20AE5FD30C50AF1BAFEA040FAE3CECD32C25BE06DB32",
+      "publicSequenceVerifier": "F2DC18F1564566C54B9E9D05CD57771F4B52D0B3194ABCE398903F828D13287D",
+      "internalRuntimeVerifier": "4E63ED944A212AC1DEFDEDE0ED6221AB333610A2C6FFD809ECAFBE81C9E0E476"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BX metadata",
+      "commit": "ed8cf6cebbbed4e6699abd34f6ebf9925eababfd",
+      "deploymentId": "dpl_Dnf2xNtXJtshJCtvx8q27xdDzx8n",
+      "immutableUrl": "https://projectwebbing-idbamqgn2-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BY makes the waterfall a legible normal-journey landmark and advances its geometry, impact field, tarn boundary response, littoral geology, and ocean surf authority while preserving the cumulative BX world. The waterfall material, broad lake/ocean surfaces, coastline contact, inherited ecology, procedural weather, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
   },
   "components": {
     "topologyAndStreaming": {
