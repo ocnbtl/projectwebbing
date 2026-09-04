@@ -55,6 +55,14 @@ for (const testCase of cases) {
       { timeout: 45_000 },
     );
   }
+  if (testCase.expectsWatershedRelief) {
+    await page.waitForFunction(
+      () => (window.__MADAGIN_REGIONAL_HABITAT_V116__
+        ?.easternValleyCatchment?.westernGroundedPlacements ?? 0) > 0,
+      undefined,
+      { timeout: 45_000 },
+    );
+  }
   const evidence = await page.evaluate(() => ({
     alpineGeology: window.__MADAGIN_ALPINE_GEOLOGY_V116__ ?? null,
     canvasCount: document.querySelectorAll("canvas").length,
@@ -74,9 +82,11 @@ for (const testCase of cases) {
     orographicWeatherBX: window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null,
     orographicWeatherBZ: window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? null,
     orographicWeatherCA: window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? null,
+    orographicWeatherCB: window.__MADAGIN_OROGRAPHIC_WEATHER_CB__ ?? null,
     realismBY: window.__MADAGIN_REALISM_BY__ ?? null,
     realismBZ: window.__MADAGIN_REALISM_BZ__ ?? null,
     realismCA: window.__MADAGIN_REALISM_CA__ ?? null,
+    realismCB: window.__MADAGIN_REALISM_CB__ ?? null,
     sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
     sourceIslandTree01BW: window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
@@ -118,6 +128,12 @@ for (const testCase of cases) {
       && alpineGeology?.summitMacroform?.maximumUpliftMeters <= 40
       && alpineGeology?.summitSurfaceRelaxation?.adjustedVertices > 0
       && alpineGeology?.summitSurfaceRelaxation?.iterations === 2
+      && alpineGeology?.weatheredCrestCompression?.adjustedVertices > 0
+      && alpineGeology?.weatheredCrestCompression?.detachedGeometry === false
+      && alpineGeology?.weatheredCrestCompression?.maximumReductionMeters > 0
+      && alpineGeology?.weatheredCrestCompression?.maximumReductionMeters <= 150
+      && alpineGeology?.weatheredCrestCompression?.highestSourceMeters
+        > alpineGeology?.weatheredCrestCompression?.highestResultMeters
     ))
   );
   const watershedRelief = testCase.expectsWatershedRelief
@@ -140,15 +156,18 @@ for (const testCase of cases) {
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.lakeRiverAndWaterfallProtected === true
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.maximumIncisionMeters > 0
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.maximumIncisionMeters <= 39
-    && evidence.terrainContactMist?.banks === 16
+    && evidence.terrainContactMist?.banks === 18
     && evidence.orographicWeatherBX?.candidate === "BX"
-    && evidence.orographicWeatherBX?.groundedBanks === 16
+    && evidence.orographicWeatherBX?.groundedBanks === 18
     && evidence.orographicWeatherBZ?.candidate === "BZ"
-    && evidence.orographicWeatherBZ?.groundedBanks === 16
+    && evidence.orographicWeatherBZ?.groundedBanks === 18
     && evidence.orographicWeatherBZ?.coastalContactBanks === 2
     && evidence.orographicWeatherCA?.candidate === "CA"
-    && evidence.orographicWeatherCA?.groundedBanks === 16
+    && evidence.orographicWeatherCA?.groundedBanks === 18
     && evidence.orographicWeatherCA?.westernCatchmentBanks === 2
+    && evidence.orographicWeatherCB?.candidate === "CB"
+    && evidence.orographicWeatherCB?.groundedBanks === 18
+    && evidence.orographicWeatherCB?.alpineCrestBanks === 2
     && evidence.regionalHabitat?.easternValleyCatchment?.habitatAuthority === "paired-eastern-western-valley-catchment-networks"
     && evidence.regionalHabitat?.easternValleyCatchment?.westernGroundedPlacements > 0
   );
@@ -241,6 +260,10 @@ for (const testCase of cases) {
       && evidence.realismCA?.waterNetworkProtected === true
       && evidence.realismCA?.westernCatchments === 4
       && evidence.realismCA?.westernSecondOrderRills === 8
+      && evidence.realismCB?.candidate === "CB"
+      && Object.keys(evidence.realismCB?.categories ?? {}).length === 5
+      && evidence.realismCB?.detachedTerrainShells === false
+      && evidence.realismCB?.waterNetworkProtected === true
       && evidence.oceanRealismBZ?.candidate === "BZ"
       && evidence.oceanRealismBZ?.breakerBands === 4
       && evidence.oceanRealismBZ?.coastalVoidClosed === true

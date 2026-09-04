@@ -1002,6 +1002,45 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           )
         );
         authoredGround = mix(authoredGround, alpineBasalt, alpineExposure);
+        // Candidate CB separates the re-formed crest into wet windward scarps,
+        // oxidized remnant ribs, and darker fracture-fed hollows. The warped
+        // world-space fields avoid the horizontal bands and face-sized wedges
+        // that made the inherited summit read as a low-poly prop.
+        float alpineCrest = alpineInterior
+          * smoothstep(132.0, 206.0, vDetailedTerrainWorld.y)
+          * smoothstep(-1588.0, -1518.0, vDetailedTerrainWorld.z)
+          * (1.0 - smoothstep(-1128.0, -1054.0, vDetailedTerrainWorld.z))
+          * smoothstep(326.0, 404.0, vDetailedTerrainWorld.x)
+          * (1.0 - smoothstep(842.0, 918.0, vDetailedTerrainWorld.x));
+        float alpineWarp = detailedTerrainFbm(vec2(
+          vDetailedTerrainWorld.x * 0.018 - vDetailedTerrainWorld.z * 0.006,
+          vDetailedTerrainWorld.z * 0.021 + vDetailedTerrainWorld.y * 0.011
+        ) + 287.4);
+        float alpineRemnantRibs = smoothstep(0.56, 0.88, detailedTerrainFbm(vec2(
+          vDetailedTerrainWorld.x * 0.035 + vDetailedTerrainWorld.y * 0.014,
+          vDetailedTerrainWorld.z * 0.031 - vDetailedTerrainWorld.y * 0.018
+        ) + alpineWarp * 2.7));
+        float alpineWetHollows = smoothstep(0.62, 0.89, detailedTerrainFbm(vec2(
+          vDetailedTerrainWorld.x * 0.024 - vDetailedTerrainWorld.y * 0.009,
+          vDetailedTerrainWorld.z * 0.027 + vDetailedTerrainWorld.y * 0.013
+        ) - alpineWarp * 1.9));
+        float alpineWindward = clamp(
+          0.48
+            - normalize(vDetailedTerrainNormal).x * 0.26
+            + normalize(vDetailedTerrainNormal).z * 0.18
+            + alpineWetHollows * 0.24,
+          0.0,
+          1.0
+        );
+        vec3 alpineWetScarp = mix(vec3(0.032, 0.049, 0.048), vec3(0.072, 0.096, 0.083), alpineWarp);
+        vec3 alpineOxidizedRib = mix(vec3(0.105, 0.092, 0.073), vec3(0.19, 0.132, 0.081), alpineOxidation);
+        vec3 alpineCrestRock = mix(alpineOxidizedRib, alpineWetScarp, alpineWindward);
+        alpineCrestRock = mix(alpineCrestRock, vec3(0.035, 0.043, 0.041), alpineWetHollows * 0.44);
+        authoredGround = mix(
+          authoredGround,
+          alpineCrestRock,
+          alpineCrest * clamp(0.3 + slope * 0.48 + alpineRemnantRibs * 0.26, 0.0, 0.86)
+        );
         // Candidate BQ adds a material-scale counterpart to the physical
         // headwalls and runoff networks. Broad talus aprons, narrow mineral
         // seams, and damp concavities break the former tan/green painted sheet
@@ -2327,6 +2366,37 @@ function subdivideAlpineCrownTerrainGeometry(source: BufferGeometry) {
   );
 }
 
+function alpineWeatheredCrestHeight(x: number, y: number, z: number) {
+  const lateral = smoothRange(328, 402, x) * (1 - smoothRange(842, 916, x));
+  const longitudinal = smoothRange(-1608, -1544, z) * (1 - smoothRange(-1128, -1052, z));
+  const elevation = smoothRange(188, 228, y);
+  const envelope = lateral * longitudinal * elevation;
+  if (envelope <= 0.001) return { adjustment: 0, envelope: 0 };
+
+  // Candidate CB treats the inherited needle-like summit as the remnant of a
+  // deeply weathered volcanic ridge. A monotonic non-linear height response
+  // removes only the extreme source apex while keeping every vertex on the
+  // original indexed terrain surface. Source-height ordering is retained so
+  // the result cannot collapse into a clipped tabletop.
+  const westRemnant = Math.exp(-(((x - 478) / 126) ** 2 + ((z + 1436) / 118) ** 2) * 1.45);
+  const eastRemnant = Math.exp(-(((x - 742) / 118) ** 2 + ((z + 1448) / 112) ** 2) * 1.5);
+  const rearRemnant = Math.exp(-(((x - 594) / 170) ** 2 + ((z + 1550) / 92) ** 2) * 1.35);
+  const erodedSaddle = Math.exp(-(((x - 612) / 112) ** 2 + ((z + 1418) / 126) ** 2) * 1.18);
+  const sourceExcess = Math.max(0, y - 205);
+  if (sourceExcess <= 0) return { adjustment: 0, envelope };
+  const compressedSourceHeight = 205
+    + sourceExcess * 0.27
+    + Math.sqrt(sourceExcess) * 3.1;
+  const remnantVariation = westRemnant * 22
+    + eastRemnant * 8
+    + rearRemnant * 8
+    - erodedSaddle * 12
+    + Math.sin(x * 0.024 - z * 0.009) * 2.8
+    + Math.sin((x + z) * 0.015 + 1.1) * 2.2;
+  const target = compressedSourceHeight + remnantVariation;
+  return { adjustment: Math.min(0, target - y) * envelope, envelope };
+}
+
 function alpineVisibleSummitMacroRelief(x: number, y: number, z: number) {
   const summitElevation = smoothRange(158, 220, y);
   const headwallElevation = smoothRange(118, 162, y) * (1 - smoothRange(246, 276, y));
@@ -2351,35 +2421,35 @@ function alpineVisibleSummitMacroRelief(x: number, y: number, z: number) {
   // ALPINE_VALLEY_V115_HIGH; the dominant crown itself remains authored data
   // while the lower shoulders broaden its silhouette. No shell or
   // camera-facing geometry is introduced.
-  const nearShoulder = ellipticalRelief(500, -1252, 178, 138) * 22;
-  const rearShoulder = ellipticalRelief(565, -1502, 172, 118) * 24;
-  const outerButtress = ellipticalRelief(438, -1375, 208, 168) * 18;
-  const rightButtress = ellipticalRelief(748, -1428, 176, 142) * 22;
+  const nearShoulder = ellipticalRelief(500, -1252, 190, 148) * 29;
+  const rearShoulder = ellipticalRelief(565, -1502, 184, 126) * 32;
+  const outerButtress = ellipticalRelief(438, -1375, 220, 180) * 24;
+  const rightButtress = ellipticalRelief(748, -1428, 190, 152) * 27;
 
   // Separate the inherited single pyramidal crown into a weathered volcanic
   // ridge. Two unequal source-surface spires flank an eroded saddle; a rear
   // shoulder keeps the silhouette dimensional as the rail crosses Summit.
-  const westCrown = ellipticalRelief(470, -1428, 116, 104, 1.8) * 22;
-  const eastCrown = ellipticalRelief(738, -1444, 112, 104, 1.85) * 18;
-  const crownSaddle = ellipticalRelief(606, -1418, 138, 126, 1.22) * -52;
-  const sourceConeErosion = ellipticalRelief(598, -1356, 224, 194, 1.02) * -64;
-  const westernAmphitheater = ellipticalRelief(470, -1310, 176, 144, 1.28) * -34;
-  const easternAmphitheater = ellipticalRelief(735, -1328, 168, 148, 1.32) * -29;
-  const rearCrown = ellipticalRelief(578, -1542, 138, 94, 1.72) * 14;
-  const westCrestSpur = ellipticalRelief(386, -1460, 164, 124, 1.55) * 14;
-  const eastCrestSpur = ellipticalRelief(825, -1470, 146, 120, 1.6) * 13;
+  const westCrown = ellipticalRelief(470, -1428, 126, 112, 1.72) * 19;
+  const eastCrown = ellipticalRelief(738, -1444, 124, 112, 1.78) * 16;
+  const crownSaddle = ellipticalRelief(606, -1418, 148, 136, 1.18) * -30;
+  const sourceConeErosion = ellipticalRelief(598, -1356, 236, 206, 1.0) * -35;
+  const westernAmphitheater = ellipticalRelief(470, -1310, 188, 154, 1.24) * -24;
+  const easternAmphitheater = ellipticalRelief(735, -1328, 180, 158, 1.28) * -20;
+  const rearCrown = ellipticalRelief(578, -1542, 148, 102, 1.66) * 18;
+  const westCrestSpur = ellipticalRelief(386, -1460, 176, 134, 1.5) * 18;
+  const eastCrestSpur = ellipticalRelief(825, -1470, 158, 130, 1.54) * 17;
 
   // A broad upper-face hollow separates the near shoulder from the forested
   // foreground slope. Its low, wide falloff reads as an incised headwall on
   // the source terrain rather than another narrow decorative groove.
-  const upperFaceHeadwall = ellipticalRelief(514, -1186, 205, 126, 1.35) * -48;
+  const upperFaceHeadwall = ellipticalRelief(514, -1186, 218, 136, 1.3) * -34;
 
   const downstream = saturate((z + 1435) / 360);
   const drainageCenter = 615 - (z + 1363) * 0.34 + Math.sin((z + 1320) * 0.022) * 11;
   const drainageWidth = 30 + downstream * 40;
   const drainageDistance = Math.abs(x - drainageCenter);
   const drainageShape = 1 - smoothRange(drainageWidth * 0.24, drainageWidth, drainageDistance);
-  const mainDrainage = -Math.pow(Math.max(0, drainageShape), 1.48) * 44;
+  const mainDrainage = -Math.pow(Math.max(0, drainageShape), 1.48) * 29;
 
   const branchAuthority = smoothRange(-1355, -1288, z) * (1 - smoothRange(-1110, -1045, z));
   const branchSpread = downstream * 92;
@@ -2388,11 +2458,11 @@ function alpineVisibleSummitMacroRelief(x: number, y: number, z: number) {
   const leftBranch = -Math.pow(
     Math.max(0, 1 - smoothRange(12, 47, leftBranchDistance)),
     1.7,
-  ) * 20 * branchAuthority;
+  ) * 13 * branchAuthority;
   const rightBranch = -Math.pow(
     Math.max(0, 1 - smoothRange(11, 43, rightBranchDistance)),
     1.7,
-  ) * 17 * branchAuthority;
+  ) * 11 * branchAuthority;
 
   return (
     (
@@ -2506,6 +2576,10 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
   let summitMacroAdjustedVertices = 0;
   let summitMacroMaximumIncision = 0;
   let summitMacroMaximumUplift = 0;
+  let crestCompressionAdjustedVertices = 0;
+  let crestCompressionMaximumReduction = 0;
+  let crestCompressionHighestSource = 0;
+  let crestCompressionHighestResult = 0;
 
   for (let index = 0; index < positions.count; index += 1) {
     const x = positions.getX(index);
@@ -2590,6 +2664,9 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
     ) * envelope;
     const relief = Math.max(-9.2, Math.min(9.8, unclampedRelief));
     const summitMacroRelief = alpineVisibleSummitMacroRelief(x, y, z) * envelope;
+    const crestCompression = detail === "detailed"
+      ? alpineWeatheredCrestHeight(x, y, z)
+      : { adjustment: 0, envelope: 0 };
     const horizontalNormalLength = Math.hypot(normalX, normalZ);
     if (horizontalNormalLength > 0.001) {
       const horizontalRelief = relief * (0.18 + steepness * 0.28)
@@ -2600,16 +2677,26 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
       positions.setX(index, x + (normalX / horizontalNormalLength) * horizontalRelief);
       positions.setZ(index, z + (normalZ / horizontalNormalLength) * horizontalRelief);
     }
-    positions.setY(
-      index,
-      y + relief * (0.58 + steepness * 0.16) + summitMacroRelief * (0.74 + steepness * 0.12),
-    );
+    const finalY = y
+      + relief * (0.58 + steepness * 0.16)
+      + summitMacroRelief * (0.74 + steepness * 0.12)
+      + crestCompression.adjustment;
+    positions.setY(index, finalY);
     adjustedVertices += 1;
     maximumRelief = Math.max(maximumRelief, Math.abs(relief + summitMacroRelief));
     if (Math.abs(summitMacroRelief) > 0.001) {
       summitMacroAdjustedVertices += 1;
       summitMacroMaximumIncision = Math.max(summitMacroMaximumIncision, -summitMacroRelief);
       summitMacroMaximumUplift = Math.max(summitMacroMaximumUplift, summitMacroRelief);
+    }
+    if (crestCompression.adjustment < -0.001) {
+      crestCompressionAdjustedVertices += 1;
+      crestCompressionMaximumReduction = Math.max(
+        crestCompressionMaximumReduction,
+        -crestCompression.adjustment,
+      );
+      crestCompressionHighestSource = Math.max(crestCompressionHighestSource, y);
+      crestCompressionHighestResult = Math.max(crestCompressionHighestResult, finalY);
     }
   }
 
@@ -2641,7 +2728,15 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
       detachedGeometry: false,
       maximumIncisionMeters: summitMacroMaximumIncision,
       maximumUpliftMeters: summitMacroMaximumUplift,
-      method: "four descending source-summit shoulders around paired eroded amphitheaters, a broad upper-face headwall, and branching drainage on the existing Alpine surface",
+      method: "four broadened descending source-summit shoulders around paired eroded amphitheaters, a broad upper-face headwall, and branching drainage on the existing Alpine surface",
+    },
+    weatheredCrestCompression: {
+      adjustedVertices: crestCompressionAdjustedVertices,
+      detachedGeometry: false,
+      highestResultMeters: crestCompressionHighestResult,
+      highestSourceMeters: crestCompressionHighestSource,
+      maximumReductionMeters: crestCompressionMaximumReduction,
+      method: "monotonic non-linear high-elevation erosion with unequal west, east, and rear remnant variation on the connected Alpine source surface",
     },
     summitSurfaceRelaxation,
     surfaceNormalReconciliation,
@@ -5872,6 +5967,13 @@ function isHighContactTrailheadCanopyPlacement(placement: PlacementTuple) {
     && isWithinContactTrailheadHabitatBounds(placement);
 }
 
+function isBelowCandidateCbAlpineTreeline(placement: PlacementTuple) {
+  const localTreeline = 174
+    + Math.sin(placement[2] * 0.018 - placement[4] * 0.007) * 10
+    + Math.sin(placement[4] * 0.021 + 0.8) * 6;
+  return placement[3] <= localTreeline;
+}
+
 function isAddedContactTrailheadHabitatPlacement(placement: PlacementTuple) {
   if (!isContactTrailheadHabitatPlacement(placement) || placement[1] !== 1) return false;
   const alreadySuccession = isMultiSlopeSuccessionPlacement(placement, "valley")
@@ -5897,7 +5999,7 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
         )
       )
       : placement[1] === 0
-  ) && placement[0] < 8);
+  ) && placement[0] < 8 && (zone !== "alpine" || isBelowCandidateCbAlpineTreeline(placement)));
   const stride = tier === "high"
     ? zone === "lake" ? 8 : zone === "alpine" ? 6 : zone === "ridge" ? 12 : 14
     : 1;
@@ -5918,6 +6020,7 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
   const successionDivisor = tier === "high" ? 8 : zone === "alpine" ? 1 : 2;
   const succession = instances.filter((placement) => (
     isMultiSlopeSuccessionPlacement(placement, zone)
+    && (zone !== "alpine" || isBelowCandidateCbAlpineTreeline(placement))
     && multiSlopeSuccessionSignature(placement) % successionDivisor === 0
   ));
   const drainageSuccession = zone === "ridge" && tier !== "high"
@@ -6804,6 +6907,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     [contactTrailheadGroundcover, detailedPlacements, groundedRiparianEcology, regionalHabitatGroundcover, sourceQualityGeologyPlacements, sourceQualityIslandTree01Placements, sourceQualityIslandTreePlacements, watershedGroundcover],
   );
   const visible = useMemo(() => manifest.instances.filter((placement, index) => {
+    if (zone === "alpine" && !isBelowCandidateCbAlpineTreeline(placement)) return false;
     if (detailedSet.has(placement)) return false;
     if (zone === "lake" && isLakeBankSuccessionPlacement(placement)) return false;
     if (tier === "high" && !mobile) return true;
@@ -8455,7 +8559,7 @@ const CLOUD_BANKS = [
   { position: [172, 68, -650] as [number, number, number], scale: [310, 48, 116] as [number, number, number], opacity: 0.31 },
   { position: [-260, 132, -980] as [number, number, number], scale: [390, 55, 148] as [number, number, number], opacity: 0.28 },
   { position: [360, 338, -1040] as [number, number, number], scale: [330, 46, 126] as [number, number, number], opacity: 0.27 },
-  { position: [-515, 155, -1420] as [number, number, number], scale: [430, 39, 154] as [number, number, number], opacity: 0.1 },
+  { position: [510, 196, -1370] as [number, number, number], scale: [318, 44, 142] as [number, number, number], opacity: 0.16 },
   { position: [610, 215, -1545] as [number, number, number], scale: [380, 34, 128] as [number, number, number], opacity: 0.09 },
 ];
 
@@ -8476,6 +8580,8 @@ const TERRAIN_CONTACT_MIST_BANKS = [
   { authority: "surf-headland-contact", position: [-652, -12, -280] as [number, number, number], scale: [168, 18, 116] as [number, number, number], opacity: 0.09 },
   { authority: "western-upper-catchments", position: [-414, 74, -846] as [number, number, number], scale: [214, 22, 78] as [number, number, number], opacity: 0.08 },
   { authority: "western-colluvial-toes", position: [-196, 7, -642] as [number, number, number], scale: [184, 18, 86] as [number, number, number], opacity: 0.075 },
+  { authority: "alpine-windward-cap", position: [486, 188, -1328] as [number, number, number], scale: [238, 38, 104] as [number, number, number], opacity: 0.2 },
+  { authority: "alpine-leeward-break", position: [742, 154, -1468] as [number, number, number], scale: [178, 28, 82] as [number, number, number], opacity: 0.13 },
 ];
 
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
@@ -8506,6 +8612,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       __MADAGIN_OROGRAPHIC_WEATHER_BX__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_BZ__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_CA__?: Record<string, unknown>;
+      __MADAGIN_OROGRAPHIC_WEATHER_CB__?: Record<string, unknown>;
       __MADAGIN_TERRAIN_MIST_V120__?: Record<string, unknown>;
     };
     host.__MADAGIN_TERRAIN_MIST_V120__ = {
@@ -8544,6 +8651,17 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       method: "terrain-coupled western catchment and retained coast/inland weather under one sky and lighting authority",
     };
     document.documentElement.dataset.madaginOrographicWeatherCa = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CA__);
+    host.__MADAGIN_OROGRAPHIC_WEATHER_CB__ = {
+      candidate: "CB",
+      authorities: mistBanks.map((mist) => mist.authority),
+      alpineCrestBanks: mistBanks.filter((mist) => (
+        mist.authority === "alpine-windward-cap" || mist.authority === "alpine-leeward-break"
+      )).length,
+      cloudBanks: clouds.length,
+      groundedBanks: mistBanks.length,
+      method: "windward crest-cap and leeward-break weather intersect the re-formed connected Alpine terrain under one sky authority",
+    };
+    document.documentElement.dataset.madaginOrographicWeatherCb = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CB__);
     if (mistBanks.length) dispatchStage(3, "terrain-contact-mist-ready", "valley");
     return () => {
       materials.forEach((material) => material.dispose());
@@ -8583,7 +8701,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
           </mesh>
         ))}
       </group>
-      <group name={`Madagin Candidate CA watershed-and-coast-contact weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
+      <group name={`Madagin Candidate CB crest-coupled watershed-and-coast weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
         {mistBanks.map((mist, index) => (
           <mesh key={mist.authority} material={mistMaterials[index]} position={mist.position} scale={mist.scale}>
             <sphereGeometry args={[0.5, 24, 12]} />
@@ -8818,6 +8936,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       __MADAGIN_REALISM_BY__?: Record<string, unknown>;
       __MADAGIN_REALISM_BZ__?: Record<string, unknown>;
       __MADAGIN_REALISM_CA__?: Record<string, unknown>;
+      __MADAGIN_REALISM_CB__?: Record<string, unknown>;
       __MADAGIN_WORLD_STREAM_V116__?: unknown;
     };
     host.__MADAGIN_WORLD_STREAM_V116__ = {
@@ -8876,13 +8995,30 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       westernCatchments: WESTERN_VALLEY_CATCHMENTS.length,
       westernSecondOrderRills: WESTERN_VALLEY_CATCHMENTS.length * 2,
     };
+    host.__MADAGIN_REALISM_CB__ = {
+      candidate: "CB",
+      categories: {
+        atmosphereAndLighting: "eighteen terrain-contact authorities including windward crest-cap and leeward-break Alpine banks under the retained physical sky",
+        ecologyAndGrounding: "a spatially varied upper treeline removes trees from the eroded crest while retaining lower Alpine succession and source-quality geology",
+        materialScale: "wet windward scarps, oxidized remnant ribs, and fracture-fed hollows follow the connected re-formed crest in world space",
+        terrainStructure: "monotonic high-elevation erosion removes the inherited needle apex while preserving unequal source-height ordering across connected remnant ridges, shoulders, amphitheaters, and drainage",
+        waterIntegration: "the lake, river, waterfall, coast, and ocean boundaries remain protected while the Alpine source surface changes upstream",
+      },
+      coastlineAuthority: "retained Candidate BZ four-octave analytic western coastline",
+      detachedTerrainShells: false,
+      exposedCoastalVoidClosed: true,
+      lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      waterNetworkProtected: true,
+    };
     document.documentElement.dataset.madaginRealismBy = JSON.stringify(host.__MADAGIN_REALISM_BY__);
     document.documentElement.dataset.madaginRealismBz = JSON.stringify(host.__MADAGIN_REALISM_BZ__);
     document.documentElement.dataset.madaginRealismCa = JSON.stringify(host.__MADAGIN_REALISM_CA__);
+    document.documentElement.dataset.madaginRealismCb = JSON.stringify(host.__MADAGIN_REALISM_CB__);
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CA cumulative watershed realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CB cumulative weathered-crest realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>

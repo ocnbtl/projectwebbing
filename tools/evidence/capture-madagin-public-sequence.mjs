@@ -51,6 +51,7 @@ for (const checkpoint of checkpoints) {
   await page.waitForTimeout(350);
   const evidence = await page.evaluate(() => {
     const cumulativeVegetation = window.__MADAGIN_CUMULATIVE_VEGETATION_V116__ ?? {};
+    const alpineGeology = window.__MADAGIN_ALPINE_GEOLOGY_V116__ ?? {};
     const detailedTerrain = window.__MADAGIN_DETAILED_TERRAIN_V116__ ?? {};
     const ecologyDebug = window.__MADAGIN_ECOLOGY_DEBUG_V116__ ?? {};
     const regionalHabitat = window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? {};
@@ -61,10 +62,10 @@ for (const checkpoint of checkpoints) {
     const coastalEcology = window.__MADAGIN_COASTAL_ECOLOGY_V116__ ?? {};
     const coastalShoulder = window.__MADAGIN_COASTAL_SHOULDER_V116__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
-    const realism = window.__MADAGIN_REALISM_CA__ ?? window.__MADAGIN_REALISM_BZ__ ?? window.__MADAGIN_REALISM_BY__ ?? null;
+    const realism = window.__MADAGIN_REALISM_CB__ ?? window.__MADAGIN_REALISM_CA__ ?? window.__MADAGIN_REALISM_BZ__ ?? window.__MADAGIN_REALISM_BY__ ?? null;
     const waterRealism = window.__MADAGIN_WATER_REALISM_BY__ ?? null;
     const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BZ__ ?? window.__MADAGIN_OCEAN_REALISM_BY__ ?? null;
-    const orographicWeather = window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null;
+    const orographicWeather = window.__MADAGIN_OROGRAPHIC_WEATHER_CB__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null;
     const watershedSurface = window.__MADAGIN_WATERSHED_SURFACE_V116__ ?? {};
     return {
       canvasCount: document.querySelectorAll("canvas").length,
@@ -111,6 +112,15 @@ for (const checkpoint of checkpoints) {
           ?.surfaceNormalReconciliation?.reconciledVertices ?? 0,
         alpineNormalReconciledVertices: detailedTerrain.alpine?.alpineGeology
           ?.surfaceNormalReconciliation?.reconciledVertices ?? 0,
+        alpineCrestAdjustedVertices: alpineGeology.detailed?.weatheredCrestCompression
+          ?.adjustedVertices ?? 0,
+        alpineCrestMaximumReductionMeters: alpineGeology.detailed?.weatheredCrestCompression
+          ?.maximumReductionMeters ?? 0,
+        alpineCrestHighestSourceMeters: alpineGeology.detailed?.weatheredCrestCompression
+          ?.highestSourceMeters ?? 0,
+        alpineCrestHighestResultMeters: alpineGeology.detailed?.weatheredCrestCompression
+          ?.highestResultMeters ?? 0,
+        alpineTreelineVisibleInstances: ecologyDebug.alpine?.visibleInstances ?? 0,
         watershedTriangles: detailedTerrain.valley?.watershedIntegration?.subdivision?.triangles ?? 0,
         watershedRenderedTriangles: detailedTerrain.valley?.watershedIntegration?.renderedTriangles ?? 0,
         regionalGroundcover: Object.values(ecologyDebug)
@@ -158,6 +168,7 @@ for (const checkpoint of checkpoints) {
         terrainContactMistAuthorities: terrainMist.authorities ?? [],
         terrainContactMistBanks: terrainMist.banks ?? 0,
         orographicWeatherCandidate: orographicWeather?.candidate ?? null,
+        orographicWeatherAlpineCrestBanks: orographicWeather?.alpineCrestBanks ?? 0,
         orographicWeatherGroundedBanks: orographicWeather?.groundedBanks ?? 0,
         waterfallLowerHalfWidthMeters: waterRealism?.waterfall?.body?.lowerHalfWidthMeters ?? 0,
         waterfallBraidedTransparentGaps: waterRealism?.waterfall?.braidedTransparentGaps ?? false,
@@ -223,7 +234,7 @@ await fs.writeFile(
 process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
-  && result.structuralEcology?.candidate === "CA"
+  && result.structuralEcology?.candidate === "CB"
   && result.structuralEcology?.releasedPrimaryCanopy > 0
   && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
   && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 2
@@ -237,6 +248,10 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.westernCatchmentMaximumIncisionMeters <= 39
   && result.structuralEcology?.westernCatchmentWaterProtection === true
   && result.structuralEcology?.westernCatchmentCanopy > 0
+  && result.structuralEcology?.alpineCrestAdjustedVertices > 0
+  && result.structuralEcology?.alpineCrestMaximumReductionMeters > 0
+  && result.structuralEcology?.alpineCrestMaximumReductionMeters <= 150
+  && result.structuralEcology?.alpineCrestHighestSourceMeters > result.structuralEcology?.alpineCrestHighestResultMeters
   && result.structuralEcology?.valleyNormalReconciledVertices > 0
   && result.structuralEcology?.watershedTriangles > 0
   && result.structuralEcology?.watershedTriangles <= 1_500_000
@@ -276,12 +291,15 @@ const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.regionalGroundcover > 0
   && result.structuralEcology?.regionalHabitatAuthorities.length > 0
   && result.structuralEcology?.westernRegionalGroundcover > 0
-  && result.structuralEcology?.terrainContactMistBanks === 16
-  && result.structuralEcology?.terrainContactMistAuthorities.length === 16
+  && result.structuralEcology?.terrainContactMistBanks === 18
+  && result.structuralEcology?.terrainContactMistAuthorities.length === 18
   && result.structuralEcology?.terrainContactMistAuthorities.includes("western-upper-catchments")
   && result.structuralEcology?.terrainContactMistAuthorities.includes("western-colluvial-toes")
-  && result.structuralEcology?.orographicWeatherCandidate === "CA"
-  && result.structuralEcology?.orographicWeatherGroundedBanks === 16
+  && result.structuralEcology?.terrainContactMistAuthorities.includes("alpine-windward-cap")
+  && result.structuralEcology?.terrainContactMistAuthorities.includes("alpine-leeward-break")
+  && result.structuralEcology?.orographicWeatherCandidate === "CB"
+  && result.structuralEcology?.orographicWeatherAlpineCrestBanks === 2
+  && result.structuralEcology?.orographicWeatherGroundedBanks === 18
 )) && results.some((result) => (
   result.structuralEcology?.sourceQualityGeologyAlpine > 0
 )) && results.some((result) => (
