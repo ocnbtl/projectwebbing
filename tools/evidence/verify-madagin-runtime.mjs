@@ -48,6 +48,8 @@ for (const testCase of cases) {
         && Object.values(window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? {})
           .some((zone) => (zone?.placements ?? 0) > 0)
         && Object.values(window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? {})
+          .some((zone) => (zone?.placements ?? 0) > 0)
+        && Object.values(window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? {})
           .some((zone) => (zone?.placements ?? 0) > 0),
       undefined,
       { timeout: 45_000 },
@@ -57,6 +59,7 @@ for (const testCase of cases) {
     alpineGeology: window.__MADAGIN_ALPINE_GEOLOGY_V116__ ?? null,
     canvasCount: document.querySelectorAll("canvas").length,
     compactJourneySeam: window.__MADAGIN_COMPACT_JOURNEY_SEAM_V116__ ?? null,
+    coastalShoulder: window.__MADAGIN_COASTAL_SHOULDER_V116__ ?? null,
     cumulativeVegetation: window.__MADAGIN_CUMULATIVE_VEGETATION_V116__ ?? null,
     detailedTerrain: window.__MADAGIN_DETAILED_TERRAIN_V116__ ?? null,
     ecologyDebug: window.__MADAGIN_ECOLOGY_DEBUG_V116__ ?? null,
@@ -65,13 +68,14 @@ for (const testCase of cases) {
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
-    oceanRealismBV: window.__MADAGIN_OCEAN_REALISM_BV__ ?? null,
-    realismBV: window.__MADAGIN_REALISM_BV__ ?? null,
+    oceanRealismBW: window.__MADAGIN_OCEAN_REALISM_BW__ ?? null,
+    realismBW: window.__MADAGIN_REALISM_BW__ ?? null,
     sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
+    sourceIslandTree01BW: window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
     sourceQualityVegetationBR: window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? null,
     terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
-    waterRealismBV: window.__MADAGIN_WATER_REALISM_BV__ ?? null,
+    waterRealismBW: window.__MADAGIN_WATER_REALISM_BW__ ?? null,
     videoElements: document.querySelectorAll("video").length,
     v115Marker: document.body.textContent?.includes("WORLD SLICE V1.15") ?? false,
     worldVersion: document.documentElement.dataset.madaginWorldVersion ?? null,
@@ -119,7 +123,7 @@ for (const testCase of cases) {
     && watershedRelief?.maximumUpliftMeters > 0
     && watershedRelief?.maximumUpliftMeters <= 17.5
     && evidence.detailedTerrain?.valley?.watershedIntegration?.subdivision?.triangles <= 1_500_000
-    && evidence.terrainContactMist?.banks === 6
+    && evidence.terrainContactMist?.banks === 8
   );
   const sourceQualityPachira = Object.values(evidence.sourceQualityVegetationBR ?? {});
   const sourceQualityPachiraPassed = testCase.expectedVersion !== "v1.16"
@@ -143,6 +147,21 @@ for (const testCase of cases) {
       && sourceIslandTree.every((zone) => zone?.sourceLicense === "CC0 1.0 Universal")
       && sourceIslandTree.every((zone) => zone?.crossedPlanesPerPlacement === 2)
     );
+  const sourceIslandTree01 = Object.values(evidence.sourceIslandTree01BW ?? {});
+  const sourceIslandTree01Passed = testCase.expectedVersion !== "v1.16"
+    || testCase.query.includes("mobile=1")
+    || (
+      sourceIslandTree01.reduce((total, zone) => total + (zone?.placements ?? 0), 0) > 0
+      && sourceIslandTree01.every((zone) => zone?.sourceLicense === "CC0 1.0 Universal")
+      && sourceIslandTree01.every((zone) => zone?.runtimeTriangles === 109_999)
+    );
+  const coastalHeightfieldPassed = testCase.expectedVersion !== "v1.16"
+    || testCase.id !== "v116-alpine-detailed"
+    || (
+      evidence.coastalShoulder?.structuralSource?.dimensions?.columns === 77
+      && evidence.coastalShoulder?.structuralSource?.dimensions?.rows === 179
+      && evidence.coastalShoulder?.structuralSource?.triangles === 27_056
+    );
   const passed = evidence.rendererState === testCase.expectedState
     && evidence.videoElements === 0
     && (testCase.expectedVersion === null || evidence.worldVersion === testCase.expectedVersion)
@@ -153,25 +172,29 @@ for (const testCase of cases) {
     && alpineGeologyPassed
     && watershedReliefPassed
     && (testCase.expectedVersion !== "v1.16" || (
-      evidence.realismBV?.candidate === "BV"
-      && Object.keys(evidence.realismBV?.categories ?? {}).length === 5
-      && evidence.realismBV?.detachedTerrainShells === false
-      && evidence.realismBV?.waterNetworkProtected === true
-      && evidence.realismBV?.lakeRadiusMeters?.join(",") === "132.4,94.6"
-      && evidence.waterRealismBV?.candidate === "BV"
-      && evidence.waterRealismBV?.waterfall?.body?.lowerHalfWidthMeters === 21.2
-      && evidence.waterRealismBV?.waterfall?.braidedTransparentGaps === true
-      && evidence.waterRealismBV?.lakeBed?.proceduralWorldScale === true
-      && evidence.waterRealismBV?.lakeBed?.shorelineBands === 3
-      && (testCase.query.includes("mobile=1") || evidence.waterRealismBV?.lakeBed?.sourceGeologyPlacements >= 18)
-      && evidence.oceanRealismBV?.candidate === "BV"
-      && evidence.oceanRealismBV?.breakerBands === 2
-      && evidence.oceanRealismBV?.deepenedVolcanicShallows === true
-      && evidence.oceanRealismBV?.displacedPrimaryBreaker === true
-      && evidence.oceanRealismBV?.nearshoreBackwash === true
+      evidence.realismBW?.candidate === "BW"
+      && Object.keys(evidence.realismBW?.categories ?? {}).length === 5
+      && evidence.realismBW?.detachedTerrainShells === false
+      && evidence.realismBW?.waterNetworkProtected === true
+      && evidence.realismBW?.lakeRadiusMeters?.join(",") === "132.4,94.6"
+      && evidence.waterRealismBW?.candidate === "BW"
+      && evidence.waterRealismBW?.waterfall?.body?.lowerHalfWidthMeters === 21.2
+      && evidence.waterRealismBW?.waterfall?.braidedTransparentGaps === true
+      && evidence.waterRealismBW?.lakeBed?.analyticBoundaryOptics === true
+      && evidence.waterRealismBW?.lakeBed?.proceduralWorldScale === true
+      && evidence.waterRealismBW?.lakeBed?.shorelineBands === 3
+      && (testCase.query.includes("mobile=1") || evidence.waterRealismBW?.lakeBed?.sourceGeologyPlacements >= 18)
+      && evidence.oceanRealismBW?.candidate === "BW"
+      && evidence.oceanRealismBW?.breakerBands === 2
+      && evidence.oceanRealismBW?.deepenedVolcanicShallows === true
+      && evidence.oceanRealismBW?.displacedPrimaryBreaker === true
+      && evidence.oceanRealismBW?.nearshoreBackwash === true
+      && (testCase.query.includes("mobile=1") || evidence.oceanRealismBW?.surfaceSegments >= 320)
       && sourceQualityPachiraPassed
       && sourceQualityGeologyPassed
       && sourceIslandTreePassed
+      && sourceIslandTree01Passed
+      && coastalHeightfieldPassed
     ))
     && !forbiddenV115OnMobile
     && pageErrors.length === 0;

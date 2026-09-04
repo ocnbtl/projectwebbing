@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "lastReverified": "2026-09-03",
+  "lastReverified": "2026-09-04",
   "activeRuntime": "v1.16",
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
@@ -719,6 +719,72 @@
       "immutableUrl": "https://projectwebbing-3nvf7khs4-unigentamos.vercel.app"
     },
     "decisionBoundary": "BV makes bounded source-surface, topology, ecology, shoreline, water, ocean, and atmosphere corrections while preserving public continuity. Inherited coarse macroforms, repeated species/silhouettes, procedural water/coast/weather, and missing physical-device evidence keep overall reference realism at score 1."
+  },
+  "fifteenthPostLaunchCandidate": {
+    "selected": "Candidate BW / v128-source-and-structure-bw-selected",
+    "status": "selected locally after optimized runtime, seven-view, motion, build, source-provenance, and visual gates; production release remains pending",
+    "changedCategories": [
+      "licensed fully three-dimensional Island Tree 01 family with bounded desktop placement",
+      "tracked 179-by-77 connected western-coast structural heightfield",
+      "analytic tarn shoreline and basin optical authority",
+      "finer balanced/high ocean displacement topology",
+      "eight terrain-contact weather authorities including western headwall and Alpine amphitheater"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bw-optimized/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bw-optimized/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-bw-local-01/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-bw-optimized/motion/motion-evidence.json",
+    "productionBaselineEvidence": "output/playwright/madagin-world-progress/candidate-bv-production-baseline-20260904/sequence.json",
+    "selectedTelemetry": {
+      "sourceQualityIslandTree01Placements": 25,
+      "sourceQualityIslandTree01RuntimeTriangles": 109999,
+      "sourceQualityIslandTree01Bytes": 12683140,
+      "coastalHeightfieldRows": 179,
+      "coastalHeightfieldColumns": 77,
+      "coastalHeightfieldSamples": 13783,
+      "coastalHeightfieldTriangles": 27056,
+      "coastalHeightfieldBytes": 113815,
+      "analyticTarnBoundaryOptics": true,
+      "balancedOceanSurfaceSegments": 320,
+      "terrainContactMistBanks": 8,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "sourceAssets": {
+      "islandTree01": {
+        "source": "https://polyhaven.com/a/island_tree_01",
+        "authors": [
+          "Rico Cilliers",
+          "Rob Tuytel"
+        ],
+        "license": "CC0 1.0 Universal",
+        "provenance": "public/world/assets/polyhaven/island_tree_01_bw/PROVENANCE.md",
+        "runtime": "public/world/assets/polyhaven/island_tree_01_bw/island_tree_01_bw.glb",
+        "runtimeTriangles": 109999,
+        "runtimeBytes": 12683140,
+        "runtimeSha256": "61E7AE377CCDD11C3D8BE3DE4CCCC9B628FBCC52B1D1DF28B6339F3E5662CB28"
+      },
+      "coastalHeightfield": {
+        "source": "project-authored deterministic generator",
+        "generator": "tools/world/generate_candidate_bw_coast_heightfield.mjs",
+        "runtime": "public/world/v116/coast-heightfield-bw.json",
+        "runtimeSha256": "18378A31A70F49476A44E9BD9084612CFED1A1DE16D0C08BBF38DBCAEED24930"
+      }
+    },
+    "sourceSha256": {
+      "renderer": "1251978DD7BDD0CA76F95B9A0B3692B41A2B008A2B54424483E8D3E0761DA0A6",
+      "publicSequenceVerifier": "40534AB329D75B98126A00330FD2E103F1F325C3039DA9ABFA636900C00FE053",
+      "internalRuntimeVerifier": "F036BF79F793DB1410817BDC561B992A5731758F66A009E1DEC89B7069B9CB69",
+      "blenderConverter": "C8D20DF29CD96F41E90279F7CDC322DFE758F53BEA1D2A6F68B6546A0245E25F",
+      "coastGenerator": "7EF82642BD70EC25496CA4C1638D63655E9E4B7D58F55750C167BC9E6CF74C53"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BV metadata",
+      "commit": "9b7efccfd7fd1824cbdacd0f21b7745bd8ada8f9",
+      "deploymentId": "dpl_C8U9SH2nLEwxnkgWJkyC1VhJA4E5",
+      "immutableUrl": "https://projectwebbing-5rfb328ua-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BW materially advances source quality and structural coast sampling while preserving public continuity. The normal views remain dominated by inherited coarse macroforms, repeated legacy ecology, procedural water/coast/weather, and missing physical-device evidence, so overall reference realism remains score 1."
   },
   "components": {
     "topologyAndStreaming": {
