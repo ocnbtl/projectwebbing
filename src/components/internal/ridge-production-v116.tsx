@@ -731,10 +731,21 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         float terrainMicroX = detailedTerrainFbm((vDetailedTerrainWorld.xz + vec2(0.32, 0.0)) * ${zone === "alpine" ? "0.21" : "0.29"} + 91.7);
         float terrainMicroZ = detailedTerrainFbm((vDetailedTerrainWorld.xz + vec2(0.0, 0.32)) * ${zone === "alpine" ? "0.21" : "0.29"} + 91.7);
         float terrainMicroSlope = smoothstep(0.08, 0.82, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
+        float terrainCeMesoCenter = detailedTerrainFbm(
+          vDetailedTerrainWorld.xz * ${zone === "alpine" ? "0.063" : zone === "valley" ? "0.079" : "0.087"} + 423.1
+        );
+        float terrainCeMesoX = detailedTerrainFbm(
+          (vDetailedTerrainWorld.xz + vec2(0.78, 0.0)) * ${zone === "alpine" ? "0.063" : zone === "valley" ? "0.079" : "0.087"} + 423.1
+        );
+        float terrainCeMesoZ = detailedTerrainFbm(
+          (vDetailedTerrainWorld.xz + vec2(0.0, 0.78)) * ${zone === "alpine" ? "0.063" : zone === "valley" ? "0.079" : "0.087"} + 423.1
+        );
         vec3 terrainMicroWorldNormal = normalize(
           normalize(vDetailedTerrainNormal)
             + vec3(terrainMicroCenter - terrainMicroX, 0.0, terrainMicroCenter - terrainMicroZ)
               * mix(1.45, 2.55, terrainMicroSlope)
+            + vec3(terrainCeMesoCenter - terrainCeMesoX, 0.0, terrainCeMesoCenter - terrainCeMesoZ)
+              * mix(1.7, 3.2, terrainMicroSlope)
         );
         normal = normalize(mix(
           normal,
@@ -1178,6 +1189,45 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         authoredGround = mix(authoredGround, candidateCdWetCoast, candidateCdRunup * 0.86);
         authoredGround = mix(authoredGround, candidateCdSaltRock, candidateCdSaltExposure * 0.48);
         authoredGround = mix(authoredGround, candidateCdSediment, candidateCdForeshoreSediment * 0.54);
+        // Candidate CE introduces a continuous basalt-to-colluvium weathering
+        // field at landform scale. It follows world position, slope, elevation,
+        // and drainage rather than source UV islands, breaking the broad
+        // green/brown polygons while retaining the real scanned PBR grain.
+        float candidateCeMacro = detailedTerrainFbm(vec2(
+          vDetailedTerrainWorld.x * 0.009 - vDetailedTerrainWorld.z * 0.003,
+          vDetailedTerrainWorld.z * 0.0105 + vDetailedTerrainWorld.y * 0.004
+        ) + 401.8);
+        float candidateCeMeso = detailedTerrainFbm(vec2(
+          vDetailedTerrainWorld.x * 0.047 + vDetailedTerrainWorld.y * 0.012,
+          vDetailedTerrainWorld.z * 0.041 - vDetailedTerrainWorld.y * 0.009
+        ) - 219.3);
+        float candidateCeDrainage = smoothstep(
+          0.62,
+          0.9,
+          detailedTerrainFbm(vec2(
+            vDetailedTerrainWorld.x * 0.021 - vDetailedTerrainWorld.z * 0.007,
+            vDetailedTerrainWorld.z * 0.025 + vDetailedTerrainWorld.y * 0.015
+          ) + 527.4)
+        ) * (0.34 + slope * 0.66);
+        float candidateCeTalus = smoothstep(0.52, 0.81, candidateCeMacro)
+          * smoothstep(0.14, 0.58, slope)
+          * (1.0 - smoothstep(0.78, 0.94, slope));
+        float candidateCeRockRib = smoothstep(0.61, 0.88, candidateCeMeso)
+          * smoothstep(0.3, 0.78, slope);
+        vec3 candidateCeColluvium = mix(
+          vec3(0.058, 0.066, 0.056),
+          vec3(0.135, 0.111, 0.074),
+          candidateCeMeso
+        );
+        vec3 candidateCeBasalt = mix(
+          vec3(0.026, 0.043, 0.042),
+          vec3(0.116, 0.104, 0.082),
+          candidateCeMacro
+        );
+        authoredGround = mix(authoredGround, candidateCeColluvium, candidateCeTalus * 0.38);
+        authoredGround = mix(authoredGround, candidateCeBasalt, candidateCeRockRib * 0.42);
+        authoredGround = mix(authoredGround, vec3(0.021, 0.052, 0.041), candidateCeDrainage * 0.31);
+        authoredGround *= mix(0.88, 1.1, smoothstep(0.18, 0.88, candidateCeMeso));
         float sourceLuminance = dot(sourceSurface, vec3(0.2126, 0.7152, 0.0722));
         vec3 sourceChroma = clamp(sourceSurface / max(sourceLuminance, 0.08), vec3(0.62), vec3(1.42));
         float mineralGrain = detailedTerrainFbm(vec2(
@@ -1194,7 +1244,7 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         // as giant painted polygons despite the low sourceAuthority below.
         // Keep real PBR chroma and grain, but stop those UV faces from becoming
         // the dominant landform signal in distant vistas.
-        float sourceAuthority = ${zone === "connected" ? "mix(0.36, 0.4, terrainValley)" : zone === "ridge" ? "0.36" : zone === "valley" ? "0.4" : "0.44"};
+        float sourceAuthority = ${zone === "connected" ? "mix(0.2, 0.24, terrainValley)" : zone === "ridge" ? "0.2" : zone === "valley" ? "0.24" : "0.28"};
         diffuseColor.rgb = clamp(
           authoredGround * mix(vec3(0.9), microSurface, sourceAuthority) * 1.26,
           vec3(0.0),
@@ -1209,7 +1259,9 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
             - candidateCcWetness * 0.22
             + candidateCcExposure * 0.025
             - candidateCdRunup * 0.2
-            + candidateCdSaltExposure * 0.045,
+            + candidateCdSaltExposure * 0.045
+            + candidateCeTalus * 0.035
+            - candidateCeDrainage * 0.055,
           0.58,
           0.98
         );`,
@@ -1228,8 +1280,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * (0.095 + basinDrainage * 0.05);`,
       );
   };
-  material.customProgramCacheKey = () => `madagin-candidate-cd-coast-to-horizon-material-${zone}`;
-  material.name = `Madagin Candidate CD coast-to-horizon weathered volcanic PBR ${zone} terrain`;
+  material.customProgramCacheKey = () => `madagin-candidate-ce-basin-to-ridge-material-${zone}`;
+  material.name = `Madagin Candidate CE basin-to-ridge weathered volcanic PBR ${zone} terrain`;
   return material;
 }
 
@@ -1368,14 +1420,18 @@ function lakeBoundaryDistance(x: number, z: number) {
 
 function createLittoralGeologyPlacements(mobile: boolean, tier: WorldQualityTier): PlacementTuple[] {
   if (mobile || tier === "conservative") return [];
+  // Candidate CE replaces the nearly continuous ring of similarly scaled
+  // shoreline anchors with three unequal, erosion-led clusters. Open reaches
+  // remain visible between the north shelf, inlet fan, and southern spur, so
+  // these licensed forms read as exposed geology rather than a rock necklace.
   const angles = tier === "high"
-    ? [-3.08, -2.98, -2.88, -2.77, -2.65, -2.52, -2.37, -2.08, -1.94, -1.8, -1.66, -1.51, -1.06, -0.92, -0.78, -0.64, -0.21, -0.07, 0.07, 0.21, 0.36, 0.78, 0.92, 1.06, 1.21, 1.73, 1.87, 2.01, 2.15, 2.3, 2.45, 2.61]
-    : [-3.04, -2.91, -2.77, -2.62, -2.46, -2.05, -1.88, -1.7, -1.52, -1.0, -0.84, -0.68, -0.18, -0.01, 0.16, 0.34, 0.83, 1.0, 1.18, 1.78, 1.96, 2.14, 2.33, 2.54];
+    ? [-2.98, -2.82, -2.61, -1.96, -1.74, -0.92, -0.69, 0.02, 0.24, 0.91, 1.12, 1.86, 2.08, 2.36]
+    : [-2.94, -2.7, -1.88, -0.79, 0.1, 0.98, 1.95, 2.22];
   const count = angles.length;
   return Array.from({ length: count }, (_, index) => {
     const angle = angles[index] + Math.sin(index * 2.17) * 0.018;
-    const cluster = Math.sin(index * 1.91 + 0.4) * 0.022 + Math.sin(index * 0.57) * 0.014;
-    const radius = lakeBoundaryScale(angle) * (1.005 + cluster);
+    const cluster = Math.sin(index * 1.91 + 0.4) * 0.038 + Math.sin(index * 0.57) * 0.021;
+    const radius = lakeBoundaryScale(angle) * (1.016 + cluster);
     const x = LAKE_CENTER.x + Math.cos(angle) * LAKE_RADIUS.x * radius;
     const z = LAKE_CENTER.z + Math.sin(angle) * LAKE_RADIUS.z * radius;
     const waterlineVariation = Math.sin(angle * 5.0 - 0.6) * 0.22 + Math.sin(index * 1.31) * 0.12;
@@ -1383,7 +1439,7 @@ function createLittoralGeologyPlacements(mobile: boolean, tier: WorldQualityTier
       0,
       2,
       x,
-      LAKE_WATER_LEVEL + 0.34 + waterlineVariation,
+      LAKE_WATER_LEVEL + 0.2 + waterlineVariation,
       z,
       angle + Math.PI * 0.5,
       1,
@@ -2663,6 +2719,8 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
   let crestCompressionMaximumReduction = 0;
   let crestCompressionHighestSource = 0;
   let crestCompressionHighestResult = 0;
+  let candidateCeWeatheredVertices = 0;
+  let candidateCeMaximumRelief = 0;
 
   for (let index = 0; index < positions.count; index += 1) {
     const x = positions.getX(index);
@@ -2746,6 +2804,11 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
       + crownGullies
     ) * envelope;
     const relief = Math.max(-9.2, Math.min(9.8, unclampedRelief));
+    const candidateCeWeathering = (
+      Math.sin(x * 0.046 - z * 0.031 + Math.sin(y * 0.036) * 0.74) * 0.72
+      + Math.sin(x * 0.091 + z * 0.022 - 2.1) * 0.34
+      - Math.pow(Math.max(0, Math.cos(x * 0.037 + z * 0.028)), 20) * 1.02
+    ) * envelope * (0.24 + steepness * 0.76);
     const summitMacroRelief = alpineVisibleSummitMacroRelief(x, y, z) * envelope;
     const crestCompression = detail === "detailed"
       ? alpineWeatheredCrestHeight(x, y, z)
@@ -2762,11 +2825,16 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
     }
     const finalY = y
       + relief * (0.58 + steepness * 0.16)
+      + candidateCeWeathering
       + summitMacroRelief * (0.74 + steepness * 0.12)
       + crestCompression.adjustment;
     positions.setY(index, finalY);
     adjustedVertices += 1;
     maximumRelief = Math.max(maximumRelief, Math.abs(relief + summitMacroRelief));
+    if (Math.abs(candidateCeWeathering) > 0.001) {
+      candidateCeWeatheredVertices += 1;
+      candidateCeMaximumRelief = Math.max(candidateCeMaximumRelief, Math.abs(candidateCeWeathering));
+    }
     if (Math.abs(summitMacroRelief) > 0.001) {
       summitMacroAdjustedVertices += 1;
       summitMacroMaximumIncision = Math.max(summitMacroMaximumIncision, -summitMacroRelief);
@@ -2820,6 +2888,14 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
       highestSourceMeters: crestCompressionHighestSource,
       maximumReductionMeters: crestCompressionMaximumReduction,
       method: "monotonic non-linear high-elevation erosion with unequal west, east, and rear remnant variation on the connected Alpine source surface",
+    },
+    candidateCeMesoWeathering: {
+      adjustedVertices: candidateCeWeatheredVertices,
+      detachedGeometry: false,
+      maximumReliefMeters: candidateCeMaximumRelief,
+      method: "bounded dual-frequency frost-weathering and narrow subtractive fracture runs on the connected Alpine source surface",
+      valleyBoundaryProtected: true,
+      worldBoundsProtected: true,
     },
     summitSurfaceRelaxation,
     surfaceNormalReconciliation,
@@ -2916,6 +2992,8 @@ function createRidgeErosionTerrainGeometry(source: Mesh) {
   let adjustedVertices = 0;
   let maximumIncision = 0;
   let maximumUplift = 0;
+  let candidateCeWeatheredVertices = 0;
+  let candidateCeMaximumRelief = 0;
 
   for (let index = 0; index < positions.count; index += 1) {
     const x = positions.getX(index);
@@ -2937,16 +3015,26 @@ function createRidgeErosionTerrainGeometry(source: Mesh) {
     if (envelope <= 0.001) continue;
 
     const relief = ridgeErosionRelief(x, z) * envelope;
+    const candidateCeWeathering = (
+      Math.sin(x * 0.084 - z * 0.026 + Math.sin(z * 0.019) * 0.82) * 0.68
+      + Math.sin(x * 0.037 + z * 0.059 + 1.6) * 0.42
+      - Math.pow(Math.max(0, Math.cos(x * 0.052 - z * 0.017)), 18) * 1.16
+    ) * envelope * (0.28 + steepness * 0.72);
+    const combinedRelief = relief + candidateCeWeathering;
     const horizontalNormalLength = Math.hypot(normalX, normalZ);
     if (horizontalNormalLength > 0.001) {
-      const horizontalRelief = relief * (0.1 + steepness * 0.16);
+      const horizontalRelief = combinedRelief * (0.1 + steepness * 0.16);
       positions.setX(index, x + (normalX / horizontalNormalLength) * horizontalRelief);
       positions.setZ(index, z + (normalZ / horizontalNormalLength) * horizontalRelief);
     }
-    positions.setY(index, y + relief * (0.94 + steepness * 0.08));
+    positions.setY(index, y + combinedRelief * (0.94 + steepness * 0.08));
     adjustedVertices += 1;
-    maximumIncision = Math.max(maximumIncision, -relief);
-    maximumUplift = Math.max(maximumUplift, relief);
+    maximumIncision = Math.max(maximumIncision, -combinedRelief);
+    maximumUplift = Math.max(maximumUplift, combinedRelief);
+    if (Math.abs(candidateCeWeathering) > 0.001) {
+      candidateCeWeatheredVertices += 1;
+      candidateCeMaximumRelief = Math.max(candidateCeMaximumRelief, Math.abs(candidateCeWeathering));
+    }
   }
 
   positions.needsUpdate = true;
@@ -2967,6 +3055,14 @@ function createRidgeErosionTerrainGeometry(source: Mesh) {
     surfaceNormalReconciliation,
     worldBoundsProtected: true,
     subdivision: geometry.userData.ridgeErosionSubdivision ?? null,
+    candidateCeMesoWeathering: {
+      adjustedVertices: candidateCeWeatheredVertices,
+      detachedGeometry: false,
+      maximumReliefMeters: candidateCeMaximumRelief,
+      method: "bounded dual-frequency colluvial breakup plus narrow subtractive rills on the connected Ridge source surface",
+      ridgeValleyBoundaryProtected: true,
+      worldBoundsProtected: true,
+    },
   };
   return geometry;
 }
@@ -3061,6 +3157,8 @@ function createIntegratedWatershedTerrainGeometry(
   let maximumAlpineSeamAdjustment = 0;
   let ridgeSeamVertices = 0;
   let maximumRidgeSeamAdjustment = 0;
+  let candidateCeWeatheredVertices = 0;
+  let candidateCeMaximumRelief = 0;
   for (let index = 0; index < positions.count; index += 1) {
     const x = positions.getX(index);
     const y = positions.getY(index);
@@ -3159,6 +3257,40 @@ function createIntegratedWatershedTerrainGeometry(
       contactTrailheadReliefVertices += 1;
       maximumContactTrailheadIncision = Math.max(maximumContactTrailheadIncision, -relief);
       maximumContactTrailheadUplift = Math.max(maximumContactTrailheadUplift, relief);
+    }
+
+    // Candidate CE adds restrained physical breakup to the broad remaining
+    // Valley surfaces. It fades completely at every decoded world boundary
+    // and around the lake, river, and waterfall, so it cannot disturb the
+    // accepted continuous hydrology or manufacture a detached cover shell.
+    const candidateCeBoundaryEnvelope = smoothRange(-958, -924, z)
+      * (1 - smoothRange(-366, -326, z))
+      * smoothRange(-888, -840, x)
+      * (1 - smoothRange(840, 888, x));
+    const candidateCeLakeProtection = smoothRange(1.18, 1.48, lakeBoundaryDistance(x, z));
+    const candidateCeRiverProtection = z >= -820 && z <= -304
+      ? smoothRange(v116RiverHalfWidth(z) * 1.8, v116RiverHalfWidth(z) * 4.2, Math.abs(x - v116RiverCenter(z)))
+      : 1;
+    const candidateCeWaterfallProtection = smoothRange(
+      0.92,
+      1.42,
+      Math.hypot((x - 154) / 128, (z + 714) / 104),
+    );
+    const candidateCeSlope = 1 - Math.abs(normalY);
+    const candidateCeEnvelope = candidateCeBoundaryEnvelope
+      * candidateCeLakeProtection
+      * candidateCeRiverProtection
+      * candidateCeWaterfallProtection
+      * (0.22 + smoothRange(0.035, 0.66, candidateCeSlope) * 0.78);
+    if (candidateCeEnvelope > 0.001) {
+      const candidateCeWeathering = (
+        Math.sin(x * 0.058 - z * 0.019 + Math.sin(z * 0.014) * 0.92) * 0.86
+        + Math.sin(x * 0.103 + z * 0.037 + 0.8) * 0.41
+        - Math.pow(Math.max(0, Math.cos(x * 0.044 - z * 0.029 + 1.4)), 18) * 1.34
+      ) * candidateCeEnvelope;
+      nextY += candidateCeWeathering;
+      candidateCeWeatheredVertices += 1;
+      candidateCeMaximumRelief = Math.max(candidateCeMaximumRelief, Math.abs(candidateCeWeathering));
     }
 
     const cliffEnvelope = westernValleyCliffEnvelope(x, y, z, normalY);
@@ -3453,6 +3585,14 @@ function createIntegratedWatershedTerrainGeometry(
       method: "shared-span decoded Ridge boundary alignment eased through the first 28 metres of the subdivided Valley surface",
     },
     ridgeBoundaryWeld: geometry.userData.detailedRidgeValleyWeld ?? null,
+    candidateCeMesoWeathering: {
+      adjustedVertices: candidateCeWeatheredVertices,
+      detachedGeometry: false,
+      lakeRiverAndWaterfallProtected: true,
+      maximumReliefMeters: candidateCeMaximumRelief,
+      method: "bounded dual-frequency colluvial breakup and narrow subtractive rills across remaining connected Valley surfaces",
+      ridgeAndAlpineBoundariesProtected: true,
+    },
     subdivision: geometry.userData.watershedSubdivision,
     waterfallLandform: {
       basinVertices: waterfallBasinVertices,
@@ -5697,9 +5837,9 @@ function InstancedSourceQualityGeology({ part, placements, shadows, zone }: {
     placements.forEach((placement, index) => {
       const signature = sourceQualityGeologySignature(placement) + index * 31;
       const nearLake = lakeBoundaryDistance(placement[2], placement[4]) < 1.32;
-      const baseScale = nearLake ? 4.65 : zone === "alpine" ? 5.25 : zone === "valley" ? 4.4 : 4.15;
+      const baseScale = nearLake ? 2.85 : zone === "alpine" ? 5.25 : zone === "valley" ? 4.4 : 4.15;
       const size = baseScale * (0.72 + (signature % 13) * 0.045);
-      dummy.position.set(placement[2], placement[3] - (nearLake ? 0.48 : 0.62), placement[4]);
+      dummy.position.set(placement[2], placement[3] - (nearLake ? 0.68 : 0.62), placement[4]);
       dummy.rotation.set(
         ((signature % 9) - 4) * 0.012,
         placement[5] + (signature % 17) * 0.29,
@@ -6412,11 +6552,18 @@ function prepareWatershedGroundcover(scene: Object3D, sourceKey: WatershedGround
 
 function selectWatershedGroundcover(instances: PlacementTuple[], mobile: boolean, tier: WorldQualityTier) {
   if (mobile || tier === "conservative") return [];
-  const lakeCenterX = v116RiverCenter(-890);
   const eligible = instances.filter((placement) => {
     if (placement[1] !== 2) return false;
-    const shorelineDistance = Math.hypot((placement[2] - lakeCenterX) / 146, (placement[4] + 890) / 118);
-    return shorelineDistance > 0.82 && shorelineDistance < 1.32;
+    const shorelineDistance = lakeBoundaryDistance(placement[2], placement[4]);
+    if (shorelineDistance <= 0.98 || shorelineDistance >= 1.37) return false;
+    const angle = Math.atan2(
+      (placement[4] - LAKE_CENTER.z) / LAKE_RADIUS.z,
+      (placement[2] - LAKE_CENTER.x) / LAKE_RADIUS.x,
+    );
+    const habitat = Math.sin(angle * 3.0 + 0.45) * 0.52
+      + Math.sin(angle * 7.0 - 1.1) * 0.31
+      + Math.sin(placement[2] * 0.047 - placement[4] * 0.021) * 0.17;
+    return habitat > -0.18;
   });
   return tier === "high" ? eligible : eligible.filter((_, index) => index % 3 !== 1);
 }
@@ -6476,8 +6623,9 @@ function selectRegionalHabitatGroundcover(
 }
 
 function watershedGroundcoverSource(placement: PlacementTuple, index: number): WatershedGroundcoverKey {
-  void placement;
-  void index;
+  const signature = Math.abs(Math.round(placement[2] * 2.9 + placement[4] * 4.7 + index * 23));
+  if (signature % 10 < 4) return "fern";
+  if (signature % 10 < 7) return "shrub";
   return "rock";
 }
 
@@ -6567,10 +6715,14 @@ function DetailedWatershedGroundcover({ placements, shadows }: {
   placements: PlacementTuple[];
   shadows: boolean;
 }) {
+  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern);
   const rock = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.rock);
+  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub);
   const parts = useMemo(() => [
+    ...prepareWatershedGroundcover(fern.scene, "fern"),
     ...prepareWatershedGroundcover(rock.scene, "rock"),
-  ], [rock.scene]);
+    ...prepareWatershedGroundcover(shrub.scene, "shrub"),
+  ], [fern.scene, rock.scene, shrub.scene]);
   const bySource = useMemo(() => {
     const result = new Map<WatershedGroundcoverKey, PlacementTuple[]>();
     placements.forEach((placement, index) => {
@@ -6580,13 +6732,27 @@ function DetailedWatershedGroundcover({ placements, shadows }: {
     return result;
   }, [placements]);
   useEffect(() => {
-    dispatchStage(3, "lake-grounded-existing-source-geology-ready", "lake");
+    const host = window as Window & { __MADAGIN_LITTORAL_SUCCESSION_CE__?: Record<string, unknown> };
+    host.__MADAGIN_LITTORAL_SUCCESSION_CE__ = {
+      candidate: "CE",
+      clusteredHabitat: true,
+      fern: bySource.get("fern")?.length ?? 0,
+      groundedPlacements: placements.length,
+      openShoreReaches: true,
+      rock: bySource.get("rock")?.length ?? 0,
+      shrub: bySource.get("shrub")?.length ?? 0,
+      sources: [WATERSHED_GROUNDCOVER_URLS.fern, WATERSHED_GROUNDCOVER_URLS.rock, WATERSHED_GROUNDCOVER_URLS.shrub],
+    };
+    document.documentElement.dataset.madaginLittoralSuccessionCe = JSON.stringify(
+      host.__MADAGIN_LITTORAL_SUCCESSION_CE__,
+    );
+    dispatchStage(3, "lake-candidate-ce-clustered-littoral-succession-ready", "lake");
     return () => parts.forEach((part) => {
       (Array.isArray(part.material) ? part.material : [part.material]).forEach((material) => material.dispose());
     });
-  }, [parts]);
+  }, [bySource, parts, placements.length]);
   return (
-    <group name={`Madagin v1.16 grounded existing-source watershed geology · ${placements.length}`}>
+    <group name={`Madagin Candidate CE clustered fern, shrub, and basalt littoral succession · ${placements.length}`}>
       {parts.flatMap((part, index) => {
         const sourcePlacements = bySource.get(part.sourceKey) ?? [];
         return sourcePlacements.length ? (
@@ -6998,7 +7164,14 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     if (detailedSet.has(placement)) return false;
     if (zone === "lake" && isLakeBankSuccessionPlacement(placement)) return false;
     if (tier === "high" && !mobile) return true;
-    if (tier === "balanced" && !mobile) return true;
+    // Candidate CF opens the normal desktop composition by thinning only the
+    // repeated legacy core stratum. The source-quality canopy, grounded
+    // riparian succession, and drainage habitat above are retained in full.
+    if (tier === "balanced" && !mobile) {
+      if (placement[1] === 0) return index % 4 !== 1;
+      if (placement[1] === 1) return index % 3 !== 1;
+      return index % 2 === 0;
+    }
     if (mobile && zone === "lake" && isRiparianHabitatPlacement(placement)) return true;
     if (mobile) return placement[1] === 0 ? index % 4 !== 1 : index % 2 === 0;
     return placement[1] === 0 ? index % 3 === 0 : index % 5 === 0;
@@ -7175,7 +7348,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     depthWrite: lake,
     side: DoubleSide,
     toneMapped: true,
-    transparent: !lake,
+    transparent: true,
     uniforms: { uTime: { value: 0 } },
     vertexShader: `
       uniform float uTime;
@@ -7312,15 +7485,18 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         color += vec3(0.018, 0.046, 0.055) * (lakeSurfaceVariation - 0.5) * lakeInterior * ${lake ? "0.28" : "0.0"};
         float reflectionBreakup = ${lake ? "(waterNoise(vWorld.xz * 0.034 - vec2(uTime * 0.012, uTime * 0.006)) - 0.5) * (0.026 + fresnel * 0.038)" : "0.0"};
         float reflectionCell = ${lake ? "mix(0.58, 1.0, waterNoise(vWorld.xz * 0.073 + vec2(uTime * 0.006, -uTime * 0.004)))" : "1.0"};
-        color = mix(color, skyReflection, clamp((fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.46" : "0.4"} + reflectionBreakup) * reflectionCell, 0.0, ${lake ? "0.54" : "0.58"}));
+        color = mix(color, skyReflection, clamp((fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.64" : "0.4"} + reflectionBreakup) * reflectionCell, 0.0, ${lake ? "0.7" : "0.58"}));
         color += vec3(0.32, 0.43, 0.42) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.04" : "0.055"};
         color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.045" : "0.06"};
+        float candidateCfShoreInterference = ${lake ? "(1.0 - basinDepth) * bankSoftening * pow(max(0.0, sin(vWorld.x * 0.11 - vWorld.z * 0.16 + uTime * 0.17)), 12.0)" : "0.0"};
+        color += vec3(0.25, 0.34, 0.27) * candidateCfShoreInterference * 0.055;
         // The integrated source terrain remains below the water for shoreline
         // continuity. A denser interior optical column prevents those large
         // submerged source triangles from dominating the surface read, while
         // low-amplitude cross-wave variation avoids a false diagonal seam; the
         // final littoral band stays transparent enough to reveal the basin bed.
         float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "1.0, 1.0" : "0.66, 0.88"}, fresnel) * ${lake ? "1.0" : `mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : "0.72"}, 1.0, bankSoftening)`} * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
+        ${lake ? "opacity = mix(0.7, 0.94, basinDepth) * mix(0.88, 1.0, fresnel);" : ""}
         gl_FragColor = vec4(color, opacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -7332,7 +7508,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     : river
       ? "Madagin v1.16 darker directional river water"
       : lake
-        ? "Madagin Candidate CC depth-graded volcanic tarn with anisotropic atmospheric reflection"
+        ? "Madagin Candidate CF translucent depth-graded volcanic tarn with anisotropic atmospheric reflection"
         : "Madagin v1.17 atmospheric Fresnel watershed";
   return material;
 }
@@ -7376,7 +7552,7 @@ function createWaterfallMaterial() {
         float microThreads = fallNoise(vec2(vFallUv.x * 46.0 + sin(vFallUv.y * 13.0), -vWorld.y * 0.21 - uTime * 2.1));
         float crossFlow = sin(-vWorld.y * 0.68 - uTime * 6.8 + fineThreads * 3.5) * 0.5 + 0.5;
         float runnel = smoothstep(0.39, 0.74, fineThreads * 0.44 + microThreads * 0.56);
-        float body = smoothstep(0.22, 0.74, verticalFlow * 0.48 + runnel * 0.39 + crossFlow * 0.13);
+        float body = smoothstep(0.3, 0.76, verticalFlow * 0.48 + runnel * 0.39 + crossFlow * 0.13);
         float breakup = smoothstep(0.2, 0.69, fallNoise(flowUv * vec2(1.15, 3.8) + vec2(uTime * 0.07, -uTime * 1.18)));
         float braidedGap = smoothstep(0.64, 0.82, fallNoise(vec2(vFallUv.x * 13.0, vFallUv.y * 8.0 - uTime * 0.18)));
         float edgeNoise = fallNoise(vec2(vFallUv.y * 12.0, uTime * 0.11)) * 0.038;
@@ -7394,20 +7570,20 @@ function createWaterfallMaterial() {
         float transparentGap = braidedGap * (0.2 + descent * 0.72) * (1.0 - runnel * 0.58);
         float plungeTurbulence = smoothstep(0.72, 0.98, vFallUv.y)
           * (0.42 + fallNoise(vec2(vFallUv.x * 21.0, -vWorld.y * 0.16 - uTime * 1.8)) * 0.58);
-        float alpha = edge * (0.075 + body * 0.43 + runnel * 0.18 + aeration * 0.2 + cascadeAeration * 0.23 + plungeTurbulence * 0.12)
-          * mix(0.64, 1.0, breakup) * (1.0 - transparentGap * 0.72);
-        vec3 deepWater = vec3(0.012, 0.052, 0.058);
-        vec3 whiteWater = vec3(0.67, 0.82, 0.8);
-        vec3 color = mix(deepWater, whiteWater, body * 0.34 + runnel * 0.23 + crossFlow * 0.055 + aeration * 0.22 + cascadeAeration * 0.24 + plungeTurbulence * 0.13 + fresnel * 0.075);
+        float alpha = edge * (0.035 + body * 0.31 + runnel * 0.11 + aeration * 0.14 + cascadeAeration * 0.2 + plungeTurbulence * 0.1)
+          * mix(0.48, 0.92, breakup) * (1.0 - transparentGap * 0.9);
+        vec3 deepWater = vec3(0.008, 0.041, 0.047);
+        vec3 whiteWater = vec3(0.48, 0.66, 0.65);
+        vec3 color = mix(deepWater, whiteWater, body * 0.22 + runnel * 0.17 + crossFlow * 0.035 + aeration * 0.19 + cascadeAeration * 0.22 + plungeTurbulence * 0.12 + fresnel * 0.055);
         color *= faceLight;
-        if (alpha < 0.055) discard;
+        if (alpha < 0.07) discard;
         gl_FragColor = vec4(color, alpha);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
     `,
   });
-  material.name = "Madagin Candidate CC three-scale aerated braided waterfall";
+  material.name = "Madagin Candidate CF transparent broken-runnel aerated waterfall";
   return material;
 }
 
@@ -8392,6 +8568,8 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     const host = window as Window & {
       __MADAGIN_WATER_REALISM_BY__?: Record<string, unknown>;
       __MADAGIN_WATER_REALISM_CC__?: Record<string, unknown>;
+      __MADAGIN_WATER_REALISM_CE__?: Record<string, unknown>;
+      __MADAGIN_WATER_REALISM_CF__?: Record<string, unknown>;
       __MADAGIN_WATERFALL_LANDFORM_V116__?: unknown;
       __MADAGIN_RIVER_CORRIDOR_V116__?: unknown;
       __MADAGIN_WATERSHED_SURFACE_V116__?: unknown;
@@ -8470,11 +8648,44 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
         turbulenceAuthorities: 5,
       },
     };
+    host.__MADAGIN_WATER_REALISM_CE__ = {
+      candidate: "CE",
+      continuousHydrology: true,
+      lakeShore: {
+        clusteredSourceGeology: true,
+        openShoreReaches: true,
+        sourceGeologyPlacements: littoralGeologyPlacements.length,
+        sourceGeologyScaleReduction: 0.61,
+        successionAuthority: "shared analytic lake boundary with habitat-gated fern, shrub, and basalt placement",
+      },
+      protectedWaterCandidate: "CC",
+      protectedOceanCandidate: "CD",
+    };
+    host.__MADAGIN_WATER_REALISM_CF__ = {
+      candidate: "CF",
+      continuousHydrology: true,
+      lake: {
+        depthWrite: true,
+        interiorOpacity: 0.94,
+        littoralOpacity: 0.7,
+        retainedAnisotropicReflection: true,
+        substrateVisibleAtShore: true,
+      },
+      protectedOceanCandidate: "CD",
+      waterfall: {
+        braidedTransparentGaps: true,
+        lowerContinuousWhiteAuthority: true,
+        minimumFragmentAlpha: 0.07,
+        retainedConnectedGeometry: true,
+      },
+    };
     document.documentElement.dataset.madaginWatershedSurfaceV116 = JSON.stringify(host.__MADAGIN_WATERSHED_SURFACE_V116__);
     document.documentElement.dataset.madaginRiverCorridorV116 = JSON.stringify(host.__MADAGIN_RIVER_CORRIDOR_V116__);
     document.documentElement.dataset.madaginWaterfallLandformV116 = JSON.stringify(host.__MADAGIN_WATERFALL_LANDFORM_V116__);
     document.documentElement.dataset.madaginWaterRealismBy = JSON.stringify(host.__MADAGIN_WATER_REALISM_BY__);
     document.documentElement.dataset.madaginWaterRealismCc = JSON.stringify(host.__MADAGIN_WATER_REALISM_CC__);
+    document.documentElement.dataset.madaginWaterRealismCe = JSON.stringify(host.__MADAGIN_WATER_REALISM_CE__);
+    document.documentElement.dataset.madaginWaterRealismCf = JSON.stringify(host.__MADAGIN_WATER_REALISM_CF__);
     dispatchStage(3, "connected-waterfall-landform-and-outflow-ready", "lake");
     return () => {
       activeWaterMaterial.current = null;
@@ -8485,8 +8696,12 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       activeImpactMaterial.current = null;
       delete host.__MADAGIN_WATER_REALISM_BY__;
       delete host.__MADAGIN_WATER_REALISM_CC__;
+      delete host.__MADAGIN_WATER_REALISM_CE__;
+      delete host.__MADAGIN_WATER_REALISM_CF__;
       delete document.documentElement.dataset.madaginWaterRealismBy;
       delete document.documentElement.dataset.madaginWaterRealismCc;
+      delete document.documentElement.dataset.madaginWaterRealismCe;
+      delete document.documentElement.dataset.madaginWaterRealismCf;
       cliffMaterial.dispose();
       impactMaterial.dispose();
       lakeBedGeometry.dispose();
@@ -8526,7 +8741,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     tier,
   ]);
   return (
-    <group name="Madagin Candidate BY connected watershed and two-stage remeshed waterfall landform">
+    <group name="Madagin Candidate CF translucent tarn and broken-runnel waterfall over Candidate CE clustered littoral succession">
       {littoralGeologyPlacements.length ? (
         <Suspense fallback={null}>
           <SourceQualityGeologyAnchors
@@ -8537,14 +8752,14 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
         </Suspense>
       ) : null}
       <mesh geometry={lakeBedGeometry} material={lakeBedMaterial} name="Madagin Candidate CC dark depth-graded irregular lake basin bed" receiveShadow />
-      <mesh geometry={lakeGeometry} material={waterMaterial} name="Madagin Candidate CC anisotropic reflective irregular lake surface" />
+      <mesh geometry={lakeGeometry} material={waterMaterial} name="Madagin Candidate CF translucent anisotropic reflective irregular lake surface" />
       <mesh geometry={riverGeometry} material={riverMaterial} name="Madagin v1.16 centerline-following irregular river surface" />
       <primitive object={scene} />
       {waterfallVisible ? (
         <>
           <mesh geometry={waterfallUpperGeometry} material={headwaterMaterial} name="Madagin v1.16 terrain-following waterfall source" />
-          <mesh geometry={waterfallGeometry} material={waterfallMaterial} name="Madagin Candidate CC aerated braided connected waterfall body" renderOrder={8} />
-          <mesh geometry={waterfallSecondaryGeometry} material={waterfallMaterial} name="Madagin Candidate CC aerated secondary runnel sheet" renderOrder={8} />
+          <mesh geometry={waterfallGeometry} material={waterfallMaterial} name="Madagin Candidate CF transparent broken-runnel connected waterfall body" renderOrder={8} />
+          <mesh geometry={waterfallSecondaryGeometry} material={waterfallMaterial} name="Madagin Candidate CF transparent aerated secondary runnel sheet" renderOrder={8} />
           <mesh geometry={waterfallPlungeGeometry} material={poolMaterial} name="Madagin v1.16 integrated plunge pool" />
           <mesh geometry={waterfallOutflowGeometry} material={riverMaterial} name="Madagin v1.16 connected plunge outflow" />
           <mesh material={impactMaterial} position={[PLUNGE_POOL_CENTER.x, WATERFALL_BOTTOM.y - 0.12, PLUNGE_POOL_CENTER.z]} renderOrder={9} rotation={[-Math.PI / 2, 0, 0]} scale={[31, 17, 1]}>
@@ -8689,6 +8904,13 @@ const CLOUD_BANKS = [
   { position: [610, 215, -1545] as [number, number, number], scale: [380, 34, 128] as [number, number, number], opacity: 0.09 },
 ];
 
+const CLOUD_BANK_LOBES = [
+  { position: [-0.24, -0.02, 0.04] as [number, number, number], scale: [0.72, 0.82, 0.68] as [number, number, number] },
+  { position: [0.04, 0.08, -0.12] as [number, number, number], scale: [0.86, 1.02, 0.78] as [number, number, number] },
+  { position: [0.27, -0.06, 0.1] as [number, number, number], scale: [0.66, 0.74, 0.7] as [number, number, number] },
+  { position: [0.1, -0.15, 0.22] as [number, number, number], scale: [0.52, 0.58, 0.56] as [number, number, number] },
+] as const;
+
 const TERRAIN_CONTACT_MIST_BANKS = [
   { authority: "ridge-drainage", position: [-72, 48, -205] as [number, number, number], scale: [172, 36, 62] as [number, number, number], opacity: 0.2 },
   { authority: "valley-catchment", position: [-88, 16, -720] as [number, number, number], scale: [278, 40, 96] as [number, number, number], opacity: 0.32 },
@@ -8719,7 +8941,10 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
   const mistGroup = useRef<Group>(null);
   const clouds = useMemo(() => CLOUD_BANKS.slice(0, tier === "conservative" ? 1 : tier === "balanced" ? 5 : 6), [tier]);
   const mistBanks = useMemo(() => tier === "conservative" ? [] : TERRAIN_CONTACT_MIST_BANKS, [tier]);
-  const materials = useMemo(() => clouds.map((cloud, index) => createCloudMaterial(cloud.opacity, index + 1)), [clouds]);
+  const materials = useMemo(
+    () => clouds.map((cloud, index) => createCloudMaterial(cloud.opacity * 0.58, index + 1)),
+    [clouds],
+  );
   const mistMaterials = useMemo(
     () => mistBanks.map((mist, index) => createTerrainMistMaterial(mist.opacity, index + 11)),
     [mistBanks],
@@ -8745,6 +8970,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       __MADAGIN_OROGRAPHIC_WEATHER_CB__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_CC__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_CD__?: Record<string, unknown>;
+      __MADAGIN_OROGRAPHIC_WEATHER_CE__?: Record<string, unknown>;
       __MADAGIN_TERRAIN_MIST_V120__?: Record<string, unknown>;
     };
     host.__MADAGIN_TERRAIN_MIST_V120__ = {
@@ -8835,6 +9061,17 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       )).length,
     };
     document.documentElement.dataset.madaginOrographicWeatherCd = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CD__);
+    host.__MADAGIN_OROGRAPHIC_WEATHER_CE__ = {
+      candidate: "CE",
+      authorities: mistBanks.map((mist) => mist.authority),
+      cloudBanks: clouds.length,
+      cloudLobes: clouds.length * CLOUD_BANK_LOBES.length,
+      groundedBanks: mistBanks.length,
+      lightingAuthority: "reduced broad hemisphere fill with stronger warm directional relief and retained cool sky bounce",
+      method: "each stretched cloud shell is replaced by four offset low-opacity erosion volumes while retained mist remains coupled to named terrain authorities",
+      singleStretchedCloudShells: false,
+    };
+    document.documentElement.dataset.madaginOrographicWeatherCe = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CE__);
     if (mistBanks.length) dispatchStage(3, "terrain-contact-mist-ready", "valley");
     return () => {
       materials.forEach((material) => material.dispose());
@@ -8844,15 +9081,15 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
   return (
     <group name="Madagin v1.16 single physical atmosphere and lighting authority">
       <color attach="background" args={["#294b57"]} />
-      <fogExp2 attach="fog" args={["#58767a", tier === "conservative" ? 0.00031 : 0.00034]} />
+      <fogExp2 attach="fog" args={["#58767a", tier === "conservative" ? 0.00031 : 0.0003]} />
       <SkyDome reducedMotion={reducedMotion} />
       <PhysicalSkyEnvironment intensityScale={0.64} tier={tier} />
-      <hemisphereLight args={["#a9c6cd", "#13231b", 0.72]} />
+      <hemisphereLight args={["#a9c6cd", "#13231b", 0.56]} />
       <ambientLight color="#72878a" intensity={0.08} />
       <directionalLight
         castShadow={shadows}
         color="#f4dac1"
-        intensity={2.48}
+        intensity={2.62}
         position={[-420, 280, 360]}
         shadow-bias={-0.00012}
         shadow-normalBias={0.24}
@@ -8866,15 +9103,25 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
         shadow-mapSize-height={tier === "high" ? 2048 : 1536}
         shadow-mapSize-width={tier === "high" ? 2048 : 1536}
       />
-      <directionalLight color="#bad2d5" intensity={0.24} position={[190, 150, -220]} />
+      <directionalLight color="#bad2d5" intensity={0.18} position={[190, 150, -220]} />
       <group ref={cloudGroup}>
         {clouds.map((cloud, index) => (
-          <mesh key={cloud.position.join(":")} material={materials[index]} position={cloud.position} scale={cloud.scale}>
-            <sphereGeometry args={[0.5, 24, 12]} />
-          </mesh>
+          <group key={cloud.position.join(":")} position={cloud.position} scale={cloud.scale}>
+            {CLOUD_BANK_LOBES.map((lobe, lobeIndex) => (
+              <mesh
+                key={lobeIndex}
+                material={materials[index]}
+                position={lobe.position}
+                rotation={[0, (index * 0.41 + lobeIndex * 0.67) % Math.PI, 0]}
+                scale={lobe.scale}
+              >
+                <sphereGeometry args={[0.5, 24, 12]} />
+              </mesh>
+            ))}
+          </group>
         ))}
       </group>
-      <group name={`Madagin Candidate CD coast-to-horizon coupled weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
+      <group name={`Madagin Candidate CE basin-to-ridge coupled weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
         {mistBanks.map((mist, index) => (
           <mesh key={mist.authority} material={mistMaterials[index]} position={mist.position} scale={mist.scale}>
             <sphereGeometry args={[0.5, 24, 12]} />
@@ -9169,6 +9416,8 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       __MADAGIN_REALISM_CB__?: Record<string, unknown>;
       __MADAGIN_REALISM_CC__?: Record<string, unknown>;
       __MADAGIN_REALISM_CD__?: Record<string, unknown>;
+      __MADAGIN_REALISM_CE__?: Record<string, unknown>;
+      __MADAGIN_REALISM_CF__?: Record<string, unknown>;
       __MADAGIN_WORLD_STREAM_V116__?: unknown;
     };
     host.__MADAGIN_WORLD_STREAM_V116__ = {
@@ -9275,16 +9524,55 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
       waterNetworkProtected: true,
     };
+    host.__MADAGIN_REALISM_CE__ = {
+      candidate: "CE",
+      categories: {
+        atmosphereAndLighting: "five retained cloud banks become twenty offset low-opacity erosion lobes; reduced broad fill and stronger directional relief improve terrain depth without increasing concealing mist",
+        ecologyAndGrounding: "the former rock-only nearshore stratum becomes habitat-gated fern, shrub, and basalt succession with open shore reaches; source-quality geology is smaller, lower, and clustered",
+        materialScale: "continuous world-space basalt, colluvium, drainage, and talus fields replace most remaining source-atlas chroma authority and add a second mesoscopic normal response",
+        terrainStructure: "bounded dual-frequency weathering and narrow subtractive rills physically break Ridge, Valley, and Alpine source surfaces while decoded seams and all water corridors remain protected",
+        waterIntegration: "the accepted CC hydrology and CD ocean are retained while fourteen high-tier or eight balanced source-geology anchors replace the former near-continuous thirty-two/high or twenty-four/balanced lake-edge ring",
+      },
+      cloudLobesPerBank: CLOUD_BANK_LOBES.length,
+      coastlineAuthority: "retained Candidate CD shared four-octave analytic western coastline",
+      detachedTerrainShells: false,
+      exposedCoastalVoidClosed: true,
+      lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
+      protectedOceanCandidate: "CD",
+      protectedWaterCandidate: "CC",
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      waterNetworkProtected: true,
+    };
+    host.__MADAGIN_REALISM_CF__ = {
+      candidate: "CF",
+      categories: {
+        atmosphereAndLighting: "retained Candidate CE twenty-lobe cloud breakup and directional terrain-depth lighting",
+        ecologyAndGrounding: "normal desktop presentation thins only repeated legacy core canopy while retaining source-quality trees and full drainage, riparian, and clustered littoral succession",
+        materialScale: "retained Candidate CE continuous basalt-to-colluvium weathering and mesoscopic normal response",
+        terrainStructure: "retained Candidate CE physical Ridge, Valley, and Alpine weathering with decoded seams and water corridors protected",
+        waterIntegration: "the lake now exposes its authored depth-graded substrate through a 0.70-to-0.94 optical column, while the connected waterfall lowers continuous white authority and opens stronger transparent runnel gaps",
+      },
+      coastlineAuthority: "retained Candidate CD shared four-octave analytic western coastline",
+      detachedTerrainShells: false,
+      exposedCoastalVoidClosed: true,
+      lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
+      normalDesktopLegacyCoreThinning: true,
+      protectedOceanCandidate: "CD",
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      waterNetworkProtected: true,
+    };
     document.documentElement.dataset.madaginRealismBy = JSON.stringify(host.__MADAGIN_REALISM_BY__);
     document.documentElement.dataset.madaginRealismBz = JSON.stringify(host.__MADAGIN_REALISM_BZ__);
     document.documentElement.dataset.madaginRealismCa = JSON.stringify(host.__MADAGIN_REALISM_CA__);
     document.documentElement.dataset.madaginRealismCb = JSON.stringify(host.__MADAGIN_REALISM_CB__);
     document.documentElement.dataset.madaginRealismCc = JSON.stringify(host.__MADAGIN_REALISM_CC__);
     document.documentElement.dataset.madaginRealismCd = JSON.stringify(host.__MADAGIN_REALISM_CD__);
+    document.documentElement.dataset.madaginRealismCe = JSON.stringify(host.__MADAGIN_REALISM_CE__);
+    document.documentElement.dataset.madaginRealismCf = JSON.stringify(host.__MADAGIN_REALISM_CF__);
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CD cumulative coast-to-horizon realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CF cumulative basin-to-water realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>
