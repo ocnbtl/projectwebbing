@@ -5,14 +5,14 @@
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
   "publicRelease": {
-    "commit": "3c01241e19e2d8e1bca403817575b2bed6aa5e9f",
-    "deploymentId": "dpl_DDKXj8XGRRnxbaMx3zG5n56MsS2j",
-    "immutableUrl": "https://projectwebbing-aw1nyq6g7-unigentamos.vercel.app",
+    "commit": "5c4d7a11da0a2750147035775622c182fb46f47f",
+    "deploymentId": "dpl_AqjqUks6gD9ALKts7pNymoWP5HT3",
+    "immutableUrl": "https://projectwebbing-713u28dav-unigentamos.vercel.app",
     "productionAlias": "https://projectwebbing.vercel.app",
     "providerState": "READY",
     "providerIdentityVerified": true,
-    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cb-production-alias/runtime-gates.json",
-    "status": "Candidate CB implementation is READY/PROMOTED and alias-assigned from independently verified GitHub main provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
+    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cc-production-alias/runtime-gates.json",
+    "status": "Candidate CC implementation is READY and alias-assigned from independently verified GitHub main provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
   },
   "postLaunchCandidate": {
     "selected": "Candidate BI / v117-public-reality-a2",
@@ -1171,6 +1171,81 @@
     },
     "decisionBoundary": "CB removes the most fantastical Alpine silhouette and crest ecology while retaining one connected source-surface terrain and the cumulative journey. Coarse polygonal geology, subtle normal-view material and cloud effects, repeated ecology, simplified water, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
   },
+  "twentyFirstPostLaunchCandidate": {
+    "selected": "Candidate CC / rain-to-water-coupling-cc-selected",
+    "commit": "5c4d7a11da0a2750147035775622c182fb46f47f",
+    "deploymentId": "dpl_AqjqUks6gD9ALKts7pNymoWP5HT3",
+    "immutableUrl": "https://projectwebbing-713u28dav-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative rain-to-water candidate; production matrix passes six of six on alias and immutable deployment, seven-view journey proof passes on both, and fixed-camera motion proof passes on both",
+    "changedCategories": [
+      "world-projected wet-channel, littoral, hollow, interfluve, cross-bed, remnant-rib, and colluvial-fan terrain response",
+      "deeper lake optical column with anisotropic reflection, depth-graded scattering, sediment response, and three moving-normal authorities",
+      "stronger connected waterfall body, three-scale aeration, five turbulence authorities, and plunge response",
+      "sixteen additional deterministic source-quality Island Tree 01 placements in the normal Ridge-to-Lake and Summit populations",
+      "two lake-and-waterfall terrain-contact weather authorities under the retained physical sky"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-cc-local-01/sequence.json",
+    "localComparisonBoard": "output/playwright/madagin-world-progress/candidate-cc-local-01/cb-vs-cc.png",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cc-local-01/runtime-gates.json",
+    "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-cc-optimized/sequence.json",
+    "optimizedRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cc-optimized/runtime-gates.json",
+    "optimizedMotionEvidence": "output/playwright/madagin-world-progress/candidate-cc-optimized/motion/motion-evidence.json",
+    "optimizedParityBoard": "output/playwright/madagin-world-progress/candidate-cc-optimized/local-vs-optimized.png",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-cc-local-01/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-cc-local-01/motion/motion-evidence.json",
+    "productionBaselineEvidence": "output/playwright/madagin-world-progress/candidate-cb-metadata-alias/sequence.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cc-production-alias/runtime-gates.json",
+    "productionVisualEvidence": "output/playwright/madagin-world-progress/candidate-cc-production-alias/sequence.json",
+    "productionMotionEvidence": "output/playwright/madagin-world-progress/candidate-cc-production-alias/motion/motion-evidence.json",
+    "immutableRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cc-production-immutable/runtime-gates.json",
+    "immutableVisualEvidence": "output/playwright/madagin-world-progress/candidate-cc-production-immutable/sequence.json",
+    "immutableMotionEvidence": "output/playwright/madagin-world-progress/candidate-cc-production-immutable/motion/motion-evidence.json",
+    "productionBaselineComparisonBoard": "output/playwright/madagin-world-progress/candidate-cc-production-alias/candidate-cb-vs-cc-production-board.png",
+    "implementationSource": {
+      "type": "github",
+      "organization": "ocnbtl",
+      "repository": "projectwebbing",
+      "ref": "main",
+      "sha": "5c4d7a11da0a2750147035775622c182fb46f47f"
+    },
+    "selectedTelemetry": {
+      "candidate": "CC",
+      "sourceIslandTree01OpeningPlacements": 52,
+      "sourceIslandTree01SummitPlacements": 90,
+      "sourceIslandTree01AddedPlacements": 16,
+      "terrainContactMistBanks": 20,
+      "lakeAndWaterfallTerrainContactMistBanks": 5,
+      "lakeDepthGradedScattering": true,
+      "lakeAnisotropicReflection": true,
+      "lakeShorelineSedimentResponse": true,
+      "lakeWaveNormalAuthorities": 3,
+      "waterfallThreeScaleAeration": true,
+      "waterfallTurbulenceAuthorities": 5,
+      "waterfallConnectedGeometry": true,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "referenceReview": {
+      "reviewedAt": "2026-09-04",
+      "policy": "view-only; no reference media copied into the product",
+      "sources": [
+        "https://www.nps.gov/places/kuloa-point.htm",
+        "https://www.usgs.gov/publications/geology-hawaiian-islands-0"
+      ]
+    },
+    "sourceSha256": {
+      "renderer": "F2DF3503E1B459C6D995E75ACAC9DF2F441B1AEC12F95A7E6944718A26EBF0DC",
+      "publicSequenceVerifier": "FB72970C2047AB8C2618E2AF32173D1717E8BBEF6A97C39C69BEA9DBE88E1875",
+      "internalRuntimeVerifier": "15BA4F472EC812CB268BFFFB0614F80A154C09CFBC190E0A6D86C710D339B47B"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate CB metadata",
+      "commit": "5d328378bba227aafcba0ba44508ec2d47569a99",
+      "deploymentId": "dpl_CkgBrG8SvGJjy6woVZsjLuhYdkCU",
+      "immutableUrl": "https://projectwebbing-q47rtuqml-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "CC visibly deepens the connected rain-to-water read and source-quality canopy coverage without changing the public cameras or journey. The water remains simplified, terrain and vegetation remain visibly procedural, weather stays subtle, and missing physical-device evidence keeps overall reference realism at score 2 and blocks any photoreal or final claim."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",
@@ -1185,7 +1260,7 @@
     },
     "terrainFoundation": {
       "selected": "v1.12 DEM coordinates plus v1.15 high desktop geometry inside v1.16 chunk activation, Candidate V1 runtime boundary-derived coastal topology, Candidate AX bounded detailed Ridge erosion remesh, and Candidate AZ exact first-cell detailed Ridge-to-Valley weld",
-      "currentCandidate": "Candidate CB adds monotonic high-elevation erosion and unequal remnant-ridge calibration to 61,099 vertices of the connected detailed Alpine source surface, reducing the affected 333-metre apex to 259.899 metres with no detached geometry; compact/mobile terrain remains unchanged",
+      "currentCandidate": "Candidate CC retains CB's connected Alpine crest correction and adds world-projected rain-to-water material response across western channels, the waterfall catchment, littoral terrain, Alpine hollows, interfluves, cross-beds, remnant ribs, and colluvial fans; topology and compact/mobile terrain remain unchanged",
       "source": [
         "world-source/dem/usgs-3dep-n23w160/madagin-ridge-dem-source-v1.11.png",
         "tools/blender/build_madagin_ridge_world_v113.py",
@@ -1236,7 +1311,7 @@
     },
     "activeVegetation": {
       "selected": "v1.16 grounded placements with v1.15 detailed LOD replacement, Candidate AV low near-bank succession, Candidate AW multi-slope vertical succession, Candidate AY drainage-coupled Ridge habitat response, and Candidate BG high Contact canopy hierarchy",
-      "currentCandidate": "Candidate CB applies a spatially varied upper Alpine treeline to existing grounded placements, removing exposed-crest trees while preserving lower Alpine succession, reviewed source geology, and the compact/mobile resource policy",
+      "currentCandidate": "Candidate CC retains CB's exposed-crest treeline and expands deterministic source-quality Island Tree 01 selection by sixteen visible placements in the normal journey, reaching 52 at Opening and 90 at Summit while preserving exact source identity and the compact/mobile resource policy",
       "source": [
         "src/components/internal/ridge-production-v116.tsx",
         "public/world/v116/species-core-v1.16.glb",
@@ -1288,6 +1363,7 @@
     },
     "waterAndWaterfall": {
       "selected": "v1.16 connected bundle with Candidate BC asymmetric two-fan braided primary curtain, Candidate AU terrain-incised asymmetric lake inlet, Candidate AT basin-scaled irregular lake response, Candidate AS shared irregular basin macroform, Candidate AR anisotropic impact mist and falling spray threads, Candidate AP terrain-bound basin headwall, Candidate AO compact lake shoreline topology and basin bed, AB3 depth-aware water, AC3 lower-frequency boundary, AD column-solved lake join, AI incised headwater, Y6 connected waterfall, and Z8 centerline-following river",
+      "currentCandidate": "Candidate CC strengthens the retained connected system with a darker depth-graded lake column, anisotropic reflection, shoreline sediment response, three moving-normal authorities, a fuller waterfall body, three-scale aeration, five turbulence authorities, and a stronger plunge response without changing water topology",
       "source": [
         "public/world/v116/water-lake-waterfall-v1.16.glb",
         "src/components/internal/ridge-production-v116.tsx"
@@ -1343,7 +1419,7 @@
     },
     "atmosphere": {
       "selected": "v1.16 single atmosphere authority with Candidate W2 multi-scale moving sky and rounded spatial cloud banks",
-      "currentCandidate": "Candidate CB retains the single physical-sky authority and expands terrain-contact weather from sixteen to eighteen banks with windward-cap and leeward-break Alpine authorities; normal-view cloud interception remains subtle and below photographic acceptance",
+      "currentCandidate": "Candidate CC retains the single physical-sky authority and expands terrain-contact weather from eighteen to twenty banks with lake-inlet-strata-haze and waterfall-plume-drift authorities; normal-view weather remains subtle and below photographic acceptance",
       "source": [
         "src/components/internal/ridge-production-v116.tsx"
       ],
