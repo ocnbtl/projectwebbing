@@ -79,16 +79,19 @@ for (const testCase of cases) {
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
     oceanRealismBY: window.__MADAGIN_OCEAN_REALISM_BY__ ?? null,
     oceanRealismBZ: window.__MADAGIN_OCEAN_REALISM_BZ__ ?? null,
+    oceanRealismCD: window.__MADAGIN_OCEAN_REALISM_CD__ ?? null,
     orographicWeatherBX: window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null,
     orographicWeatherBZ: window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? null,
     orographicWeatherCA: window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? null,
     orographicWeatherCB: window.__MADAGIN_OROGRAPHIC_WEATHER_CB__ ?? null,
     orographicWeatherCC: window.__MADAGIN_OROGRAPHIC_WEATHER_CC__ ?? null,
+    orographicWeatherCD: window.__MADAGIN_OROGRAPHIC_WEATHER_CD__ ?? null,
     realismBY: window.__MADAGIN_REALISM_BY__ ?? null,
     realismBZ: window.__MADAGIN_REALISM_BZ__ ?? null,
     realismCA: window.__MADAGIN_REALISM_CA__ ?? null,
     realismCB: window.__MADAGIN_REALISM_CB__ ?? null,
     realismCC: window.__MADAGIN_REALISM_CC__ ?? null,
+    realismCD: window.__MADAGIN_REALISM_CD__ ?? null,
     sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
     sourceIslandTree01BW: window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
@@ -159,24 +162,28 @@ for (const testCase of cases) {
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.lakeRiverAndWaterfallProtected === true
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.maximumIncisionMeters > 0
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.maximumIncisionMeters <= 39
-    && evidence.terrainContactMist?.banks === 20
+    && evidence.terrainContactMist?.banks === 22
     && evidence.orographicWeatherBX?.candidate === "BX"
-    && evidence.orographicWeatherBX?.groundedBanks === 20
+    && evidence.orographicWeatherBX?.groundedBanks === 22
     && evidence.orographicWeatherBZ?.candidate === "BZ"
-    && evidence.orographicWeatherBZ?.groundedBanks === 20
+    && evidence.orographicWeatherBZ?.groundedBanks === 22
     && evidence.orographicWeatherBZ?.coastalContactBanks === 2
     && evidence.orographicWeatherCA?.candidate === "CA"
-    && evidence.orographicWeatherCA?.groundedBanks === 20
+    && evidence.orographicWeatherCA?.groundedBanks === 22
     && evidence.orographicWeatherCA?.westernCatchmentBanks === 2
     && evidence.orographicWeatherCB?.candidate === "CB"
-    && evidence.orographicWeatherCB?.groundedBanks === 20
+    && evidence.orographicWeatherCB?.groundedBanks === 22
     && evidence.orographicWeatherCB?.alpineCrestBanks === 2
     && evidence.orographicWeatherCC?.candidate === "CC"
-    && evidence.orographicWeatherCC?.groundedBanks === 20
+    && evidence.orographicWeatherCC?.groundedBanks === 22
     && evidence.orographicWeatherCC?.alpineCrestBanks === 2
     && evidence.orographicWeatherCC?.coastalContactBanks === 2
     && evidence.orographicWeatherCC?.westernCatchmentBanks === 2
     && evidence.orographicWeatherCC?.lakeAndWaterfallBanks === 5
+    && evidence.orographicWeatherCD?.candidate === "CD"
+    && evidence.orographicWeatherCD?.groundedBanks === 22
+    && evidence.orographicWeatherCD?.coastalContactBanks === 4
+    && evidence.orographicWeatherCD?.surfSprayBanks === 2
     && evidence.regionalHabitat?.easternValleyCatchment?.habitatAuthority === "paired-eastern-western-valley-catchment-networks"
     && evidence.regionalHabitat?.easternValleyCatchment?.westernGroundedPlacements > 0
   );
@@ -223,8 +230,14 @@ for (const testCase of cases) {
       && evidence.coastalShoulder?.southernExtension?.structuralSpan?.span === "valley"
       && evidence.coastalShoulder?.southernExtension?.structuralSpan?.triangles > 0
       && evidence.coastalShoulder?.southernBoundarySamples >= 39
-      && evidence.coastalEcology?.["coastal-north"]?.sourceQualityIslandTree01Placements > 0
-      && evidence.coastalEcology?.["coastal-south"]?.sourceQualityIslandTree01Placements > 0
+      && evidence.coastalEcology?.["coastal-north"]?.candidate === "CD"
+      && evidence.coastalEcology?.["coastal-north"]?.placements === 210
+      && evidence.coastalEcology?.["coastal-north"]?.sourceQualityIslandTree01Placements === 24
+      && evidence.coastalEcology?.["coastal-north"]?.windPrunedSourceCanopy === true
+      && evidence.coastalEcology?.["coastal-south"]?.candidate === "CD"
+      && evidence.coastalEcology?.["coastal-south"]?.placements === 110
+      && evidence.coastalEcology?.["coastal-south"]?.sourceQualityIslandTree01Placements === 30
+      && evidence.coastalEcology?.["coastal-south"]?.windPrunedSourceCanopy === true
     );
   const passed = evidence.rendererState === testCase.expectedState
     && evidence.videoElements === 0
@@ -277,6 +290,11 @@ for (const testCase of cases) {
       && Object.keys(evidence.realismCC?.categories ?? {}).length === 5
       && evidence.realismCC?.detachedTerrainShells === false
       && evidence.realismCC?.waterNetworkProtected === true
+      && evidence.realismCD?.candidate === "CD"
+      && Object.keys(evidence.realismCD?.categories ?? {}).length === 5
+      && evidence.realismCD?.detachedTerrainShells === false
+      && evidence.realismCD?.exposedCoastalVoidClosed === true
+      && evidence.realismCD?.waterNetworkProtected === true
       && evidence.waterRealismCC?.candidate === "CC"
       && evidence.waterRealismCC?.continuousHydrology === true
       && evidence.waterRealismCC?.lakeBed?.anisotropicReflection === true
@@ -293,6 +311,16 @@ for (const testCase of cases) {
       && evidence.oceanRealismBZ?.displacedBreakerBands === 3
       && evidence.oceanRealismBZ?.sedimentBearingShallows === true
       && (testCase.query.includes("mobile=1") || evidence.oceanRealismBZ?.surfaceSegments >= 448)
+      && evidence.oceanRealismCD?.candidate === "CD"
+      && evidence.oceanRealismCD?.beerLambertDepthAbsorption === true
+      && evidence.oceanRealismCD?.breakerBands === 5
+      && evidence.oceanRealismCD?.directionalSwellAuthorities === 6
+      && evidence.oceanRealismCD?.displacedBreakerBands === 4
+      && evidence.oceanRealismCD?.horizonAtmosphere === true
+      && evidence.oceanRealismCD?.nearshoreBackwash === true
+      && evidence.oceanRealismCD?.runupFoamAuthority === true
+      && evidence.oceanRealismCD?.sedimentBearingShallows === true
+      && (testCase.query.includes("mobile=1") || evidence.oceanRealismCD?.surfaceSegments >= 448)
       && sourceQualityPachiraPassed
       && sourceQualityGeologyPassed
       && sourceIslandTreePassed

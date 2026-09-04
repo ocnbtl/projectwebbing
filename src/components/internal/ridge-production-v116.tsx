@@ -1138,6 +1138,46 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           vDetailedTerrainWorld.z * 0.039 + vDetailedTerrainWorld.y * 0.021
         ) + 311.6);
         authoredGround *= mix(0.82, 1.14, smoothstep(0.18, 0.86, candidateCcMesoContrast));
+        // Candidate CD extends the shared coastline authority onto the
+        // connected land surface. Runup-darkened basalt, salt-weathered rock,
+        // and deposited volcanic sediment now meet the ocean shader at the
+        // same four-octave boundary instead of ending as one green/brown hill.
+        float candidateCdCoastline = -690.0
+          + sin(vDetailedTerrainWorld.z * 0.012 + 0.8) * 18.0
+          + sin(vDetailedTerrainWorld.z * 0.029 - 1.3) * 7.5
+          + sin(vDetailedTerrainWorld.z * 0.061 + 0.35) * 2.8;
+        float candidateCdLandwardDistance = vDetailedTerrainWorld.x - candidateCdCoastline;
+        float candidateCdCoastalElevation = ${zone === "connected" ? "1.0" : "0.0"}
+          * (1.0 - smoothstep(-7.0, 27.0, vDetailedTerrainWorld.y));
+        float candidateCdRunup = candidateCdCoastalElevation
+          * smoothstep(-2.5, 1.5, candidateCdLandwardDistance)
+          * (1.0 - smoothstep(4.0, 19.0, candidateCdLandwardDistance));
+        float candidateCdSaltExposure = candidateCdCoastalElevation
+          * smoothstep(9.0, 25.0, candidateCdLandwardDistance)
+          * (1.0 - smoothstep(58.0, 112.0, candidateCdLandwardDistance))
+          * (0.44 + slope * 0.56);
+        float candidateCdForeshoreSediment = candidateCdCoastalElevation
+          * smoothstep(-1.0, 5.0, candidateCdLandwardDistance)
+          * (1.0 - smoothstep(30.0, 72.0, candidateCdLandwardDistance))
+          * (1.0 - smoothstep(0.42, 0.78, slope));
+        vec3 candidateCdWetCoast = mix(
+          vec3(0.012, 0.027, 0.029),
+          vec3(0.047, 0.064, 0.058),
+          detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.082 + 371.8)
+        );
+        vec3 candidateCdSaltRock = mix(
+          vec3(0.085, 0.083, 0.071),
+          vec3(0.185, 0.153, 0.105),
+          detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.044 - 128.3)
+        );
+        vec3 candidateCdSediment = mix(
+          vec3(0.056, 0.061, 0.052),
+          vec3(0.135, 0.116, 0.078),
+          detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.095 + 43.7)
+        );
+        authoredGround = mix(authoredGround, candidateCdWetCoast, candidateCdRunup * 0.86);
+        authoredGround = mix(authoredGround, candidateCdSaltRock, candidateCdSaltExposure * 0.48);
+        authoredGround = mix(authoredGround, candidateCdSediment, candidateCdForeshoreSediment * 0.54);
         float sourceLuminance = dot(sourceSurface, vec3(0.2126, 0.7152, 0.0722));
         vec3 sourceChroma = clamp(sourceSurface / max(sourceLuminance, 0.08), vec3(0.62), vec3(1.42));
         float mineralGrain = detailedTerrainFbm(vec2(
@@ -1165,7 +1205,11 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         "#include <roughnessmap_fragment>",
         `#include <roughnessmap_fragment>
         roughnessFactor = clamp(
-          roughnessFactor - candidateCcWetness * 0.22 + candidateCcExposure * 0.025,
+          roughnessFactor
+            - candidateCcWetness * 0.22
+            + candidateCcExposure * 0.025
+            - candidateCdRunup * 0.2
+            + candidateCdSaltExposure * 0.045,
           0.58,
           0.98
         );`,
@@ -1184,8 +1228,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * (0.095 + basinDrainage * 0.05);`,
       );
   };
-  material.customProgramCacheKey = () => `madagin-candidate-cc-rain-to-water-material-${zone}`;
-  material.name = `Madagin Candidate CC rain-to-water weathered volcanic PBR ${zone} terrain`;
+  material.customProgramCacheKey = () => `madagin-candidate-cd-coast-to-horizon-material-${zone}`;
+  material.name = `Madagin Candidate CD coast-to-horizon weathered volcanic PBR ${zone} terrain`;
   return material;
 }
 
@@ -4578,8 +4622,8 @@ function createCoastalPlacements(geometry: BufferGeometry, mobile: boolean, tier
   const limit = mobile
     ? southernExtension ? 52 : 88
     : southernExtension
-      ? tier === "high" ? 112 : tier === "balanced" ? 88 : 62
-      : tier === "high" ? 260 : tier === "balanced" ? 180 : 110;
+      ? tier === "high" ? 132 : tier === "balanced" ? 110 : 62
+      : tier === "high" ? 300 : tier === "balanced" ? 210 : 110;
   const candidates: Array<{ placement: PlacementTuple; rank: number }> = [];
   const seededUnit = (seed: number) => {
     const signal = Math.sin(seed * 12.9898 + 78.233) * 43758.5453123;
@@ -4642,7 +4686,7 @@ function CoastalEcology({ placements, shadows, zone = "coastal-north" }: {
   const gltf = useLoader(GLTFLoader, SPECIES_URL, configureCompressedGltf);
   const parts = useMemo(() => prepareSpecies(gltf.scene), [gltf.scene]);
   const sourceQualityPlacements = useMemo(() => {
-    const limit = zone === "coastal-south" ? 22 : 16;
+    const limit = zone === "coastal-south" ? 30 : 24;
     return placements
       .filter((placement, index) => sourceQualityIslandTree01Signature(placement, index) % 7 < 3)
       .sort((left, right) => (
@@ -4664,17 +4708,19 @@ function CoastalEcology({ placements, shadows, zone = "coastal-north" }: {
     host.__MADAGIN_COASTAL_ECOLOGY_V116__ = {
       ...(host.__MADAGIN_COASTAL_ECOLOGY_V116__ ?? {}),
       [zone]: {
-        architecture: "wind-pruned near/mid/far coastal succession",
+        architecture: "wind-pruned near/mid/far coastal succession with bounded source-quality crown reinforcement",
+        candidate: "CD",
         placements: placements.length,
         source: SPECIES_URL,
         sourceQualityIslandTree01Placements: sourceQualityPlacements.length,
+        windPrunedSourceCanopy: true,
       },
     };
     document.documentElement.dataset.madaginCoastalEcologyV116 = JSON.stringify(host.__MADAGIN_COASTAL_ECOLOGY_V116__);
     dispatchStage(2, "summit-grounded-coastal-ecology-ready", "ridge");
   }, [placements.length, sourceQualityPlacements.length, zone]);
   return (
-    <group name={`Madagin Candidate BZ grounded ${zone} ecology · ${placements.length}`}>
+    <group name={`Madagin Candidate CD grounded wind-pruned ${zone} ecology · ${placements.length}`}>
       {[...batches.entries()].flatMap(([key, batch]) => parts
         .filter((part) => part.family === key)
         .map((part, index) => (
@@ -5477,6 +5523,8 @@ function InstancedSourceQualityIslandTree01({ part, placements, shadows, zone }:
       const age = 0.72 + (signature % 11) * 0.041;
       const width = 0.78 + ((signature * 5) % 13) * 0.037;
       const depth = 0.82 + ((signature * 7) % 11) * 0.035;
+      const coastalHeight = coastal ? 0.72 + ((signature * 13) % 7) * 0.035 : 1;
+      const coastalSpread = coastal ? 1.08 + ((signature * 17) % 9) * 0.026 : 1;
       dummy.position.set(placement[2], placement[3] - 0.07, placement[4]);
       dummy.rotation.set(
         ((signature % 7) - 3) * (coastal ? 0.025 : 0.012),
@@ -5484,9 +5532,9 @@ function InstancedSourceQualityIslandTree01({ part, placements, shadows, zone }:
         (((signature * 3) % 7) - 3) * (coastal ? 0.022 : 0.011),
       );
       dummy.scale.set(
-        placement[6] * baseScale * age * width,
-        placement[7] * baseScale * (0.9 + ((signature * 11) % 7) * 0.034),
-        placement[8] * baseScale * age * depth,
+        placement[6] * baseScale * age * width * coastalSpread,
+        placement[7] * baseScale * (0.9 + ((signature * 11) % 7) * 0.034) * coastalHeight,
+        placement[8] * baseScale * age * depth * (coastal ? 0.9 + ((signature * 19) % 5) * 0.036 : 1),
       );
       dummy.updateMatrix();
       matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
@@ -5545,7 +5593,7 @@ function SourceQualityIslandTree01Anchors({ placements, shadows, zone }: {
     });
   }, [parts, placements.length, zone]);
   return (
-    <group name={`Madagin Candidate BW ${zone} three-dimensional Island Tree 01 anchors · ${placements.length}`}>
+    <group name={`Madagin Candidate CD ${zone} three-dimensional Island Tree 01 anchors · ${placements.length}`}>
       {parts.map((part, index) => (
         <InstancedSourceQualityIslandTree01
           key={`source-island-tree-01-${zone}-${part.sourceKey}-${index}`}
@@ -8633,6 +8681,7 @@ function createTerrainMistMaterial(opacity: number, seed: number) {
 
 const CLOUD_BANKS = [
   { position: [-165, 112, -285] as [number, number, number], scale: [230, 38, 82] as [number, number, number], opacity: 0.27 },
+  { position: [-930, 96, -640] as [number, number, number], scale: [520, 44, 180] as [number, number, number], opacity: 0.13 },
   { position: [172, 68, -650] as [number, number, number], scale: [310, 48, 116] as [number, number, number], opacity: 0.31 },
   { position: [-260, 132, -980] as [number, number, number], scale: [390, 55, 148] as [number, number, number], opacity: 0.28 },
   { position: [360, 338, -1040] as [number, number, number], scale: [330, 46, 126] as [number, number, number], opacity: 0.27 },
@@ -8661,6 +8710,8 @@ const TERRAIN_CONTACT_MIST_BANKS = [
   { authority: "alpine-leeward-break", position: [742, 154, -1468] as [number, number, number], scale: [178, 28, 82] as [number, number, number], opacity: 0.13 },
   { authority: "lake-inlet-strata-haze", position: [38, -22, -818] as [number, number, number], scale: [176, 20, 82] as [number, number, number], opacity: 0.11 },
   { authority: "waterfall-plume-drift", position: [168, 8, -710] as [number, number, number], scale: [142, 46, 72] as [number, number, number], opacity: 0.14 },
+  { authority: "north-coast-runup-spray", position: [-676, -12, -126] as [number, number, number], scale: [224, 14, 92] as [number, number, number], opacity: 0.08 },
+  { authority: "southern-bay-runup-spray", position: [-684, -12, -522] as [number, number, number], scale: [246, 14, 122] as [number, number, number], opacity: 0.075 },
 ];
 
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
@@ -8693,6 +8744,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       __MADAGIN_OROGRAPHIC_WEATHER_CA__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_CB__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_CC__?: Record<string, unknown>;
+      __MADAGIN_OROGRAPHIC_WEATHER_CD__?: Record<string, unknown>;
       __MADAGIN_TERRAIN_MIST_V120__?: Record<string, unknown>;
     };
     host.__MADAGIN_TERRAIN_MIST_V120__ = {
@@ -8766,6 +8818,23 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       )).length,
     };
     document.documentElement.dataset.madaginOrographicWeatherCc = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CC__);
+    host.__MADAGIN_OROGRAPHIC_WEATHER_CD__ = {
+      candidate: "CD",
+      authorities: mistBanks.map((mist) => mist.authority),
+      cloudBanks: clouds.length,
+      coastalContactBanks: mistBanks.filter((mist) => (
+        mist.authority === "southern-coastal-shelf"
+          || mist.authority === "surf-headland-contact"
+          || mist.authority === "north-coast-runup-spray"
+          || mist.authority === "southern-bay-runup-spray"
+      )).length,
+      groundedBanks: mistBanks.length,
+      method: "offshore cloud depth and two low runup-spray banks extend the retained landform-coupled weather without concealing coastline geometry",
+      surfSprayBanks: mistBanks.filter((mist) => (
+        mist.authority === "north-coast-runup-spray" || mist.authority === "southern-bay-runup-spray"
+      )).length,
+    };
+    document.documentElement.dataset.madaginOrographicWeatherCd = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CD__);
     if (mistBanks.length) dispatchStage(3, "terrain-contact-mist-ready", "valley");
     return () => {
       materials.forEach((material) => material.dispose());
@@ -8805,7 +8874,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
           </mesh>
         ))}
       </group>
-      <group name={`Madagin Candidate CC landform-and-water-coupled weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
+      <group name={`Madagin Candidate CD coast-to-horizon coupled weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
         {mistBanks.map((mist, index) => (
           <mesh key={mist.authority} material={mistMaterials[index]} position={mist.position} scale={mist.scale}>
             <sphereGeometry args={[0.5, 24, 12]} />
@@ -8831,6 +8900,8 @@ function createOceanMaterial() {
       varying float vCoastDepth;
       varying float vOceanDistance;
       varying float vBreaker;
+      varying float vLongSwell;
+      varying float vRunupPulse;
       void main() {
         vec3 displaced = position;
         vec2 p = position.xy;
@@ -8850,33 +8921,43 @@ function createOceanMaterial() {
         float phaseB = p.x * -0.026 + p.y * 0.035 + warpB * 0.24 + uTime * 0.36 + 1.7;
         float phaseC = p.x * 0.061 + p.y * -0.053 + warpA * 0.12 + uTime * 0.68 + 4.2;
         float phaseD = p.x * -0.132 + p.y * -0.108 + warpB * 0.16 + uTime * 0.94 + 2.4;
+        float phaseE = p.x * 0.0082 + p.y * 0.0038 + warpA * 0.14 + uTime * 0.27 - 0.9;
+        float phaseF = p.x * -0.041 + p.y * 0.019 + warpB * 0.12 + uTime * 0.58 + 5.3;
         float swellA = sin(phaseA) * 1.78;
         float swellB = sin(phaseB) * 0.88;
         float swellC = sin(phaseC) * 0.31;
         float swellD = sin(phaseD) * 0.11;
+        float swellE = sin(phaseE) * 1.42;
+        float swellF = sin(phaseF) * 0.56;
         float movingBreak = 17.0 + sin(baseWorld.z * 0.021 - uTime * 0.72) * 4.8
           + sin(baseWorld.z * 0.053 + uTime * 0.31) * 2.1;
         float breaker = exp(-pow((oceanDistance - movingBreak) / 7.6, 2.0));
         float secondaryBreaker = exp(-pow((oceanDistance - 33.0 - sin(baseWorld.z * 0.037 + uTime * 0.28) * 5.2) / 8.8, 2.0));
         float outerBreaker = exp(-pow((oceanDistance - 52.0 - sin(baseWorld.z * 0.024 - uTime * 0.19) * 6.4) / 10.8, 2.0));
         float backwash = exp(-pow((oceanDistance - 6.0 - sin(baseWorld.z * 0.034 - uTime * 0.5) * 2.5) / 4.4, 2.0));
+        float runupPulse = exp(-pow((oceanDistance - 2.8 - sin(baseWorld.z * 0.052 - uTime * 0.61) * 1.9) / 2.7, 2.0));
         float waveEnvelope = 0.16 + coastDepth * 0.84;
-        float height = (swellA + swellB + swellC + swellD) * waveEnvelope
+        float height = (swellA + swellB + swellC + swellD + swellE + swellF) * waveEnvelope
           + breaker * (0.72 + sin(baseWorld.z * 0.105 - uTime * 1.18) * 0.18)
           + secondaryBreaker * (0.3 + sin(baseWorld.z * 0.072 - uTime * 0.74) * 0.08)
           + outerBreaker * (0.16 + sin(baseWorld.z * 0.051 - uTime * 0.52) * 0.04)
-          - backwash * 0.18;
+          - backwash * 0.18
+          + runupPulse * 0.12;
         displaced.x += (cos(phaseA) * 0.42 - cos(phaseB) * 0.18) * waveEnvelope - breaker * 0.42;
         displaced.y += (cos(phaseA) * 0.28 + cos(phaseB) * 0.22) * waveEnvelope;
         displaced.z += height;
         float dx = (cos(phaseA) * 0.016 * 1.78
           + cos(phaseB) * -0.026 * 0.88
           + cos(phaseC) * 0.061 * 0.31
-          + cos(phaseD) * -0.132 * 0.11) * waveEnvelope;
+          + cos(phaseD) * -0.132 * 0.11
+          + cos(phaseE) * 0.0082 * 1.42
+          + cos(phaseF) * -0.041 * 0.56) * waveEnvelope;
         float dy = (cos(phaseA) * 0.009 * 1.78
           + cos(phaseB) * 0.035 * 0.88
           + cos(phaseC) * -0.053 * 0.31
-          + cos(phaseD) * -0.108 * 0.11) * waveEnvelope;
+          + cos(phaseD) * -0.108 * 0.11
+          + cos(phaseE) * 0.0038 * 1.42
+          + cos(phaseF) * 0.019 * 0.56) * waveEnvelope;
         vec3 localNormal = normalize(vec3(-dx, -dy, 1.0));
         vec4 worldPosition = modelMatrix * vec4(displaced, 1.0);
         vWorldPosition = worldPosition.xyz;
@@ -8884,6 +8965,8 @@ function createOceanMaterial() {
         vWaveHeight = height;
         vWaveSlope = length(vec2(dx, dy)) + breaker * 0.11;
         vBreaker = max(breaker, max(secondaryBreaker * 0.62, outerBreaker * 0.36));
+        vLongSwell = swellE + swellA * 0.44;
+        vRunupPulse = runupPulse;
         gl_Position = projectionMatrix * viewMatrix * worldPosition;
       }
     `,
@@ -8896,6 +8979,8 @@ function createOceanMaterial() {
       varying float vCoastDepth;
       varying float vOceanDistance;
       varying float vBreaker;
+      varying float vLongSwell;
+      varying float vRunupPulse;
       float oceanHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float oceanNoise(vec2 p) {
         vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -8915,22 +9000,33 @@ function createOceanMaterial() {
         normal = normalize(normal + vec3(capillary.x * 0.016, 0.0, capillary.y * 0.016) * detailFade);
         vec3 reflected = reflect(-viewDirection, normal);
         float skyAmount = smoothstep(-0.08, 0.78, reflected.y);
-        vec3 horizon = vec3(0.135, 0.31, 0.38);
-        vec3 zenith = vec3(0.025, 0.12, 0.235);
+        vec3 horizon = vec3(0.16, 0.305, 0.345);
+        vec3 zenith = vec3(0.02, 0.092, 0.18);
         vec3 reflectedSky = mix(horizon, zenith, skyAmount);
+        float reflectedCloud = smoothstep(0.54, 0.82, oceanNoise(
+          vWorldPosition.xz * 0.0024 + reflected.xz * 1.7 + vec2(uTime * 0.002, -uTime * 0.001)
+        ));
+        reflectedSky = mix(reflectedSky, vec3(0.39, 0.46, 0.45), reflectedCloud * (0.22 + skyAmount * 0.28));
         float fresnel = pow(1.0 - max(dot(viewDirection, normal), 0.0), 3.6);
         float surfaceVariation = oceanNoise(vWorldPosition.xz * 0.046 + vec2(uTime * 0.014, -uTime * 0.011));
         float shoal = 1.0 - vCoastDepth;
-        vec3 deepWater = vec3(0.0015, 0.021, 0.045);
-        vec3 coastalWater = vec3(0.008, 0.062, 0.082);
-        vec3 volcanicShallows = vec3(0.056, 0.075, 0.063);
+        vec3 deepWater = vec3(0.0012, 0.014, 0.034);
+        vec3 coastalWater = vec3(0.006, 0.051, 0.068);
+        vec3 volcanicShallows = vec3(0.052, 0.068, 0.057);
         vec3 baseWater = mix(deepWater, coastalWater, shoal * 0.78);
         baseWater = mix(baseWater, volcanicShallows, smoothstep(0.78, 0.99, shoal) * 0.34);
         float suspendedSediment = smoothstep(0.68, 0.98, shoal)
           * (0.46 + oceanNoise(vWorldPosition.xz * 0.031 + vec2(0.0, uTime * 0.006)) * 0.54);
         baseWater = mix(baseWater, vec3(0.082, 0.1, 0.073), suspendedSediment * 0.2);
-        vec3 color = mix(baseWater, reflectedSky, 0.075 + fresnel * 0.43);
-        color *= 0.7 + surfaceVariation * 0.24;
+        float opticalDepth = mix(0.94, 0.38, shoal);
+        vec3 absorption = exp(-vec3(0.31, 0.12, 0.065) * opticalDepth);
+        vec3 color = mix(baseWater * absorption, reflectedSky, 0.1 + fresnel * 0.5);
+        color *= 0.7 + surfaceVariation * 0.29;
+        float longSwellLight = smoothstep(0.2, 1.35, vLongSwell) * (0.28 + fresnel * 0.72);
+        float longSwellTrough = 1.0 - smoothstep(-1.45, -0.08, vLongSwell);
+        color *= mix(1.0, 0.76, longSwellTrough * (0.38 + (1.0 - fresnel) * 0.22));
+        color = mix(color, reflectedSky * 1.1, longSwellLight * 0.29);
+        color += vec3(0.075, 0.105, 0.11) * smoothstep(0.035, 0.12, vWaveSlope) * detailFade * 0.12;
         float crest = smoothstep(0.05, 0.13, vWaveSlope) * smoothstep(0.3, 1.25, vWaveHeight);
         color = mix(color, vec3(0.43, 0.63, 0.66), crest * smoothstep(0.54, 0.87, surfaceVariation) * 0.29);
         float shorePulseA = sin(vWorldPosition.z * 0.071 - uTime * 0.66 + sin(vWorldPosition.z * 0.017) * 1.4) * 3.8;
@@ -8946,16 +9042,22 @@ function createOceanMaterial() {
         float brokenFoam = smoothstep(0.31, 0.74, foamNoise * 0.58 + foamVeins * 0.54 + surfaceVariation * 0.18);
         float foamTongues = smoothstep(0.38, 0.77, oceanNoise(vWorldPosition.xz * vec2(0.087, 0.29) + vec2(uTime * 0.009, -uTime * 0.028)));
         float alongshoreBreakup = 0.58 + oceanNoise(vec2(vWorldPosition.z * 0.026, floor(uTime * 0.085))) * 0.54;
-        float shoreFoam = (primaryBreak * 0.78 + secondaryBreak * 0.34 + tertiaryBreak * 0.2 + outerBreak * 0.12 + backwash * 0.22) * shoreFeather * brokenFoam * alongshoreBreakup;
+        float runupLace = smoothstep(0.4, 0.78, oceanNoise(
+          vWorldPosition.xz * vec2(0.18, 0.34) + vec2(-uTime * 0.028, uTime * 0.014)
+        ));
+        float shoreFoam = (primaryBreak * 0.82 + secondaryBreak * 0.38 + tertiaryBreak * 0.23 + outerBreak * 0.14 + backwash * 0.3 + vRunupPulse * 0.38) * shoreFeather * brokenFoam * alongshoreBreakup;
         shoreFoam *= 0.74 + foamTongues * 0.46;
+        shoreFoam += vRunupPulse * runupLace * 0.34;
         shoreFoam = max(shoreFoam, vBreaker * shoreFeather * smoothstep(0.42, 0.78, foamVeins) * 0.66);
-        color = mix(color, vec3(0.58, 0.72, 0.7), clamp(shoreFoam * 1.12, 0.0, 0.84));
+        color = mix(color, vec3(0.63, 0.73, 0.69), clamp(shoreFoam * 1.16, 0.0, 0.88));
         vec3 sunDirection = normalize(vec3(-0.78, 0.24, 0.56));
         float broadGlint = pow(max(dot(reflected, sunDirection), 0.0), 118.0);
         float sharpGlint = pow(max(dot(reflected, sunDirection), 0.0), 460.0);
-        color += vec3(1.0, 0.67, 0.42) * (broadGlint * 0.055 + sharpGlint * 0.24);
+        float glintTrack = 0.58 + oceanNoise(vec2(vWorldPosition.z * 0.026, vWorldPosition.x * 0.009 - uTime * 0.01)) * 0.42;
+        color += vec3(1.0, 0.68, 0.43) * (broadGlint * 0.075 + sharpGlint * 0.29) * glintTrack;
         float fogFactor = 1.0 - exp(-0.0000002 * distanceToCamera * distanceToCamera);
-        color = mix(color, vec3(0.2, 0.38, 0.45), clamp(fogFactor, 0.0, 0.34));
+        float horizonHaze = smoothstep(780.0, 2500.0, distanceToCamera);
+        color = mix(color, vec3(0.195, 0.33, 0.365), clamp(fogFactor + horizonHaze * 0.14, 0.0, 0.4));
         gl_FragColor = vec4(color, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -8977,6 +9079,7 @@ function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion
     const host = window as Window & {
       __MADAGIN_OCEAN_REALISM_BY__?: Record<string, unknown>;
       __MADAGIN_OCEAN_REALISM_BZ__?: Record<string, unknown>;
+      __MADAGIN_OCEAN_REALISM_CD__?: Record<string, unknown>;
     };
     const retainedByEvidence = {
       candidate: "BY",
@@ -9004,8 +9107,27 @@ function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion
     };
     host.__MADAGIN_OCEAN_REALISM_BY__ = retainedByEvidence;
     host.__MADAGIN_OCEAN_REALISM_BZ__ = evidence;
+    const coastToHorizonEvidence = {
+      candidate: "CD",
+      beerLambertDepthAbsorption: true,
+      breakerBands: 5,
+      coastlineAuthority: "shared four-octave coastline across connected runup terrain, shoal depth, displacement, foam, and backwash",
+      coastalVoidClosed: true,
+      directionalSwellAuthorities: 6,
+      displacedBreakerBands: 4,
+      environmentReflection: "procedural physical-sky and moving cloud-field reflection",
+      foamTongues: true,
+      horizonAtmosphere: true,
+      nearshoreBackwash: true,
+      runupFoamAuthority: true,
+      sedimentBearingShallows: true,
+      surfaceSegments: segments,
+      surfPersistence: "five spatially broken crest, runup, and backwash authorities",
+    };
+    host.__MADAGIN_OCEAN_REALISM_CD__ = coastToHorizonEvidence;
     document.documentElement.dataset.madaginOceanRealismBy = JSON.stringify(retainedByEvidence);
     document.documentElement.dataset.madaginOceanRealismBz = JSON.stringify(evidence);
+    document.documentElement.dataset.madaginOceanRealismCd = JSON.stringify(coastToHorizonEvidence);
     return () => {
       activeMaterial.current = null;
       if (host.__MADAGIN_OCEAN_REALISM_BY__ === retainedByEvidence) {
@@ -9016,11 +9138,15 @@ function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion
         delete host.__MADAGIN_OCEAN_REALISM_BZ__;
         delete document.documentElement.dataset.madaginOceanRealismBz;
       }
+      if (host.__MADAGIN_OCEAN_REALISM_CD__ === coastToHorizonEvidence) {
+        delete host.__MADAGIN_OCEAN_REALISM_CD__;
+        delete document.documentElement.dataset.madaginOceanRealismCd;
+      }
       material.dispose();
     };
   }, [material, segments]);
   return (
-    <mesh material={material} name="Madagin Candidate BZ shared-coastline four-breaker ocean" position={[-2500, -18, -700]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh material={material} name="Madagin Candidate CD coast-to-horizon six-swell five-breaker ocean" position={[-2500, -18, -700]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[5200, 6000, segments, segments]} />
     </mesh>
   );
@@ -9042,6 +9168,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       __MADAGIN_REALISM_CA__?: Record<string, unknown>;
       __MADAGIN_REALISM_CB__?: Record<string, unknown>;
       __MADAGIN_REALISM_CC__?: Record<string, unknown>;
+      __MADAGIN_REALISM_CD__?: Record<string, unknown>;
       __MADAGIN_WORLD_STREAM_V116__?: unknown;
     };
     host.__MADAGIN_WORLD_STREAM_V116__ = {
@@ -9132,15 +9259,32 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
       waterNetworkProtected: true,
     };
+    host.__MADAGIN_REALISM_CD__ = {
+      candidate: "CD",
+      categories: {
+        atmosphereAndLighting: "offshore cloud depth and twenty-two terrain-contact authorities include two low runup-spray banks under the retained physical sky",
+        ecologyAndGrounding: "three hundred twenty grounded coastal placements include fifty-four licensed three-dimensional Island Tree 01 anchors with wind-pruned height and crown-spread variation while retaining the inland Candidate CC ecology",
+        materialScale: "the shared four-octave coastline now drives runup-darkened basalt, salt-weathered rock, deposited sediment, and roughness transitions on connected terrain",
+        terrainStructure: "the retained connected coastal heightfield and southern extension receive a coastline-derived material interface without detached geometry",
+        waterIntegration: "six directional swell authorities, five breaker/runup/backwash authorities, depth absorption, moving sky/cloud reflection, and horizon atmosphere share the connected coast",
+      },
+      coastlineAuthority: "shared four-octave analytic western coastline",
+      detachedTerrainShells: false,
+      exposedCoastalVoidClosed: true,
+      lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      waterNetworkProtected: true,
+    };
     document.documentElement.dataset.madaginRealismBy = JSON.stringify(host.__MADAGIN_REALISM_BY__);
     document.documentElement.dataset.madaginRealismBz = JSON.stringify(host.__MADAGIN_REALISM_BZ__);
     document.documentElement.dataset.madaginRealismCa = JSON.stringify(host.__MADAGIN_REALISM_CA__);
     document.documentElement.dataset.madaginRealismCb = JSON.stringify(host.__MADAGIN_REALISM_CB__);
     document.documentElement.dataset.madaginRealismCc = JSON.stringify(host.__MADAGIN_REALISM_CC__);
+    document.documentElement.dataset.madaginRealismCd = JSON.stringify(host.__MADAGIN_REALISM_CD__);
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CC cumulative rain-to-water realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CD cumulative coast-to-horizon realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>
