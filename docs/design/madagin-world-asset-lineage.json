@@ -5,14 +5,14 @@
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
   "publicRelease": {
-    "commit": "bf4a74445c8c08ebf415c2144d873f95c56ff191",
-    "deploymentId": "dpl_9FFM1Dw7Kr6gC6nd51f3wrZGkgNk",
-    "immutableUrl": "https://projectwebbing-dzammwzvd-unigentamos.vercel.app",
+    "commit": "751c8beb2a1e1915e1f14caf23526582faf89da9",
+    "deploymentId": "dpl_CunbtN8nBYh6MhESrGyn9UVogi8s",
+    "immutableUrl": "https://projectwebbing-7mmwqmghi-unigentamos.vercel.app",
     "productionAlias": "https://projectwebbing.vercel.app",
     "providerState": "READY",
     "providerIdentityVerified": true,
-    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-by-production-alias/runtime-gates.json",
-    "status": "Candidate BY implementation is READY and alias-assigned from independently verified GitHub main and clean-archive provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
+    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bz-production-alias/runtime-gates.json",
+    "status": "Candidate BZ implementation is READY and alias-assigned from independently verified GitHub main provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
   },
   "postLaunchCandidate": {
     "selected": "Candidate BI / v117-public-reality-a2",
@@ -934,6 +934,79 @@
       "immutableUrl": "https://projectwebbing-idbamqgn2-unigentamos.vercel.app"
     },
     "decisionBoundary": "BY makes the waterfall a legible normal-journey landmark and advances its geometry, impact field, tarn boundary response, littoral geology, and ocean surf authority while preserving the cumulative BX world. The waterfall material, broad lake/ocean surfaces, coastline contact, inherited ecology, procedural weather, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
+  },
+  "eighteenthPostLaunchCandidate": {
+    "selected": "Candidate BZ / v131-cumulative-coastal-continuity-bz-selected",
+    "commit": "751c8beb2a1e1915e1f14caf23526582faf89da9",
+    "deploymentId": "dpl_CunbtN8nBYh6MhESrGyn9UVogi8s",
+    "immutableUrl": "https://projectwebbing-7mmwqmghi-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative coastal-continuity candidate; production matrix passes six of six on alias and immutable deployment, seven-view journey proof passes on both, and fixed-camera motion proof passes on both",
+    "changedCategories": [
+      "single-indexed detailed Valley-to-ocean extension closing the exposed southern coastal void",
+      "one analytic coastline shared by connected terrain, shoal depth, breaker displacement, foam, and backwash",
+      "four breaker authorities, sediment-bearing shallows, spatial alongshore breakup, and finer balanced/high ocean topology",
+      "whole-span irregular coastal succession with thirty-eight existing reviewed CC0 Island Tree 01 promotions",
+      "two additional terrain-contact atmosphere banks at the southern shelf and surf/headland contact"
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-bz-local-02/sequence.json",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bz-optimized/runtime-gates.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-bz-local-02/runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-bz-optimized/motion/motion-evidence.json",
+    "productionBaselineEvidence": "output/playwright/madagin-world-progress/candidate-by-production-baseline-20260904-r3/sequence.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bz-production-alias/runtime-gates.json",
+    "productionVisualEvidence": "output/playwright/madagin-world-progress/candidate-bz-production-alias/sequence.json",
+    "productionMotionEvidence": "output/playwright/madagin-world-progress/candidate-bz-production-alias/motion/motion-evidence.json",
+    "immutableRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-bz-production-immutable/runtime-gates.json",
+    "immutableVisualEvidence": "output/playwright/madagin-world-progress/candidate-bz-production-immutable/sequence.json",
+    "immutableMotionEvidence": "output/playwright/madagin-world-progress/candidate-bz-production-immutable/motion/motion-evidence.json",
+    "productionBaselineComparisonBoard": "output/playwright/madagin-world-progress/candidate-bz-production-alias/candidate-by-vs-bz-production-board.png",
+    "localProductionComparisonBoard": "output/playwright/madagin-world-progress/candidate-bz-production-alias/candidate-bz-local-vs-production-board.png",
+    "implementationSource": {
+      "type": "github",
+      "organization": "ocnbtl",
+      "repository": "projectwebbing",
+      "ref": "main",
+      "sha": "751c8beb2a1e1915e1f14caf23526582faf89da9"
+    },
+    "selectedTelemetry": {
+      "candidate": "BZ",
+      "northernCoastalBoundarySamples": 179,
+      "northernCoastalHeightfieldDimensions": [77, 179],
+      "northernCoastalHeightfieldTriangles": 27056,
+      "southernCoastalBoundarySamples": 39,
+      "southernCoastalTriangles": 3648,
+      "southernCoastalJoinedVertices": 28727,
+      "southernCoastalDetachedGeometry": false,
+      "exposedCoastalVoidClosed": true,
+      "coastalSourceQualityIslandTree01Placements": 38,
+      "balancedOceanSurfaceSegments": 448,
+      "oceanBreakerBands": 4,
+      "oceanSedimentBearingShallows": true,
+      "terrainContactMistBanks": 14,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "referenceReview": {
+      "reviewedAt": "2026-09-04",
+      "policy": "view-only; no reference media copied into the product",
+      "sources": [
+        "https://commons.wikimedia.org/wiki/File:Pinatubo_Crater_Lake_from_the_Ridge.jpg",
+        "https://commons.wikimedia.org/wiki/File:Morning_Sun_Shines_on_Taal_Lake_and_Volcano,_Tagaytay,_Philippines.jpg",
+        "https://commons.wikimedia.org/wiki/File:AguaAzulWaterfalls.jpg"
+      ]
+    },
+    "sourceSha256": {
+      "renderer": "C522E112DA96BA0FF78BAAFE8594F2F1087D32DAC82263D0F8E9F95940859921",
+      "publicSequenceVerifier": "657FE8F20AA8CF31B3A3B351BA0057F2A80BF572C7584A6934AA2C81445EB123",
+      "internalRuntimeVerifier": "7A103EF3F51448C006DC7340807FCC206F8A022CB515088018EF156DA4CA3D43"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate BY metadata",
+      "commit": "027171d261f4fe299b6653c0aacc8488ee9bc28a",
+      "deploymentId": "dpl_8jVLVc9h4GjZmV6eFBYA927m9sno",
+      "immutableUrl": "https://projectwebbing-lqu87nxez-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "BZ removes the production Ocean view's dominant sky-colored coast void and advances shared terrain/surf authority, shoreline water response, coastal source quality, and grounded atmosphere while preserving the cumulative world. The new shelf remains broad and smooth; repeated ecology, procedural water/weather, coarse inherited macroforms, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
   },
   "components": {
     "topologyAndStreaming": {
