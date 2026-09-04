@@ -59,6 +59,7 @@ for (const testCase of cases) {
     alpineGeology: window.__MADAGIN_ALPINE_GEOLOGY_V116__ ?? null,
     canvasCount: document.querySelectorAll("canvas").length,
     compactJourneySeam: window.__MADAGIN_COMPACT_JOURNEY_SEAM_V116__ ?? null,
+    coastalEcology: window.__MADAGIN_COASTAL_ECOLOGY_V116__ ?? null,
     coastalShoulder: window.__MADAGIN_COASTAL_SHOULDER_V116__ ?? null,
     cumulativeVegetation: window.__MADAGIN_CUMULATIVE_VEGETATION_V116__ ?? null,
     detailedTerrain: window.__MADAGIN_DETAILED_TERRAIN_V116__ ?? null,
@@ -69,8 +70,11 @@ for (const testCase of cases) {
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
     oceanRealismBY: window.__MADAGIN_OCEAN_REALISM_BY__ ?? null,
+    oceanRealismBZ: window.__MADAGIN_OCEAN_REALISM_BZ__ ?? null,
     orographicWeatherBX: window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null,
+    orographicWeatherBZ: window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? null,
     realismBY: window.__MADAGIN_REALISM_BY__ ?? null,
+    realismBZ: window.__MADAGIN_REALISM_BZ__ ?? null,
     sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
     sourceIslandTree01BW: window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
@@ -129,9 +133,12 @@ for (const testCase of cases) {
     && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.adjustedVertices > 0
     && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.detachedGeometry === false
     && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.lakeRiverAndWaterfallProtected === true
-    && evidence.terrainContactMist?.banks === 12
+    && evidence.terrainContactMist?.banks === 14
     && evidence.orographicWeatherBX?.candidate === "BX"
-    && evidence.orographicWeatherBX?.groundedBanks === 12
+    && evidence.orographicWeatherBX?.groundedBanks === 14
+    && evidence.orographicWeatherBZ?.candidate === "BZ"
+    && evidence.orographicWeatherBZ?.groundedBanks === 14
+    && evidence.orographicWeatherBZ?.coastalContactBanks === 2
   );
   const sourceQualityPachira = Object.values(evidence.sourceQualityVegetationBR ?? {});
   const sourceQualityPachiraPassed = testCase.expectedVersion !== "v1.16"
@@ -169,6 +176,14 @@ for (const testCase of cases) {
       evidence.coastalShoulder?.structuralSource?.dimensions?.columns === 77
       && evidence.coastalShoulder?.structuralSource?.dimensions?.rows === 179
       && evidence.coastalShoulder?.structuralSource?.triangles === 27_056
+      && evidence.coastalShoulder?.candidate === "BZ"
+      && evidence.coastalShoulder?.exposedCoastalVoidClosed === true
+      && evidence.coastalShoulder?.southernExtension?.detachedGeometry === false
+      && evidence.coastalShoulder?.southernExtension?.structuralSpan?.span === "valley"
+      && evidence.coastalShoulder?.southernExtension?.structuralSpan?.triangles > 0
+      && evidence.coastalShoulder?.southernBoundarySamples >= 39
+      && evidence.coastalEcology?.["coastal-north"]?.sourceQualityIslandTree01Placements > 0
+      && evidence.coastalEcology?.["coastal-south"]?.sourceQualityIslandTree01Placements > 0
     );
   const passed = evidence.rendererState === testCase.expectedState
     && evidence.videoElements === 0
@@ -203,6 +218,16 @@ for (const testCase of cases) {
       && evidence.oceanRealismBY?.nearshoreBackwash === true
       && evidence.oceanRealismBY?.foamTongues === true
       && (testCase.query.includes("mobile=1") || evidence.oceanRealismBY?.surfaceSegments >= 384)
+      && evidence.realismBZ?.candidate === "BZ"
+      && evidence.realismBZ?.detachedTerrainShells === false
+      && evidence.realismBZ?.exposedCoastalVoidClosed === true
+      && evidence.realismBZ?.waterNetworkProtected === true
+      && evidence.oceanRealismBZ?.candidate === "BZ"
+      && evidence.oceanRealismBZ?.breakerBands === 4
+      && evidence.oceanRealismBZ?.coastalVoidClosed === true
+      && evidence.oceanRealismBZ?.displacedBreakerBands === 3
+      && evidence.oceanRealismBZ?.sedimentBearingShallows === true
+      && (testCase.query.includes("mobile=1") || evidence.oceanRealismBZ?.surfaceSegments >= 448)
       && sourceQualityPachiraPassed
       && sourceQualityGeologyPassed
       && sourceIslandTreePassed

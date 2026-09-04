@@ -144,6 +144,7 @@ type SourceQualityGeologyPart = SpeciesPart & { sourceKey: string };
 type SourceQualityIslandTreePart = DetailedVegetationPart & {
   sourceKey: "branches" | "leaves" | "trunk";
 };
+type SourceQualityIslandTreeZone = V116Zone | "coastal-north" | "coastal-south";
 type WatershedGroundcoverKey = keyof typeof WATERSHED_GROUNDCOVER_URLS;
 type WatershedGroundcoverPart = SpeciesPart & { sourceKey: WatershedGroundcoverKey };
 type CoastalHeightfieldSource = {
@@ -3157,6 +3158,12 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     const source = gltf.scene.getObjectByName(DETAILED_TERRAIN_OBJECTS.ridge);
     return source instanceof Mesh ? extractCoastalBoundarySamples(source, -310) : [];
   }, [connectedCoast, gltf.scene, zone]);
+  const southernCoastalBoundary = useMemo(() => {
+    if (!connectedCoast || zone !== "valley") return [];
+    gltf.scene.updateMatrixWorld(true);
+    const source = gltf.scene.getObjectByName(DETAILED_TERRAIN_OBJECTS.valley);
+    return source instanceof Mesh ? extractCoastalBoundarySamples(source, -310) : [];
+  }, [connectedCoast, gltf.scene, zone]);
   const connectedGeometry = useMemo(() => {
     if (!coastalBoundary.length) return null;
     gltf.scene.updateMatrixWorld(true);
@@ -3175,12 +3182,45 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     shoulder.dispose();
     return placements;
   }, [coastalBoundary, coastalHeightfield, tier]);
+  const southernCoastalPlacements = useMemo(() => {
+    if (!southernCoastalBoundary.length) return [];
+    const shoulder = createCoastalShoulderGeometry(
+      false,
+      tier,
+      southernCoastalBoundary,
+      [],
+      undefined,
+      "valley",
+    );
+    const placements = createCoastalPlacements(shoulder, false, tier);
+    shoulder.dispose();
+    return placements;
+  }, [southernCoastalBoundary, tier]);
   const terminalChunkGeometry = useMemo(() => {
     if (!connectedCoast || zone !== "valley") return null;
     gltf.scene.updateMatrixWorld(true);
     const source = gltf.scene.getObjectByName(DETAILED_TERRAIN_OBJECTS.valley);
     return source instanceof Mesh ? createTerminalChunkGeometry(source, seamField) : null;
   }, [connectedCoast, gltf.scene, seamField, zone]);
+  const connectedValleyCoastGeometry = useMemo(() => {
+    if (!terminalChunkGeometry || !southernCoastalBoundary.length) return null;
+    const shoulder = createCoastalShoulderGeometry(
+      false,
+      tier,
+      southernCoastalBoundary,
+      [],
+      undefined,
+      "valley",
+    );
+    const result = createConnectedCoastalTerrainGeometry(
+      terminalChunkGeometry,
+      shoulder,
+      southernCoastalBoundary[0]?.x ?? -310,
+      "valley",
+    );
+    shoulder.dispose();
+    return result;
+  }, [southernCoastalBoundary, terminalChunkGeometry, tier]);
   const terminalBridgeGeometry = useMemo(
     () => connectedCoast && zone === "ridge" && seamField.ridge.length && seamField.valley.length
       ? createTerrainSeamBridgeGeometry(seamField, false)
@@ -3217,6 +3257,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     dispatchStage(zone === "ridge" ? 0 : 1, `${zone}-cumulative-v115-high-pbr-terrain-ready`, zone);
     if (connectedGeometry) {
       host.__MADAGIN_COASTAL_SHOULDER_V116__ = {
+        ...(host.__MADAGIN_COASTAL_SHOULDER_V116__ ?? {}),
         boundarySamples: coastalBoundary.length,
         boundaryZ: [coastalBoundary[0]?.z ?? null, coastalBoundary[coastalBoundary.length - 1]?.z ?? null],
         joinedVertices: connectedGeometry.getAttribute("position").count,
@@ -3233,9 +3274,26 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
       document.documentElement.dataset.madaginCoastalShoulderV116 = JSON.stringify(host.__MADAGIN_COASTAL_SHOULDER_V116__);
       dispatchStage(1, "summit-welded-coastal-shoulder-ready", "ridge");
     }
+    if (connectedValleyCoastGeometry) {
+      host.__MADAGIN_COASTAL_SHOULDER_V116__ = {
+        ...(host.__MADAGIN_COASTAL_SHOULDER_V116__ ?? {}),
+        candidate: "BZ",
+        coastlineAuthority: "shared by connected terrain, shoal depth, breaker displacement, foam, and backwash",
+        exposedCoastalVoidClosed: true,
+        southernExtension: connectedValleyCoastGeometry.userData.coastalExtension ?? null,
+        southernBoundarySamples: southernCoastalBoundary.length,
+        southernBoundaryZ: [
+          southernCoastalBoundary[0]?.z ?? null,
+          southernCoastalBoundary[southernCoastalBoundary.length - 1]?.z ?? null,
+        ],
+      };
+      document.documentElement.dataset.madaginCoastalShoulderV116 = JSON.stringify(host.__MADAGIN_COASTAL_SHOULDER_V116__);
+      dispatchStage(1, "summit-southern-coastal-void-closed", "valley");
+    }
     return () => {
       alpineGeometry?.dispose();
       connectedGeometry?.dispose();
+      connectedValleyCoastGeometry?.dispose();
       ridgeGeometry?.dispose();
       terminalChunkGeometry?.dispose();
       terminalBridgeGeometry?.dispose();
@@ -3243,7 +3301,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
       material.dispose();
       Object.values(textures).forEach((texture) => texture.dispose());
     };
-  }, [alpineGeometry, coastalBoundary, coastalHeightfield, connectedGeometry, material, ridgeGeometry, terminalBridgeGeometry, terminalChunkGeometry, textures, watershedGeometry, zone]);
+  }, [alpineGeometry, coastalBoundary, coastalHeightfield, connectedGeometry, connectedValleyCoastGeometry, material, ridgeGeometry, southernCoastalBoundary, terminalBridgeGeometry, terminalChunkGeometry, textures, watershedGeometry, zone]);
 
   return connectedGeometry ? (
     <>
@@ -3257,7 +3315,21 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
       {terminalBridgeGeometry ? <mesh geometry={terminalBridgeGeometry} material={material} receiveShadow /> : null}
       {coastalPlacements.length ? (
         <Suspense fallback={null}>
-          <CoastalEcology placements={coastalPlacements} shadows={shadows} />
+          <CoastalEcology placements={coastalPlacements} shadows={shadows} zone="coastal-north" />
+        </Suspense>
+      ) : null}
+    </>
+  ) : connectedValleyCoastGeometry ? (
+    <>
+      <mesh
+        geometry={connectedValleyCoastGeometry}
+        material={material}
+        name="Madagin Candidate BZ single-indexed Valley-to-ocean coastal terrain"
+        receiveShadow
+      />
+      {southernCoastalPlacements.length ? (
+        <Suspense fallback={null}>
+          <CoastalEcology placements={southernCoastalPlacements} shadows={shadows} zone="coastal-south" />
         </Suspense>
       ) : null}
     </>
@@ -3316,6 +3388,17 @@ const COASTAL_VALLEY_NEAR_PROFILE: Array<[x: number, height: number]> = [
 function smoothCoastalStep(value: number) {
   const clamped = Math.min(1, Math.max(0, value));
   return clamped * clamped * (3 - 2 * clamped);
+}
+
+// Candidate BZ gives terrain and ocean one coastline authority. The previous
+// shoulder narrowed to the Ridge boundary while the water continued south,
+// leaving a sky-colored wedge between the terminal Valley and the surf. Keep
+// the low-frequency coves broad enough to read as geography at the Ocean view.
+function coastlineAuthorityX(z: number) {
+  return -690
+    + Math.sin(z * 0.012 + 0.8) * 18
+    + Math.sin(z * 0.029 - 1.3) * 7.5
+    + Math.sin(z * 0.061 + 0.35) * 2.8;
 }
 
 function sampleCoastalProfile(profile: Array<[number, number]>, coordinate: number) {
@@ -3964,6 +4047,7 @@ function createCoastalShoulderGeometry(
   boundarySamples: CoastalBoundarySample[] = [],
   overlapProfiles: CoastalBoundarySample[][] = [],
   heightfield?: CoastalHeightfieldSource,
+  span: "ridge" | "valley" = "ridge",
 ) {
   const heightfieldReady = !mobile
     && heightfield?.candidate === "BW"
@@ -3973,14 +4057,14 @@ function createCoastalShoulderGeometry(
   const activeHeightfield = heightfieldReady ? heightfield : null;
   // Desktop uses the exact 179-row sampling of RIDGE_V115_HIGH so the shared
   // edge can be vertex-welded instead of merely placed at the same coordinates.
-  const rows = activeHeightfield
+  const rows = boundarySamples.length > 1
+    ? boundarySamples.length - 1
+    : activeHeightfield
     ? activeHeightfield.dimensions.rows - 1
-    : mobile
-    ? boundarySamples.length > 1 ? boundarySamples.length - 1 : 58
-    : 178;
+    : mobile ? 58 : 178;
   const columns = activeHeightfield
     ? activeHeightfield.dimensions.columns - 1
-    : mobile ? 18 : tier === "high" ? 34 : tier === "balanced" ? 28 : 20;
+    : mobile ? 24 : tier === "high" ? 60 : tier === "balanced" ? 48 : 32;
   const positions: number[] = [];
   const uvs: number[] = [];
   const indices: number[] = [];
@@ -3991,20 +4075,20 @@ function createCoastalShoulderGeometry(
     const along = row / rows;
     const decodedBoundary = boundarySamples.length === rows + 1 ? boundarySamples[row] : null;
     const z = decodedBoundary?.z ?? -315 + 600 * along;
-    const taper = smoothCoastalStep(Math.pow(along, 0.78));
-    const outerX = -730 + 420 * taper
-      + (Math.sin(z * 0.027 + 0.8) * 17 + Math.sin(z * 0.071 - 1.4) * 7.5) * Math.sin(along * Math.PI);
+    // Extend the same terrain surface to the shared analytic water boundary.
+    // A small landward overlap keeps moving breaker vertices from exposing the
+    // background without creating a detached shoreline collar.
+    const outerX = coastlineAuthorityX(z) + 2.6;
     const exactBoundary = sampleCoastalBoundary(boundarySamples, z);
     const ridgeHeight = exactBoundary?.height ?? sampleCoastalProfile(COASTAL_RIDGE_WEST_PROFILE, z);
     const ridgeInnerHeight = sampleCoastalProfile(COASTAL_RIDGE_INNER_PROFILE, z);
     const ridgeCrossSlope = exactBoundary
       ? Math.min(1.2, Math.max(-1.2, -exactBoundary.normal.x / Math.max(0.08, exactBoundary.normal.y)))
       : Math.min(1.2, Math.max(-1.2, (ridgeInnerHeight - ridgeHeight) / 3.2291666667));
-    const apexBlend = smoothCoastalStep((along - 0.73) / 0.27);
     const coastalHeight = -15.7
       + Math.sin(z * 0.029 + 0.4) * 2.7
       + Math.sin(z * 0.083 - 0.9) * 1.15;
-    const outerHeight = coastalHeight * (1 - apexBlend) + ridgeHeight * apexBlend;
+    const outerHeight = coastalHeight;
 
     for (let column = 0; column <= columns; column += 1) {
       const across = column / columns;
@@ -4036,7 +4120,7 @@ function createCoastalShoulderGeometry(
       ) * reliefEnvelope * (2.7 + ridgeBlend * 4.9);
       const sourceRelief = activeHeightfield
         ? activeHeightfield.samples[row * (columns + 1) + column]
-        : headlands + drainage + fracture;
+        : (headlands + drainage + fracture) * (span === "valley" ? 0.82 : 1);
       const coastalFloor = -18.5 * (1 - smoothCoastalStep(across / 0.08))
         + -16.35 * smoothCoastalStep(across / 0.08);
       const authoredHeight = Math.max(coastalFloor, formedHeight + sourceRelief);
@@ -4095,6 +4179,16 @@ function createCoastalShoulderGeometry(
     source: COASTAL_HEIGHTFIELD_URL,
     triangles: rows * columns * 2,
   } : null;
+  geometry.userData.coastalSpan = {
+    boundarySamples: boundarySamples.length,
+    coastlineAuthority: "shared four-octave analytic western coastline",
+    columns,
+    exposedCoastalVoidClosed: true,
+    rows,
+    span,
+    triangles: rows * columns * 2,
+    zRangeMeters: [boundarySamples[0]?.z ?? -315, boundarySamples[boundarySamples.length - 1]?.z ?? 285],
+  };
   return geometry;
 }
 
@@ -4112,15 +4206,29 @@ const COASTAL_FAMILIES = [
 function createCoastalPlacements(geometry: BufferGeometry, mobile: boolean, tier: WorldQualityTier) {
   const positions = geometry.getAttribute("position");
   const normals = geometry.getAttribute("normal");
-  const columns = mobile ? 18 : tier === "high" ? 34 : tier === "balanced" ? 28 : 20;
+  const structuralSpan = geometry.userData.coastalSpan as { columns?: number; span?: "ridge" | "valley" } | undefined;
+  const columns = structuralSpan?.columns
+    ?? (mobile ? 24 : tier === "high" ? 60 : tier === "balanced" ? 48 : 32);
   const rows = positions.count / (columns + 1) - 1;
-  const rowStride = mobile ? 4 : tier === "high" ? 4 : 6;
-  const columnStride = mobile ? 2 : 2;
-  const limit = mobile ? 88 : tier === "high" ? 260 : tier === "balanced" ? 180 : 110;
-  const placements: PlacementTuple[] = [];
+  const southernExtension = structuralSpan?.span === "valley";
+  const limit = mobile
+    ? southernExtension ? 52 : 88
+    : southernExtension
+      ? tier === "high" ? 112 : tier === "balanced" ? 88 : 62
+      : tier === "high" ? 260 : tier === "balanced" ? 180 : 110;
+  const candidates: Array<{ placement: PlacementTuple; rank: number }> = [];
+  const seededUnit = (seed: number) => {
+    const signal = Math.sin(seed * 12.9898 + 78.233) * 43758.5453123;
+    return signal - Math.floor(signal);
+  };
 
-  for (let row = mobile ? 5 : 12; row < rows - 4 && placements.length < limit; row += rowStride) {
-    for (let column = 2 + (row % 3); column < columns - 1 && placements.length < limit; column += columnStride) {
+  // Candidate BY advanced through this grid until it reached a cap, leaving
+  // conspicuous rows and front-loading the ecology into one end of the coast.
+  // Rank a jittered candidate set across the whole connected landform instead:
+  // the bounded result keeps the same rendering budget while reading as
+  // irregular wind-pruned succession rather than a plantation.
+  for (let row = southernExtension ? 2 : mobile ? 4 : 6; row < rows - 2; row += 1) {
+    for (let column = 2 + (row % 2); column < columns - 1; column += 2) {
       const index = row * (columns + 1) + column;
       const x = positions.getX(index);
       const y = positions.getY(index);
@@ -4128,13 +4236,18 @@ function createCoastalPlacements(geometry: BufferGeometry, mobile: boolean, tier
       const normalY = normals.getY(index);
       if (x > -318 || y < -9.5 || normalY < (mobile ? 0.66 : 0.7)) continue;
       const seed = row * 97 + column * 53;
-      const jitterX = ((seed % 17) - 8) * (mobile ? 0.36 : 0.55);
-      const jitterZ = (((seed * 7) % 19) - 9) * (mobile ? 0.32 : 0.48);
+      const nextColumn = Math.min(columns, column + 1);
+      const nextRow = Math.min(rows, row + 1);
+      const cellX = Math.max(0.8, Math.abs(positions.getX(row * (columns + 1) + nextColumn) - x));
+      const cellZ = Math.max(1.2, Math.abs(positions.getZ(nextRow * (columns + 1) + column) - z));
+      const jitterX = (seededUnit(seed + 11) - 0.5) * cellX * 1.46;
+      const jitterZ = (seededUnit(seed + 29) - 0.5) * cellZ * 1.54;
       const jitterY = (-normals.getX(index) * jitterX - normals.getZ(index) * jitterZ) / normalY;
-      const layer = seed % 6 === 0 ? 1 : 0;
-      const family = (seed + Math.floor((z + 315) * 0.03)) % COASTAL_FAMILIES.length;
-      const scale = (layer === 0 ? 0.62 : 0.42) + (seed % 11) * (layer === 0 ? 0.035 : 0.024);
-      placements.push([
+      const stature = seededUnit(seed + 43);
+      const layer = stature > 0.76 ? 1 : 0;
+      const family = Math.floor(seededUnit(seed + 61) * COASTAL_FAMILIES.length);
+      const scale = (layer === 0 ? 0.55 : 0.36) + stature * (layer === 0 ? 0.48 : 0.29);
+      const placement: PlacementTuple = [
         family,
         layer,
         x + jitterX,
@@ -4147,31 +4260,57 @@ function createCoastalPlacements(geometry: BufferGeometry, mobile: boolean, tier
         seed % 3,
         0.018,
         0,
-      ]);
+      ];
+      candidates.push({ placement, rank: seededUnit(seed + 83) });
     }
   }
-  return placements;
+  return candidates
+    .sort((left, right) => left.rank - right.rank)
+    .slice(0, limit)
+    .map(({ placement }) => placement);
 }
 
-function CoastalEcology({ placements, shadows }: { placements: PlacementTuple[]; shadows: boolean }) {
+function CoastalEcology({ placements, shadows, zone = "coastal-north" }: {
+  placements: PlacementTuple[];
+  shadows: boolean;
+  zone?: Extract<SourceQualityIslandTreeZone, "coastal-north" | "coastal-south">;
+}) {
   const gltf = useLoader(GLTFLoader, SPECIES_URL, configureCompressedGltf);
   const parts = useMemo(() => prepareSpecies(gltf.scene), [gltf.scene]);
+  const sourceQualityPlacements = useMemo(() => {
+    const limit = zone === "coastal-south" ? 22 : 16;
+    return placements
+      .filter((placement, index) => sourceQualityIslandTree01Signature(placement, index) % 7 < 3)
+      .sort((left, right) => (
+        sourceQualityIslandTree01Signature(left, 0) - sourceQualityIslandTree01Signature(right, 0)
+      ))
+      .slice(0, limit);
+  }, [placements, zone]);
+  const sourceQualitySet = useMemo(() => new Set(sourceQualityPlacements), [sourceQualityPlacements]);
   const batches = useMemo(() => {
     const grouped = new Map<string, PlacementTuple[]>();
-    placements.forEach((placement) => {
+    placements.filter((placement) => !sourceQualitySet.has(placement)).forEach((placement) => {
       const key = COASTAL_FAMILIES[placement[0] % COASTAL_FAMILIES.length];
       grouped.set(key, [...(grouped.get(key) ?? []), placement]);
     });
     return grouped;
-  }, [placements]);
+  }, [placements, sourceQualitySet]);
   useEffect(() => {
     const host = window as Window & { __MADAGIN_COASTAL_ECOLOGY_V116__?: Record<string, unknown> };
-    host.__MADAGIN_COASTAL_ECOLOGY_V116__ = { placements: placements.length, source: SPECIES_URL };
+    host.__MADAGIN_COASTAL_ECOLOGY_V116__ = {
+      ...(host.__MADAGIN_COASTAL_ECOLOGY_V116__ ?? {}),
+      [zone]: {
+        architecture: "wind-pruned near/mid/far coastal succession",
+        placements: placements.length,
+        source: SPECIES_URL,
+        sourceQualityIslandTree01Placements: sourceQualityPlacements.length,
+      },
+    };
     document.documentElement.dataset.madaginCoastalEcologyV116 = JSON.stringify(host.__MADAGIN_COASTAL_ECOLOGY_V116__);
     dispatchStage(2, "summit-grounded-coastal-ecology-ready", "ridge");
-  }, [placements.length]);
+  }, [placements.length, sourceQualityPlacements.length, zone]);
   return (
-    <group name={`Madagin v1.16 grounded coastal ecology · ${placements.length}`}>
+    <group name={`Madagin Candidate BZ grounded ${zone} ecology · ${placements.length}`}>
       {[...batches.entries()].flatMap(([key, batch]) => parts
         .filter((part) => part.family === key)
         .map((part, index) => (
@@ -4182,6 +4321,15 @@ function CoastalEcology({ placements, shadows }: { placements: PlacementTuple[];
             shadows={shadows}
           />
         )))}
+      {sourceQualityPlacements.length ? (
+        <Suspense fallback={null}>
+          <SourceQualityIslandTree01Anchors
+            placements={sourceQualityPlacements}
+            shadows={shadows}
+            zone={zone}
+          />
+        </Suspense>
+      ) : null}
     </group>
   );
 }
@@ -4254,6 +4402,46 @@ function createConnectedTerminalTerrainGeometry(
     bridgeMethod: seamDiagnostics?.method ?? null,
     joinedVertices: positions.count,
     method: "single-indexed-resolved-boundary-weld",
+  };
+  return connected;
+}
+
+function createConnectedCoastalTerrainGeometry(
+  terrain: BufferGeometry,
+  shoulder: BufferGeometry,
+  boundaryX: number,
+  span: "ridge" | "valley",
+) {
+  const terrainSurface = geometrySurfaceForMerge(terrain);
+  const shoulderSurface = geometrySurfaceForMerge(shoulder);
+  const removedBoundaryWallTriangles = removeCoplanarBoundaryWall(terrainSurface, "x", boundaryX);
+  const merged = mergeGeometries([terrainSurface, shoulderSurface], false);
+  terrainSurface.dispose();
+  shoulderSurface.dispose();
+  if (!merged) return null;
+
+  const connected = mergeVertices(merged, 0.001);
+  merged.dispose();
+  const positions = connected.getAttribute("position");
+  const uvs: number[] = [];
+  for (let index = 0; index < positions.count; index += 1) {
+    uvs.push((positions.getX(index) + 690) / 820, (285 - positions.getZ(index)) / 1265);
+  }
+  const uv = new Float32BufferAttribute(uvs, 2);
+  connected.setAttribute("uv", uv);
+  connected.setAttribute("uv1", uv.clone());
+  connected.computeVertexNormals();
+  connected.computeBoundingBox();
+  connected.computeBoundingSphere();
+  connected.name = `Madagin Candidate BZ connected ${span} coastal terrain`;
+  connected.userData.coastalExtension = {
+    boundaryX,
+    detachedGeometry: false,
+    joinedVertices: positions.count,
+    method: "single-indexed terrain-to-shore remesh using the shared ocean coastline authority",
+    removedBoundaryWallTriangles,
+    span,
+    structuralSpan: shoulder.userData.coastalSpan ?? null,
   };
   return connected;
 }
@@ -4907,7 +5095,7 @@ function InstancedSourceQualityIslandTree01({ part, placements, shadows, zone }:
   part: SourceQualityIslandTreePart;
   placements: PlacementTuple[];
   shadows: boolean;
-  zone: V116Zone;
+  zone: SourceQualityIslandTreeZone;
 }) {
   const ref = useRef<InstancedMesh>(null);
   useFrame(({ clock }) => updateLivingWind(part.material, clock.elapsedTime));
@@ -4920,15 +5108,16 @@ function InstancedSourceQualityIslandTree01({ part, placements, shadows, zone }:
     placements.forEach((placement, index) => {
       const signature = sourceQualityIslandTree01Signature(placement, index);
       const layerScale = placement[1] === 0 ? 1 : 0.76;
-      const baseScale = (zone === "valley" ? 0.88 : zone === "lake" ? 0.74 : 0.8) * layerScale;
+      const coastal = zone === "coastal-north" || zone === "coastal-south";
+      const baseScale = (coastal ? 1.08 : zone === "valley" ? 0.88 : zone === "lake" ? 0.74 : 0.8) * layerScale;
       const age = 0.72 + (signature % 11) * 0.041;
       const width = 0.78 + ((signature * 5) % 13) * 0.037;
       const depth = 0.82 + ((signature * 7) % 11) * 0.035;
       dummy.position.set(placement[2], placement[3] - 0.07, placement[4]);
       dummy.rotation.set(
-        ((signature % 7) - 3) * 0.012,
+        ((signature % 7) - 3) * (coastal ? 0.025 : 0.012),
         placement[5] + (signature % 19) * 0.19,
-        (((signature * 3) % 7) - 3) * 0.011,
+        (((signature * 3) % 7) - 3) * (coastal ? 0.022 : 0.011),
       );
       dummy.scale.set(
         placement[6] * baseScale * age * width,
@@ -4963,7 +5152,7 @@ function InstancedSourceQualityIslandTree01({ part, placements, shadows, zone }:
 function SourceQualityIslandTree01Anchors({ placements, shadows, zone }: {
   placements: PlacementTuple[];
   shadows: boolean;
-  zone: V116Zone;
+  zone: SourceQualityIslandTreeZone;
 }) {
   const gltf = useLoader(GLTFLoader, SOURCE_QUALITY_ISLAND_TREE_01_URL, configureCompressedGltf);
   const parts = useMemo(() => prepareSourceQualityIslandTree01(gltf.scene), [gltf.scene]);
@@ -4982,7 +5171,11 @@ function SourceQualityIslandTree01Anchors({ placements, shadows, zone }: {
     document.documentElement.dataset.madaginSourceIslandTree01Bw = JSON.stringify(
       host.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__,
     );
-    dispatchStage(3, `${zone}-source-quality-island-tree-01-ready`, zone);
+    dispatchStage(
+      3,
+      `${zone}-source-quality-island-tree-01-ready`,
+      zone === "coastal-north" ? "ridge" : zone === "coastal-south" ? "valley" : zone,
+    );
     return () => parts.forEach((part) => {
       (Array.isArray(part.material) ? part.material : [part.material]).forEach((material) => material.dispose());
     });
@@ -7962,6 +8155,8 @@ const TERRAIN_CONTACT_MIST_BANKS = [
   { authority: "eastern-collapse-hollow", position: [386, 82, -672] as [number, number, number], scale: [146, 48, 88] as [number, number, number], opacity: 0.14 },
   { authority: "summit-crown-saddle", position: [608, 212, -1418] as [number, number, number], scale: [172, 54, 92] as [number, number, number], opacity: 0.13 },
   { authority: "lake-inlet-confluence", position: [42, -15, -792] as [number, number, number], scale: [128, 24, 68] as [number, number, number], opacity: 0.18 },
+  { authority: "southern-coastal-shelf", position: [-520, -5, -520] as [number, number, number], scale: [252, 24, 132] as [number, number, number], opacity: 0.11 },
+  { authority: "surf-headland-contact", position: [-652, -12, -280] as [number, number, number], scale: [168, 18, 116] as [number, number, number], opacity: 0.09 },
 ];
 
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
@@ -7990,6 +8185,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
   useEffect(() => {
     const host = window as Window & {
       __MADAGIN_OROGRAPHIC_WEATHER_BX__?: Record<string, unknown>;
+      __MADAGIN_OROGRAPHIC_WEATHER_BZ__?: Record<string, unknown>;
       __MADAGIN_TERRAIN_MIST_V120__?: Record<string, unknown>;
     };
     host.__MADAGIN_TERRAIN_MIST_V120__ = {
@@ -8006,6 +8202,17 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       method: "terrain-coupled anisotropic mist volumes under a single physical sky and lighting authority",
     };
     document.documentElement.dataset.madaginOrographicWeatherBx = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_BX__);
+    host.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ = {
+      candidate: "BZ",
+      authorities: mistBanks.map((mist) => mist.authority),
+      cloudBanks: clouds.length,
+      coastalContactBanks: mistBanks.filter((mist) => (
+        mist.authority === "southern-coastal-shelf" || mist.authority === "surf-headland-contact"
+      )).length,
+      groundedBanks: mistBanks.length,
+      method: "terrain-coupled inland and coast-contact anisotropic weather under one sky and lighting authority",
+    };
+    document.documentElement.dataset.madaginOrographicWeatherBz = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_BZ__);
     if (mistBanks.length) dispatchStage(3, "terrain-contact-mist-ready", "valley");
     return () => {
       materials.forEach((material) => material.dispose());
@@ -8045,7 +8252,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
           </mesh>
         ))}
       </group>
-      <group name={`Madagin v1.20 terrain-contact weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
+      <group name={`Madagin Candidate BZ terrain-and-coast-contact weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
         {mistBanks.map((mist, index) => (
           <mesh key={mist.authority} material={mistMaterials[index]} position={mist.position} scale={mist.scale}>
             <sphereGeometry args={[0.5, 24, 12]} />
@@ -8098,11 +8305,13 @@ function createOceanMaterial() {
           + sin(baseWorld.z * 0.053 + uTime * 0.31) * 2.1;
         float breaker = exp(-pow((oceanDistance - movingBreak) / 7.6, 2.0));
         float secondaryBreaker = exp(-pow((oceanDistance - 33.0 - sin(baseWorld.z * 0.037 + uTime * 0.28) * 5.2) / 8.8, 2.0));
+        float outerBreaker = exp(-pow((oceanDistance - 52.0 - sin(baseWorld.z * 0.024 - uTime * 0.19) * 6.4) / 10.8, 2.0));
         float backwash = exp(-pow((oceanDistance - 6.0 - sin(baseWorld.z * 0.034 - uTime * 0.5) * 2.5) / 4.4, 2.0));
         float waveEnvelope = 0.16 + coastDepth * 0.84;
         float height = (swellA + swellB + swellC + swellD) * waveEnvelope
           + breaker * (0.72 + sin(baseWorld.z * 0.105 - uTime * 1.18) * 0.18)
           + secondaryBreaker * (0.3 + sin(baseWorld.z * 0.072 - uTime * 0.74) * 0.08)
+          + outerBreaker * (0.16 + sin(baseWorld.z * 0.051 - uTime * 0.52) * 0.04)
           - backwash * 0.18;
         displaced.x += (cos(phaseA) * 0.42 - cos(phaseB) * 0.18) * waveEnvelope - breaker * 0.42;
         displaced.y += (cos(phaseA) * 0.28 + cos(phaseB) * 0.22) * waveEnvelope;
@@ -8121,7 +8330,7 @@ function createOceanMaterial() {
         vWorldNormal = normalize(mat3(modelMatrix) * localNormal);
         vWaveHeight = height;
         vWaveSlope = length(vec2(dx, dy)) + breaker * 0.11;
-        vBreaker = breaker;
+        vBreaker = max(breaker, max(secondaryBreaker * 0.62, outerBreaker * 0.36));
         gl_Position = projectionMatrix * viewMatrix * worldPosition;
       }
     `,
@@ -8164,6 +8373,9 @@ function createOceanMaterial() {
         vec3 volcanicShallows = vec3(0.056, 0.075, 0.063);
         vec3 baseWater = mix(deepWater, coastalWater, shoal * 0.78);
         baseWater = mix(baseWater, volcanicShallows, smoothstep(0.78, 0.99, shoal) * 0.34);
+        float suspendedSediment = smoothstep(0.68, 0.98, shoal)
+          * (0.46 + oceanNoise(vWorldPosition.xz * 0.031 + vec2(0.0, uTime * 0.006)) * 0.54);
+        baseWater = mix(baseWater, vec3(0.082, 0.1, 0.073), suspendedSediment * 0.2);
         vec3 color = mix(baseWater, reflectedSky, 0.075 + fresnel * 0.43);
         color *= 0.7 + surfaceVariation * 0.24;
         float crest = smoothstep(0.05, 0.13, vWaveSlope) * smoothstep(0.3, 1.25, vWaveHeight);
@@ -8173,13 +8385,15 @@ function createOceanMaterial() {
         float primaryBreak = exp(-pow((vOceanDistance - 17.0 - shorePulseA) / 4.0, 2.0));
         float secondaryBreak = exp(-pow((vOceanDistance - 31.0 - shorePulseB) / 5.6, 2.0));
         float tertiaryBreak = exp(-pow((vOceanDistance - 49.0 + shorePulseA * 0.4 - shorePulseB * 0.3) / 7.4, 2.0));
+        float outerBreak = exp(-pow((vOceanDistance - 67.0 + shorePulseB * 0.46) / 10.4, 2.0));
         float backwash = exp(-pow((vOceanDistance - 5.5 + shorePulseA * 0.22) / 3.9, 2.0));
-        float shoreFeather = smoothstep(1.2, 5.5, vOceanDistance) * (1.0 - smoothstep(48.0, 72.0, vOceanDistance));
+        float shoreFeather = smoothstep(0.6, 4.4, vOceanDistance) * (1.0 - smoothstep(72.0, 94.0, vOceanDistance));
         float foamNoise = oceanNoise(vWorldPosition.xz * 0.13 + vec2(-uTime * 0.035, uTime * 0.012));
         float foamVeins = oceanNoise(vWorldPosition.xz * vec2(0.21, 0.082) + vec2(uTime * 0.022, -uTime * 0.008));
         float brokenFoam = smoothstep(0.31, 0.74, foamNoise * 0.58 + foamVeins * 0.54 + surfaceVariation * 0.18);
         float foamTongues = smoothstep(0.38, 0.77, oceanNoise(vWorldPosition.xz * vec2(0.087, 0.29) + vec2(uTime * 0.009, -uTime * 0.028)));
-        float shoreFoam = (primaryBreak * 0.82 + secondaryBreak * 0.38 + tertiaryBreak * 0.21 + backwash * 0.24) * shoreFeather * brokenFoam;
+        float alongshoreBreakup = 0.58 + oceanNoise(vec2(vWorldPosition.z * 0.026, floor(uTime * 0.085))) * 0.54;
+        float shoreFoam = (primaryBreak * 0.78 + secondaryBreak * 0.34 + tertiaryBreak * 0.2 + outerBreak * 0.12 + backwash * 0.22) * shoreFeather * brokenFoam * alongshoreBreakup;
         shoreFoam *= 0.74 + foamTongues * 0.46;
         shoreFoam = max(shoreFoam, vBreaker * shoreFeather * smoothstep(0.42, 0.78, foamVeins) * 0.66);
         color = mix(color, vec3(0.58, 0.72, 0.7), clamp(shoreFoam * 1.12, 0.0, 0.84));
@@ -8200,15 +8414,18 @@ function createOceanMaterial() {
 function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion: boolean; tier: WorldQualityTier }) {
   const activeMaterial = useRef<ShaderMaterial | null>(null);
   const material = useMemo(() => createOceanMaterial(), []);
-  const segments = mobile ? 112 : tier === "high" ? 448 : tier === "balanced" ? 384 : 144;
+  const segments = mobile ? 112 : tier === "high" ? 512 : tier === "balanced" ? 448 : 160;
   useFrame(({ clock }) => {
     const waterTime = activeMaterial.current?.uniforms.uTime;
     if (waterTime) waterTime.value = reducedMotion ? 0 : clock.elapsedTime * 0.55;
   });
   useEffect(() => {
     activeMaterial.current = material;
-    const host = window as Window & { __MADAGIN_OCEAN_REALISM_BY__?: Record<string, unknown> };
-    const evidence = {
+    const host = window as Window & {
+      __MADAGIN_OCEAN_REALISM_BY__?: Record<string, unknown>;
+      __MADAGIN_OCEAN_REALISM_BZ__?: Record<string, unknown>;
+    };
+    const retainedByEvidence = {
       candidate: "BY",
       coastlineAuthority: "one analytic western coastline shared by displacement, shoal color, breaker crests, foam, and backwash",
       breakerBands: 3,
@@ -8220,19 +8437,37 @@ function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion
       volcanicShallows: true,
       foamTongues: true,
     };
-    host.__MADAGIN_OCEAN_REALISM_BY__ = evidence;
-    document.documentElement.dataset.madaginOceanRealismBy = JSON.stringify(evidence);
+    const evidence = {
+      candidate: "BZ",
+      breakerBands: 4,
+      coastlineAuthority: "shared four-octave analytic western coastline consumed by the connected coastal remesh and ocean shader",
+      coastalVoidClosed: true,
+      displacedBreakerBands: 3,
+      foamTongues: true,
+      nearshoreBackwash: true,
+      sedimentBearingShallows: true,
+      surfaceSegments: segments,
+      surfPersistence: "four spatially broken crest and backwash authorities",
+    };
+    host.__MADAGIN_OCEAN_REALISM_BY__ = retainedByEvidence;
+    host.__MADAGIN_OCEAN_REALISM_BZ__ = evidence;
+    document.documentElement.dataset.madaginOceanRealismBy = JSON.stringify(retainedByEvidence);
+    document.documentElement.dataset.madaginOceanRealismBz = JSON.stringify(evidence);
     return () => {
       activeMaterial.current = null;
-      if (host.__MADAGIN_OCEAN_REALISM_BY__ === evidence) {
+      if (host.__MADAGIN_OCEAN_REALISM_BY__ === retainedByEvidence) {
         delete host.__MADAGIN_OCEAN_REALISM_BY__;
         delete document.documentElement.dataset.madaginOceanRealismBy;
+      }
+      if (host.__MADAGIN_OCEAN_REALISM_BZ__ === evidence) {
+        delete host.__MADAGIN_OCEAN_REALISM_BZ__;
+        delete document.documentElement.dataset.madaginOceanRealismBz;
       }
       material.dispose();
     };
   }, [material, segments]);
   return (
-    <mesh material={material} position={[-2500, -18, -700]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh material={material} name="Madagin Candidate BZ shared-coastline four-breaker ocean" position={[-2500, -18, -700]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[5200, 6000, segments, segments]} />
     </mesh>
   );
@@ -8250,6 +8485,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
     document.documentElement.dataset.madaginWorldVersion = "v1.16";
     const host = window as Window & {
       __MADAGIN_REALISM_BY__?: Record<string, unknown>;
+      __MADAGIN_REALISM_BZ__?: Record<string, unknown>;
       __MADAGIN_WORLD_STREAM_V116__?: unknown;
     };
     host.__MADAGIN_WORLD_STREAM_V116__ = {
@@ -8274,11 +8510,28 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
       waterNetworkProtected: true,
     };
+    host.__MADAGIN_REALISM_BZ__ = {
+      candidate: "BZ",
+      categories: {
+        atmosphereAndLighting: "fourteen terrain-contact authorities including two coast-contact weather banks under the retained physical sky",
+        coastalEcology: "north and south coastal succession with bounded licensed three-dimensional Island Tree 01 age, width, and wind-pruned silhouettes",
+        coastalStructure: "one connected terrain-to-shore remesh spans the Ridge and southern Valley instead of exposing the former sky-colored coastal wedge",
+        materialScale: "retained world-projected volcanic terrain material continues across the new single-indexed coastal surface",
+        waterIntegration: "terrain and ocean share one coastline; sediment-bearing shallows, four spatially broken breaker bands, foam tongues, and backwash meet the remeshed shore",
+      },
+      coastlineAuthority: "shared four-octave analytic western coastline",
+      detachedTerrainShells: false,
+      exposedCoastalVoidClosed: true,
+      lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      waterNetworkProtected: true,
+    };
     document.documentElement.dataset.madaginRealismBy = JSON.stringify(host.__MADAGIN_REALISM_BY__);
+    document.documentElement.dataset.madaginRealismBz = JSON.stringify(host.__MADAGIN_REALISM_BZ__);
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BY cumulative geologic-hydrologic realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate BZ cumulative coast-ocean realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>

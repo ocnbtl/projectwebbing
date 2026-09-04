@@ -58,12 +58,13 @@ for (const checkpoint of checkpoints) {
     const sourceQualityGeology = window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? {};
     const sourceIslandTree = window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? {};
     const sourceIslandTree01 = window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? {};
+    const coastalEcology = window.__MADAGIN_COASTAL_ECOLOGY_V116__ ?? {};
     const coastalShoulder = window.__MADAGIN_COASTAL_SHOULDER_V116__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
-    const realism = window.__MADAGIN_REALISM_BY__ ?? null;
+    const realism = window.__MADAGIN_REALISM_BZ__ ?? window.__MADAGIN_REALISM_BY__ ?? null;
     const waterRealism = window.__MADAGIN_WATER_REALISM_BY__ ?? null;
-    const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BY__ ?? null;
-    const orographicWeather = window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null;
+    const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BZ__ ?? window.__MADAGIN_OCEAN_REALISM_BY__ ?? null;
+    const orographicWeather = window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null;
     const watershedSurface = window.__MADAGIN_WATERSHED_SURFACE_V116__ ?? {};
     return {
       canvasCount: document.querySelectorAll("canvas").length,
@@ -129,6 +130,11 @@ for (const checkpoint of checkpoints) {
         coastalHeightfieldColumns: coastalShoulder.structuralSource?.dimensions?.columns ?? 0,
         coastalHeightfieldRows: coastalShoulder.structuralSource?.dimensions?.rows ?? 0,
         coastalHeightfieldTriangles: coastalShoulder.structuralSource?.triangles ?? 0,
+        coastalSouthernBoundarySamples: coastalShoulder.southernBoundarySamples ?? 0,
+        coastalSouthernTriangles: coastalShoulder.southernExtension?.structuralSpan?.triangles ?? 0,
+        coastalVoidClosed: coastalShoulder.exposedCoastalVoidClosed ?? false,
+        coastalSourceTreePlacements: Object.values(coastalEcology)
+          .reduce((total, coast) => total + (coast?.sourceQualityIslandTree01Placements ?? 0), 0),
         volcanicTarnFootprint: watershedSurface.volcanicTarnFootprint ?? false,
         volcanicTarnRadiusMeters: watershedSurface.radiusMeters ?? null,
         lakeAngularSegments: watershedSurface.angularSegments ?? 0,
@@ -150,9 +156,10 @@ for (const checkpoint of checkpoints) {
         lakeOpaqueInteriorSorting: waterRealism?.lakeBed?.opaqueInteriorSorting ?? false,
         lakeShoreSourceGeology: waterRealism?.lakeBed?.sourceGeologyPlacements ?? 0,
         oceanBreakerBands: oceanRealism?.breakerBands ?? 0,
-        oceanDisplacedPrimaryBreaker: oceanRealism?.displacedPrimaryBreaker ?? false,
+        oceanDisplacedBreakerBands: oceanRealism?.displacedBreakerBands ?? 0,
         oceanNearshoreBackwash: oceanRealism?.nearshoreBackwash ?? false,
         oceanFoamTongues: oceanRealism?.foamTongues ?? false,
+        oceanSedimentBearingShallows: oceanRealism?.sedimentBearingShallows ?? false,
         oceanSurfaceSegments: oceanRealism?.surfaceSegments ?? 0,
         volumetricCrownPlacements: Object.values(ecologyDebug)
           .reduce((total, zone) => total + (zone?.volumetricCrownPlacements ?? 0), 0),
@@ -203,7 +210,7 @@ await fs.writeFile(
 process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
-  && result.structuralEcology?.candidate === "BY"
+  && result.structuralEcology?.candidate === "BZ"
   && result.structuralEcology?.releasedPrimaryCanopy > 0
   && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
   && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 2
@@ -238,24 +245,29 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.lakeShoreSourceGeology >= 24
   && result.structuralEcology?.lakeAngularSegments >= 320
   && result.structuralEcology?.lakeRadialSegments >= 40
-  && result.structuralEcology?.oceanBreakerBands === 3
-  && result.structuralEcology?.oceanDisplacedPrimaryBreaker === true
+  && result.structuralEcology?.oceanBreakerBands === 4
+  && result.structuralEcology?.oceanDisplacedBreakerBands === 3
   && result.structuralEcology?.oceanNearshoreBackwash === true
   && result.structuralEcology?.oceanFoamTongues === true
-  && result.structuralEcology?.oceanSurfaceSegments >= 384
+  && result.structuralEcology?.oceanSedimentBearingShallows === true
+  && result.structuralEcology?.oceanSurfaceSegments >= 448
   && result.structuralEcology?.volumetricCrownPlacements > 0
   && result.structuralEcology?.volumetricCrownRenderedLobes > result.structuralEcology?.volumetricCrownPlacements
 )) && results.some((result) => (
   result.structuralEcology?.regionalGroundcover > 0
   && result.structuralEcology?.regionalHabitatAuthorities.length > 0
-  && result.structuralEcology?.terrainContactMistBanks === 12
-  && result.structuralEcology?.terrainContactMistAuthorities.length === 12
-  && result.structuralEcology?.orographicWeatherCandidate === "BX"
-  && result.structuralEcology?.orographicWeatherGroundedBanks === 12
+  && result.structuralEcology?.terrainContactMistBanks === 14
+  && result.structuralEcology?.terrainContactMistAuthorities.length === 14
+  && result.structuralEcology?.orographicWeatherCandidate === "BZ"
+  && result.structuralEcology?.orographicWeatherGroundedBanks === 14
 )) && results.some((result) => (
   result.structuralEcology?.coastalHeightfieldColumns === 77
   && result.structuralEcology?.coastalHeightfieldRows === 179
   && result.structuralEcology?.coastalHeightfieldTriangles === 27_056
+  && result.structuralEcology?.coastalSouthernBoundarySamples >= 39
+  && result.structuralEcology?.coastalSouthernTriangles > 0
+  && result.structuralEcology?.coastalVoidClosed === true
+  && result.structuralEcology?.coastalSourceTreePlacements > 0
 ));
 if (
   pageErrors.length
