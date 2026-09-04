@@ -5,14 +5,14 @@
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
   "publicRelease": {
-    "commit": "5f6f03f1f41fef3d95bbb4a3ddab89bdaf70dd48",
-    "deploymentId": "dpl_HjFYvuKgfRBy57PReD12KskQZRRK",
-    "immutableUrl": "https://projectwebbing-9k9q9k2jg-unigentamos.vercel.app",
+    "commit": "3c01241e19e2d8e1bca403817575b2bed6aa5e9f",
+    "deploymentId": "dpl_DDKXj8XGRRnxbaMx3zG5n56MsS2j",
+    "immutableUrl": "https://projectwebbing-aw1nyq6g7-unigentamos.vercel.app",
     "productionAlias": "https://projectwebbing.vercel.app",
     "providerState": "READY",
     "providerIdentityVerified": true,
-    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-ca-production-alias/runtime-gates.json",
-    "status": "Candidate CA implementation is READY/PROMOTED and alias-assigned from independently verified GitHub main provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
+    "runtimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cb-production-alias/runtime-gates.json",
+    "status": "Candidate CB implementation is READY/PROMOTED and alias-assigned from independently verified GitHub main provenance; six of six production runtime cases, seven journey views, and fixed-camera motion pass on both the public alias and immutable deployment"
   },
   "postLaunchCandidate": {
     "selected": "Candidate BI / v117-public-reality-a2",
@@ -1089,6 +1089,88 @@
     },
     "decisionBoundary": "CA adds a visible but restrained watershed-scale improvement to the western Valley and couples its terrain, material, ecology, geology, and atmosphere without changing the public composition or accepted water network. Coarse inherited terrain, repeated ecology, simplified water, procedural weather, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
   },
+  "twentiethPostLaunchCandidate": {
+    "selected": "Candidate CB / weathered-alpine-crest-cb-selected",
+    "commit": "3c01241e19e2d8e1bca403817575b2bed6aa5e9f",
+    "deploymentId": "dpl_DDKXj8XGRRnxbaMx3zG5n56MsS2j",
+    "immutableUrl": "https://projectwebbing-aw1nyq6g7-unigentamos.vercel.app",
+    "status": "selected and publicly released cumulative weathered-Alpine candidate; production matrix passes six of six on alias and immutable deployment, seven-view journey proof passes on both, and fixed-camera motion proof passes on both",
+    "changedCategories": [
+      "monotonic non-linear erosion of the inherited needle-like Alpine apex on the connected detailed source surface",
+      "broader unequal west, east, and rear volcanic remnant ridges with restrained headwall and drainage incision",
+      "world-projected wet windward scarp, oxidized remnant-rib, and fracture-hollow material response",
+      "spatially varied upper treeline that removes trees from the exposed crest while retaining lower Alpine succession",
+      "two Alpine terrain-contact weather authorities under the retained physical sky"
+    ],
+    "rejectedIterations": [
+      {
+        "id": "CB1",
+        "reason": "strong subtractive paired-crown deformation repeated the documented flat crenellated-tabletop failure"
+      },
+      {
+        "id": "CB2-CB3",
+        "reason": "monotonic compression removed the fantasy needles but left the selected broad ridge too low or too uniform before final asymmetric remnant calibration"
+      }
+    ],
+    "selectedLocalVisualEvidence": "output/playwright/madagin-world-progress/candidate-cb-local-04/sequence.json",
+    "localComparisonBoard": "output/playwright/madagin-world-progress/candidate-cb-local-04/ca-vs-cb.png",
+    "localPublicRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cb-optimized/runtime-gates.json",
+    "optimizedVisualEvidence": "output/playwright/madagin-world-progress/candidate-cb-optimized/sequence.json",
+    "internalRuntimeEvidence": "output/playwright/madagin-world-progress/candidate-cb-local-04/internal-runtime-gates.json",
+    "localMotionEvidence": "output/playwright/madagin-world-progress/candidate-cb-local-04/motion/motion-evidence.json",
+    "productionBaselineEvidence": "output/playwright/madagin-world-progress/candidate-ca-production-baseline-20260904-r6/sequence.json",
+    "productionRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cb-production-alias/runtime-gates.json",
+    "productionVisualEvidence": "output/playwright/madagin-world-progress/candidate-cb-production-alias/sequence.json",
+    "productionMotionEvidence": "output/playwright/madagin-world-progress/candidate-cb-production-alias/motion/motion-evidence.json",
+    "immutableRuntimeEvidence": "output/playwright/madagin-world-progress/production-public-runtime/candidate-cb-production-immutable/runtime-gates.json",
+    "immutableVisualEvidence": "output/playwright/madagin-world-progress/candidate-cb-production-immutable/sequence.json",
+    "immutableMotionEvidence": "output/playwright/madagin-world-progress/candidate-cb-production-immutable/motion/motion-evidence.json",
+    "productionBaselineComparisonBoard": "output/playwright/madagin-world-progress/candidate-cb-production-alias/candidate-ca-vs-cb-production-board.png",
+    "optimizedProductionComparisonBoard": "output/playwright/madagin-world-progress/candidate-cb-production-alias/candidate-cb-optimized-vs-production-board.png",
+    "implementationSource": {
+      "type": "github",
+      "organization": "ocnbtl",
+      "repository": "projectwebbing",
+      "ref": "main",
+      "sha": "3c01241e19e2d8e1bca403817575b2bed6aa5e9f"
+    },
+    "selectedTelemetry": {
+      "candidate": "CB",
+      "alpineCrestAdjustedVertices": 61099,
+      "alpineCrestMaximumReductionMeters": 60.285432,
+      "alpineCrestHighestSourceMeters": 333,
+      "alpineCrestHighestResultMeters": 259.8994,
+      "alpineCrestDetachedGeometry": false,
+      "waterNetworkProtected": true,
+      "alpineSourceGeologyPlacements": 22,
+      "terrainContactMistBanks": 18,
+      "alpineTerrainContactMistBanks": 2,
+      "watershedSourceTriangles": 703618,
+      "watershedRenderedTriangles": 706206,
+      "canvasCount": 1,
+      "videoCount": 0
+    },
+    "referenceReview": {
+      "reviewedAt": "2026-09-04",
+      "policy": "view-only; no reference media copied into the product",
+      "sources": [
+        "https://www.nps.gov/places/kuloa-point.htm",
+        "https://www.usgs.gov/publications/geology-hawaiian-islands-0"
+      ]
+    },
+    "sourceSha256": {
+      "renderer": "034AE97060D8895A5B980528EA6D2B2DDF1482CFD806C3F9ED6272C3574094D0",
+      "publicSequenceVerifier": "8B8D9C7A1886D17A1D6AEA518039C7CBFCEA95E0BCC11CEC374EC1A5803E44BB",
+      "internalRuntimeVerifier": "844CB54C88FE36E14D74E3358BCEB294526FA20C3260BD84D9DC20D2CFE15883"
+    },
+    "rollbackTarget": {
+      "candidate": "Candidate CA metadata",
+      "commit": "e9acd7eaddc4be17da53ef065e2384deebb282d3",
+      "deploymentId": "dpl_FXkNiS22sRSFmCLWCNvXp3PLgsYr",
+      "immutableUrl": "https://projectwebbing-m1m2x9f54-unigentamos.vercel.app"
+    },
+    "decisionBoundary": "CB removes the most fantastical Alpine silhouette and crest ecology while retaining one connected source-surface terrain and the cumulative journey. Coarse polygonal geology, subtle normal-view material and cloud effects, repeated ecology, simplified water, and missing physical-device evidence keep overall reference realism at score 2 and block any photoreal or final claim."
+  },
   "components": {
     "topologyAndStreaming": {
       "selected": "v1.16",
@@ -1103,6 +1185,7 @@
     },
     "terrainFoundation": {
       "selected": "v1.12 DEM coordinates plus v1.15 high desktop geometry inside v1.16 chunk activation, Candidate V1 runtime boundary-derived coastal topology, Candidate AX bounded detailed Ridge erosion remesh, and Candidate AZ exact first-cell detailed Ridge-to-Valley weld",
+      "currentCandidate": "Candidate CB adds monotonic high-elevation erosion and unequal remnant-ridge calibration to 61,099 vertices of the connected detailed Alpine source surface, reducing the affected 333-metre apex to 259.899 metres with no detached geometry; compact/mobile terrain remains unchanged",
       "source": [
         "world-source/dem/usgs-3dep-n23w160/madagin-ridge-dem-source-v1.11.png",
         "tools/blender/build_madagin_ridge_world_v113.py",
@@ -1153,6 +1236,7 @@
     },
     "activeVegetation": {
       "selected": "v1.16 grounded placements with v1.15 detailed LOD replacement, Candidate AV low near-bank succession, Candidate AW multi-slope vertical succession, Candidate AY drainage-coupled Ridge habitat response, and Candidate BG high Contact canopy hierarchy",
+      "currentCandidate": "Candidate CB applies a spatially varied upper Alpine treeline to existing grounded placements, removing exposed-crest trees while preserving lower Alpine succession, reviewed source geology, and the compact/mobile resource policy",
       "source": [
         "src/components/internal/ridge-production-v116.tsx",
         "public/world/v116/species-core-v1.16.glb",
@@ -1259,6 +1343,7 @@
     },
     "atmosphere": {
       "selected": "v1.16 single atmosphere authority with Candidate W2 multi-scale moving sky and rounded spatial cloud banks",
+      "currentCandidate": "Candidate CB retains the single physical-sky authority and expands terrain-contact weather from sixteen to eighteen banks with windward-cap and leeward-break Alpine authorities; normal-view cloud interception remains subtle and below photographic acceptance",
       "source": [
         "src/components/internal/ridge-production-v116.tsx"
       ],
