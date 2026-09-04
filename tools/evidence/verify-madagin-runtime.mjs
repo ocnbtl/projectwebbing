@@ -68,14 +68,15 @@ for (const testCase of cases) {
     rendererState: document.querySelector("[data-renderer-state]")?.getAttribute("data-renderer-state") ?? null,
     resources: performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => name.includes("/world/")),
     regionalHabitat: window.__MADAGIN_REGIONAL_HABITAT_V116__ ?? null,
-    oceanRealismBW: window.__MADAGIN_OCEAN_REALISM_BW__ ?? null,
-    realismBW: window.__MADAGIN_REALISM_BW__ ?? null,
+    oceanRealismBX: window.__MADAGIN_OCEAN_REALISM_BX__ ?? null,
+    orographicWeatherBX: window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null,
+    realismBX: window.__MADAGIN_REALISM_BX__ ?? null,
     sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
     sourceIslandTree01BW: window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
     sourceQualityVegetationBR: window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? null,
     terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
-    waterRealismBW: window.__MADAGIN_WATER_REALISM_BW__ ?? null,
+    waterRealismBX: window.__MADAGIN_WATER_REALISM_BX__ ?? null,
     videoElements: document.querySelectorAll("video").length,
     v115Marker: document.body.textContent?.includes("WORLD SLICE V1.15") ?? false,
     worldVersion: document.documentElement.dataset.madaginWorldVersion ?? null,
@@ -86,9 +87,11 @@ for (const testCase of cases) {
     : null;
   const baseAlpineTriangles = alpineGeology?.sourceTriangles * 4;
   const detailedCrownSubdivisionPassed = testCase.expectsAlpineDetail !== "detailed" || (
-    alpineGeology?.crownSubdivision?.selectedTriangles > 0
-    && alpineGeology?.crownSubdivision?.sourceTriangles === baseAlpineTriangles
-    && alpineGeology?.crownSubdivision?.triangles === alpineGeology?.triangles
+    alpineGeology?.crownSubdivisionPasses === 2
+    && alpineGeology?.crownSubdivision?.length === 2
+    && alpineGeology?.crownSubdivision?.every((pass) => pass?.selectedTriangles > 0)
+    && alpineGeology?.crownSubdivision?.[0]?.sourceTriangles === baseAlpineTriangles
+    && alpineGeology?.crownSubdivision?.[1]?.triangles === alpineGeology?.triangles
     && alpineGeology?.triangles > baseAlpineTriangles
   );
   const alpineGeologyPassed = !testCase.expectsAlpineDetail || (
@@ -108,7 +111,7 @@ for (const testCase of cases) {
       && alpineGeology?.summitMacroform?.maximumUpliftMeters > 0
       && alpineGeology?.summitMacroform?.maximumUpliftMeters <= 40
       && alpineGeology?.summitSurfaceRelaxation?.adjustedVertices > 0
-      && alpineGeology?.summitSurfaceRelaxation?.iterations === 5
+      && alpineGeology?.summitSurfaceRelaxation?.iterations === 2
     ))
   );
   const watershedRelief = testCase.expectsWatershedRelief
@@ -117,13 +120,18 @@ for (const testCase of cases) {
   const watershedReliefPassed = !testCase.expectsWatershedRelief || (
     watershedRelief?.adjustedVertices > 0
     && watershedRelief?.lakeRiverAndWaterfallProtected === true
-    && watershedRelief?.subdivisionPasses === 1
+    && watershedRelief?.subdivisionPasses === 2
     && watershedRelief?.maximumIncisionMeters > 0
     && watershedRelief?.maximumIncisionMeters <= 22.5
     && watershedRelief?.maximumUpliftMeters > 0
     && watershedRelief?.maximumUpliftMeters <= 17.5
     && evidence.detailedTerrain?.valley?.watershedIntegration?.subdivision?.triangles <= 1_500_000
-    && evidence.terrainContactMist?.banks === 8
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.adjustedVertices > 0
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.detachedGeometry === false
+    && evidence.detailedTerrain?.valley?.watershedIntegration?.valleyEscarpmentMesoRelief?.lakeRiverAndWaterfallProtected === true
+    && evidence.terrainContactMist?.banks === 12
+    && evidence.orographicWeatherBX?.candidate === "BX"
+    && evidence.orographicWeatherBX?.groundedBanks === 12
   );
   const sourceQualityPachira = Object.values(evidence.sourceQualityVegetationBR ?? {});
   const sourceQualityPachiraPassed = testCase.expectedVersion !== "v1.16"
@@ -172,24 +180,26 @@ for (const testCase of cases) {
     && alpineGeologyPassed
     && watershedReliefPassed
     && (testCase.expectedVersion !== "v1.16" || (
-      evidence.realismBW?.candidate === "BW"
-      && Object.keys(evidence.realismBW?.categories ?? {}).length === 5
-      && evidence.realismBW?.detachedTerrainShells === false
-      && evidence.realismBW?.waterNetworkProtected === true
-      && evidence.realismBW?.lakeRadiusMeters?.join(",") === "132.4,94.6"
-      && evidence.waterRealismBW?.candidate === "BW"
-      && evidence.waterRealismBW?.waterfall?.body?.lowerHalfWidthMeters === 21.2
-      && evidence.waterRealismBW?.waterfall?.braidedTransparentGaps === true
-      && evidence.waterRealismBW?.lakeBed?.analyticBoundaryOptics === true
-      && evidence.waterRealismBW?.lakeBed?.proceduralWorldScale === true
-      && evidence.waterRealismBW?.lakeBed?.shorelineBands === 3
-      && (testCase.query.includes("mobile=1") || evidence.waterRealismBW?.lakeBed?.sourceGeologyPlacements >= 18)
-      && evidence.oceanRealismBW?.candidate === "BW"
-      && evidence.oceanRealismBW?.breakerBands === 2
-      && evidence.oceanRealismBW?.deepenedVolcanicShallows === true
-      && evidence.oceanRealismBW?.displacedPrimaryBreaker === true
-      && evidence.oceanRealismBW?.nearshoreBackwash === true
-      && (testCase.query.includes("mobile=1") || evidence.oceanRealismBW?.surfaceSegments >= 320)
+      evidence.realismBX?.candidate === "BX"
+      && Object.keys(evidence.realismBX?.categories ?? {}).length === 5
+      && evidence.realismBX?.detachedTerrainShells === false
+      && evidence.realismBX?.waterNetworkProtected === true
+      && evidence.realismBX?.lakeRadiusMeters?.join(",") === "132.4,94.6"
+      && evidence.waterRealismBX?.candidate === "BX"
+      && evidence.waterRealismBX?.waterfall?.body?.lowerHalfWidthMeters === 21.2
+      && evidence.waterRealismBX?.waterfall?.braidedTransparentGaps === true
+      && evidence.waterRealismBX?.lakeBed?.analyticBoundaryOptics === true
+      && evidence.waterRealismBX?.lakeBed?.brokenTerrainReflection === true
+      && evidence.waterRealismBX?.lakeBed?.opaqueInteriorSorting === true
+      && evidence.waterRealismBX?.lakeBed?.proceduralWorldScale === true
+      && evidence.waterRealismBX?.lakeBed?.shorelineBands === 3
+      && (testCase.query.includes("mobile=1") || evidence.waterRealismBX?.lakeBed?.sourceGeologyPlacements >= 18)
+      && evidence.oceanRealismBX?.candidate === "BX"
+      && evidence.oceanRealismBX?.breakerBands === 2
+      && evidence.oceanRealismBX?.deepenedVolcanicShallows === true
+      && evidence.oceanRealismBX?.displacedPrimaryBreaker === true
+      && evidence.oceanRealismBX?.nearshoreBackwash === true
+      && (testCase.query.includes("mobile=1") || evidence.oceanRealismBX?.surfaceSegments >= 352)
       && sourceQualityPachiraPassed
       && sourceQualityGeologyPassed
       && sourceIslandTreePassed

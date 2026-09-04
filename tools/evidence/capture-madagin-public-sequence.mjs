@@ -60,9 +60,10 @@ for (const checkpoint of checkpoints) {
     const sourceIslandTree01 = window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? {};
     const coastalShoulder = window.__MADAGIN_COASTAL_SHOULDER_V116__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
-    const realism = window.__MADAGIN_REALISM_BW__ ?? null;
-    const waterRealism = window.__MADAGIN_WATER_REALISM_BW__ ?? null;
-    const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BW__ ?? null;
+    const realism = window.__MADAGIN_REALISM_BX__ ?? null;
+    const waterRealism = window.__MADAGIN_WATER_REALISM_BX__ ?? null;
+    const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BX__ ?? null;
+    const orographicWeather = window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null;
     const watershedSurface = window.__MADAGIN_WATERSHED_SURFACE_V116__ ?? {};
     return {
       canvasCount: document.querySelectorAll("canvas").length,
@@ -87,6 +88,12 @@ for (const checkpoint of checkpoints) {
           ?.regionalVolcanicLandform?.subdivisionPasses ?? 0,
         regionalVolcanicWaterProtection: detailedTerrain.valley?.watershedIntegration
           ?.regionalVolcanicLandform?.lakeRiverAndWaterfallProtected ?? false,
+        valleyEscarpmentMesoAdjustedVertices: detailedTerrain.valley?.watershedIntegration
+          ?.valleyEscarpmentMesoRelief?.adjustedVertices ?? 0,
+        valleyEscarpmentMesoDetachedGeometry: detailedTerrain.valley?.watershedIntegration
+          ?.valleyEscarpmentMesoRelief?.detachedGeometry ?? null,
+        valleyEscarpmentMesoWaterProtection: detailedTerrain.valley?.watershedIntegration
+          ?.valleyEscarpmentMesoRelief?.lakeRiverAndWaterfallProtected ?? false,
         valleyNormalReconciledVertices: detailedTerrain.valley?.watershedIntegration
           ?.surfaceNormalReconciliation?.reconciledVertices ?? 0,
         ridgeNormalReconciledVertices: detailedTerrain.ridge?.ridgeErosion
@@ -129,10 +136,14 @@ for (const checkpoint of checkpoints) {
           .filter(Boolean),
         terrainContactMistAuthorities: terrainMist.authorities ?? [],
         terrainContactMistBanks: terrainMist.banks ?? 0,
+        orographicWeatherCandidate: orographicWeather?.candidate ?? null,
+        orographicWeatherGroundedBanks: orographicWeather?.groundedBanks ?? 0,
         waterfallLowerHalfWidthMeters: waterRealism?.waterfall?.body?.lowerHalfWidthMeters ?? 0,
         waterfallBraidedTransparentGaps: waterRealism?.waterfall?.braidedTransparentGaps ?? false,
         lakeBedShorelineBands: waterRealism?.lakeBed?.shorelineBands ?? 0,
         lakeAnalyticBoundaryOptics: waterRealism?.lakeBed?.analyticBoundaryOptics ?? false,
+        lakeBrokenTerrainReflection: waterRealism?.lakeBed?.brokenTerrainReflection ?? false,
+        lakeOpaqueInteriorSorting: waterRealism?.lakeBed?.opaqueInteriorSorting ?? false,
         lakeShoreSourceGeology: waterRealism?.lakeBed?.sourceGeologyPlacements ?? 0,
         oceanBreakerBands: oceanRealism?.breakerBands ?? 0,
         oceanDisplacedPrimaryBreaker: oceanRealism?.displacedPrimaryBreaker ?? false,
@@ -187,11 +198,14 @@ await fs.writeFile(
 process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
-  && result.structuralEcology?.candidate === "BW"
+  && result.structuralEcology?.candidate === "BX"
   && result.structuralEcology?.releasedPrimaryCanopy > 0
   && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
-  && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 1
+  && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 2
   && result.structuralEcology?.regionalVolcanicWaterProtection === true
+  && result.structuralEcology?.valleyEscarpmentMesoAdjustedVertices > 0
+  && result.structuralEcology?.valleyEscarpmentMesoDetachedGeometry === false
+  && result.structuralEcology?.valleyEscarpmentMesoWaterProtection === true
   && result.structuralEcology?.valleyNormalReconciledVertices > 0
   && result.structuralEcology?.watershedTriangles > 0
   && result.structuralEcology?.watershedTriangles <= 1_500_000
@@ -212,18 +226,22 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.waterfallBraidedTransparentGaps === true
   && result.structuralEcology?.lakeBedShorelineBands === 3
   && result.structuralEcology?.lakeAnalyticBoundaryOptics === true
+  && result.structuralEcology?.lakeBrokenTerrainReflection === true
+  && result.structuralEcology?.lakeOpaqueInteriorSorting === true
   && result.structuralEcology?.lakeShoreSourceGeology >= 18
   && result.structuralEcology?.oceanBreakerBands === 2
   && result.structuralEcology?.oceanDisplacedPrimaryBreaker === true
   && result.structuralEcology?.oceanNearshoreBackwash === true
-  && result.structuralEcology?.oceanSurfaceSegments >= 320
+  && result.structuralEcology?.oceanSurfaceSegments >= 352
   && result.structuralEcology?.volumetricCrownPlacements > 0
   && result.structuralEcology?.volumetricCrownRenderedLobes > result.structuralEcology?.volumetricCrownPlacements
 )) && results.some((result) => (
   result.structuralEcology?.regionalGroundcover > 0
   && result.structuralEcology?.regionalHabitatAuthorities.length > 0
-  && result.structuralEcology?.terrainContactMistBanks === 8
-  && result.structuralEcology?.terrainContactMistAuthorities.length === 8
+  && result.structuralEcology?.terrainContactMistBanks === 12
+  && result.structuralEcology?.terrainContactMistAuthorities.length === 12
+  && result.structuralEcology?.orographicWeatherCandidate === "BX"
+  && result.structuralEcology?.orographicWeatherGroundedBanks === 12
 )) && results.some((result) => (
   result.structuralEcology?.coastalHeightfieldColumns === 77
   && result.structuralEcology?.coastalHeightfieldRows === 179
