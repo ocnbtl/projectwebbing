@@ -62,10 +62,10 @@ for (const checkpoint of checkpoints) {
     const coastalEcology = window.__MADAGIN_COASTAL_ECOLOGY_V116__ ?? {};
     const coastalShoulder = window.__MADAGIN_COASTAL_SHOULDER_V116__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
-    const realism = window.__MADAGIN_REALISM_CB__ ?? window.__MADAGIN_REALISM_CA__ ?? window.__MADAGIN_REALISM_BZ__ ?? window.__MADAGIN_REALISM_BY__ ?? null;
-    const waterRealism = window.__MADAGIN_WATER_REALISM_BY__ ?? null;
+    const realism = window.__MADAGIN_REALISM_CC__ ?? window.__MADAGIN_REALISM_CB__ ?? window.__MADAGIN_REALISM_CA__ ?? window.__MADAGIN_REALISM_BZ__ ?? window.__MADAGIN_REALISM_BY__ ?? null;
+    const waterRealism = window.__MADAGIN_WATER_REALISM_CC__ ?? window.__MADAGIN_WATER_REALISM_BY__ ?? null;
     const oceanRealism = window.__MADAGIN_OCEAN_REALISM_BZ__ ?? window.__MADAGIN_OCEAN_REALISM_BY__ ?? null;
-    const orographicWeather = window.__MADAGIN_OROGRAPHIC_WEATHER_CB__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null;
+    const orographicWeather = window.__MADAGIN_OROGRAPHIC_WEATHER_CC__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_CB__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null;
     const watershedSurface = window.__MADAGIN_WATERSHED_SURFACE_V116__ ?? {};
     return {
       canvasCount: document.querySelectorAll("canvas").length,
@@ -169,10 +169,18 @@ for (const checkpoint of checkpoints) {
         terrainContactMistBanks: terrainMist.banks ?? 0,
         orographicWeatherCandidate: orographicWeather?.candidate ?? null,
         orographicWeatherAlpineCrestBanks: orographicWeather?.alpineCrestBanks ?? 0,
+        orographicWeatherLakeAndWaterfallBanks: orographicWeather?.lakeAndWaterfallBanks ?? 0,
         orographicWeatherGroundedBanks: orographicWeather?.groundedBanks ?? 0,
+        waterRealismCandidate: waterRealism?.candidate ?? null,
+        lakeDepthGradedScattering: waterRealism?.lakeBed?.depthGradedScattering ?? false,
+        lakeAnisotropicReflection: waterRealism?.lakeBed?.anisotropicReflection ?? false,
+        lakeShorelineSedimentResponse: waterRealism?.lakeBed?.shorelineSedimentResponse ?? false,
+        lakeWaveNormalAuthorities: waterRealism?.lakeBed?.waveNormalAuthorities ?? 0,
         waterfallLowerHalfWidthMeters: waterRealism?.waterfall?.body?.lowerHalfWidthMeters ?? 0,
         waterfallBraidedTransparentGaps: waterRealism?.waterfall?.braidedTransparentGaps ?? false,
         waterfallCascadeShelves: waterRealism?.waterfall?.cascadeShelves ?? 0,
+        waterfallThreeScaleAeration: waterRealism?.waterfall?.threeScaleAeration ?? false,
+        waterfallTurbulenceAuthorities: waterRealism?.waterfall?.turbulenceAuthorities ?? 0,
         plungeBrokenFoamArcs: waterRealism?.plungeImpact?.brokenFoamArcs ?? 0,
         lakeBedShorelineBands: waterRealism?.lakeBed?.shorelineBands ?? 0,
         lakeAnalyticBoundaryOptics: waterRealism?.lakeBed?.analyticBoundaryOptics ?? false,
@@ -234,7 +242,7 @@ await fs.writeFile(
 process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
-  && result.structuralEcology?.candidate === "CB"
+  && result.structuralEcology?.candidate === "CC"
   && result.structuralEcology?.releasedPrimaryCanopy > 0
   && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
   && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 2
@@ -271,11 +279,18 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.waterfallLowerHalfWidthMeters === 25.6
   && result.structuralEcology?.waterfallBraidedTransparentGaps === true
   && result.structuralEcology?.waterfallCascadeShelves === 2
+  && result.structuralEcology?.waterfallThreeScaleAeration === true
+  && result.structuralEcology?.waterfallTurbulenceAuthorities === 5
   && result.structuralEcology?.plungeBrokenFoamArcs === 3
   && result.structuralEcology?.lakeBedShorelineBands === 3
   && result.structuralEcology?.lakeAnalyticBoundaryOptics === true
   && result.structuralEcology?.lakeBrokenTerrainReflection === true
   && result.structuralEcology?.lakeOpaqueInteriorSorting === true
+  && result.structuralEcology?.waterRealismCandidate === "CC"
+  && result.structuralEcology?.lakeDepthGradedScattering === true
+  && result.structuralEcology?.lakeAnisotropicReflection === true
+  && result.structuralEcology?.lakeShorelineSedimentResponse === true
+  && result.structuralEcology?.lakeWaveNormalAuthorities === 3
   && result.structuralEcology?.lakeShoreSourceGeology >= 24
   && result.structuralEcology?.lakeAngularSegments >= 320
   && result.structuralEcology?.lakeRadialSegments >= 40
@@ -291,15 +306,17 @@ const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.regionalGroundcover > 0
   && result.structuralEcology?.regionalHabitatAuthorities.length > 0
   && result.structuralEcology?.westernRegionalGroundcover > 0
-  && result.structuralEcology?.terrainContactMistBanks === 18
-  && result.structuralEcology?.terrainContactMistAuthorities.length === 18
+  && result.structuralEcology?.terrainContactMistBanks === 20
+  && result.structuralEcology?.terrainContactMistAuthorities.length === 20
   && result.structuralEcology?.terrainContactMistAuthorities.includes("western-upper-catchments")
   && result.structuralEcology?.terrainContactMistAuthorities.includes("western-colluvial-toes")
   && result.structuralEcology?.terrainContactMistAuthorities.includes("alpine-windward-cap")
   && result.structuralEcology?.terrainContactMistAuthorities.includes("alpine-leeward-break")
-  && result.structuralEcology?.orographicWeatherCandidate === "CB"
-  && result.structuralEcology?.orographicWeatherAlpineCrestBanks === 2
-  && result.structuralEcology?.orographicWeatherGroundedBanks === 18
+  && result.structuralEcology?.terrainContactMistAuthorities.includes("lake-inlet-strata-haze")
+  && result.structuralEcology?.terrainContactMistAuthorities.includes("waterfall-plume-drift")
+  && result.structuralEcology?.orographicWeatherCandidate === "CC"
+  && result.structuralEcology?.orographicWeatherLakeAndWaterfallBanks === 5
+  && result.structuralEcology?.orographicWeatherGroundedBanks === 20
 )) && results.some((result) => (
   result.structuralEcology?.sourceQualityGeologyAlpine > 0
 )) && results.some((result) => (

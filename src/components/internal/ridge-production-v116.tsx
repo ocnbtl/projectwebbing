@@ -1108,6 +1108,36 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           clamp(detail * 0.45 + drainage * 0.3, 0.0, 0.68)
         );
         authoredGround = mix(authoredGround, wetLittoralRock, littoralBand * (0.62 + slope * 0.2));
+        // Candidate CC establishes one rain-to-water material response across
+        // the connected landform. Wet catchments, the waterfall headwall,
+        // littoral rock, and Alpine hollows share a darker basalt authority;
+        // exposed ribs retain warmer oxidized relief. This increases physical
+        // separation without adding a cover mesh or a camera-facing overlay.
+        float candidateCcWetness = clamp(max(
+          max(westernChannelCore * 0.9, waterfallCatchment * (0.42 + slope * 0.36)),
+          max(littoralBand * 0.86, alpineWetHollows * alpineCrest)
+        ), 0.0, 1.0);
+        float candidateCcExposure = clamp(max(
+          max(westernInterfluve * 0.56, crossBed * 0.42),
+          max(alpineRemnantRibs * alpineCrest, colluvialFan * 0.34)
+        ), 0.0, 1.0);
+        vec3 candidateCcWetBasalt = mix(
+          vec3(0.018, 0.031, 0.03),
+          vec3(0.052, 0.078, 0.066),
+          moistureMosaic
+        );
+        vec3 candidateCcExposedRock = mix(
+          vec3(0.092, 0.081, 0.064),
+          vec3(0.205, 0.139, 0.082),
+          clamp(strata * 0.52 + erosionalRibs * 0.31, 0.0, 0.82)
+        );
+        authoredGround = mix(authoredGround, candidateCcWetBasalt, candidateCcWetness * 0.5);
+        authoredGround = mix(authoredGround, candidateCcExposedRock, candidateCcExposure * 0.29);
+        float candidateCcMesoContrast = detailedTerrainFbm(vec2(
+          vDetailedTerrainWorld.x * 0.046 - vDetailedTerrainWorld.z * 0.013,
+          vDetailedTerrainWorld.z * 0.039 + vDetailedTerrainWorld.y * 0.021
+        ) + 311.6);
+        authoredGround *= mix(0.82, 1.14, smoothstep(0.18, 0.86, candidateCcMesoContrast));
         float sourceLuminance = dot(sourceSurface, vec3(0.2126, 0.7152, 0.0722));
         vec3 sourceChroma = clamp(sourceSurface / max(sourceLuminance, 0.08), vec3(0.62), vec3(1.42));
         float mineralGrain = detailedTerrainFbm(vec2(
@@ -1132,6 +1162,15 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
         );`,
       )
       .replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
+        roughnessFactor = clamp(
+          roughnessFactor - candidateCcWetness * 0.22 + candidateCcExposure * 0.025,
+          0.58,
+          0.98
+        );`,
+      )
+      .replace(
         "#include <lights_fragment_end>",
         `#include <lights_fragment_end>
         // The enclosed west wall receives very little direct sun. A bounded,
@@ -1145,8 +1184,8 @@ function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textur
           * (0.095 + basinDrainage * 0.05);`,
       );
   };
-  material.customProgramCacheKey = () => `madagin-candidate-ca-western-watershed-${zone}`;
-  material.name = `Madagin Candidate CA world-projected weathered volcanic PBR ${zone} terrain`;
+  material.customProgramCacheKey = () => `madagin-candidate-cc-rain-to-water-material-${zone}`;
+  material.name = `Madagin Candidate CC rain-to-water weathered volcanic PBR ${zone} terrain`;
   return material;
 }
 
@@ -5400,8 +5439,8 @@ function selectSourceQualityIslandTree01Placements(
 ) {
   if (mobile || tier === "conservative" || zone === "alpine") return [];
   const limit = tier === "high"
-    ? zone === "valley" ? 22 : zone === "lake" ? 12 : 15
-    : zone === "valley" ? 18 : zone === "lake" ? 9 : 11;
+    ? zone === "valley" ? 28 : zone === "lake" ? 16 : 18
+    : zone === "valley" ? 26 : zone === "lake" ? 14 : 16;
   return instances
     .filter((placement) => placement[1] <= 1 && placement[0] < 8)
     .filter((placement) => zone === "ridge"
@@ -5409,7 +5448,7 @@ function selectSourceQualityIslandTree01Placements(
       : zone === "valley"
         ? placement[3] >= -44 && placement[3] <= 116
         : placement[3] >= -42 && placement[3] <= 72)
-    .filter((placement, index) => sourceQualityIslandTree01Signature(placement, index) % 17 < 3)
+    .filter((placement, index) => sourceQualityIslandTree01Signature(placement, index) % 17 < 4)
     .sort((left, right) => (
       sourceQualityIslandTree01Signature(left, 0) - sourceQualityIslandTree01Signature(right, 0)
     ))
@@ -7151,7 +7190,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           (stochasticWave - stochasticWaveZ) * 0.72
         ));
         n = ${lake
-    ? "normalize(mix(vec3(0.0, 1.0, 0.0), normalize(mix(rippleNormal, stochasticRippleNormal, 0.7)), 0.36))"
+    ? "normalize(mix(vec3(0.0, 1.0, 0.0), normalize(mix(rippleNormal, stochasticRippleNormal, 0.7)), 0.5))"
     : `normalize(mix(n, rippleNormal, ${directional ? "0.105" : "0.078"}))`};
         vec3 viewDirection = normalize(cameraPosition - vWorld);
         float fresnel = pow(
@@ -7187,9 +7226,9 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     : "smoothstep(0.006 + sin(vWorld.x * 0.17 - vWorld.z * 0.11) * 0.006, 0.17 + sin(vWorld.x * 0.041 + vWorld.z * 0.067) * 0.018, lakeInterior)"};
         float basinDepth = ${directional ? "bankSoftening" : "smoothstep(0.12, 0.76, lakeInterior)"};
         float riverMouth = ${river ? "smoothstep(0.94, 1.0, vWaterUv.y)" : "0.0"};
-        vec3 depthColor = ${headwater ? "vec3(0.004, 0.021, 0.021)" : river ? "mix(vec3(0.005, 0.029, 0.03), vec3(0.003, 0.021, 0.028), riverMouth)" : lake ? "vec3(0.002, 0.015, 0.021)" : "vec3(0.007, 0.043, 0.05)"};
-        vec3 surfaceColor = ${headwater ? "vec3(0.019, 0.062, 0.052)" : river ? "mix(vec3(0.022, 0.086, 0.083), vec3(0.014, 0.064, 0.078), riverMouth)" : lake ? "vec3(0.008, 0.039, 0.049)" : "vec3(0.03, 0.11, 0.125)"};
-        vec3 shallowColor = ${headwater ? "vec3(0.042, 0.09, 0.07)" : river ? "mix(vec3(0.054, 0.12, 0.1), vec3(0.052, 0.13, 0.12), riverMouth)" : lake ? "vec3(0.052, 0.098, 0.072)" : "vec3(0.085, 0.17, 0.15)"};
+        vec3 depthColor = ${headwater ? "vec3(0.004, 0.021, 0.021)" : river ? "mix(vec3(0.005, 0.029, 0.03), vec3(0.003, 0.021, 0.028), riverMouth)" : lake ? "vec3(0.002, 0.011, 0.016)" : "vec3(0.007, 0.043, 0.05)"};
+        vec3 surfaceColor = ${headwater ? "vec3(0.019, 0.062, 0.052)" : river ? "mix(vec3(0.022, 0.086, 0.083), vec3(0.014, 0.064, 0.078), riverMouth)" : lake ? "vec3(0.006, 0.028, 0.034)" : "vec3(0.03, 0.11, 0.125)"};
+        vec3 shallowColor = ${headwater ? "vec3(0.042, 0.09, 0.07)" : river ? "mix(vec3(0.054, 0.12, 0.1), vec3(0.052, 0.13, 0.12), riverMouth)" : lake ? "vec3(0.043, 0.076, 0.052)" : "vec3(0.085, 0.17, 0.15)"};
         vec3 reflectionDirection = reflect(-viewDirection, n);
         float reflectedHeight = smoothstep(-0.12, 0.78, reflectionDirection.y);
         vec3 atmosphericReflection = mix(
@@ -7202,7 +7241,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     : river
       ? "mix(mix(vec3(0.12, 0.205, 0.21), vec3(0.09, 0.18, 0.24), riverMouth), atmosphericReflection, 0.34)"
         : lake
-        ? "mix(vec3(0.045, 0.105, 0.13), atmosphericReflection, 0.68)"
+        ? "mix(vec3(0.031, 0.078, 0.094), atmosphericReflection, 0.72)"
         : "mix(vec3(0.17, 0.28, 0.31), atmosphericReflection, 0.46)"};
         float reflectedTerrain = ${lake ? "(1.0 - smoothstep(0.08, 0.5, max(reflectionDirection.y, 0.0))) * smoothstep(0.12, 0.78, fresnel)" : "0.0"};
         float reflectedTerrainBreakup = ${lake ? "mix(0.16, 0.78, waterNoise(vWorld.xz * 0.021 + vec2(uTime * 0.008, -uTime * 0.005)))" : "1.0"};
@@ -7211,7 +7250,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         skyReflection = mix(
           skyReflection,
           mix(vec3(0.018, 0.052, 0.04), vec3(0.075, 0.098, 0.072), reflectedCanopyBreakup),
-          reflectedTerrain * reflectedTerrainBreakup * 0.075
+          reflectedTerrain * reflectedTerrainBreakup * ${lake ? "0.14" : "0.075"}
         );
         vec3 color = mix(shallowColor, depthColor, basinDepth * ${headwater ? "0.82" : river ? "0.72" : lake ? "0.9" : "0.88"});
         float shorelineTurbidity = ${lake ? "(1.0 - bankSoftening) * (0.72 + windBand * 0.18)" : "0.0"};
@@ -7219,15 +7258,15 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
           * sin(vWorld.z * 0.64 - vWorld.x * 0.13) * 0.5 + 0.5;
         float littoralCaustic = pow(max(0.0, sin(vWorld.x * 0.19 - vWorld.z * 0.23 + uTime * 0.23)), 8.0)
           * (1.0 - basinDepth) * bankSoftening;
-        color = mix(color, mix(vec3(0.075, 0.095, 0.058), vec3(0.15, 0.14, 0.086), submergedStone), shorelineTurbidity * 0.52);
+        color = mix(color, mix(vec3(0.067, 0.078, 0.048), vec3(0.132, 0.116, 0.068), submergedStone), shorelineTurbidity * ${lake ? "0.64" : "0.52"});
         color += vec3(0.28, 0.34, 0.22) * littoralCaustic * ${lake ? "0.035" : directional ? "0.055" : "0.075"};
-        color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.075 + broad * 0.025" : "0.2 + broad * 0.11"});
+        color = mix(color, surfaceColor, ${headwater ? "0.16 + broad * 0.055" : river ? "0.22 + broad * 0.08" : lake ? "0.045 + broad * 0.02" : "0.2 + broad * 0.11"});
         color += vec3(0.018, 0.046, 0.055) * (lakeSurfaceVariation - 0.5) * lakeInterior * ${lake ? "0.28" : "0.0"};
         float reflectionBreakup = ${lake ? "(waterNoise(vWorld.xz * 0.034 - vec2(uTime * 0.012, uTime * 0.006)) - 0.5) * (0.026 + fresnel * 0.038)" : "0.0"};
         float reflectionCell = ${lake ? "mix(0.58, 1.0, waterNoise(vWorld.xz * 0.073 + vec2(uTime * 0.006, -uTime * 0.004)))" : "1.0"};
-        color = mix(color, skyReflection, clamp((fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.34" : "0.4"} + reflectionBreakup) * reflectionCell, 0.0, ${lake ? "0.46" : "0.58"}));
-        color += vec3(0.32, 0.43, 0.42) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.026" : "0.055"};
-        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.03" : "0.06"};
+        color = mix(color, skyReflection, clamp((fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.46" : "0.4"} + reflectionBreakup) * reflectionCell, 0.0, ${lake ? "0.54" : "0.58"}));
+        color += vec3(0.32, 0.43, 0.42) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.04" : "0.055"};
+        color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.045" : "0.06"};
         // The integrated source terrain remains below the water for shoreline
         // continuity. A denser interior optical column prevents those large
         // submerged source triangles from dominating the surface read, while
@@ -7245,7 +7284,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     : river
       ? "Madagin v1.16 darker directional river water"
       : lake
-        ? "Madagin Candidate BY analytic-boundary volcanic tarn with cellular broken reflection"
+        ? "Madagin Candidate CC depth-graded volcanic tarn with anisotropic atmospheric reflection"
         : "Madagin v1.17 atmospheric Fresnel watershed";
   return material;
 }
@@ -7289,7 +7328,7 @@ function createWaterfallMaterial() {
         float microThreads = fallNoise(vec2(vFallUv.x * 46.0 + sin(vFallUv.y * 13.0), -vWorld.y * 0.21 - uTime * 2.1));
         float crossFlow = sin(-vWorld.y * 0.68 - uTime * 6.8 + fineThreads * 3.5) * 0.5 + 0.5;
         float runnel = smoothstep(0.39, 0.74, fineThreads * 0.44 + microThreads * 0.56);
-        float body = smoothstep(0.28, 0.79, verticalFlow * 0.48 + runnel * 0.39 + crossFlow * 0.13);
+        float body = smoothstep(0.22, 0.74, verticalFlow * 0.48 + runnel * 0.39 + crossFlow * 0.13);
         float breakup = smoothstep(0.2, 0.69, fallNoise(flowUv * vec2(1.15, 3.8) + vec2(uTime * 0.07, -uTime * 1.18)));
         float braidedGap = smoothstep(0.64, 0.82, fallNoise(vec2(vFallUv.x * 13.0, vFallUv.y * 8.0 - uTime * 0.18)));
         float edgeNoise = fallNoise(vec2(vFallUv.y * 12.0, uTime * 0.11)) * 0.038;
@@ -7305,11 +7344,13 @@ function createWaterfallMaterial() {
         float cascadeAeration = max(upperCascade, lowerCascade) * (0.28 + breakup * 0.42);
         float aeration = descent * (0.18 + runnel * 0.48 + body * 0.34);
         float transparentGap = braidedGap * (0.2 + descent * 0.72) * (1.0 - runnel * 0.58);
-        float alpha = edge * (0.08 + body * 0.37 + runnel * 0.16 + aeration * 0.14 + cascadeAeration * 0.16)
-          * mix(0.67, 1.0, breakup) * (1.0 - transparentGap * 0.78);
-        vec3 deepWater = vec3(0.018, 0.079, 0.09);
-        vec3 whiteWater = vec3(0.53, 0.7, 0.71);
-        vec3 color = mix(deepWater, whiteWater, body * 0.29 + runnel * 0.21 + crossFlow * 0.045 + aeration * 0.17 + cascadeAeration * 0.19 + fresnel * 0.065);
+        float plungeTurbulence = smoothstep(0.72, 0.98, vFallUv.y)
+          * (0.42 + fallNoise(vec2(vFallUv.x * 21.0, -vWorld.y * 0.16 - uTime * 1.8)) * 0.58);
+        float alpha = edge * (0.075 + body * 0.43 + runnel * 0.18 + aeration * 0.2 + cascadeAeration * 0.23 + plungeTurbulence * 0.12)
+          * mix(0.64, 1.0, breakup) * (1.0 - transparentGap * 0.72);
+        vec3 deepWater = vec3(0.012, 0.052, 0.058);
+        vec3 whiteWater = vec3(0.67, 0.82, 0.8);
+        vec3 color = mix(deepWater, whiteWater, body * 0.34 + runnel * 0.23 + crossFlow * 0.055 + aeration * 0.22 + cascadeAeration * 0.24 + plungeTurbulence * 0.13 + fresnel * 0.075);
         color *= faceLight;
         if (alpha < 0.055) discard;
         gl_FragColor = vec4(color, alpha);
@@ -7318,7 +7359,7 @@ function createWaterfallMaterial() {
       }
     `,
   });
-  material.name = "Madagin Candidate BY two-stage braided translucent waterfall";
+  material.name = "Madagin Candidate CC three-scale aerated braided waterfall";
   return material;
 }
 
@@ -8302,6 +8343,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     activeImpactMaterial.current = impactMaterial;
     const host = window as Window & {
       __MADAGIN_WATER_REALISM_BY__?: Record<string, unknown>;
+      __MADAGIN_WATER_REALISM_CC__?: Record<string, unknown>;
       __MADAGIN_WATERFALL_LANDFORM_V116__?: unknown;
       __MADAGIN_RIVER_CORRIDOR_V116__?: unknown;
       __MADAGIN_WATERSHED_SURFACE_V116__?: unknown;
@@ -8348,10 +8390,43 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
         secondaryRunnelSheet: true,
       },
     };
+    host.__MADAGIN_WATER_REALISM_CC__ = {
+      candidate: "CC",
+      continuousHydrology: true,
+      lakeBed: {
+        analyticBoundaryOptics: true,
+        anisotropicReflection: true,
+        brokenTerrainReflection: true,
+        depthGradedScattering: true,
+        depthRangeMeters: lakeBedGeometry.userData.watershedBed.depthRangeMeters,
+        fixedSharedBoundary: true,
+        opaqueInteriorSorting: true,
+        proceduralWorldScale: true,
+        shorelineBands: 3,
+        sourceGeologyPlacements: littoralGeologyPlacements.length,
+        shorelineSedimentResponse: true,
+        waveNormalAuthorities: 3,
+      },
+      plungeImpact: {
+        brokenFoamArcs: 3,
+        connectedOutflow: true,
+        impactMistCount: tier === "high" ? 717 : tier === "balanced" ? 499 : 140,
+      },
+      waterfall: {
+        body: waterfallGeometry.userData.waterfallBody,
+        braidedTransparentGaps: true,
+        cascadeShelves: 2,
+        connectedGeometry: true,
+        secondaryRunnelSheet: true,
+        threeScaleAeration: true,
+        turbulenceAuthorities: 5,
+      },
+    };
     document.documentElement.dataset.madaginWatershedSurfaceV116 = JSON.stringify(host.__MADAGIN_WATERSHED_SURFACE_V116__);
     document.documentElement.dataset.madaginRiverCorridorV116 = JSON.stringify(host.__MADAGIN_RIVER_CORRIDOR_V116__);
     document.documentElement.dataset.madaginWaterfallLandformV116 = JSON.stringify(host.__MADAGIN_WATERFALL_LANDFORM_V116__);
     document.documentElement.dataset.madaginWaterRealismBy = JSON.stringify(host.__MADAGIN_WATER_REALISM_BY__);
+    document.documentElement.dataset.madaginWaterRealismCc = JSON.stringify(host.__MADAGIN_WATER_REALISM_CC__);
     dispatchStage(3, "connected-waterfall-landform-and-outflow-ready", "lake");
     return () => {
       activeWaterMaterial.current = null;
@@ -8361,7 +8436,9 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       activeWaterfallMaterial.current = null;
       activeImpactMaterial.current = null;
       delete host.__MADAGIN_WATER_REALISM_BY__;
+      delete host.__MADAGIN_WATER_REALISM_CC__;
       delete document.documentElement.dataset.madaginWaterRealismBy;
+      delete document.documentElement.dataset.madaginWaterRealismCc;
       cliffMaterial.dispose();
       impactMaterial.dispose();
       lakeBedGeometry.dispose();
@@ -8411,15 +8488,15 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
           />
         </Suspense>
       ) : null}
-      <mesh geometry={lakeBedGeometry} material={lakeBedMaterial} name="Madagin Candidate BY dark depth-graded irregular lake basin bed" receiveShadow />
-      <mesh geometry={lakeGeometry} material={waterMaterial} name="Madagin v1.16 integrated irregular lake surface" />
+      <mesh geometry={lakeBedGeometry} material={lakeBedMaterial} name="Madagin Candidate CC dark depth-graded irregular lake basin bed" receiveShadow />
+      <mesh geometry={lakeGeometry} material={waterMaterial} name="Madagin Candidate CC anisotropic reflective irregular lake surface" />
       <mesh geometry={riverGeometry} material={riverMaterial} name="Madagin v1.16 centerline-following irregular river surface" />
       <primitive object={scene} />
       {waterfallVisible ? (
         <>
           <mesh geometry={waterfallUpperGeometry} material={headwaterMaterial} name="Madagin v1.16 terrain-following waterfall source" />
-          <mesh geometry={waterfallGeometry} material={waterfallMaterial} name="Madagin Candidate BY two-stage braided connected waterfall body" renderOrder={8} />
-          <mesh geometry={waterfallSecondaryGeometry} material={waterfallMaterial} name="Madagin Candidate BY broken secondary runnel sheet" renderOrder={8} />
+          <mesh geometry={waterfallGeometry} material={waterfallMaterial} name="Madagin Candidate CC aerated braided connected waterfall body" renderOrder={8} />
+          <mesh geometry={waterfallSecondaryGeometry} material={waterfallMaterial} name="Madagin Candidate CC aerated secondary runnel sheet" renderOrder={8} />
           <mesh geometry={waterfallPlungeGeometry} material={poolMaterial} name="Madagin v1.16 integrated plunge pool" />
           <mesh geometry={waterfallOutflowGeometry} material={riverMaterial} name="Madagin v1.16 connected plunge outflow" />
           <mesh material={impactMaterial} position={[PLUNGE_POOL_CENTER.x, WATERFALL_BOTTOM.y - 0.12, PLUNGE_POOL_CENTER.z]} renderOrder={9} rotation={[-Math.PI / 2, 0, 0]} scale={[31, 17, 1]}>
@@ -8582,6 +8659,8 @@ const TERRAIN_CONTACT_MIST_BANKS = [
   { authority: "western-colluvial-toes", position: [-196, 7, -642] as [number, number, number], scale: [184, 18, 86] as [number, number, number], opacity: 0.075 },
   { authority: "alpine-windward-cap", position: [486, 188, -1328] as [number, number, number], scale: [238, 38, 104] as [number, number, number], opacity: 0.2 },
   { authority: "alpine-leeward-break", position: [742, 154, -1468] as [number, number, number], scale: [178, 28, 82] as [number, number, number], opacity: 0.13 },
+  { authority: "lake-inlet-strata-haze", position: [38, -22, -818] as [number, number, number], scale: [176, 20, 82] as [number, number, number], opacity: 0.11 },
+  { authority: "waterfall-plume-drift", position: [168, 8, -710] as [number, number, number], scale: [142, 46, 72] as [number, number, number], opacity: 0.14 },
 ];
 
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
@@ -8613,6 +8692,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       __MADAGIN_OROGRAPHIC_WEATHER_BZ__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_CA__?: Record<string, unknown>;
       __MADAGIN_OROGRAPHIC_WEATHER_CB__?: Record<string, unknown>;
+      __MADAGIN_OROGRAPHIC_WEATHER_CC__?: Record<string, unknown>;
       __MADAGIN_TERRAIN_MIST_V120__?: Record<string, unknown>;
     };
     host.__MADAGIN_TERRAIN_MIST_V120__ = {
@@ -8662,6 +8742,30 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       method: "windward crest-cap and leeward-break weather intersect the re-formed connected Alpine terrain under one sky authority",
     };
     document.documentElement.dataset.madaginOrographicWeatherCb = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CB__);
+    host.__MADAGIN_OROGRAPHIC_WEATHER_CC__ = {
+      candidate: "CC",
+      authorities: mistBanks.map((mist) => mist.authority),
+      alpineCrestBanks: mistBanks.filter((mist) => (
+        mist.authority === "alpine-windward-cap" || mist.authority === "alpine-leeward-break"
+      )).length,
+      cloudBanks: clouds.length,
+      coastalContactBanks: mistBanks.filter((mist) => (
+        mist.authority === "southern-coastal-shelf" || mist.authority === "surf-headland-contact"
+      )).length,
+      groundedBanks: mistBanks.length,
+      lakeAndWaterfallBanks: mistBanks.filter((mist) => (
+        mist.authority === "lake-basin"
+          || mist.authority === "lake-inlet-confluence"
+          || mist.authority === "lake-inlet-strata-haze"
+          || mist.authority === "waterfall-plunge"
+          || mist.authority === "waterfall-plume-drift"
+      )).length,
+      method: "layered lake-inlet strata haze and waterfall plume drift extend the retained terrain-coupled weather under one sky authority",
+      westernCatchmentBanks: mistBanks.filter((mist) => (
+        mist.authority === "western-upper-catchments" || mist.authority === "western-colluvial-toes"
+      )).length,
+    };
+    document.documentElement.dataset.madaginOrographicWeatherCc = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CC__);
     if (mistBanks.length) dispatchStage(3, "terrain-contact-mist-ready", "valley");
     return () => {
       materials.forEach((material) => material.dispose());
@@ -8701,7 +8805,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
           </mesh>
         ))}
       </group>
-      <group name={`Madagin Candidate CB crest-coupled watershed-and-coast weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
+      <group name={`Madagin Candidate CC landform-and-water-coupled weather · ${mistBanks.length} grounded banks`} ref={mistGroup}>
         {mistBanks.map((mist, index) => (
           <mesh key={mist.authority} material={mistMaterials[index]} position={mist.position} scale={mist.scale}>
             <sphereGeometry args={[0.5, 24, 12]} />
@@ -8937,6 +9041,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       __MADAGIN_REALISM_BZ__?: Record<string, unknown>;
       __MADAGIN_REALISM_CA__?: Record<string, unknown>;
       __MADAGIN_REALISM_CB__?: Record<string, unknown>;
+      __MADAGIN_REALISM_CC__?: Record<string, unknown>;
       __MADAGIN_WORLD_STREAM_V116__?: unknown;
     };
     host.__MADAGIN_WORLD_STREAM_V116__ = {
@@ -9011,14 +9116,31 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
       waterNetworkProtected: true,
     };
+    host.__MADAGIN_REALISM_CC__ = {
+      candidate: "CC",
+      categories: {
+        atmosphereAndLighting: "twenty terrain-contact authorities including layered lake-inlet strata haze and waterfall plume drift under the retained physical sky",
+        ecologyAndGrounding: "denser replacement of eligible legacy canopy with the retained licensed 109,999-triangle three-dimensional Island Tree 01 family while preserving mobile/conservative policy",
+        materialScale: "one rain-to-water material authority couples wet catchments, waterfall headwall, littoral rock, Alpine hollows, oxidized ribs, and roughness response on connected terrain",
+        terrainStructure: "the retained connected Ridge, Valley, coast, and weathered Alpine terrain gains stronger mesoscopic material relief without a detached shell",
+        waterIntegration: "depth-graded anisotropic tarn reflection, sediment-bearing shallows, and five-authority aerated waterfall breakup retain the ordered headwater-to-ocean network",
+      },
+      coastlineAuthority: "retained Candidate BZ four-octave analytic western coastline",
+      detachedTerrainShells: false,
+      exposedCoastalVoidClosed: true,
+      lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      waterNetworkProtected: true,
+    };
     document.documentElement.dataset.madaginRealismBy = JSON.stringify(host.__MADAGIN_REALISM_BY__);
     document.documentElement.dataset.madaginRealismBz = JSON.stringify(host.__MADAGIN_REALISM_BZ__);
     document.documentElement.dataset.madaginRealismCa = JSON.stringify(host.__MADAGIN_REALISM_CA__);
     document.documentElement.dataset.madaginRealismCb = JSON.stringify(host.__MADAGIN_REALISM_CB__);
+    document.documentElement.dataset.madaginRealismCc = JSON.stringify(host.__MADAGIN_REALISM_CC__);
     document.documentElement.dataset.madaginLivingWindV116 = "spatial-phased-vertex-wind";
   }, [chunks, terrainChunks, zone]);
   return (
-    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CB cumulative weathered-crest realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
+    <group name={`Madagin Ridge-to-Valley v1.16 + Candidate CC cumulative rain-to-water realism world · ${zone} · ${chunks.join("+")} · ${showOcean ? "ocean focus" : "journey focus"}`}>
       <V116Atmosphere reducedMotion={reducedMotion} shadows={shadows} tier={tier} />
       {terrainChunks.map((chunk) => (
         <Suspense fallback={null} key={`terrain-${chunk}`}>

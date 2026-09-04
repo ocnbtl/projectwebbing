@@ -83,16 +83,19 @@ for (const testCase of cases) {
     orographicWeatherBZ: window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? null,
     orographicWeatherCA: window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? null,
     orographicWeatherCB: window.__MADAGIN_OROGRAPHIC_WEATHER_CB__ ?? null,
+    orographicWeatherCC: window.__MADAGIN_OROGRAPHIC_WEATHER_CC__ ?? null,
     realismBY: window.__MADAGIN_REALISM_BY__ ?? null,
     realismBZ: window.__MADAGIN_REALISM_BZ__ ?? null,
     realismCA: window.__MADAGIN_REALISM_CA__ ?? null,
     realismCB: window.__MADAGIN_REALISM_CB__ ?? null,
+    realismCC: window.__MADAGIN_REALISM_CC__ ?? null,
     sourceIslandTreeBT: window.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? null,
     sourceIslandTree01BW: window.__MADAGIN_SOURCE_ISLAND_TREE_01_BW__ ?? null,
     sourceQualityGeologyBS: window.__MADAGIN_SOURCE_GEOLOGY_BS__ ?? null,
     sourceQualityVegetationBR: window.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? null,
     terrainContactMist: window.__MADAGIN_TERRAIN_MIST_V120__ ?? null,
     waterRealismBY: window.__MADAGIN_WATER_REALISM_BY__ ?? null,
+    waterRealismCC: window.__MADAGIN_WATER_REALISM_CC__ ?? null,
     videoElements: document.querySelectorAll("video").length,
     v115Marker: document.body.textContent?.includes("WORLD SLICE V1.15") ?? false,
     worldVersion: document.documentElement.dataset.madaginWorldVersion ?? null,
@@ -156,18 +159,24 @@ for (const testCase of cases) {
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.lakeRiverAndWaterfallProtected === true
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.maximumIncisionMeters > 0
     && evidence.detailedTerrain?.valley?.watershedIntegration?.westernValleyCatchments?.maximumIncisionMeters <= 39
-    && evidence.terrainContactMist?.banks === 18
+    && evidence.terrainContactMist?.banks === 20
     && evidence.orographicWeatherBX?.candidate === "BX"
-    && evidence.orographicWeatherBX?.groundedBanks === 18
+    && evidence.orographicWeatherBX?.groundedBanks === 20
     && evidence.orographicWeatherBZ?.candidate === "BZ"
-    && evidence.orographicWeatherBZ?.groundedBanks === 18
+    && evidence.orographicWeatherBZ?.groundedBanks === 20
     && evidence.orographicWeatherBZ?.coastalContactBanks === 2
     && evidence.orographicWeatherCA?.candidate === "CA"
-    && evidence.orographicWeatherCA?.groundedBanks === 18
+    && evidence.orographicWeatherCA?.groundedBanks === 20
     && evidence.orographicWeatherCA?.westernCatchmentBanks === 2
     && evidence.orographicWeatherCB?.candidate === "CB"
-    && evidence.orographicWeatherCB?.groundedBanks === 18
+    && evidence.orographicWeatherCB?.groundedBanks === 20
     && evidence.orographicWeatherCB?.alpineCrestBanks === 2
+    && evidence.orographicWeatherCC?.candidate === "CC"
+    && evidence.orographicWeatherCC?.groundedBanks === 20
+    && evidence.orographicWeatherCC?.alpineCrestBanks === 2
+    && evidence.orographicWeatherCC?.coastalContactBanks === 2
+    && evidence.orographicWeatherCC?.westernCatchmentBanks === 2
+    && evidence.orographicWeatherCC?.lakeAndWaterfallBanks === 5
     && evidence.regionalHabitat?.easternValleyCatchment?.habitatAuthority === "paired-eastern-western-valley-catchment-networks"
     && evidence.regionalHabitat?.easternValleyCatchment?.westernGroundedPlacements > 0
   );
@@ -264,6 +273,20 @@ for (const testCase of cases) {
       && Object.keys(evidence.realismCB?.categories ?? {}).length === 5
       && evidence.realismCB?.detachedTerrainShells === false
       && evidence.realismCB?.waterNetworkProtected === true
+      && evidence.realismCC?.candidate === "CC"
+      && Object.keys(evidence.realismCC?.categories ?? {}).length === 5
+      && evidence.realismCC?.detachedTerrainShells === false
+      && evidence.realismCC?.waterNetworkProtected === true
+      && evidence.waterRealismCC?.candidate === "CC"
+      && evidence.waterRealismCC?.continuousHydrology === true
+      && evidence.waterRealismCC?.lakeBed?.anisotropicReflection === true
+      && evidence.waterRealismCC?.lakeBed?.depthGradedScattering === true
+      && evidence.waterRealismCC?.lakeBed?.fixedSharedBoundary === true
+      && evidence.waterRealismCC?.lakeBed?.shorelineSedimentResponse === true
+      && evidence.waterRealismCC?.lakeBed?.waveNormalAuthorities === 3
+      && evidence.waterRealismCC?.waterfall?.connectedGeometry === true
+      && evidence.waterRealismCC?.waterfall?.threeScaleAeration === true
+      && evidence.waterRealismCC?.waterfall?.turbulenceAuthorities === 5
       && evidence.oceanRealismBZ?.candidate === "BZ"
       && evidence.oceanRealismBZ?.breakerBands === 4
       && evidence.oceanRealismBZ?.coastalVoidClosed === true
