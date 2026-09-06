@@ -41,34 +41,34 @@ const V116_SUN_POSITION = V116_SUN_DIRECTION.toArray().map(value => value * 720)
 
 const ROOT = "/world/v116";
 const SPECIES_URL = `${ROOT}/species-core-v1.16.glb`;
-const V115_MID_VEGETATION_URL = "/world/v115/madagin-ridge-vegetation-mid-v1.15.glb";
+const V115_MID_VEGETATION_URL = "/world/canopy-v1/vegetation-mid.glb";
 const V115_HERO_VEGETATION_URL = "/world/v115/madagin-ridge-vegetation-hero-v1.15.glb";
 const V115_HIGH_TERRAIN_URL = "/world/v115/madagin-ridge-to-valley-high-v1.15.glb";
 const ASSET_ROOT = "/world/assets/polyhaven";
-const SOURCE_QUALITY_PACHIRA_URL = `${ASSET_ROOT}/pachira_aquatica_01/pachira_aquatica_01_1k.gltf`;
-const SOURCE_QUALITY_GEOLOGY_URL = `${ASSET_ROOT}/rock_moss_set_02/rock_moss_set_02_1k.gltf`;
-const SOURCE_QUALITY_ISLAND_TREE_01_URL = `${ASSET_ROOT}/island_tree_01_bw/island_tree_01_bw.glb`;
+const SOURCE_QUALITY_PACHIRA_URL = "/world/canopy-v1/pachira.glb";
+const SOURCE_QUALITY_GEOLOGY_URL = "/world/canopy-v1/moss-rock.glb";
+const SOURCE_QUALITY_ISLAND_TREE_01_URL = "/world/canopy-v1/island-tree.glb";
 const COASTAL_HEIGHTFIELD_URL = `${ROOT}/coast-heightfield-bw.json`;
 const SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS = [1, 2, 3, 4].map(
   (view) => `/world/v110/island-tree-03-impostors/island-tree-03-side-${view}.png`,
 );
 const WATERSHED_GROUNDCOVER_URLS = {
-  fern: `${ASSET_ROOT}/fern_02/fern_02_1k.gltf`,
-  rock: `${ASSET_ROOT}/rock_09/rock_09_1k.gltf`,
-  shrub: `${ASSET_ROOT}/shrub_04/shrub_04_1k.gltf`,
+  fern: "/world/canopy-v1/fern.glb",
+  rock: "/world/canopy-v1/rock.glb",
+  shrub: "/world/canopy-v1/shrub.glb",
 } as const;
 const GROUND_TEXTURE_URLS: string[] = [
-  `${ASSET_ROOT}/forrest_ground_03/forrest_ground_03_diff_1k.jpg`,
-  `${ASSET_ROOT}/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg`,
+  "/world/canopy-v1/forest-color.webp",
+  "/world/canopy-v1/rock-color.webp",
 ];
 const DETAILED_GROUND_TEXTURES = {
   forest: [
-    `${ASSET_ROOT}/forrest_ground_03/forrest_ground_03_diff_1k.jpg`,
+    "/world/canopy-v1/forest-color.webp",
     `${ASSET_ROOT}/forrest_ground_03/forrest_ground_03_nor_gl_1k.jpg`,
     `${ASSET_ROOT}/forrest_ground_03/forrest_ground_03_arm_1k.jpg`,
   ],
   rock: [
-    `${ASSET_ROOT}/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg`,
+    "/world/canopy-v1/rock-color.webp",
     `${ASSET_ROOT}/aerial_grass_rock/aerial_grass_rock_nor_gl_1k.jpg`,
     `${ASSET_ROOT}/aerial_grass_rock/aerial_grass_rock_arm_1k.jpg`,
   ],
@@ -5286,7 +5286,7 @@ function RidgeBasaltField({ placements, shadows, zone }: {
   shadows: boolean;
   zone: V116Zone;
 }) {
-  const gltf = useLoader(GLTFLoader, `${ASSET_ROOT}/rock_09/rock_09_1k.gltf`);
+  const gltf = useLoader(GLTFLoader, "/world/canopy-v1/rock.glb", configureCompressedGltf);
   const parts = useMemo(() => {
     gltf.scene.updateMatrixWorld(true);
     const result: SpeciesPart[] = [];
@@ -5533,7 +5533,7 @@ function SourceQualityPachiraAnchors({ placements, shadows, zone }: {
   shadows: boolean;
   zone: V116Zone;
 }) {
-  const gltf = useLoader(GLTFLoader, SOURCE_QUALITY_PACHIRA_URL);
+  const gltf = useLoader(GLTFLoader, SOURCE_QUALITY_PACHIRA_URL, configureCompressedGltf);
   const parts = useMemo(() => prepareSourceQualityPachira(gltf.scene), [gltf.scene]);
   const bySource = useMemo(() => {
     const result = new Map<SourceQualityVegetationPart["sourceKey"], PlacementTuple[]>();
@@ -5903,7 +5903,7 @@ function SourceQualityGeologyAnchors({ placements, shadows, zone }: {
   shadows: boolean;
   zone: V116Zone;
 }) {
-  const gltf = useLoader(GLTFLoader, SOURCE_QUALITY_GEOLOGY_URL);
+  const gltf = useLoader(GLTFLoader, SOURCE_QUALITY_GEOLOGY_URL, configureCompressedGltf);
   const parts = useMemo(() => prepareSourceQualityGeology(gltf.scene), [gltf.scene]);
   const bySource = useMemo(() => {
     const result = new Map<string, PlacementTuple[]>();
@@ -6737,9 +6737,9 @@ function DetailedWatershedGroundcover({ placements, shadows }: {
   placements: PlacementTuple[];
   shadows: boolean;
 }) {
-  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern);
-  const rock = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.rock);
-  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub);
+  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern, configureCompressedGltf);
+  const rock = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.rock, configureCompressedGltf);
+  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub, configureCompressedGltf);
   const parts = useMemo(() => [
     ...prepareWatershedGroundcover(fern.scene, "fern"),
     ...prepareWatershedGroundcover(rock.scene, "rock"),
@@ -6795,8 +6795,8 @@ function DetailedRiparianGroundcover({ lakeBankSuccessionPlacements, placements,
   placements: PlacementTuple[];
   shadows: boolean;
 }) {
-  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern);
-  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub);
+  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern, configureCompressedGltf);
+  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub, configureCompressedGltf);
   const parts = useMemo(() => [
     ...prepareWatershedGroundcover(fern.scene, "fern"),
     ...prepareWatershedGroundcover(shrub.scene, "shrub"),
@@ -6846,8 +6846,8 @@ function DetailedContactTrailheadGroundcover({ placements, shadows }: {
   placements: PlacementTuple[];
   shadows: boolean;
 }) {
-  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern);
-  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub);
+  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern, configureCompressedGltf);
+  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub, configureCompressedGltf);
   const parts = useMemo(() => [
     ...prepareWatershedGroundcover(fern.scene, "fern"),
     ...prepareWatershedGroundcover(shrub.scene, "shrub"),
@@ -6904,9 +6904,9 @@ function DetailedRegionalHabitatGroundcover({ placements, shadows, zone }: {
   shadows: boolean;
   zone: "ridge" | "valley" | "alpine";
 }) {
-  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern);
-  const rock = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.rock);
-  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub);
+  const fern = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.fern, configureCompressedGltf);
+  const rock = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.rock, configureCompressedGltf);
+  const shrub = useLoader(GLTFLoader, WATERSHED_GROUNDCOVER_URLS.shrub, configureCompressedGltf);
   const parts = useMemo(() => [
     ...prepareWatershedGroundcover(fern.scene, "fern"),
     ...prepareWatershedGroundcover(rock.scene, "rock"),
@@ -8072,7 +8072,7 @@ function createImpactFoamMaterial() {
 // visibly stacked rock border instead of a credible weathered cliff edge.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function WaterfallRockFrame({ shadows, tier }: { shadows: boolean; tier: WorldQualityTier }) {
-  const gltf = useLoader(GLTFLoader, `${ASSET_ROOT}/rock_09/rock_09_1k.gltf`);
+  const gltf = useLoader(GLTFLoader, "/world/canopy-v1/rock.glb", configureCompressedGltf);
   const source = useMemo(() => {
     gltf.scene.updateMatrixWorld(true);
     let match: Mesh | null = null;

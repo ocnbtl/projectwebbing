@@ -4,7 +4,7 @@ Updated September 6, 2026. This is the compact index; the [progress ledger](mada
 
 ## Release and boundaries
 
-Release evidence: `output/releases/madagin-spatial-20260906/`. Rollback is the verified `9e888651b0e2bf670fb276e8cb2fe05d2a242f20` website release, Vercel `dpl_F62rF4Gv7mrjVSF6P5y7BEmRQW7p`. Consult this release's `publication.json` for the exact commit, provider state and completed public checks; a build alone is not release proof.
+Release evidence: `output/releases/madagin-canopy-20260906/`. Rollback is the verified `b1dff6798414424a5895c4e97c42007d373fc9e1` spatial-reading release, Vercel `dpl_DovaRGnjWVzGZDkoCo5qQnc4aytJ`. Consult this release's `publication.json` for the exact commit, provider state and completed public checks; a build alone is not release proof.
 
 Selected: persistent About/Projects/Blog, connected early coast, shared sun, ordinary links, article and project reading with browser history, independent scroll, keyboard/touch, and disabled inquiry adapter. The shared content file contains the two confirmed clients and one original studio planning note. No testimonial, business result or new client fact was added.
 
@@ -25,16 +25,18 @@ Estimates count coherent implementation plus evaluation cycles, not cosmetic twe
 
 ## This cycle
 
-Constraint: accepted navigation and coastal continuity were unavailable publicly; reading selections were ephemeral, Blog was empty, and keyboard interaction outside the panel was implicit.
+Constraint: B remains limited by source composition, sparse/repeated canopy and inconsistent-looking foliage light. The previous journey also transferred 54,433,504 desktop / 15,666,271 compact bytes, exceeding both budgets.
 
-Hypothesis: retaining one canvas and the accepted geometry, adding fragment history with conventional links, and sharing the same factual/editorial content will make the world usable as a website without interrupting the scenery. Accept when Back/Forward restore selection and reading position, all input modes remain independent, supported and fallback journeys pass, and the exact release is public.
+Two foliage/shadow trials failed visual comparison: removing emissive compensation and following the rail with crown shadows produced black crowns; reducing repeated tinting did not recover convincing volume. Both are rejected, with source snapshots retained in the release evidence. Stop that material-only approach. No visual category is promoted and B is not advanced by these trials.
 
-Environment decision: promote the already visually accepted coast/lighting bundle. Do not claim this navigation cycle improves the terrain study or completes B. Shader-only tuning has not solved the structural source problem; the next realism implementation must prove a slope-aware surface and canopy treatment on the shared terrain field, then derive a connected drainage slice from that same field. A second failure of that coherent slice requires a source/composition/architecture reassessment.
+Accepted direction for this release: retain the public composition, lighting, navigation and animation; remove eight unused tree variants, pack used geometry, and encode licensed textures with reported error bounds. Require whole-journey transfer reduction, decoded geometry checks, comparable views, uninterrupted/held motion, preserved reading/fallback behavior and exact publication provenance. See [package provenance](../../public/world/canopy-v1/PROVENANCE.md). This improves runtime feasibility toward D, separately from B's quality gate.
 
-Roughly one fifth of this cycle's implementation was reserved for shared copy, a useful article, focus/scroll restoration, direct links, and constrained-height behavior. The remaining work was integration, verification, motion/performance evidence and production delivery.
+The next B bundle must start with the shared geographic terrain field, a bounded cliff-to-canopy-to-drainage slice and explicit public-camera parity. Do not spend another cycle changing only the old renderer's tint or shadow coefficients. The retained NOAA/WorldCover prototype still fails this acceptance bar. Milestone estimates remain low-confidence; a failed lighting experiment does not reduce remaining work. Finishing effort here covers asset provenance/reproduction, loading evidence, reading/capability regression checks and release verification.
 
 ## Evaluation and device budgets
 
 See [evaluation register](madagin-evaluation-register.md). The final realism gate is **UNVERIFIED**: no independent human results, no matched held-out comparison set, and no physical-device/thermal run. Diagnostic AI judgments are not a blind human result. Do not replace these statements with a single percentage or average score.
 
-Current evidence root: `output/playwright/madagin-world-progress/spatial-release-20260906/`. Before captures use the previous accepted optimized build; rendering code and camera rail are unchanged during this finishing cycle. Browser capture timing introduces small camera/time differences, so the reading screenshots are qualitative comparisons, not pixel-registered environmental measurements. Existing fixed spatial checkpoints remain the reference for the next geometry change.
+Current evidence root: `output/playwright/madagin-world-progress/canopy-release-20260906/`, with prior/experimental sequences in sibling `canopy-release-20260906-before`, `-trial`, and `-light2` directories. Final geometry bounds and original poses are retained; capture timing still introduces small differences, so moving-rail screenshots are qualitative, not pixel-registered measurements. The final records report budget failures without relaxing targets.
+
+Latest optimized host screening: desktop transfer 54,433,504 → 26,414,873 bytes (51.5% lower); compact 15,666,271 → 9,484,775 (39.5% lower). Both remain above 24/8 MiB. Meaningful readiness 8.81/3.49 s fails desktop and passes compact; do not claim a desktop loading-time improvement. Held-frame p95/p99 and JS heap pass on this RTX 5080 host only. Six capability cases, three reading viewports and seven sequence views pass locally. Public verification and exact deployment identity are recorded separately in the release publication record.

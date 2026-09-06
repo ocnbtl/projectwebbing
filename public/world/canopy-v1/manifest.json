@@ -1,0 +1,1019 @@
+{
+  "version": 1,
+  "tools": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "sharp": "0.35.4"
+  },
+  "policy": "No simplification or resize. Topology and node transforms retained. Raw Island Tree attributes rounded in place (position <=0.0001221 source metres/component, normal <=0.0002442/component, UV <=0.00000763/component); decoded output checked exactly against that bounded input. Mid vegetation attributes unchanged. Color WebP 95 with exact alpha; data WebP 100 accepted only below RGB RMSE 3 and mean normal angle 0.75 degrees, otherwise original retained. Licensed source packages untouched.",
+  "assets": [
+    {
+      "source": "public/world/v115/madagin-ridge-vegetation-mid-v1.15.glb",
+      "target": "vegetation-mid.glb",
+      "inputBytes": 24269704,
+      "outputBytes": 788276,
+      "inputBytesScope": "embedded source package",
+      "inputSha256": "2e2abd1bbe4e0c02e46e0dcd462c113877a67c290d68df6ab501498ca8d189c7",
+      "outputSha256": "4ee1e92eec97017728ad0a30a0dab2665e27c3914ea341bf60850db8795e86d9",
+      "referencedImages": [
+        {
+          "path": "textures/389b0f8cc3e8bf4ee78ea12c367ff3003d69d8e83de8baf908e6f2e123d1e6a8.jpeg",
+          "bytes": 723624,
+          "sha256": "389b0f8cc3e8bf4ee78ea12c367ff3003d69d8e83de8baf908e6f2e123d1e6a8"
+        },
+        {
+          "path": "textures/8a247acdc04888518aed59aa67ab2366f24ccff0e0198261fc823e7d535ab18f.webp",
+          "bytes": 253486,
+          "sha256": "8a247acdc04888518aed59aa67ab2366f24ccff0e0198261fc823e7d535ab18f"
+        },
+        {
+          "path": "textures/a13227c2abd9d0dc35b6128291b3a48dc4a6ad8d807e52857188a3fa047dbf1b.webp",
+          "bytes": 309194,
+          "sha256": "a13227c2abd9d0dc35b6128291b3a48dc4a6ad8d807e52857188a3fa047dbf1b"
+        },
+        {
+          "path": "textures/38ed3e92d762d3da06da74674fe3e9feaacc4567f3d0e1651d2a30b13607e0e7.webp",
+          "bytes": 290494,
+          "sha256": "38ed3e92d762d3da06da74674fe3e9feaacc4567f3d0e1651d2a30b13607e0e7"
+        },
+        {
+          "path": "textures/7f6149be174ae53d18a27b5aaf560371f03b94b75b99344558d012b81ea476a6.webp",
+          "bytes": 108092,
+          "sha256": "7f6149be174ae53d18a27b5aaf560371f03b94b75b99344558d012b81ea476a6"
+        },
+        {
+          "path": "textures/8510c92791489a2b950ac3824eb56160ba17a3be881ad8133e0c8f42c6a17db5.webp",
+          "bytes": 189192,
+          "sha256": "8510c92791489a2b950ac3824eb56160ba17a3be881ad8133e0c8f42c6a17db5"
+        },
+        {
+          "path": "textures/f18952513ea25225a303397098a54f33e0bebe1d2e3c4d64f30ce5f698e933b2.webp",
+          "bytes": 368902,
+          "sha256": "f18952513ea25225a303397098a54f33e0bebe1d2e3c4d64f30ce5f698e933b2"
+        },
+        {
+          "path": "textures/058d2281df5010a00ea61b70ff90c0b4d4ac6f69b11b426bd4896719e995f05f.webp",
+          "bytes": 162904,
+          "sha256": "058d2281df5010a00ea61b70ff90c0b4d4ac6f69b11b426bd4896719e995f05f"
+        },
+        {
+          "path": "textures/99c9a5f96d6a78eb30a7a6e73996d42737f4bb4ccb5205f61d1a34b10d43b574.webp",
+          "bytes": 193478,
+          "sha256": "99c9a5f96d6a78eb30a7a6e73996d42737f4bb4ccb5205f61d1a34b10d43b574"
+        },
+        {
+          "path": "textures/0956d06df244f33bdfb38c683880d51341da39487adf691ca33e8590b456baa9.webp",
+          "bytes": 432956,
+          "sha256": "0956d06df244f33bdfb38c683880d51341da39487adf691ca33e8590b456baa9"
+        },
+        {
+          "path": "textures/f9ac610c0eb07b66bd38c79d761a705db6b43750c6b9ef617650e365e8c5c5f5.webp",
+          "bytes": 113888,
+          "sha256": "f9ac610c0eb07b66bd38c79d761a705db6b43750c6b9ef617650e365e8c5c5f5"
+        },
+        {
+          "path": "textures/f5624279c1c3473930301ae081d9541e7493180cac16246f5aa9b8b3b3ad1b11.webp",
+          "bytes": 398872,
+          "sha256": "f5624279c1c3473930301ae081d9541e7493180cac16246f5aa9b8b3b3ad1b11"
+        },
+        {
+          "path": "textures/9c83be074c950ea1b94c732c0c0291b53b9ba357f932d378bafe3ca3b4418871.jpeg",
+          "bytes": 1228646,
+          "sha256": "9c83be074c950ea1b94c732c0c0291b53b9ba357f932d378bafe3ca3b4418871"
+        },
+        {
+          "path": "textures/083b76cae17916d0f6c0888247bd935e6fc0a70422407c9f5747fa0367895003.webp",
+          "bytes": 433662,
+          "sha256": "083b76cae17916d0f6c0888247bd935e6fc0a70422407c9f5747fa0367895003"
+        },
+        {
+          "path": "textures/62ff8a82494721adedbf8bd8adcc7d18af6f06599c0e74207d777d3d5e2bc787.webp",
+          "bytes": 453316,
+          "sha256": "62ff8a82494721adedbf8bd8adcc7d18af6f06599c0e74207d777d3d5e2bc787"
+        }
+      ],
+      "removedNodes": [
+        "mid_variant_08",
+        "mid_variant_09",
+        "mid_variant_10",
+        "mid_variant_11",
+        "mid_variant_12",
+        "mid_variant_13",
+        "mid_variant_16",
+        "mid_variant_17"
+      ],
+      "topologyAndTransformsRetained": true,
+      "decodedAttributesMatchPreparedInput": true,
+      "rounding": [],
+      "textures": [
+        {
+          "name": "pachira_aquatica_01_bark_nor_gl_1k",
+          "inputBytes": 723624,
+          "outputBytes": 723624,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "pachira_aquatica_01_bark_diff_1k",
+          "inputBytes": 592488,
+          "outputBytes": 253486,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.6972444603949872,
+          "rgbMaxError": 15,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "pachira_aquatica_01_bark_arm_1k",
+          "inputBytes": 588614,
+          "outputBytes": 309194,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.5056294662770384,
+          "rgbMaxError": 15,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "pachira_aquatica_01_leaves_nor_gl_1k",
+          "inputBytes": 490166,
+          "outputBytes": 290494,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.1270031931667452,
+          "rgbMaxError": 11,
+          "normalMeanAngleDegrees": 0.5981204475152647
+        },
+        {
+          "name": "pachira_aquatica_01_leaves_diff_1k",
+          "inputBytes": 320484,
+          "outputBytes": 108092,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.320722106357917,
+          "rgbMaxError": 14,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "pachira_aquatica_01_leaves_arm_1k",
+          "inputBytes": 372937,
+          "outputBytes": 189192,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.0176662179958613,
+          "rgbMaxError": 8,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "tree_small_02_branch_nor_gl_1k",
+          "inputBytes": 581596,
+          "outputBytes": 368902,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.3463290991254164,
+          "rgbMaxError": 8,
+          "normalMeanAngleDegrees": 0.7192077841868134
+        },
+        {
+          "name": "tree_small_02_branch_diff_1k",
+          "inputBytes": 449977,
+          "outputBytes": 162904,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.4854738685469167,
+          "rgbMaxError": 9,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "tree_small_02_branch_arm_1k",
+          "inputBytes": 375732,
+          "outputBytes": 193478,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.0914798974774997,
+          "rgbMaxError": 7,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "tree_small_02_leaves_nor_gl_1k",
+          "inputBytes": 681604,
+          "outputBytes": 432956,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.3198271391612004,
+          "rgbMaxError": 9,
+          "normalMeanAngleDegrees": 0.693130130294467
+        },
+        {
+          "name": "tree_small_02_leaves_diff_1k",
+          "inputBytes": 823424,
+          "outputBytes": 113888,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.271277469924612,
+          "rgbMaxError": 18,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "tree_small_02_leaves_arm_1k",
+          "inputBytes": 633698,
+          "outputBytes": 398872,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.1906103258405105,
+          "rgbMaxError": 8,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "tree_small_02_nor_gl_1k",
+          "inputBytes": 1228646,
+          "outputBytes": 1228646,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "tree_small_02_diff_1k",
+          "inputBytes": 863246,
+          "outputBytes": 433662,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.7390965067967905,
+          "rgbMaxError": 10,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "tree_small_02_arm_1k",
+          "inputBytes": 708242,
+          "outputBytes": 453316,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.254337668352005,
+          "rgbMaxError": 13,
+          "normalMeanAngleDegrees": 0
+        }
+      ]
+    },
+    {
+      "source": "public/world/assets/polyhaven/island_tree_01_bw/island_tree_01_bw.glb",
+      "target": "island-tree.glb",
+      "inputBytes": 12683140,
+      "outputBytes": 3539036,
+      "inputBytesScope": "embedded source package",
+      "inputSha256": "61e7ae377ccdd11c3d8be3de4cccc9b628fbcc52b1d1df28b6339f3e5662cb28",
+      "outputSha256": "6ea20c0faf60953f7261eff9e909f18d6bb130b602a9a209979cf2774a19e994",
+      "referencedImages": [
+        {
+          "path": "textures/2d67393ba76a0f49cf965fa0c99d8c16268e71e87b1203d35539bfdb971a514e.jpeg",
+          "bytes": 819101,
+          "sha256": "2d67393ba76a0f49cf965fa0c99d8c16268e71e87b1203d35539bfdb971a514e"
+        },
+        {
+          "path": "textures/31cc0d4c1d652846cc7d576facab2f5fdc5b320a47abf5392bbad8e92f3db36d.webp",
+          "bytes": 217904,
+          "sha256": "31cc0d4c1d652846cc7d576facab2f5fdc5b320a47abf5392bbad8e92f3db36d"
+        },
+        {
+          "path": "textures/2fed1187acd49fabf397107a9ac3fa02ea064c74d55b0623a49fb12ef3a4f931.webp",
+          "bytes": 267174,
+          "sha256": "2fed1187acd49fabf397107a9ac3fa02ea064c74d55b0623a49fb12ef3a4f931"
+        },
+        {
+          "path": "textures/60f78a7d469aead97d6ea6a1a95e747ea220f07b5cd79958c3183926e5cdb765.webp",
+          "bytes": 218112,
+          "sha256": "60f78a7d469aead97d6ea6a1a95e747ea220f07b5cd79958c3183926e5cdb765"
+        },
+        {
+          "path": "textures/11879209f2501d187cdfa7db807e8f388d18e474d471b0a06399abaafb36fafd.webp",
+          "bytes": 57266,
+          "sha256": "11879209f2501d187cdfa7db807e8f388d18e474d471b0a06399abaafb36fafd"
+        },
+        {
+          "path": "textures/aeacb9f2f1f1456cd241be02921db9d0e5b36e47ad8e188b553b6a500f07a752.webp",
+          "bytes": 292602,
+          "sha256": "aeacb9f2f1f1456cd241be02921db9d0e5b36e47ad8e188b553b6a500f07a752"
+        },
+        {
+          "path": "textures/ca22e428e1b1ebac47b2fc67ec355700c8779d6628d2fc6c3ebae9002988f63e.jpeg",
+          "bytes": 1207134,
+          "sha256": "ca22e428e1b1ebac47b2fc67ec355700c8779d6628d2fc6c3ebae9002988f63e"
+        },
+        {
+          "path": "textures/b05ffac9a2ef4bc24f43ccebe0159c58e6bb3a857335f3c13d7b43bfd5e977ef.webp",
+          "bytes": 400178,
+          "sha256": "b05ffac9a2ef4bc24f43ccebe0159c58e6bb3a857335f3c13d7b43bfd5e977ef"
+        },
+        {
+          "path": "textures/f1f69dfcde1c10be1264f6ce37d866060cbf54d8c538875ee08ad1717dce8e4a.webp",
+          "bytes": 421100,
+          "sha256": "f1f69dfcde1c10be1264f6ce37d866060cbf54d8c538875ee08ad1717dce8e4a"
+        }
+      ],
+      "removedNodes": [],
+      "topologyAndTransformsRetained": true,
+      "decodedAttributesMatchPreparedInput": true,
+      "rounding": [
+        {
+          "mesh": "island_trees_01_blockout_cleaned",
+          "semantic": "POSITION",
+          "maxError": 0.0001220703125
+        },
+        {
+          "mesh": "island_trees_01_blockout_cleaned",
+          "semantic": "NORMAL",
+          "maxError": 0.000244140625
+        },
+        {
+          "mesh": "island_trees_01_blockout_cleaned",
+          "semantic": "TEXCOORD_0",
+          "maxError": 0.00000762939453125
+        },
+        {
+          "mesh": "island_trees_01_blockout_cleaned.002",
+          "semantic": "POSITION",
+          "maxError": 0.0001220703125
+        },
+        {
+          "mesh": "island_trees_01_blockout_cleaned.002",
+          "semantic": "NORMAL",
+          "maxError": 0.000244140625
+        },
+        {
+          "mesh": "island_trees_01_blockout_cleaned.002",
+          "semantic": "TEXCOORD_0",
+          "maxError": 0.00000762939453125
+        },
+        {
+          "mesh": "island_trees_01_blockout_cleaned.001",
+          "semantic": "POSITION",
+          "maxError": 0.0001220703125
+        },
+        {
+          "mesh": "island_trees_01_blockout_cleaned.001",
+          "semantic": "NORMAL",
+          "maxError": 0.000244140625
+        },
+        {
+          "mesh": "island_trees_01_blockout_cleaned.001",
+          "semantic": "TEXCOORD_0",
+          "maxError": 0.00000762939453125
+        }
+      ],
+      "textures": [
+        {
+          "name": "island_tree_01_branches_nor_gl_1k",
+          "inputBytes": 819101,
+          "outputBytes": 819101,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "island_tree_01_branches_diff_1k",
+          "inputBytes": 528304,
+          "outputBytes": 217904,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.4842036633571947,
+          "rgbMaxError": 8,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "island_tree_01_branches_arm_1k",
+          "inputBytes": 484806,
+          "outputBytes": 267174,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.1469211385456308,
+          "rgbMaxError": 7,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "island_tree_01_leaves_nor_gl_1k",
+          "inputBytes": 379443,
+          "outputBytes": 218112,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.1843674148679029,
+          "rgbMaxError": 16,
+          "normalMeanAngleDegrees": 0.6237216330996003
+        },
+        {
+          "name": "island_tree_01_leaves_diff_1k",
+          "inputBytes": 471115,
+          "outputBytes": 57266,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0.966627030272526,
+          "rgbMaxError": 25,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "island_tree_01_leaves_arm_1k",
+          "inputBytes": 489476,
+          "outputBytes": 292602,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.085217134046152,
+          "rgbMaxError": 16,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "island_tree_01_nor_gl_1k",
+          "inputBytes": 1207134,
+          "outputBytes": 1207134,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "island_tree_01_diff_1k",
+          "inputBytes": 791327,
+          "outputBytes": 400178,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.679809944362177,
+          "rgbMaxError": 11,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "island_tree_01_arm_1k",
+          "inputBytes": 727403,
+          "outputBytes": 421100,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.5007751369401463,
+          "rgbMaxError": 16,
+          "normalMeanAngleDegrees": 0
+        }
+      ]
+    },
+    {
+      "source": "public/world/assets/polyhaven/pachira_aquatica_01/pachira_aquatica_01_1k.gltf",
+      "target": "pachira.glb",
+      "inputBytes": 13730,
+      "outputBytes": 1417396,
+      "inputBytesScope": "descriptor only; dependencies recorded in original source provenance",
+      "inputSha256": "e73b77c0ffadd8b9fa686faabfecf37799123fe4bc756f816145a4f8c9f53364",
+      "outputSha256": "32bb5e1aef3bec6bbbcc8908978724317ac144d59cd830282d1578711dbf1d22",
+      "referencedImages": [
+        {
+          "path": "textures/389b0f8cc3e8bf4ee78ea12c367ff3003d69d8e83de8baf908e6f2e123d1e6a8.jpeg",
+          "bytes": 723624,
+          "sha256": "389b0f8cc3e8bf4ee78ea12c367ff3003d69d8e83de8baf908e6f2e123d1e6a8"
+        },
+        {
+          "path": "textures/8a247acdc04888518aed59aa67ab2366f24ccff0e0198261fc823e7d535ab18f.webp",
+          "bytes": 253486,
+          "sha256": "8a247acdc04888518aed59aa67ab2366f24ccff0e0198261fc823e7d535ab18f"
+        },
+        {
+          "path": "textures/a13227c2abd9d0dc35b6128291b3a48dc4a6ad8d807e52857188a3fa047dbf1b.webp",
+          "bytes": 309194,
+          "sha256": "a13227c2abd9d0dc35b6128291b3a48dc4a6ad8d807e52857188a3fa047dbf1b"
+        },
+        {
+          "path": "textures/38ed3e92d762d3da06da74674fe3e9feaacc4567f3d0e1651d2a30b13607e0e7.webp",
+          "bytes": 290494,
+          "sha256": "38ed3e92d762d3da06da74674fe3e9feaacc4567f3d0e1651d2a30b13607e0e7"
+        },
+        {
+          "path": "textures/7f6149be174ae53d18a27b5aaf560371f03b94b75b99344558d012b81ea476a6.webp",
+          "bytes": 108092,
+          "sha256": "7f6149be174ae53d18a27b5aaf560371f03b94b75b99344558d012b81ea476a6"
+        },
+        {
+          "path": "textures/8510c92791489a2b950ac3824eb56160ba17a3be881ad8133e0c8f42c6a17db5.webp",
+          "bytes": 189192,
+          "sha256": "8510c92791489a2b950ac3824eb56160ba17a3be881ad8133e0c8f42c6a17db5"
+        }
+      ],
+      "removedNodes": [],
+      "topologyAndTransformsRetained": true,
+      "decodedAttributesMatchPreparedInput": true,
+      "rounding": [],
+      "textures": [
+        {
+          "name": "pachira_aquatica_01_bark_nor_gl",
+          "inputBytes": 723624,
+          "outputBytes": 723624,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "pachira_aquatica_01_bark_diff",
+          "inputBytes": 592488,
+          "outputBytes": 253486,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.6972444603949872,
+          "rgbMaxError": 15,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "pachira_aquatica_01_bark_rough",
+          "inputBytes": 588614,
+          "outputBytes": 309194,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.5056294662770384,
+          "rgbMaxError": 15,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "pachira_aquatica_01_leaves_nor_gl",
+          "inputBytes": 490166,
+          "outputBytes": 290494,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.1270031931667452,
+          "rgbMaxError": 11,
+          "normalMeanAngleDegrees": 0.5981204475152647
+        },
+        {
+          "name": "pachira_aquatica_01_leaves_diff-pachira_aquatica_01_leaves_alpha",
+          "inputBytes": 320484,
+          "outputBytes": 108092,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.320722106357917,
+          "rgbMaxError": 14,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "pachira_aquatica_01_leaves_rough",
+          "inputBytes": 372937,
+          "outputBytes": 189192,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.0176662179958613,
+          "rgbMaxError": 8,
+          "normalMeanAngleDegrees": 0
+        }
+      ]
+    },
+    {
+      "source": "public/world/assets/polyhaven/rock_09/rock_09_1k.gltf",
+      "target": "rock.glb",
+      "inputBytes": 2745,
+      "outputBytes": 226916,
+      "inputBytesScope": "descriptor only; dependencies recorded in original source provenance",
+      "inputSha256": "636e57eb0090889627da18edaec202ff9f65f83101b94f91b7da4d21dc080ab9",
+      "outputSha256": "7c50d07519b3fcb9a2c8ca3971e5271af1fb682d83222936cc07fa0e95843e30",
+      "referencedImages": [
+        {
+          "path": "textures/2195b5c7da3a23af2a5f93dbb20f38bc069028509b106397bc8d2aee0bc55729.jpeg",
+          "bytes": 757031,
+          "sha256": "2195b5c7da3a23af2a5f93dbb20f38bc069028509b106397bc8d2aee0bc55729"
+        },
+        {
+          "path": "textures/3abbe0c5adf3e2d82b381ef52658a25eed850f0fcccd3ba1714d17c70d000966.webp",
+          "bytes": 264546,
+          "sha256": "3abbe0c5adf3e2d82b381ef52658a25eed850f0fcccd3ba1714d17c70d000966"
+        },
+        {
+          "path": "textures/4be36e3b8f2cbedb393970ced87304697b16176352fe8c6fc2c62e54160dee57.webp",
+          "bytes": 174926,
+          "sha256": "4be36e3b8f2cbedb393970ced87304697b16176352fe8c6fc2c62e54160dee57"
+        }
+      ],
+      "removedNodes": [],
+      "topologyAndTransformsRetained": true,
+      "decodedAttributesMatchPreparedInput": true,
+      "rounding": [],
+      "textures": [
+        {
+          "name": "rock_09_nor_gl",
+          "inputBytes": 757031,
+          "outputBytes": 757031,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "rock_09_diff",
+          "inputBytes": 595103,
+          "outputBytes": 264546,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.619859438477048,
+          "rgbMaxError": 11,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "rock_09_rough",
+          "inputBytes": 322950,
+          "outputBytes": 174926,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.011395062642502,
+          "rgbMaxError": 11,
+          "normalMeanAngleDegrees": 0
+        }
+      ]
+    },
+    {
+      "source": "public/world/assets/polyhaven/fern_02/fern_02_1k.gltf",
+      "target": "fern.glb",
+      "inputBytes": 6899,
+      "outputBytes": 135040,
+      "inputBytesScope": "descriptor only; dependencies recorded in original source provenance",
+      "inputSha256": "33974295ee19670af4877705fc7d91f33f42d6302f0d44a625e072271223031f",
+      "outputSha256": "b1ff4cded168e4ebb321fdc6e208a5582d8c2449f6c031f0ac0871a52f7538be",
+      "referencedImages": [
+        {
+          "path": "textures/43a63c3d8c957cda42e30f4dc053ef8975cfa91a1daa45b5b92df1e133f64723.webp",
+          "bytes": 209100,
+          "sha256": "43a63c3d8c957cda42e30f4dc053ef8975cfa91a1daa45b5b92df1e133f64723"
+        },
+        {
+          "path": "textures/384492d3832b1662a716a3694fadadd1e0cf3029a548f16516fad65b7084e571.webp",
+          "bytes": 108380,
+          "sha256": "384492d3832b1662a716a3694fadadd1e0cf3029a548f16516fad65b7084e571"
+        },
+        {
+          "path": "textures/68fd09868958793aa6ca7e61db38b6eadad7c2e73c980dbccec80f4ffba39879.webp",
+          "bytes": 158242,
+          "sha256": "68fd09868958793aa6ca7e61db38b6eadad7c2e73c980dbccec80f4ffba39879"
+        }
+      ],
+      "removedNodes": [],
+      "topologyAndTransformsRetained": true,
+      "decodedAttributesMatchPreparedInput": true,
+      "rounding": [],
+      "textures": [
+        {
+          "name": "fern_02_nor_gl",
+          "inputBytes": 367222,
+          "outputBytes": 209100,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.0200661611604078,
+          "rgbMaxError": 10,
+          "normalMeanAngleDegrees": 0.5336432533929443
+        },
+        {
+          "name": "fern_02_diff-fern_02_alpha",
+          "inputBytes": 315705,
+          "outputBytes": 108380,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.3570117504685915,
+          "rgbMaxError": 13,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "fern_02_rough",
+          "inputBytes": 280359,
+          "outputBytes": 158242,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0.8373012173966853,
+          "rgbMaxError": 10,
+          "normalMeanAngleDegrees": 0
+        }
+      ]
+    },
+    {
+      "source": "public/world/assets/polyhaven/shrub_04/shrub_04_1k.gltf",
+      "target": "shrub.glb",
+      "inputBytes": 2882,
+      "outputBytes": 538388,
+      "inputBytesScope": "descriptor only; dependencies recorded in original source provenance",
+      "inputSha256": "782832cbc57e96686b78c6ef9df6234c25f564f78421c8ed4bd42c3631f5aeae",
+      "outputSha256": "c5393d663eddf25c8eaff1e2c85eac2d26a7ba3bb6da067851ce8f7d7ad9c344",
+      "referencedImages": [
+        {
+          "path": "textures/ef63fdd91e4e65b3df0c450f67c9918d3e3d7eafcbc31f6d497fcffed858c309.webp",
+          "bytes": 267000,
+          "sha256": "ef63fdd91e4e65b3df0c450f67c9918d3e3d7eafcbc31f6d497fcffed858c309"
+        },
+        {
+          "path": "textures/73e448c5e34841f0445126b4673b00f29438b32b193381f223fb482fa8bba997.webp",
+          "bytes": 132260,
+          "sha256": "73e448c5e34841f0445126b4673b00f29438b32b193381f223fb482fa8bba997"
+        },
+        {
+          "path": "textures/f1875f360bb7ae545bdb4fc24be5f972a6d176cae113ae734ef07a824ffe7e1b.webp",
+          "bytes": 175226,
+          "sha256": "f1875f360bb7ae545bdb4fc24be5f972a6d176cae113ae734ef07a824ffe7e1b"
+        }
+      ],
+      "removedNodes": [],
+      "topologyAndTransformsRetained": true,
+      "decodedAttributesMatchPreparedInput": true,
+      "rounding": [],
+      "textures": [
+        {
+          "name": "shrub_04_nor_gl",
+          "inputBytes": 449241,
+          "outputBytes": 267000,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.1930029004198424,
+          "rgbMaxError": 9,
+          "normalMeanAngleDegrees": 0.633346484963208
+        },
+        {
+          "name": "shrub_04_diff",
+          "inputBytes": 373350,
+          "outputBytes": 132260,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 95",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.3756179576914787,
+          "rgbMaxError": 11,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "shrub_04_rough",
+          "inputBytes": 332957,
+          "outputBytes": 175226,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "WebP 100, error-gated",
+          "alphaMaxError": 0,
+          "rgbRMSE": 1.0398931027763494,
+          "rgbMaxError": 14,
+          "normalMeanAngleDegrees": 0
+        }
+      ]
+    },
+    {
+      "source": "public/world/assets/polyhaven/rock_moss_set_02/rock_moss_set_02_1k.gltf",
+      "target": "moss-rock.glb",
+      "inputBytes": 11608,
+      "outputBytes": 925192,
+      "inputBytesScope": "descriptor only; dependencies recorded in original source provenance",
+      "inputSha256": "c3b992a7622e94f7d8da97a47277a2a5177a513af0312a127ec908d4056c97db",
+      "outputSha256": "66d142bd19ea475098ec80ec29f43755a7cec605a77754e47643f15a0e4a2d2a",
+      "referencedImages": [
+        {
+          "path": "textures/dd2503789089fb72ef469efd14364d393e769c0de8781a251475cac7e0b6f51d.jpeg",
+          "bytes": 273527,
+          "sha256": "dd2503789089fb72ef469efd14364d393e769c0de8781a251475cac7e0b6f51d"
+        },
+        {
+          "path": "textures/91dd2cc77d5198b067d77e5bdb3fa8ee7b8950aeff5aec2c1ccaddb76dcca481.jpeg",
+          "bytes": 194307,
+          "sha256": "91dd2cc77d5198b067d77e5bdb3fa8ee7b8950aeff5aec2c1ccaddb76dcca481"
+        },
+        {
+          "path": "textures/12252219a98a560940359973e83af831abdcfab0ead3f0a2a7b135a0143105f1.jpeg",
+          "bytes": 146226,
+          "sha256": "12252219a98a560940359973e83af831abdcfab0ead3f0a2a7b135a0143105f1"
+        }
+      ],
+      "removedNodes": [],
+      "topologyAndTransformsRetained": true,
+      "decodedAttributesMatchPreparedInput": true,
+      "rounding": [],
+      "textures": [
+        {
+          "name": "rock_moss_set_02_nor_gl",
+          "inputBytes": 273527,
+          "outputBytes": 273527,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "rock_moss_set_02_diff",
+          "inputBytes": 194307,
+          "outputBytes": 194307,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        },
+        {
+          "name": "rock_moss_set_02_rough",
+          "inputBytes": 146226,
+          "outputBytes": 146226,
+          "size": [
+            1024,
+            1024
+          ],
+          "codec": "retained source",
+          "alphaMaxError": 0,
+          "rgbRMSE": 0,
+          "rgbMaxError": 0,
+          "normalMeanAngleDegrees": 0
+        }
+      ]
+    },
+    {
+      "source": "public/world/assets/polyhaven/forrest_ground_03/forrest_ground_03_diff_1k.jpg",
+      "target": "forest-color.webp",
+      "inputSha256": "69c3ae8a40c70eecbb312c2ca1044b5dea4f48d37f2a6f84ca7ed56b95f04a7b",
+      "outputSha256": "50fa9cde769ab6b87c2efda594ebc42c0ed6f68b2b38050df33e23f5721c58fd",
+      "name": "forrest_ground_03/forrest_ground_03_diff_1k.jpg",
+      "inputBytes": 821191,
+      "outputBytes": 680210,
+      "size": [
+        1024,
+        1024
+      ],
+      "codec": "WebP 95",
+      "alphaMaxError": 0,
+      "rgbRMSE": 2.293217729419677,
+      "rgbMaxError": 69,
+      "normalMeanAngleDegrees": 0
+    },
+    {
+      "source": "public/world/assets/polyhaven/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg",
+      "target": "rock-color.webp",
+      "inputSha256": "57b8041bfe0d0f01430e4dbaad45e7ddddf0a9fc97317f90dbc51f7b0d9e1b5d",
+      "outputSha256": "9dc1f628955ddbe9f1b1e254c7a72db4b45da56da66f6a2d41eb850b2bd1456e",
+      "name": "aerial_grass_rock/aerial_grass_rock_diff_1k.jpg",
+      "inputBytes": 666655,
+      "outputBytes": 465898,
+      "size": [
+        1024,
+        1024
+      ],
+      "codec": "WebP 95",
+      "alphaMaxError": 0,
+      "rgbRMSE": 3.480170206094971,
+      "rgbMaxError": 53,
+      "normalMeanAngleDegrees": 0
+    }
+  ]
+}

@@ -2,7 +2,14 @@
   "schemaVersion": 2,
   "lastReverified": "2026-09-06",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-spatial-20260906/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-canopy-20260906/publication.json",
+  "canopyRuntimePackage": {
+    "manifest": "public/world/canopy-v1/manifest.json",
+    "provenance": "public/world/canopy-v1/PROVENANCE.md",
+    "builder": "tools/gltf/build-canopy-runtime.mjs",
+    "policy": "Retained licensed sources and public composition; eight unused mid variants removed; bounded coastal-tree float rounding, mesh compression and error-gated texture encoding. No source files removed, no terrain-study integration, no new visual-realism acceptance.",
+    "rejected": "Two foliage-light/shadow trials retained under output/releases/madagin-canopy-20260906. Accepted material and animation implementation restored."
+  },
   "spatialReadingRelease": {
     "assetsAdded": [],
     "sourcePolicy": "Existing accepted CF geometry, ecology and licensed textures; continuous early western coast and one shared sky/ocean/key-light sun direction. NOAA/WorldCover source experiment remains excluded.",
