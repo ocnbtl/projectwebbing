@@ -3726,7 +3726,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     const source = gltf.scene.getObjectByName(DETAILED_TERRAIN_OBJECTS.ridge);
     if (!(source instanceof Mesh)) return null;
     const shoulder = createCoastalShoulderGeometry(false, tier, coastalBoundary, [], coastalHeightfield);
-    const result = createConnectedRidgeGeometry(source, shoulder);
+    const result = createConnectedRidgeGeometry(source, shoulder, true);
     shoulder.dispose();
     if (result) applyTerminalSeamNormals(result, seamField);
     return result;
@@ -5019,7 +5019,7 @@ function extendJourneyCoast(terrain: BufferGeometry, tier: WorldQualityTier, spa
   return joined;
 }
 
-function createConnectedRidgeGeometry(source: Mesh, shoulder: BufferGeometry) {
+function createConnectedRidgeGeometry(source: Mesh, shoulder: BufferGeometry, retainErosion = false) {
   const sourcePositions = source.geometry.getAttribute("position");
   const shoulderPositions = shoulder.getAttribute("position");
   let shoulderBoundaryX = Number.NEGATIVE_INFINITY;
@@ -5059,9 +5059,14 @@ function createConnectedRidgeGeometry(source: Mesh, shoulder: BufferGeometry) {
   ));
   const boundaryDistances = boundaryMatches.map(({ distance }) => distance);
   const worstBoundaryIndex = boundaryDistances.indexOf(Math.max(...boundaryDistances));
-  // Keep the same eroded surface when the terminal camera turns back.
-  // Secondary-canopy roots are baked against this exact surface.
-  const ridgeSurface = createRidgeErosionTerrainGeometry(source);
+  // Desktop roots use the eroded surface; compact retains its source surface.
+  // Merge only positions and indices, then reconstruct shared normals and UVs.
+  // Mixing the eroded surface's attributes with the bare shoulder rejects the merge.
+  const eroded = retainErosion ? createRidgeErosionTerrainGeometry(source) : null;
+  const ridgeSurface = eroded
+    ? geometrySurfaceForMerge(eroded)
+    : geometrySurfaceForMerge(source.geometry, source.matrixWorld);
+  eroded?.dispose();
   const ridgePositions = ridgeSurface.getAttribute("position");
   let terminalZ = Number.POSITIVE_INFINITY;
   for (let index = 0; index < ridgePositions.count; index += 1) {

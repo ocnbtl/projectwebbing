@@ -18,6 +18,7 @@ try {
    const out=path.join(root,release,String(viewport.width));await fs.mkdir(out,{recursive:true});
    const context=await browser.newContext({viewport,recordVideo:{dir:path.join(out,'video'),size:viewport}});
    const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
    await page.goto(origin);await page.waitForFunction(()=>document.documentElement.dataset.madaginMeaningfulWorldReady==='true',{},{timeout:60000});
    if(release==='after'&&viewport.width>700)await page.waitForFunction(()=>!!document.documentElement.dataset.madaginRidgeCanopy);
    await page.locator('[data-journey-action="pause"]').click();
