@@ -1,0 +1,42 @@
+{
+  "id": "madagin-ridge-canopy-v1",
+  "baselineCommit": "7536e49f76b352bfb3faab46d78174426455fda7",
+  "terrainSource": "public/world/v115/madagin-ridge-to-valley-high-v1.15.glb / RIDGE_V115_HIGH",
+  "terrainSha256": "febcc26dfd576fa8efbf1e075b917748ee0f909b9febb4c551ab70836cb35f8e",
+  "geometryRecipe": "Pinned createRidgeErosionTerrainGeometry; renderer geometry unchanged. Triangle-authoritative root placement after raster slope and D8 screening.",
+  "model": "public/world/canopy-v1/vegetation-mid.glb",
+  "modelSha256": "4ee1e92eec97017728ad0a30a0dab2665e27c3914ea341bf60850db8795e86d9",
+  "variants": [
+    14,
+    15,
+    4,
+    6
+  ],
+  "license": "Existing CC0 Poly Haven tree_small_02 and pachira_aquatica_01 derivatives; see canopy-v1/PROVENANCE.md.",
+  "count": 4082,
+  "seed": 6090603,
+  "fields": [
+    "x",
+    "rootY",
+    "z",
+    "rotationRadians",
+    "heightMeters",
+    "widthRatio"
+  ],
+  "placementPolicy": "5 m jittered candidates, patch gaps, slope < 1.6, positive ground and interior join fade; open high-accumulation thalwegs. Authored ecology, not a surveyed species distribution.",
+  "rootChecks": {
+    "sampleRadiusMeters": 0.15,
+    "footprintSamples": 8,
+    "maximumGapMeters": 0.0925419658520319,
+    "maximumBurialMeters": 0.4376769951637485,
+    "gridApproximationMaximumBeforeCorrectionMeters": 0.8328224210734589
+  },
+  "drainage": {
+    "method": "Strictly downhill D8 on accepted base; dry contributing-area habitat only",
+    "edges": 100105,
+    "allEdgesDecrease": true
+  },
+  "scope": "Desktop secondary canopy; compact keeps its existing ecology and receives no new model or terrain requests.",
+  "sha256": "85efe94ba67aa022f41f5d367ba566f9d0835e2cf433bee3de894c8bc88c4c91",
+  "bytes": 181524
+}

@@ -2,7 +2,16 @@
   "schemaVersion": 2,
   "lastReverified": "2026-09-06",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-canopy-20260906/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-ridge-20260906/publication.json",
+  "ridgeSecondaryCanopy": {
+    "manifest": "public/world/ridge-canopy-v1/manifest.json",
+    "provenance": "public/world/ridge-canopy-v1/PROVENANCE.md",
+    "builder": "tools/terrain/build-ridge-canopy.py",
+    "sourceExporter": "tools/terrain/export-ridge-base.mjs",
+    "accepted": "Additional source-grounded desktop secondary canopy; same ridge erosion surface through terminal turn; original models/textures retained.",
+    "rejected": "Both NOAA residual-transfer fields and pale material remain local. Foundation prototype not promoted.",
+    "visualStatus": "Bare-slope coverage improves diagnostically. Broad ecology/world ratings stay 2/5. Independent human gate unverified."
+  },
   "canopyRuntimePackage": {
     "manifest": "public/world/canopy-v1/manifest.json",
     "provenance": "public/world/canopy-v1/PROVENANCE.md",

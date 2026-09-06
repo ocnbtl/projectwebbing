@@ -1,0 +1,41 @@
+// Export the accepted ridge geometry for an offline, shared surface bake.
+import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
+import path from 'node:path';
+import {BufferGeometry, BufferAttribute, Mesh, Matrix4} from 'three';
+import ts from 'typescript';
+const root=path.resolve(import.meta.dirname,'../..');
+const out=path.join(root,'output/releases/madagin-ridge-20260906');
+const require=createRequire(path.join(root,'output/releases/madagin-canopy-20260906/pipeline/package.json'));
+const {NodeIO}=require('@gltf-transform/core');
+const {ALL_EXTENSIONS}=require('@gltf-transform/extensions');
+const {MeshoptDecoder}=require('meshoptimizer');
+await MeshoptDecoder.ready;
+await fs.mkdir(out,{recursive:true});
+const baseline='7536e49f76b352bfb3faab46d78174426455fda7';
+let source=execFileSync('git',['show',`${baseline}:src/components/internal/ridge-production-v116.tsx`],{cwd:root,encoding:'utf8',maxBuffer:4*1024*1024});
+source=source.replace('import { PhysicalSkyEnvironment } from "./world-atmosphere";','const PhysicalSkyEnvironment = () => null;');
+source+='\nexport {createRidgeErosionTerrainGeometry};';
+const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+const modulePath=path.join(out,'baseline-bake.mjs');
+await fs.writeFile(modulePath,compiled);
+const {createRidgeErosionTerrainGeometry}=await import(pathToFileURL(modulePath).href);
+const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.decoder':MeshoptDecoder});
+const document=await io.read(path.join(root,'public/world/v115/madagin-ridge-to-valley-high-v1.15.glb'));
+const node=document.getRoot().listNodes().find(n=>n.getName()==='RIDGE_V115_HIGH');
+if(!node) throw new Error('Pinned ridge node missing');
+const primitive=node.getMesh().listPrimitives()[0];
+const geometry=new BufferGeometry();
+for(const [semantic,name] of [['POSITION','position'],['NORMAL','normal'],['TEXCOORD_0','uv']]) {
+ const accessor=primitive.getAttribute(semantic);
+ if(accessor) geometry.setAttribute(name,new BufferAttribute(accessor.getArray(),accessor.getElementSize()));
+}
+geometry.setIndex(new BufferAttribute(primitive.getIndices().getArray(),1));
+const mesh=new Mesh(geometry);mesh.matrixWorld=new Matrix4().fromArray(node.getWorldMatrix());
+const result=createRidgeErosionTerrainGeometry(mesh);
+await fs.writeFile(path.join(out,'base-positions.f32'),Buffer.from(result.getAttribute('position').array.buffer));
+await fs.writeFile(path.join(out,'base-indices.u32'),Buffer.from(Uint32Array.from(result.getIndex().array).buffer));
+await fs.writeFile(path.join(out,'base.json'),JSON.stringify({baseline,vertices:result.getAttribute('position').count,triangles:result.getIndex().count/3,userData:result.userData},null,2));
+console.log(JSON.stringify({vertices:result.getAttribute('position').count,triangles:result.getIndex().count/3}));

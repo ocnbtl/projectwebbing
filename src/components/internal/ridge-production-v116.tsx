@@ -33,6 +33,7 @@ import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferG
 import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
+import {RidgeCanopy} from "./ridge-canopy";
 
 // Retain the visible sky's authored sun, and use it for environment, shadows
 // and water. These previously used three different azimuth/elevation pairs.
@@ -5058,7 +5059,9 @@ function createConnectedRidgeGeometry(source: Mesh, shoulder: BufferGeometry) {
   ));
   const boundaryDistances = boundaryMatches.map(({ distance }) => distance);
   const worstBoundaryIndex = boundaryDistances.indexOf(Math.max(...boundaryDistances));
-  const ridgeSurface = geometrySurfaceForMerge(source.geometry, source.matrixWorld);
+  // Keep the same eroded surface when the terminal camera turns back.
+  // Secondary-canopy roots are baked against this exact surface.
+  const ridgeSurface = createRidgeErosionTerrainGeometry(source);
   const ridgePositions = ridgeSurface.getAttribute("position");
   let terminalZ = Number.POSITIVE_INFINITY;
   for (let index = 0; index < ridgePositions.count; index += 1) {
@@ -9620,6 +9623,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
           )}
         </Suspense>
       ))}
+      {!mobile && tier !== "conservative" ? <Suspense fallback={null}><RidgeCanopy /></Suspense> : null}
       {ecologyChunks.map((chunk) => (
         <Suspense fallback={null} key={`ecology-${chunk}`}>
           <EcologyChunk diagnosticMode={diagnosticMode} mobile={mobile} shadows={shadows} tier={tier} zone={chunk} />

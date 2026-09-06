@@ -1,0 +1,19 @@
+// Raster sizes share the source SVG brand mark. Requires the existing asset-tool Sharp.
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+const root=path.resolve(import.meta.dirname,'../..');
+const require=createRequire(path.join(root,'output/releases/madagin-canopy-20260906/pipeline/package.json'));
+const sharp=require('sharp');
+const svg=await fs.readFile(path.join(root,'src/app/icon.svg'));
+const sizes=[16,32,48];
+const images=await Promise.all(sizes.map(size=>sharp(svg).resize(size,size).png().toBuffer()));
+const header=Buffer.alloc(6+16*sizes.length);header.writeUInt16LE(1,2);header.writeUInt16LE(sizes.length,4);
+let offset=header.length;
+for(let i=0;i<sizes.length;i++) {
+ const at=6+i*16;header[at]=header[at+1]=sizes[i];header.writeUInt16LE(1,at+4);header.writeUInt16LE(32,at+6);
+ header.writeUInt32LE(images[i].length,at+8);header.writeUInt32LE(offset,at+12);offset+=images[i].length;
+}
+await fs.writeFile(path.join(root,'src/app/favicon.ico'),Buffer.concat([header,...images]));
+await sharp(svg).resize(180,180).png().toFile(path.join(root,'src/app/apple-icon.png'));
+console.log('Built 16/32/48 px favicon and 180 px touch icon from the SVG mark.');
