@@ -30,7 +30,7 @@ type WorldAtmosphereProps = {
   tier: WorldQualityTier;
 };
 
-function configureSky(sky: Sky, showSunDisc = true) {
+function configureSky(sky: Sky, showSunDisc = true, sunDirection = MADAGIN_SUN_DIRECTION) {
   sky.scale.setScalar(2400);
   sky.frustumCulled = false;
   const material = sky.material as ShaderMaterial;
@@ -38,7 +38,7 @@ function configureSky(sky: Sky, showSunDisc = true) {
   material.uniforms.rayleigh.value = 1.75;
   material.uniforms.mieCoefficient.value = 0.0055;
   material.uniforms.mieDirectionalG.value = 0.82;
-  material.uniforms.sunPosition.value.copy(MADAGIN_SUN_DIRECTION);
+  material.uniforms.sunPosition.value.copy(sunDirection);
   if (material.uniforms.showSunDisc) material.uniforms.showSunDisc.value = showSunDisc;
   material.depthWrite = false;
   return sky;
@@ -64,13 +64,14 @@ function DaylightSky() {
 
 export function PhysicalSkyEnvironment({
   intensityScale = 1,
+  sunDirection = MADAGIN_SUN_DIRECTION,
   tier,
-}: Pick<WorldAtmosphereProps, "tier"> & { intensityScale?: number }) {
+}: Pick<WorldAtmosphereProps, "tier"> & { intensityScale?: number; sunDirection?: Vector3 }) {
   const { gl, scene } = useThree();
 
   useEffect(() => {
     const environmentScene = new Scene();
-    const environmentSky = configureSky(new Sky(), false);
+    const environmentSky = configureSky(new Sky(), false, sunDirection);
     environmentSky.scale.setScalar(92);
     environmentScene.add(environmentSky);
     const generator = new PMREMGenerator(gl);
@@ -95,7 +96,7 @@ export function PhysicalSkyEnvironment({
       scene.environmentIntensity = previousIntensity;
       target?.dispose();
     };
-  }, [gl, intensityScale, scene, tier]);
+  }, [gl, intensityScale, scene, sunDirection, tier]);
 
   return null;
 }

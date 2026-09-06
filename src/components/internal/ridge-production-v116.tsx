@@ -34,6 +34,11 @@ import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
 
+// Retain the visible sky's authored sun, and use it for environment, shadows
+// and water. These previously used three different azimuth/elevation pairs.
+const V116_SUN_DIRECTION = new Vector3(-0.78, 0.24, 0.56).normalize();
+const V116_SUN_POSITION = V116_SUN_DIRECTION.toArray().map(value => value * 720) as [number, number, number];
+
 const ROOT = "/world/v116";
 const SPECIES_URL = `${ROOT}/species-core-v1.16.glb`;
 const V115_MID_VEGETATION_URL = "/world/v115/madagin-ridge-vegetation-mid-v1.15.glb";
@@ -529,7 +534,9 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     } : null;
     ridge.name = "Madagin v1.16 compact journey Ridge terrain without terminal wall";
     valley.name = "Madagin v1.16 compact journey integrated Valley terrain without near wall";
-    return { bridge, diagnostics, ridge, valley };
+    const coastalRidge = extendJourneyCoast(ridge, "conservative", "ridge");
+    const coastalValley = extendJourneyCoast(valley, "conservative", "valley");
+    return { bridge, diagnostics, ridge: coastalRidge, valley: coastalValley };
   }, [sources]);
   useEffect(() => {
     const host = window as Window & { __MADAGIN_COMPACT_JOURNEY_SEAM_V116__?: Record<string, unknown> };
@@ -3638,8 +3645,8 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     if (connectedCoast || zone !== "ridge") return null;
     gltf.scene.updateMatrixWorld(true);
     const source = gltf.scene.getObjectByName(DETAILED_TERRAIN_OBJECTS.ridge);
-    return source instanceof Mesh ? createRidgeErosionTerrainGeometry(source) : null;
-  }, [connectedCoast, gltf.scene, zone]);
+    return source instanceof Mesh ? extendJourneyCoast(createRidgeErosionTerrainGeometry(source), tier, "ridge", coastalHeightfield) : null;
+  }, [coastalHeightfield, connectedCoast, gltf.scene, tier, zone]);
   const alpineGeometry = useMemo(() => {
     if (connectedCoast || zone !== "alpine") return null;
     gltf.scene.updateMatrixWorld(true);
@@ -3697,9 +3704,9 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     gltf.scene.updateMatrixWorld(true);
     const source = gltf.scene.getObjectByName(DETAILED_TERRAIN_OBJECTS.valley);
     return source instanceof Mesh
-      ? createIntegratedWatershedTerrainGeometry(source, alpineBoundary, ridgeBoundary, 1, 1, ridgeInteriorBoundary, 2)
+      ? extendJourneyCoast(createIntegratedWatershedTerrainGeometry(source, alpineBoundary, ridgeBoundary, 1, 1, ridgeInteriorBoundary, 2), tier, "valley")
       : null;
-  }, [alpineBoundary, connectedCoast, gltf.scene, ridgeBoundary, ridgeInteriorBoundary, zone]);
+  }, [alpineBoundary, connectedCoast, gltf.scene, ridgeBoundary, ridgeInteriorBoundary, tier, zone]);
   const coastalBoundary = useMemo(() => {
     if (!connectedCoast || zone !== "ridge") return [];
     gltf.scene.updateMatrixWorld(true);
@@ -4994,6 +5001,21 @@ function createConnectedCoastalTerrainGeometry(
     structuralSpan: shoulder.userData.coastalSpan ?? null,
   };
   return connected;
+}
+
+// In-world reading can expose the western boundary at any rail position. Extend
+// the actual cumulative journey surface instead of waiting for the Summit-only
+// coast or swapping out the watershed while a visitor turns toward the ocean.
+function extendJourneyCoast(terrain: BufferGeometry, tier: WorldQualityTier, span: "ridge" | "valley", heightfield?: CoastalHeightfieldSource) {
+  const boundary = extractCoastalBoundarySamples(new Mesh(terrain), -310);
+  if (boundary.length < 2) return terrain;
+  const shoulder = createCoastalShoulderGeometry(tier === "conservative", tier, boundary, [], heightfield, span);
+  const joined = createConnectedCoastalTerrainGeometry(terrain, shoulder, boundary[0].x, span);
+  shoulder.dispose();
+  if (!joined) return terrain;
+  joined.userData = { ...terrain.userData, journeyCoast: joined.userData.coastalExtension };
+  terrain.dispose();
+  return joined;
 }
 
 function createConnectedRidgeGeometry(source: Mesh, shoulder: BufferGeometry) {
@@ -8778,10 +8800,11 @@ function SkyDome({ reducedMotion }: { reducedMotion: boolean }) {
     depthWrite: false,
     side: BackSide,
     toneMapped: true,
-    uniforms: { uTime: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uSunDirection: { value: V116_SUN_DIRECTION.clone() } },
     vertexShader: "varying vec3 vDirection; void main(){vDirection=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
     fragmentShader: `
       uniform float uTime;
+      uniform vec3 uSunDirection;
       varying vec3 vDirection;
       float skyHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
       float skyNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(skyHash(i),skyHash(i+vec2(1,0)),f.x),mix(skyHash(i+vec2(0,1)),skyHash(i+vec2(1)),f.x),f.y);}
@@ -8791,7 +8814,7 @@ function SkyDome({ reducedMotion }: { reducedMotion: boolean }) {
         float h = smoothstep(-0.08, 0.82, direction.y);
         vec3 horizon = vec3(0.15, 0.31, 0.38);
         vec3 zenith = vec3(0.012, 0.066, 0.17);
-        float sun = pow(max(dot(direction, normalize(vec3(-0.78, 0.24, 0.56))), 0.0), 180.0);
+        float sun = pow(max(dot(direction, uSunDirection), 0.0), 180.0);
         vec3 sky = mix(horizon, zenith, h) + vec3(1.0, 0.5, 0.2) * sun * 0.94;
         vec2 cloudUv = direction.xz / max(0.28, 0.48 + direction.y * 0.58);
         vec2 drift = vec2(uTime * 0.0035, -uTime * 0.0017);
@@ -8802,7 +8825,7 @@ function SkyDome({ reducedMotion }: { reducedMotion: boolean }) {
         float cloudFloor = smoothstep(-0.1, 0.11, direction.y);
         float cloud = smoothstep(0.39, 0.57, cloudBody) * cloudFloor;
         float cloudCore = smoothstep(0.53, 0.69, cloudBody);
-        float sunFacing = max(dot(direction, normalize(vec3(-0.72, 0.38, 0.58))), 0.0);
+        float sunFacing = max(dot(direction, uSunDirection), 0.0);
         vec3 cloudShade = mix(vec3(0.255, 0.34, 0.36), vec3(0.84, 0.81, 0.72), cloudCore * 0.72 + sunFacing * 0.22);
         sky = mix(sky, cloudShade, cloud * (0.73 + cloudCore * 0.18));
         float distantBank = smoothstep(0.02, 0.2, direction.y) * (1.0 - smoothstep(0.24, 0.48, direction.y));
@@ -9083,14 +9106,14 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       <color attach="background" args={["#294b57"]} />
       <fogExp2 attach="fog" args={["#58767a", tier === "conservative" ? 0.00031 : 0.0003]} />
       <SkyDome reducedMotion={reducedMotion} />
-      <PhysicalSkyEnvironment intensityScale={0.64} tier={tier} />
+      <PhysicalSkyEnvironment intensityScale={0.64} sunDirection={V116_SUN_DIRECTION} tier={tier} />
       <hemisphereLight args={["#a9c6cd", "#13231b", 0.56]} />
       <ambientLight color="#72878a" intensity={0.08} />
       <directionalLight
         castShadow={shadows}
         color="#f4dac1"
         intensity={2.62}
-        position={[-420, 280, 360]}
+        position={V116_SUN_POSITION}
         shadow-bias={-0.00012}
         shadow-normalBias={0.24}
         shadow-radius={2.2}
@@ -9137,7 +9160,7 @@ function createOceanMaterial() {
     depthWrite: true,
     side: DoubleSide,
     toneMapped: true,
-    uniforms: { uTime: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uSunDirection: { value: V116_SUN_DIRECTION.clone() } },
     vertexShader: `
       uniform float uTime;
       varying vec3 vWorldNormal;
@@ -9219,6 +9242,7 @@ function createOceanMaterial() {
     `,
     fragmentShader: `
       uniform float uTime;
+      uniform vec3 uSunDirection;
       varying vec3 vWorldNormal;
       varying vec3 vWorldPosition;
       varying float vWaveHeight;
@@ -9288,7 +9312,7 @@ function createOceanMaterial() {
         float foamVeins = oceanNoise(vWorldPosition.xz * vec2(0.21, 0.082) + vec2(uTime * 0.022, -uTime * 0.008));
         float brokenFoam = smoothstep(0.31, 0.74, foamNoise * 0.58 + foamVeins * 0.54 + surfaceVariation * 0.18);
         float foamTongues = smoothstep(0.38, 0.77, oceanNoise(vWorldPosition.xz * vec2(0.087, 0.29) + vec2(uTime * 0.009, -uTime * 0.028)));
-        float alongshoreBreakup = 0.58 + oceanNoise(vec2(vWorldPosition.z * 0.026, floor(uTime * 0.085))) * 0.54;
+        float alongshoreBreakup = 0.58 + oceanNoise(vec2(vWorldPosition.z * 0.026, uTime * 0.085)) * 0.54;
         float runupLace = smoothstep(0.4, 0.78, oceanNoise(
           vWorldPosition.xz * vec2(0.18, 0.34) + vec2(-uTime * 0.028, uTime * 0.014)
         ));
@@ -9297,7 +9321,7 @@ function createOceanMaterial() {
         shoreFoam += vRunupPulse * runupLace * 0.34;
         shoreFoam = max(shoreFoam, vBreaker * shoreFeather * smoothstep(0.42, 0.78, foamVeins) * 0.66);
         color = mix(color, vec3(0.63, 0.73, 0.69), clamp(shoreFoam * 1.16, 0.0, 0.88));
-        vec3 sunDirection = normalize(vec3(-0.78, 0.24, 0.56));
+        vec3 sunDirection = normalize(uSunDirection);
         float broadGlint = pow(max(dot(reflected, sunDirection), 0.0), 118.0);
         float sharpGlint = pow(max(dot(reflected, sunDirection), 0.0), 460.0);
         float glintTrack = 0.58 + oceanNoise(vec2(vWorldPosition.z * 0.026, vWorldPosition.x * 0.009 - uTime * 0.01)) * 0.42;

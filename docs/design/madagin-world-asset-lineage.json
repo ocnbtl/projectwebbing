@@ -1,10 +1,21 @@
 {
   "schemaVersion": 2,
-  "lastReverified": "2026-09-04",
+  "lastReverified": "2026-09-06",
+  "currentStateRecord": "docs/design/madagin-current-state.md",
+  "currentPublicationEvidence": "output/releases/madagin-spatial-20260906/publication.json",
+  "spatialReadingRelease": {
+    "assetsAdded": [],
+    "sourcePolicy": "Existing accepted CF geometry, ecology and licensed textures; continuous early western coast and one shared sky/ocean/key-light sun direction. NOAA/WorldCover source experiment remains excluded.",
+    "runtimeFiles": ["src/components/internal/ridge-production-v116.tsx", "src/components/internal/world-atmosphere.tsx", "src/components/internal/world-lab.tsx"],
+    "verification": "output/playwright/madagin-world-progress/spatial-release-20260906/",
+    "evaluation": "docs/design/madagin-evaluation-register.md",
+    "publicationAuthority": "Owner standing authorization on September 6, 2026 for scoped website/world commits, pushes and production releases through the existing infrastructure."
+  },
   "activeRuntime": "v1.16",
   "wholeWorldAcceptedBaseline": null,
   "wholeWorldStatus": "publicly deployed as a real-time WebGL experience; not accepted as photoreal, visually finished, or physically device-validated",
   "publicRelease": {
+    "recordRole": "Historical CF release; current publication evidence is identified above. This older object is retained for asset provenance, not current alias identity.",
     "commit": "8c1189e73e63e94cc196c65506ddc23d5350a886",
     "deploymentId": "dpl_Zrmq1MU4SEGXXRF7LP3aKgeuikCR",
     "immutableUrl": "https://projectwebbing-9lztwrwhu-unigentamos.vercel.app",

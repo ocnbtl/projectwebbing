@@ -70,10 +70,10 @@ export function PublicWorldLoader({
       )}
       <p className={styles.status} role="status">
         {eligibility.live
-          ? "The live Madagin mountain world is active."
+          ? "The mountain view is ready."
           : eligibility.reason === "checking"
-            ? "Checking whether this device can run the live Madagin mountain world."
-            : "A still mountain composition is active for this device or motion preference."}
+            ? "Loading the mountain view."
+            : "A still mountain view is displayed."}
       </p>
     </div>
   );

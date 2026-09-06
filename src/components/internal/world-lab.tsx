@@ -794,6 +794,9 @@ function CameraDirector({
   const positionTarget = useRef(new Vector3());
   const lookTarget = useRef(new Vector3());
   const currentLook = useRef(new Vector3());
+  const publicView = useRef<WorldViewId>("journey");
+  const publicReturnSeconds = useRef(0);
+  const publicCameraSampleAt = useRef(0);
   const contactSummitPosition = useRef(new Vector3());
   const contactSummitLook = useRef(new Vector3());
   const cameraBank = useRef(0);
@@ -845,14 +848,47 @@ function CameraDirector({
     const nextPosition = positionTarget.current;
     const nextLook = lookTarget.current;
 
-    if (activeView === "journey" && publicJourneyProgress && !inspection.enabled) {
+    if (activeView !== "contact" && publicJourneyProgress && !inspection.enabled) {
       const rawProgress = Math.min(1, Math.max(0, publicJourneyProgress.get()));
       const curveParameter = authoredJourneyCurveParameter(rawProgress);
       (mobile ? FULL_JOURNEY_MOBILE_POSITION : FULL_JOURNEY_POSITION).getPoint(curveParameter, nextPosition);
       (mobile ? FULL_JOURNEY_MOBILE_LOOK : FULL_JOURNEY_LOOK).getPoint(curveParameter, nextLook);
+      const dx = nextLook.x - nextPosition.x;
+      const dz = nextLook.z - nextPosition.z;
+      const distance = Math.max(60, Math.hypot(dx, dz));
+      if (activeView === "about") {
+        let oceanIndex = 0;
+        JOURNEY_CHECKPOINTS.forEach((item, index) => { if (rawProgress >= item.progress) oceanIndex = index; });
+        const from = JOURNEY_CHECKPOINTS[oceanIndex];
+        const to = JOURNEY_CHECKPOINTS[Math.min(oceanIndex + 1, JOURNEY_CHECKPOINTS.length - 1)];
+        const amount = Math.min(1, Math.max(0, (rawProgress - from.progress) / Math.max(0.001, to.progress - from.progress)));
+        const fromLook = mobile ? from.mobileOceanLookAt : from.oceanLookAt;
+        const toLook = mobile ? to.mobileOceanLookAt : to.oceanLookAt;
+        nextLook.set(...fromLook.map((value, index) => value + (toLook[index] - value) * amount) as [number, number, number]);
+        nextLook.z = Math.max(-600, Math.min(-200, nextLook.z));
+      } else if (activeView === "blog") {
+        // A restrained right pan keeps the hillside in frame; a full 90-degree
+        // turn looks beyond the current source terrain's eastern boundary.
+        nextLook.set(nextPosition.x + dx * 0.978148 - dz * 0.207912, nextLook.y, nextPosition.z + dz * 0.978148 + dx * 0.207912);
+      } else if (activeView === "projects") {
+        nextLook.set(nextPosition.x + dx * 0.25, nextPosition.y + distance * 0.82, nextPosition.z + dz * 0.25);
+      }
+      if (publicView.current !== activeView) {
+        if (activeView === "journey") publicReturnSeconds.current = 2;
+        publicView.current = activeView;
+      }
+      // Reading turns around the actual rail sample, never a nearby checkpoint.
+      // The return settles onto that same sample before ordinary playback resumes.
       camera.position.copy(nextPosition);
-      currentLook.current.copy(nextLook);
+      if (activeView !== "journey" || publicReturnSeconds.current > 0) {
+        currentLook.current.lerp(nextLook, 1 - Math.exp(-Math.min(delta, 0.05) * 4.5));
+        publicReturnSeconds.current = Math.max(0, publicReturnSeconds.current - delta);
+      } else currentLook.current.copy(nextLook);
       camera.lookAt(currentLook.current);
+      if (performance.now() - publicCameraSampleAt.current > 200) {
+        publicCameraSampleAt.current = performance.now();
+        document.documentElement.dataset.madaginPublicCamera = JSON.stringify({ position: camera.position.toArray(), look: currentLook.current.toArray(), view: activeView, progress: rawProgress });
+      }
       let chapterIndex = 0;
       JOURNEY_CHECKPOINTS.forEach((item, index) => {
         if (rawProgress >= item.progress) chapterIndex = index;
@@ -948,6 +984,9 @@ function CameraDirector({
         nextPosition.y += mobile ? 30 : 28;
       } else if (activeView === "projects") {
         nextLook.fromArray(mobile ? checkpoint.mobileSkyLookAt : checkpoint.skyLookAt);
+      } else if (activeView === "blog") {
+        const forward = mobile ? checkpoint.mobileLookAt : checkpoint.lookAt;
+        nextLook.set(nextPosition.x - (forward[2] - nextPosition.z), nextPosition.y - 12, nextPosition.z + (forward[0] - nextPosition.x));
       } else {
         nextLook.fromArray(mobile ? checkpoint.mobileLookAt : checkpoint.lookAt);
       }
@@ -1454,6 +1493,9 @@ function sceneCopy(activeView: WorldViewId, journeyCheckpoint: number, contactSt
       label: "Mountain ascent.",
       detail: getWorldView("contact").entry,
     };
+  }
+  if (activeView === "blog") {
+    return { role: "Blog", label: "Beside the hillside.", detail: "Turn right to read, then return to the saved journey." };
   }
   return { role: checkpoint.role, label: checkpoint.label, detail: checkpoint.story };
 }

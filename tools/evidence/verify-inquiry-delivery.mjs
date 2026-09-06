@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {deliverPreparedInquiry} from '../../src/lib/inquiry-delivery-policy.ts';
+const verified={mode:'webhook',recipient:'contact@madagin.com',domainVerified:true,mailboxVerified:true,deliveryVerified:true,endpoint:'https://delivery.example.test/inquiry',token:'fixture-only-not-a-credential'};
+const fixture={replyTo:'fixture@example.test',brief:'Local test only. No actual transport.'};
+let calls=[];
+const transport=async(url,options)=>{calls.push({url:String(url),options});return new Response('',{status:202});};
+assert.deepEqual(await deliverPreparedInquiry({...verified,mode:'off'},fixture,transport),{status:'disabled'});
+for(const field of ['domainVerified','mailboxVerified','deliveryVerified']) assert.deepEqual(await deliverPreparedInquiry({...verified,[field]:false},fixture,transport),{status:'unverified'});
+for(const patch of [{endpoint:''},{endpoint:'http://delivery.example.test'},{endpoint:'https://user:password@delivery.example.test'},{token:''},{recipient:'bad\naddress'}]) assert.deepEqual(await deliverPreparedInquiry({...verified,...patch},fixture,transport),{status:'invalid'});
+assert.deepEqual(await deliverPreparedInquiry(verified,{...fixture,replyTo:'person@example.test\nBcc: other@example.test'},transport),{status:'invalid'});
+assert.deepEqual(await deliverPreparedInquiry(verified,{...fixture,brief:'x'.repeat(12001)},transport),{status:'invalid'});
+assert.equal(calls.length,0);
+assert.deepEqual(await deliverPreparedInquiry(verified,fixture,transport),{status:'accepted'});
+assert.equal(calls.length,1);assert.equal(JSON.parse(calls[0].options.body).to,'contact@madagin.com');assert.equal(calls[0].options.redirect,'error');
+assert.deepEqual(await deliverPreparedInquiry(verified,fixture,async()=>new Response('',{status:503})),{status:'failed'});
+assert.deepEqual(await deliverPreparedInquiry(verified,fixture,async()=>{throw Error('offline');}),{status:'failed'});
+console.log(JSON.stringify({passed:true,realNetworkRequests:0,disabledAndUnverifiedTransportCalls:0,acceptanceIsNotDelivery:true,cases:14},null,2));

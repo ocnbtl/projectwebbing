@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { MadaginMark, PublicFooter, PublicHeader } from "@/components/public/public-chrome";
 import { PublicWorldLoader } from "@/components/public/public-world-loader";
+import { WorldReadingPanel } from "./world-reading-panel";
+import { readWorldLocation, worldLocationHash, type ReadingDestination, type ReadingLocation } from "@/lib/world-reading-location";
 import type { ContentItem } from "@/lib/content-types";
 import { method, promise, standards } from "@/lib/brand";
 import type { WorldViewId } from "@/lib/world-manifest";
@@ -128,6 +130,11 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
   const [useLessMotion, setUseLessMotion] = useState(false);
   const [worldReady, setWorldReady] = useState(false);
   const [activeView, setActiveView] = useState<WorldViewId>("journey");
+  const [readingLocation, setReadingLocation] = useState<ReadingLocation | null>(null);
+  const reading = readingLocation?.destination ?? null;
+  const readingRef = useRef<ReadingLocation | null>(null);
+  const readingScrollPositions = useRef(new Map<string, number>());
+  const returnFocus = useRef<HTMLElement | null>(null);
   const [playbackState, setPlaybackState] = useState<JourneyPlaybackState>("waiting");
   const motionOff = Boolean(prefersReducedMotion || useLessMotion);
   const worldProgress = useMotionValue(0);
@@ -157,26 +164,58 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
     setPlaybackState((current) => current === "complete" ? current : "paused");
   }, []);
 
+  const navigateReading = useCallback((next: ReadingLocation | null, updateHistory = true) => {
+    if (next && !readingRef.current) returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    readingRef.current = next;
+    setReadingLocation(next);
+    pauseJourney();
+    selectView(next?.destination ?? "journey");
+    if (updateHistory) {
+      const hash = worldLocationHash(next);
+      if (window.location.hash !== hash) window.history.pushState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
+    }
+    if (!next) returnFocus.current?.focus({ preventScroll: true });
+  }, [pauseJourney, selectView]);
+
+  useEffect(() => {
+    const readLocation = () => navigateReading(readWorldLocation(window.location.hash), false);
+    window.addEventListener("popstate", readLocation);
+    window.addEventListener("hashchange", readLocation);
+    // Hydration starts with ordinary semantic content; then restore a shared
+    // immersive link without asking Next to replace the mounted world.
+    if (readWorldLocation(window.location.hash)) queueMicrotask(readLocation);
+    return () => {
+      window.removeEventListener("popstate", readLocation);
+      window.removeEventListener("hashchange", readLocation);
+    };
+  }, [navigateReading]);
+
   const replayJourney = useCallback(() => {
+    navigateReading(null);
     elapsedJourneyMs.current = 0;
     worldProgress.set(0);
     selectView("journey");
     setPlaybackState(worldReady ? "playing" : "waiting");
-  }, [selectView, worldProgress, worldReady]);
+  }, [navigateReading, selectView, worldProgress, worldReady]);
 
   const resumeJourney = useCallback(() => {
+    navigateReading(null);
     if (playbackState === "complete") {
       replayJourney();
       return;
     }
     selectView("journey");
     setPlaybackState(worldReady ? "playing" : "waiting");
-  }, [playbackState, replayJourney, selectView, worldReady]);
+  }, [navigateReading, playbackState, replayJourney, selectView, worldReady]);
 
-  const openGuidedView = useCallback((view: "about" | "projects") => {
-    pauseJourney();
-    selectView(view);
-  }, [pauseJourney, selectView]);
+  const openGuidedView = useCallback((view: ReadingDestination) => {
+    navigateReading({ destination: view });
+  }, [navigateReading]);
+
+  const returnToJourney = useCallback(() => {
+    // Hold the exact saved rail position while the camera turns back. Resume is explicit.
+    navigateReading(null);
+  }, [navigateReading]);
 
   const handleWorldReady = useCallback(() => {
     setWorldReady(true);
@@ -184,18 +223,21 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
   }, []);
 
   const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest("a, button")) return;
+    if (!event.isPrimary || event.button !== 0) return;
+    if ((event.target as HTMLElement).closest("a, button, [data-world-content]")) return;
     pointerStart.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    event.currentTarget.setPointerCapture(event.pointerId);
   }, []);
 
   const handlePointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     const start = pointerStart.current;
     pointerStart.current = null;
-    if (!start || start.id !== event.pointerId || (event.target as HTMLElement).closest("a, button")) return;
+    if (!start || start.id !== event.pointerId || (event.target as HTMLElement).closest("a, button, [data-world-content]")) return;
     const deltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
     if (Math.abs(deltaX) < 48 && Math.abs(deltaY) < 48) return;
     if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < 0) openGuidedView("about");
+    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) openGuidedView("blog");
     if (Math.abs(deltaY) >= Math.abs(deltaX) && deltaY < 0) openGuidedView("projects");
   }, [openGuidedView]);
 
@@ -264,16 +306,25 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
       <main>
         <section ref={journeyRef} className={`${styles.journey} ${motionOff ? styles.motionOff : ""}`} aria-labelledby="madagin-title">
           <div
-            className={styles.stage}
+            className={`${styles.stage} ${reading && !motionOff ? styles.reading : ""}`}
             data-public-journey-state={playbackState}
             onPointerDown={handlePointerDown}
             onPointerUp={handlePointerUp}
+            onPointerCancel={() => { pointerStart.current = null; }}
+            onKeyDown={event => { if (event.key === "Escape" && reading) returnToJourney(); }}
           >
-            <PublicHeader tone="dark" />
+            <PublicHeader tone="dark" onDestination={worldReady && !motionOff ? openGuidedView : undefined} activeDestination={reading ?? undefined} />
             <div className={styles.worldPlate}>
               <PublicWorldLoader activeView={activeView} motionOff={motionOff} onReady={handleWorldReady} progress={worldProgress} />
             </div>
             <motion.div className={styles.stageShade} style={motionOff ? undefined : { filter: shadeFilter }} />
+            {worldReady && !motionOff ? <div className={styles.worldInput} tabIndex={0} role="group"
+              aria-label="Explore the world: left arrow for About, up arrow for Projects, right arrow for Blog. Space pauses or resumes the journey."
+              onKeyDown={event => {
+                const view = { ArrowLeft: "about", ArrowUp: "projects", ArrowRight: "blog" }[event.key] as ReadingDestination | undefined;
+                if (view) { event.preventDefault(); openGuidedView(view); }
+                if (event.key === " ") { event.preventDefault(); if (playbackState === "playing") pauseJourney(); else resumeJourney(); }
+              }} /> : null}
             <h1 id="madagin-title" className={styles.srTitle}>Madagin</h1>
             <p className={styles.heroPromise}><span className={styles.studioLabel}>Founder-led web studio.</span>{promise}</p>
             <motion.div className={styles.wordmark} role="img" aria-label="Madagin" style={motionOff ? undefined : { filter: wordFilter }}>
@@ -282,12 +333,16 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
             <div className={styles.valueStack} aria-label="The standards Madagin works toward">
               {standards.map((standard, index) => <ValueScene index={index} key={standard.name} motionOff={motionOff} name={standard.name} progress={worldProgress} question={standard.question} />)}
             </div>
+            {reading && !motionOff && worldReady ? <WorldReadingPanel destination={reading} slug={readingLocation?.slug} projects={projects} posts={posts} onReturn={returnToJourney}
+              onSelect={slug => navigateReading({ destination: reading, ...(slug ? { slug } : {}) })} scrollPositions={readingScrollPositions} /> : null}
+            {reading && (motionOff || !worldReady) ? <p className={styles.readingFallback}><Link href={`/${reading}${readingLocation?.slug ? `/${readingLocation.slug}` : ""}`}>Open {readingLocation?.slug ? "this story" : reading} →</Link></p> : null}
             {!motionOff && worldReady ? (
               <div className={styles.journeyControls} aria-label="Mountain journey controls">
                 <div className={styles.viewControls}>
-                  <button aria-pressed={activeView === "about"} data-journey-action="ocean" onClick={() => openGuidedView("about")} type="button">← Ocean</button>
-                  <button aria-pressed={activeView === "projects"} data-journey-action="sky" onClick={() => openGuidedView("projects")} type="button">↑ Sky</button>
-                  {activeView !== "journey" ? <button data-journey-action="continue" onClick={resumeJourney} type="button">Continue</button> : null}
+                  <button aria-pressed={reading === "about"} data-journey-action="ocean" onClick={() => openGuidedView("about")} type="button">← About</button>
+                  <button aria-pressed={reading === "projects"} data-journey-action="sky" onClick={() => openGuidedView("projects")} type="button">↑ Projects</button>
+                  <button aria-pressed={reading === "blog"} data-journey-action="blog" onClick={() => openGuidedView("blog")} type="button">Blog →</button>
+                  {activeView !== "journey" ? <button data-journey-action="continue" onClick={returnToJourney} type="button">Return</button> : null}
                 </div>
                 <div className={styles.playbackControls}>
                   <button
@@ -301,7 +356,7 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
                   <a href="#site-content">Skip</a>
                 </div>
                 <div className={styles.journeyProgress} aria-hidden="true"><motion.span style={{ scaleX: worldProgress }} /></div>
-                <p className={styles.gestureHint}>Swipe or drag left for the ocean · up for the sky</p>
+                <p className={styles.gestureHint}>{reading ? "Scroll the panel to read · Return keeps your place" : "Drag left to About · up to Projects · right to Blog"}</p>
               </div>
             ) : null}
             <button
@@ -309,6 +364,7 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
               className={styles.motionControl}
               onClick={() => {
                 motionToggleUsed.current = true;
+                navigateReading(null);
                 setUseLessMotion((current) => !current);
               }}
               type="button"

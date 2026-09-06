@@ -37,6 +37,7 @@ try{
    await page.locator('#'+item.slug+'-detail').scrollIntoViewIfNeeded();
    await page.screenshot({path:path.join(out,item.slug+'-'+viewport.width+'-proof.png')});
    await page.locator('#'+item.slug+'-mobile').scrollIntoViewIfNeeded();
+   await page.locator('img[src*="proof-20260905"]').evaluateAll(images=>Promise.all(images.map(img=>img.decode())));
    await page.screenshot({path:path.join(out,item.slug+'-'+viewport.width+'-mobile-proof.png')});
    const proofImages=await page.locator('img[src*="proof-20260905"]').evaluateAll(images=>images.map(img=>({src:img.getAttribute('src'),loaded:img.complete&&img.naturalWidth>0,alt:img.alt})));
    if(proofImages.length!==2||proofImages.some(img=>!img.loaded||!img.alt))throw Error('Project proof images missing');

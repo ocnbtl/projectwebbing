@@ -16,6 +16,16 @@
   touch-action: pan-y;
 }
 
+.reading .heroPromise,.reading .wordmark,.reading .valueStack,.reading .scrollCue { visibility:hidden; }
+.worldInput { position:absolute; inset:0; z-index:1; touch-action:none; cursor:grab; }
+.worldInput:active { cursor:grabbing; }
+.worldInput:focus-visible { outline:2px solid #d2efff; outline-offset:-6px; }
+.readingFallback { position:absolute; top:10rem; left:clamp(1.25rem,4vw,4rem); z-index:11; padding:1rem 1.4rem; background:#06191fe6; color:#fff; }
+.readingFallback a { color:inherit; text-underline-offset:.25em; }
+.wordmark,.valueStack { pointer-events:none; }
+.reading .journeyControls { width:min(43rem,calc(100% - 2rem)); }
+@media(max-width:700px) { .reading .motionControl { top:6.6rem; } .reading .journeyControls { bottom:.6rem; } .reading .journeyControls button { padding:.4rem .5rem; font-size:.62rem; } }
+
 .worldPlate {
   position: absolute;
   inset: 0;
@@ -187,7 +197,7 @@
   left: 50%;
   display: grid;
   width: min(38rem, calc(100% - 2.5rem));
-  grid-template-columns: auto auto;
+  grid-template-columns: 1fr;
   gap: 0.42rem 0.55rem;
   padding: 0.58rem 0.68rem 0.52rem;
   border: 1px solid rgba(252, 252, 252, 0.2);
@@ -209,7 +219,7 @@
 .journeyControls button,
 .journeyControls a {
   display: inline-flex;
-  min-height: 2.35rem;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   padding: 0.45rem 0.75rem;
@@ -808,7 +818,7 @@
 
   .journeyControls button,
   .journeyControls a {
-    min-height: 2.6rem;
+    min-height: 2.75rem;
     flex: 1;
     padding-right: 0.45rem;
     padding-left: 0.45rem;
@@ -975,4 +985,11 @@
   display: block;
   margin-bottom: 0.35rem;
   font-weight: 450;
+}
+
+@media(max-height:560px) and (min-width:701px) {
+  .reading .journeyControls { left:auto; right:1rem; bottom:1rem; width:calc(42% - 3rem); transform:none; }
+  .reading .viewControls { flex-wrap:wrap; }
+  .reading .journeyControls button,.reading .journeyControls a { padding:.35rem .5rem; font-size:.58rem; }
+  .reading .motionControl { top:5.2rem; right:1.5rem; }
 }

@@ -1,4 +1,4 @@
-export type WorldViewId = "journey" | "about" | "projects" | "contact";
+export type WorldViewId = "journey" | "about" | "projects" | "blog" | "contact";
 
 export type JourneyCheckpointId =
   | "ridge"
@@ -46,8 +46,8 @@ export const WORLD_VIEWS: readonly WorldView[] = [
     id: "about",
     label: "Ocean pan",
     role: "About",
-    behavior: "Rise above nearby canopy and turn west from the current checkpoint",
-    entry: "Lift into a clear ocean sightline while preserving the story position.",
+    behavior: "Turn west toward the coastline from the saved journey position",
+    entry: "Read beside the ocean while preserving the story position.",
   },
   {
     id: "projects",
@@ -55,6 +55,13 @@ export const WORLD_VIEWS: readonly WorldView[] = [
     role: "Selected projects",
     behavior: "Tilt upward from the current checkpoint; do not translate",
     entry: "Look above the mountain line while the atmosphere stays alive.",
+  },
+  {
+    id: "blog",
+    label: "Hillside pan",
+    role: "Blog",
+    behavior: "Turn right from the saved journey position",
+    entry: "Read beside the hillside while the world keeps moving.",
   },
   {
     id: "contact",

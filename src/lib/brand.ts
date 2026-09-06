@@ -9,6 +9,8 @@ export const palette = [
 
 export const promise = "Sites people remember, trust, and choose.";
 
+export const studioIntroduction = "Madagin is a founder-led web studio for businesses that have outgrown the way they show up online. Strategy, design, and development stay in one conversation from the first question to the finished site.";
+
 export const method = [
   {
     name: "Fresh perspective",

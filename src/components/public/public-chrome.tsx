@@ -15,7 +15,11 @@ export function MadaginMark({ compact = false }: { compact?: boolean }) {
   );
 }
 
-export function PublicHeader({ tone = "dark" }: { tone?: "dark" | "light" }) {
+export function PublicHeader({ tone = "dark", onDestination, activeDestination }: {
+  tone?: "dark" | "light";
+  onDestination?: (destination: "about" | "projects" | "blog") => void;
+  activeDestination?: "about" | "projects" | "blog";
+}) {
   return (
     <header className={`${styles.header} ${styles[tone]}`}>
       <Link className={styles.logoLink} href="/" aria-label="Madagin home">
@@ -23,7 +27,12 @@ export function PublicHeader({ tone = "dark" }: { tone?: "dark" | "light" }) {
       </Link>
       <nav className={styles.navigation} aria-label="Primary navigation">
         {navigation.map((item) => (
-          <Link href={item.href} key={item.href}>
+          <Link href={item.href} key={item.href} aria-current={activeDestination === item.href.slice(1) ? "location" : undefined}
+            onClick={onDestination ? event => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+              event.preventDefault();
+              onDestination(item.href.slice(1) as "about" | "projects" | "blog");
+            } : undefined}>
             {item.label}
           </Link>
         ))}

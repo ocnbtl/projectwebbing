@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PublicFooter, PublicHeader } from "@/components/public/public-chrome";
-import { method, promise, standards } from "@/lib/brand";
+import { method, promise, standards, studioIntroduction } from "@/lib/brand";
 import { getProjectPresentation } from "@/content/project-presentations";
 import type { ContentItem, ContentKind } from "@/lib/content-types";
 import { getPublishedContentItem } from "@/lib/content";
@@ -144,7 +144,9 @@ export async function ContentDetail({ item }: { item: ContentItem }) {
             <div><span>Your next website</span><h2 id="project-next-step">What needs to change?</h2><p>Tell me where the business is now, and what the website needs to do next.</p><Link href="/contact">Start a project brief <span aria-hidden="true">↗</span></Link></div>
             {nextProject ? <Link className={styles.nextProject} href={`/projects/${nextProject.slug}`}><span>Another project</span><strong>{nextProject.title}</strong><span aria-hidden="true">→</span></Link> : null}
           </section>
-        </> : null}
+        </> : <section className={styles.projectClosing} aria-labelledby="note-next-step">
+          <div><span>Your next website</span><h2 id="note-next-step">Start with what needs to change.</h2><p>Use the project brief to put the first questions in one place.</p><Link href="/contact">Prepare your project brief <span aria-hidden="true">→</span></Link></div>
+        </section>}
       </article>
     </PublicFrame>
   );
@@ -160,10 +162,7 @@ export function AboutPage() {
       </header>
 
       <section className={styles.aboutStatement}>
-        <p>
-          Madagin is a founder-led web studio for businesses that have outgrown the way they show up online.
-          Strategy, design, and development stay in one conversation from the first question to the finished site.
-        </p>
+        <p>{studioIntroduction}</p>
       </section>
 
       <section className={styles.aboutMethod} aria-labelledby="about-method-title">
