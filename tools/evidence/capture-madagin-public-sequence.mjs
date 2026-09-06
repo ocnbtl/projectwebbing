@@ -62,7 +62,10 @@ for (const checkpoint of checkpoints) {
     const coastalEcology = window.__MADAGIN_COASTAL_ECOLOGY_V116__ ?? {};
     const coastalShoulder = window.__MADAGIN_COASTAL_SHOULDER_V116__ ?? {};
     const terrainMist = window.__MADAGIN_TERRAIN_MIST_V120__ ?? {};
-    const realism = window.__MADAGIN_REALISM_CD__ ?? window.__MADAGIN_REALISM_CC__ ?? window.__MADAGIN_REALISM_CB__ ?? window.__MADAGIN_REALISM_CA__ ?? window.__MADAGIN_REALISM_BZ__ ?? window.__MADAGIN_REALISM_BY__ ?? null;
+    const realism = window.__MADAGIN_REALISM_CF__ ?? window.__MADAGIN_REALISM_CE__ ?? window.__MADAGIN_REALISM_CD__ ?? window.__MADAGIN_REALISM_CC__ ?? window.__MADAGIN_REALISM_CB__ ?? window.__MADAGIN_REALISM_CA__ ?? window.__MADAGIN_REALISM_BZ__ ?? window.__MADAGIN_REALISM_BY__ ?? null;
+    // CF retains CC's optical contract and CE's clustered, open littoral layout.
+    // Keep those domains separate instead of inferring a new implementation count.
+    const lakeShore = window.__MADAGIN_WATER_REALISM_CE__?.lakeShore ?? null;
     const waterRealism = window.__MADAGIN_WATER_REALISM_CC__ ?? window.__MADAGIN_WATER_REALISM_BY__ ?? null;
     const oceanRealism = window.__MADAGIN_OCEAN_REALISM_CD__ ?? window.__MADAGIN_OCEAN_REALISM_BZ__ ?? window.__MADAGIN_OCEAN_REALISM_BY__ ?? null;
     const orographicWeather = window.__MADAGIN_OROGRAPHIC_WEATHER_CD__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_CC__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_CB__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_CA__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BZ__ ?? window.__MADAGIN_OROGRAPHIC_WEATHER_BX__ ?? null;
@@ -194,6 +197,8 @@ for (const checkpoint of checkpoints) {
         lakeBrokenTerrainReflection: waterRealism?.lakeBed?.brokenTerrainReflection ?? false,
         lakeOpaqueInteriorSorting: waterRealism?.lakeBed?.opaqueInteriorSorting ?? false,
         lakeShoreSourceGeology: waterRealism?.lakeBed?.sourceGeologyPlacements ?? 0,
+        lakeShoreClustered: lakeShore?.clusteredSourceGeology ?? null,
+        lakeShoreOpenReaches: lakeShore?.openShoreReaches ?? null,
         oceanBreakerBands: oceanRealism?.breakerBands ?? 0,
         oceanCandidate: oceanRealism?.candidate ?? null,
         oceanDepthAbsorption: oceanRealism?.beerLambertDepthAbsorption ?? false,
@@ -247,15 +252,9 @@ for (const view of [
 
 await browser.close();
 const outputPath = path.join(outputRoot, "sequence.json");
-await fs.writeFile(
-  outputPath,
-  `${JSON.stringify({ capturedAt: new Date().toISOString(), origin, pageErrors, results }, null, 2)}\n`,
-  "utf8",
-);
-process.stdout.write(`${JSON.stringify({ outputPath, pageErrors, results }, null, 2)}\n`);
 const structuralEcologyPassed = results.some((result) => (
   result.structuralEcology?.architectureProfiles === 5
-  && result.structuralEcology?.candidate === "CD"
+  && ["CD", "CE", "CF"].includes(result.structuralEcology?.candidate)
   && result.structuralEcology?.releasedPrimaryCanopy > 0
   && result.structuralEcology?.regionalVolcanicAdjustedVertices > 0
   && result.structuralEcology?.regionalVolcanicSubdivisionPasses === 2
@@ -304,7 +303,11 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.lakeAnisotropicReflection === true
   && result.structuralEcology?.lakeShorelineSedimentResponse === true
   && result.structuralEcology?.lakeWaveNormalAuthorities === 3
-  && result.structuralEcology?.lakeShoreSourceGeology >= 24
+  && result.structuralEcology?.lakeShoreSourceGeology > 0
+  && (!["CE", "CF"].includes(result.structuralEcology?.candidate) || (
+    result.structuralEcology?.lakeShoreClustered === true
+    && result.structuralEcology?.lakeShoreOpenReaches === true
+  ))
   && result.structuralEcology?.lakeAngularSegments >= 320
   && result.structuralEcology?.lakeRadialSegments >= 40
   && result.structuralEcology?.oceanCandidate === "CD"
@@ -352,10 +355,12 @@ const structuralEcologyPassed = results.some((result) => (
   && result.structuralEcology?.coastalSourceTreePlacements === 54
   && result.structuralEcology?.coastalWindPrunedSourceCanopy === true
 ));
-if (
-  pageErrors.length
-  || !structuralEcologyPassed
-  || results.some((result) => result.canvasCount !== 1 || result.rendererState !== "live" || result.videoCount !== 0)
-) {
-  process.exitCode = 1;
-}
+const checks = {
+  structuralEcologyPassed,
+  rendererPassed: results.every(result => result.canvasCount === 1 && result.rendererState === "live" && result.videoCount === 0),
+  sevenViewsCaptured: results.length === 7,
+  noPageExceptions: pageErrors.length === 0,
+};
+await fs.writeFile(outputPath, `${JSON.stringify({capturedAt:new Date().toISOString(),origin,pageErrors,checks,results},null,2)}\n`, "utf8");
+process.stdout.write(`${JSON.stringify({outputPath,candidate:results[0]?.structuralEcology?.candidate,checks,pageErrors},null,2)}\n`);
+if (Object.values(checks).some(passed => !passed)) process.exitCode = 1;

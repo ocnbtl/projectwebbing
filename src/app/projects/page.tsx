@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Projects",
   description: "Selected Madagin website work and the decisions behind it.",
+  alternates: { canonical: "/projects" },
 };
 
 export default async function ProjectsPage() {

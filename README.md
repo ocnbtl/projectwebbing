@@ -6,14 +6,14 @@ Project Webbing is the private repository name for Madagin's public website and 
 
 - / - a sparse cinematic landing experience with an oversized Plaster wordmark, scroll-linked drag and stretch, a pale editorial reveal, the approved promise, and the four current standards.
 - /projects and /blog - repository-backed public content with individual story routes.
-- /contact - a six-question cinematic inquiry journey with a review step and an intentionally inactive final control until Madagin's domain and email are ready.
+- /contact - a six-question project brief with upfront delivery status, review, editing, text copying, and a local text-file download.
 - /internal/login - password-only owner authentication. Private content stays inaccessible until server-side credentials are configured.
 - /internal - a concise Vercel Web Analytics dashboard. Missing or unavailable data is shown as unconfigured, never as invented metrics.
 - /internal/projects and /internal/blog - an owner editor that commits content to GitHub; the existing GitHub/Vercel connection handles deployment.
 - /internal/brand - the living Madagin identity system: palette, typography, verbal identity, motion specimen, and open decisions.
 - /robots.txt and /sitemap.xml - public indexing rules that exclude the private workspace.
 
-The public page intentionally uses a code-native cinematic fallback until the final hero film is approved. It is a finished shell, not placeholder copy or a stock-media substitute.
+The public page uses the live Candidate CF world where browser capabilities allow it, with a static fallback for reduced motion, Save-Data, low-power hints, and unavailable WebGL. A passing runtime gate does not establish photographic realism or physical-device performance.
 
 ## Stack
 
@@ -72,9 +72,11 @@ Published content lives in [src/content/madagin-content.json](src/content/madagi
 
 This removes Vercel Blob and its separate storage bill. The tradeoff is deliberate: drafts are excluded from the public website, but remain visible to anyone who can read the GitHub repository. Cover media can be committed under public/media and referenced as /media/filename.jpg, or supplied as a public HTTPS URL.
 
+The two confirmed client stories, Sage Burress and Masonry Color Corrections, use website captures with source URLs, timestamps, and checksums under public/media/projects. Curated desktop/mobile presentation details live in src/content/project-presentations.ts. The stories describe observable website behavior; they make no performance, launch-date, or testimonial claims. Reproduce the read-only captures with tools/evidence/capture-project-proof.mjs and verify the project-to-brief journey with tools/evidence/verify-project-stories.mjs.
+
 ## Contact delivery
 
-The contact journey currently keeps every answer in the visitor's browser and ends on a complete review screen. The final Send the project control is visible but intentionally disabled until Madagin's domain, mailbox, sender authentication, and approved recipient are configured. No inquiry is transmitted or stored in this release.
+The contact journey states before the first question that direct inquiries are not open. Answers stay in page memory, can be reviewed and edited, and can be copied or downloaded as a plain-text project brief. Both outputs explicitly state that the brief has not been sent. Clipboard denial leaves the download available. No inquiry is transmitted or stored by the site. Leaving the page clears its in-memory answers. Activating delivery still requires an approved mailbox, recipient, and sender configuration.
 
 ## Hero film handoff
 

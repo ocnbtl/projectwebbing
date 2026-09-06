@@ -229,6 +229,49 @@
   line-height: 1.16;
 }
 
+.indexVisual.projectVisual,
+.indexVisual.projectVisual img {
+  min-height: 0;
+  aspect-ratio: 8 / 5;
+  object-fit: contain;
+}
+
+.projectVisual:focus-visible { outline: 3px solid var(--electric, #0846ff); outline-offset: 5px; }
+.projectStory .detailHero { min-height: 0; padding-bottom: 3.5rem; }
+.projectStory .detailHero h1 { margin-top: 2rem; }
+.projectStory .detailHero > .liveWebsite { grid-column: 2; justify-self: start; }
+.projectStory .detailImage { width: calc(100% - clamp(2.5rem, 10vw, 10rem)); margin-inline: auto; min-height: 0; height: auto; border: 1px solid #032e481c; }
+.projectStory .detailBody { padding-bottom: clamp(4rem, 7vw, 7rem); }
+.liveWebsite { display: inline-flex; align-items: center; gap: .75rem; min-height: 2.75rem; color: inherit; font-size: .9rem; text-decoration-thickness: 1px; text-underline-offset: .4rem; overflow-wrap: anywhere; }
+.proofSection { display: grid; grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); align-items: center; gap: clamp(2rem, 5vw, 6rem); padding: clamp(4rem, 8vw, 9rem) clamp(1.25rem, 5vw, 5rem); background: #edf1f1; }
+.proofCopy > span,
+.projectClosing > div > span,
+.nextProject > span:first-child { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.proofCopy h2 { max-width: 14ch; margin: 1.5rem 0; font-family: var(--font-instrument-serif), Georgia, serif; font-size: clamp(3.1rem, 5vw, 6rem); font-weight: 400; letter-spacing: -.045em; line-height: .98; }
+.proofCopy p { max-width: 34rem; color: var(--ink-secondary); font-size: 1.05rem; line-height: 1.65; }
+.proofSection figure { min-width: 0; margin: 0; }
+.proofSection img { display: block; width: 100%; height: auto; border: 1px solid #032e481c; }
+.proofSection figcaption { margin-top: 1rem; font-size: .78rem; line-height: 1.5; color: var(--ink-secondary); }
+.mobileProof { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: var(--milk-white); }
+.mobileProof figure { justify-self: center; max-width: 21rem; }
+.mobileProof img { border-radius: .65rem; box-shadow: 0 1rem 4rem #032e4812; }
+.projectClosing { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); gap: 5rem; padding: clamp(4rem, 8vw, 9rem) clamp(1.25rem, 5vw, 5rem); background: #032e48; color: #fff; }
+.projectClosing h2 { max-width: 12ch; margin: 1rem 0 1.5rem; font-family: var(--font-instrument-serif), Georgia, serif; font-size: clamp(3.6rem, 6vw, 7rem); font-weight: 400; letter-spacing: -.045em; line-height: .95; }
+.projectClosing p { max-width: 30rem; margin-bottom: 1.5rem; color: #d6e1e8; }
+.projectClosing a { display: inline-flex; align-items: center; gap: 1rem; min-height: 2.75rem; color: #fff; text-underline-offset: .35rem; }
+.projectClosing .nextProject { display: flex; flex-direction: column; align-items: start; justify-content: end; gap: 1.5rem; padding-top: 2rem; border-top: 1px solid #ffffff55; text-decoration: none; }
+.nextProject strong { font-family: var(--font-instrument-serif), Georgia, serif; font-size: clamp(2.6rem, 4vw, 4.5rem); font-weight: 400; letter-spacing: -.035em; line-height: 1; }
+.nextProject:hover strong { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .15em; }
+
+@media (max-width: 760px) {
+  .projectStory .detailHero > .liveWebsite { grid-column: 1; }
+  .projectStory .detailHero h1 { font-size: clamp(3.9rem, 15vw, 6rem); line-height: .92; }
+  .proofSection, .mobileProof, .projectClosing { grid-template-columns: minmax(0, 1fr); }
+  .mobileProof .proofCopy { grid-row: 1; }
+  .mobileProof figure { width: min(82%, 21rem); }
+  .proofCopy h2 { font-size: clamp(3.1rem, 12vw, 4.5rem); }
+}
+
 .aboutStatement {
   padding-top: clamp(6rem, 12vw, 14rem);
   padding-bottom: clamp(6rem, 12vw, 14rem);

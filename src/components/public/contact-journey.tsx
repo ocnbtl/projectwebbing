@@ -82,12 +82,58 @@ function ChoiceList({
   );
 }
 
-function SendButton() {
+function projectBriefText(answers: Answers) {
+  return [
+      "MADAGIN — PROJECT BRIEF",
+      "Saved on this device. This brief has not been sent to Madagin.",
+      "",
+      ...[
+        ["Where things are", answers.currentSituation],
+        ["What needs to change", answers.needs.join(", ")],
+        ["Budget", answers.budget],
+        ["Timing", answers.timing],
+        ["Project context", answers.context.trim()],
+        ["Name", answers.name.trim()],
+        ["Email", answers.email.trim()],
+        ["Company", answers.company.trim() || "Not provided"],
+      ].flatMap(([label, value]) => [label, value, ""]),
+  ].join("\n");
+}
+
+function SaveBriefButton({ answers }: { answers: Answers }) {
+  const [status, setStatus] = useState("");
+
+  function saveBrief() {
+    const text = projectBriefText(answers);
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "madagin-project-brief.txt";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+    setStatus("Download started. Your brief has not been sent.");
+  }
+
+  async function copyBrief() {
+    try {
+      await navigator.clipboard.writeText(projectBriefText(answers));
+      setStatus("Brief copied. Your brief has not been sent.");
+    } catch {
+      setStatus("Copy is unavailable in this browser. Save your brief as a text file instead.");
+    }
+  }
+
   return (
-    <button aria-disabled="true" className={styles.sendButton} disabled type="button">
-      <span>Send the project</span>
-      <Arrow />
-    </button>
+    <div>
+      <button className={styles.sendButton} onClick={saveBrief} type="button">
+        <span>Save your brief</span>
+        <Arrow />
+      </button>
+      <button className={styles.copyBrief} onClick={copyBrief} type="button">Copy brief text</button>
+      <p className={styles.saveStatus} role="status">{status}</p>
+    </div>
   );
 }
 
@@ -107,6 +153,7 @@ export function ContactJourney() {
 
   useEffect(() => {
     headingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [step]);
 
   const patchAnswers = (next: Partial<Answers>) => {
@@ -131,7 +178,7 @@ export function ContactJourney() {
         <Link href="/">Close</Link>
       </header>
 
-      <form className={styles.form}>
+      <form className={styles.form} onSubmit={(event) => event.preventDefault()}>
         <div className={styles.progressText} aria-hidden="true">
           <span>{reviewing ? "06" : String(step + 1).padStart(2, "0")}</span> / 06
         </div>
@@ -140,6 +187,7 @@ export function ContactJourney() {
           {step === 0 ? (
             <>
               <h1 ref={headingRef} tabIndex={-1}>Where are things now?</h1>
+              <p className={styles.deliveryNotice}>Direct inquiries aren&apos;t open yet. Use these six questions to prepare a project brief you can save. Your answers stay in this page until you leave.</p>
               <ChoiceList
                 onChange={(value) => patchAnswers({ currentSituation: value as string })}
                 options={currentSituationOptions}
@@ -199,7 +247,7 @@ export function ContactJourney() {
           ) : null}
           {step === 5 ? (
             <>
-              <h1 ref={headingRef} tabIndex={-1}>Who should I reply to?</h1>
+              <h1 ref={headingRef} tabIndex={-1}>Your contact details.</h1>
               <div className={styles.contactFields}>
                 <label>
                   <span>Name</span>
@@ -241,7 +289,7 @@ export function ContactJourney() {
           ) : null}
           {reviewing ? (
             <>
-              <h1 ref={headingRef} tabIndex={-1}>Ready when you are.</h1>
+              <h1 ref={headingRef} tabIndex={-1}>Your project, in focus.</h1>
               <div className={styles.review}>
                 {[
                   ["Where things are", answers.currentSituation, 0],
@@ -249,7 +297,7 @@ export function ContactJourney() {
                   ["Budget", answers.budget, 2],
                   ["Timing", answers.timing, 3],
                   ["Project context", answers.context, 4],
-                  ["Reply to", `${answers.name} · ${answers.email}${answers.company ? ` · ${answers.company}` : ""}`, 5],
+                  ["Contact details", `${answers.name} · ${answers.email}${answers.company ? ` · ${answers.company}` : ""}`, 5],
                 ].map(([label, value, targetStep]) => (
                   <div className={styles.reviewRow} key={String(label)}>
                     <span>{label}</span>
@@ -259,9 +307,9 @@ export function ContactJourney() {
                 ))}
               </div>
               <div className={styles.sendArea}>
-                <p>This is where your answers will go directly to Madagin once the new email is ready.</p>
-                <SendButton />
-                <small>Email delivery opens when Madagin&apos;s domain is live. For now, this final control is intentionally inactive.</small>
+                <p>Keep a copy of your answers for the next conversation.</p>
+                <SaveBriefButton answers={answers} />
+                <small>Saving downloads a text file to your device. Nothing is sent to Madagin. Direct inquiries aren&apos;t open yet.</small>
               </div>
             </>
           ) : null}

@@ -353,6 +353,8 @@
   object-fit: cover;
 }
 
+.contentPreview > img { min-height: 0; aspect-ratio: 8 / 5; object-fit: contain; border: 1px solid #032e481c; }
+
 .contentLandform {
   clip-path: polygon(0 45%, 14% 37%, 25% 49%, 40% 17%, 57% 51%, 68% 36%, 83% 55%, 100% 31%, 100% 100%, 0 100%);
   background: var(--black);
@@ -656,6 +658,15 @@
   padding: 10rem clamp(1.25rem, 5vw, 5rem) 4rem;
 }
 
+.motionOff .heroPromise {
+  position: relative;
+  top: auto;
+  left: auto;
+  max-width: 30rem;
+  margin-bottom: 3.5rem;
+  font-size: 0.95rem;
+}
+
 .motionOff .wordmark,
 .motionOff .scrollCue {
   display: none;
@@ -921,6 +932,15 @@
     padding: 10rem clamp(1.25rem, 5vw, 5rem) 4rem;
   }
 
+  .heroPromise {
+    position: relative;
+    top: auto;
+    left: auto;
+    max-width: 30rem;
+    margin-bottom: 3.5rem;
+    font-size: 0.95rem;
+  }
+
   .wordmark,
   .scrollCue {
     display: none;
@@ -949,4 +969,10 @@
   .motionControl {
     display: none;
   }
+}
+
+.studioLabel {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 450;
 }

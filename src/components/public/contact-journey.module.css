@@ -20,7 +20,7 @@
 }
 
 .chrome {
-  position: fixed;
+  position: absolute;
   z-index: 10;
   top: 0;
   left: 0;
@@ -668,4 +668,37 @@
   .questionPanel {
     animation: none;
   }
+}
+
+.deliveryNotice {
+  max-width: 43rem;
+  margin: -0.5rem 0 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.saveStatus {
+  min-height: 1.5em;
+  margin: 0.65rem 0 0;
+  font-size: 0.9rem;
+}
+
+.copyBrief { display: inline-flex; align-items: center; min-height: 2.75rem; margin-top: .6rem; padding: .4rem 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: .9rem; text-decoration: underline; text-underline-offset: .3rem; cursor: pointer; }
+.copyBrief:focus-visible { outline: 3px solid currentColor; outline-offset: 5px; }
+
+.sendButton:not(:disabled) {
+  cursor: pointer;
+  opacity: 1;
+}
+
+.sendButton:not(:disabled):hover {
+  background: var(--electric, #1245ff);
+  color: #fff;
+}
+
+.reviewRow p {
+  white-space: pre-wrap;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
 }

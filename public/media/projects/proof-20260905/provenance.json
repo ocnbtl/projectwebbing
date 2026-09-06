@@ -1,0 +1,88 @@
+{
+  "capturedAt": "2026-09-05T06:30:08.508Z",
+  "purpose": "Whole-site screenshots of the two owner-confirmed Madagin clients, for local portfolio preparation. No form submission or claim of measured outcomes.",
+  "captures": [
+    {
+      "client": "sage-burress",
+      "kind": "detail",
+      "sourceUrl": "https://sageburress.com/portfolio",
+      "status": 200,
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "file": "/media/projects/proof-20260905/sage-burress-detail.jpg",
+      "sha256": "9e59673e546a3fdf63ba42756a60661f340b6cd328a9091e9074f3f5c97b33e4",
+      "title": "Portfolio | Sage Burress",
+      "rightsBoundary": "Client website presentation retained as a whole. Underlying client photographs are not isolated or relicensed.",
+      "headings": [
+        "Portfolio",
+        "Let’s make something memorable."
+      ]
+    },
+    {
+      "client": "sage-burress",
+      "kind": "mobile",
+      "sourceUrl": "https://sageburress.com/",
+      "status": 200,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "file": "/media/projects/proof-20260905/sage-burress-mobile.jpg",
+      "sha256": "5c846f43cd7c1c33dd85feb60c89ce70a85e82819e70491d4bf2f1ceaad12bdd",
+      "title": "Sage Burress | Model & Creative",
+      "rightsBoundary": "Client website presentation retained as a whole. Underlying client photographs are not isolated or relicensed.",
+      "headings": [
+        "Hi, my name is Sage BurressSageBurress",
+        "Portfolio",
+        "Services",
+        "Let’s work together."
+      ]
+    },
+    {
+      "client": "masonry-color-corrections",
+      "kind": "detail",
+      "sourceUrl": "https://masonrycolorcorrections.com/gallery",
+      "status": 200,
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "file": "/media/projects/proof-20260905/masonry-color-corrections-detail.jpg",
+      "sha256": "ea4609e4834b0f606dcf363bbee7bf068f0dd17d24b3fc793092e726bb9d0e55",
+      "title": "Gallery | Masonry Color Corrections LLC",
+      "rightsBoundary": "Client website presentation retained as a whole. Underlying client photographs are not isolated or relicensed.",
+      "headings": [
+        "The result should read as part of the original work.",
+        "Addition color integration",
+        "Post-repair brick matching",
+        "Ceramic mantel color matching",
+        "Paint-chalking color correction",
+        "Two-batch brick and mortar matching",
+        "Have a mismatch like this?"
+      ]
+    },
+    {
+      "client": "masonry-color-corrections",
+      "kind": "mobile",
+      "sourceUrl": "https://masonrycolorcorrections.com/",
+      "status": 200,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "file": "/media/projects/proof-20260905/masonry-color-corrections-mobile.jpg",
+      "sha256": "df90fd68b49d9d0dc3e9d230993b18bb892fd3e4a708cb220fea989ae6301868",
+      "title": "Masonry Color Corrections LLC | Masonry Color Matching",
+      "rightsBoundary": "Client website presentation retained as a whole. Underlying client photographs are not isolated or relicensed.",
+      "headings": [
+        "Make mismatchedmasonry belong.",
+        "Masonry color services",
+        "Change the color without hiding the masonry.",
+        "See the match come together.",
+        "Start with a few clear photos."
+      ]
+    }
+  ]
+}

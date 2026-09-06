@@ -1,4 +1,33 @@
 {
   "version": 1,
-  "items": []
+  "items": [
+    {
+      "id": "project-sage-burress",
+      "kind": "project",
+      "title": "Sage Burress",
+      "slug": "sage-burress",
+      "summary": "A photographic home for a creative practice that spans modeling, content, and artistry.",
+      "body": "Sage Burress works across modeling, content creation, makeup, henna, travel promotions, and face painting. Her website brings that range into one place, with a portfolio and individual pages for each service.\n\nThe opening pairs a personal introduction with photography. A dedicated portfolio gives the images room, while the service navigation helps visitors find the kind of collaboration they have in mind.\n\nA clear contact link gives visitors a route from discovering the work to getting in touch. It is a personal presence with enough structure to support several kinds of creative work.",
+      "details": "Personal brand · Creative portfolio",
+      "coverImageUrl": "/media/projects/sage-burress-20260905.jpg",
+      "publishedOn": "2026-09-05",
+      "status": "published",
+      "createdAt": "2026-09-05T02:14:04.4390249Z",
+      "updatedAt": "2026-09-05T06:42:03.134Z"
+    },
+    {
+      "id": "project-masonry-color-corrections",
+      "kind": "project",
+      "title": "Masonry Color Corrections",
+      "slug": "masonry-color-corrections",
+      "summary": "Making a specialist service understandable through the masonry work itself.",
+      "body": "Masonry Color Corrections works on the color of installed brick, mortar, repairs, and additions. Its website explains a service whose value is often clearest when two surfaces are seen together.\n\nBefore-and-after photography and an interactive comparison put that difference at the center of the page. Service descriptions explain the kinds of matching and staining available, and the gallery gives visitors more examples to explore.\n\nThe estimate path asks for the project location, a description, and useful photographs. That gives a visitor a concrete next step after understanding the work.",
+      "details": "Specialist services · Masonry color matching",
+      "coverImageUrl": "/media/projects/masonry-color-corrections-20260905.jpg",
+      "publishedOn": "2026-09-05",
+      "status": "published",
+      "createdAt": "2026-09-05T02:14:04.4390249Z",
+      "updatedAt": "2026-09-05T06:42:03.134Z"
+    }
+  ]
 }

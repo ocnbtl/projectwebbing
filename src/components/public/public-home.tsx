@@ -275,7 +275,7 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
             </div>
             <motion.div className={styles.stageShade} style={motionOff ? undefined : { filter: shadeFilter }} />
             <h1 id="madagin-title" className={styles.srTitle}>Madagin</h1>
-            <p className={styles.heroPromise}>{promise}</p>
+            <p className={styles.heroPromise}><span className={styles.studioLabel}>Founder-led web studio.</span>{promise}</p>
             <motion.div className={styles.wordmark} role="img" aria-label="Madagin" style={motionOff ? undefined : { filter: wordFilter }}>
               {letters.map((letter, index) => <DraggedLetter index={index} key={`${letter}-${index}`} letter={letter} motionOff={motionOff} progress={worldProgress} />)}
             </motion.div>
@@ -352,14 +352,10 @@ export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts
             </div>
           </section>
 
-          <section className={styles.journalSection} aria-labelledby="journal-title">
+          {posts.length > 0 ? <section className={styles.journalSection} aria-labelledby="journal-title">
             <div className={styles.sectionHeading}><h2 id="journal-title">From the desk</h2><Link href="/blog">The blog</Link></div>
-            {posts.length ? (
-              <div className={styles.journalList}>{posts.slice(0, 3).map((post) => <article key={post.id}><span>{formatDate(post.publishedOn)}</span><h3><Link href={`/blog/${post.slug}`}>{post.title}</Link></h3><p>{post.summary}</p></article>)}</div>
-            ) : (
-              <div className={styles.journalEmpty}><span>Notes on perspective, websites, and the decisions behind them.</span><p>The first entries are still on the desk.</p></div>
-            )}
-          </section>
+            <div className={styles.journalList}>{posts.slice(0, 3).map((post) => <article key={post.id}><span>{formatDate(post.publishedOn)}</span><h3><Link href={`/blog/${post.slug}`}>{post.title}</Link></h3><p>{post.summary}</p></article>)}</div>
+          </section> : null}
 
           <section className={styles.nameSection} aria-labelledby="name-title">
             <div className={styles.nameMark}><MadaginMark compact /></div>
