@@ -106,7 +106,7 @@ for c in canopy:
     if gap>.10 or burial>.45: continue
     max_gap=max(max_gap,gap);max_burial=max(max_burial,burial);selected.append(c)
 canopy=selected
-(OUT/'canopy.json').write_text(json.dumps(canopy,separators=(',',':'))+'\n')
+(OUT/'canopy.json').write_text(json.dumps(canopy,separators=(',',':'))+'\n', encoding='utf-8', newline='\n')
 manifest={
  'id':'madagin-ridge-canopy-v1','baselineCommit':'7536e49f76b352bfb3faab46d78174426455fda7',
  'terrainSource':'public/world/v115/madagin-ridge-to-valley-high-v1.15.glb / RIDGE_V115_HIGH',
@@ -121,5 +121,5 @@ manifest={
  'scope':'Desktop secondary canopy; compact keeps its existing ecology and receives no new model or terrain requests.',
  'sha256':hashlib.sha256((OUT/'canopy.json').read_bytes()).hexdigest(),'bytes':(OUT/'canopy.json').stat().st_size
 }
-(OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+(OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n', encoding='utf-8', newline='\n')
 print(json.dumps(manifest))
