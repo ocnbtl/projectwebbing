@@ -1,8 +1,23 @@
 {
   "schemaVersion": 2,
-  "lastReverified": "2026-09-06",
+  "lastReverified": "2026-09-07",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-ocean-20260906/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-cliff-20260907/publication.json",
+  "cliffSurfaceRelease": {
+    "runtime": "src/components/internal/terrain-surface.ts",
+    "provenance": "public/world/cliff-material-v1/provenance.json",
+    "builder": "tools/terrain/build-cliff-material.py",
+    "source": "https://polyhaven.com/a/aerial_rocks_04",
+    "creator": "Rob Tuytel",
+    "license": "CC0-1.0",
+    "scaleMeters": 80,
+    "method": "1024px desktop / 512px compact color, normal and ARM derivatives, matched world-space projection and surface-gradient normal transport; authored actual-slope cover and wet boundaries.",
+    "accepted": "Visible cliff fractures and material response in the retained navigable public geometry. Smaller compact texture set. No source elevations grafted onto the world.",
+    "rejected": "Trial 1 pale yellow reflectance and full-resolution compact load. Evidence preserved under cliff-release-20260907/trial-1-pale and trial-2-full-resolution.",
+    "limits": "Generic photo-based rock surface, not measured Hawaiian basalt or erosion geometry. Authored reflectance adjustment remains distinct from source data. No independent realism qualification.",
+    "rawSourceOutsideRelease": "world-source/materials/polyhaven-aerial-rocks-04/",
+    "geometryPreservation": "output/releases/madagin-cliff-20260907/geometry-parity.json"
+  },
   "oceanMotionRelease": {
     "runtime": "src/components/internal/ocean-wave-field.ts",
     "assetsAdded": [],

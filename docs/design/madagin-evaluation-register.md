@@ -72,3 +72,22 @@ Diagnostic AI review, not independent blind acceptance. Anchors remain 1 = consp
 Evidence: `ocean-release-20260906/before-final.json`, `after-final.json`, `camera-parity.json`, original held videos, `motion/review.json`, and `accepted-rejected.json`. Four coast comparisons use identical positions and lighting, look residual <0.00003 m, ocean time 40 s. Other animations are not phase locked. Original WebM streams are served with byte ranges; no transcoding or frame degradation. Full flight is separate from diagnostic jumps and clock freezes. No changed-pixel/hash score is used.
 
 Source-verified DLNR photograph and actual DLNR YouTube `kxJIVCGPac8` opening aerial playback were reviewed this run. DLNR Vimeo human challenge and NPS Flickr playback failure are explicitly unavailable fresh references; old DLNR motion observations remain historical. Current visible cliffs, dense varied canopy and broken surf exceed the render. Generated fallback imagery is not live geometry or a real-Hawaii evaluation reference. Final independent-human still and motion gate remains UNVERIFIED; no formal held-out test was run.
+
+## September 7, 2026 — Cliff surface architecture
+
+Diagnostic AI judgments against real DLNR reference imagery, with no independent human or formal blind test. This table separates surface detail from the geometry it cannot fix; the earlier combined landform/surface rows retain their weak geometry rating.
+
+| Required view / category | Before → selected | Named defect / acceptance | Severity |
+|---|---|---|---|
+| Ridge held, Valley, Lake headwall, Waterfall / surface detail | 2 → 3 | Scanned fractures, slope-selected cover and linked normal/roughness survive normal viewing size. Generic source geology and repeated texture motifs remain visible on close inspection. | Medium remaining |
+| Opening, Ridge exit, Summit / surface detail | 2 → 2 | More readable rock; rounded/crumpled inherited silhouette and broad bare mantle dominate. | High |
+| All seven rail views / macro landform | 2 → 2 | Identical retained topography; no native source cliff proof or complete erosion-scale hierarchy. | High |
+| All terrain views / ecology | 2 → 2 | Existing crown scale, sparse cliff cover, weak contact lighting and compact simplified crowns remain. | High |
+| Lake, Waterfall, About / water | 2 → 2 | Wet-bank contrast improves; inland water still has authored outlines, weak volume and impact turbulence. Accepted offshore motion retained. | High |
+| Full flight, About, Projects, Blog / light, weather, route | 2 → 2 | No light/rail/weather changes. Terrain material stays attached under motion; atmosphere remains synthetic. | High |
+| About/Projects/Blog / reading | Retained acceptance | Contrasting panels, separate scrolling and input/history/return behavior remain required production checks. | Functional gate |
+| Loading and device budgets | Partial improvement | Desktop unused-map removal reduces transfer; final public transfer/readiness/frame/heap observations are in publication evidence. No physical-device qualification. | Open |
+
+Selected evidence: `cliff-release-20260907/matched-views.json`, `after/`, `motion/`, `motion-public/`, `review.html`. The same camera positions and lighting are used, with reported small reading-look residuals; water/vegetation/weather phases are not synchronized. Original held videos include diagnostic setup jumps, distinctly labeled beside the separate automatic full flight. The pale first trial and larger mobile maps remain preserved, not hidden inside the selected captures.
+
+Real source: Hawaii DLNR Nāpali park photograph and Kalalau Trail Visitor Safety Video, https://www.youtube.com/watch?v=kxJIVCGPac8. Fresh browser playback included opening aerial coastline and near-ground vegetation. These reference scenes are not camera-matched formal pairs. Generic CC0 scanned rock is a runtime material source, not evidence of geographic accuracy. Broad realism stays 2/5; independent 45–55% still/motion equivalence remains UNVERIFIED.

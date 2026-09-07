@@ -19,10 +19,8 @@ import {
   Object3D,
   PlaneGeometry,
   Points,
-  RepeatWrapping,
   ShaderMaterial,
   SRGBColorSpace,
-  Texture,
   TextureLoader,
   Vector3,
 } from "three";
@@ -35,6 +33,7 @@ import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
 import {RidgeCanopy} from "./ridge-canopy";
 import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
+import { TERRAIN_SURFACE, useTerrainSurface } from "./terrain-surface";
 
 // Retain the visible sky's authored sun, and use it for environment, shadows
 // and water. These previously used three different azimuth/elevation pairs.
@@ -46,7 +45,6 @@ const SPECIES_URL = `${ROOT}/species-core-v1.16.glb`;
 const V115_MID_VEGETATION_URL = "/world/canopy-v1/vegetation-mid.glb";
 const V115_HERO_VEGETATION_URL = "/world/v115/madagin-ridge-vegetation-hero-v1.15.glb";
 const V115_HIGH_TERRAIN_URL = "/world/v115/madagin-ridge-to-valley-high-v1.15.glb";
-const ASSET_ROOT = "/world/assets/polyhaven";
 const SOURCE_QUALITY_PACHIRA_URL = "/world/canopy-v1/pachira.glb";
 const SOURCE_QUALITY_GEOLOGY_URL = "/world/canopy-v1/moss-rock.glb";
 const SOURCE_QUALITY_ISLAND_TREE_01_URL = "/world/canopy-v1/island-tree.glb";
@@ -59,23 +57,6 @@ const WATERSHED_GROUNDCOVER_URLS = {
   rock: "/world/canopy-v1/rock.glb",
   shrub: "/world/canopy-v1/shrub.glb",
 } as const;
-const GROUND_TEXTURE_URLS: string[] = [
-  "/world/canopy-v1/forest-color.webp",
-  "/world/canopy-v1/rock-color.webp",
-];
-const DETAILED_GROUND_TEXTURES = {
-  forest: [
-    "/world/canopy-v1/forest-color.webp",
-    `${ASSET_ROOT}/forrest_ground_03/forrest_ground_03_nor_gl_1k.jpg`,
-    `${ASSET_ROOT}/forrest_ground_03/forrest_ground_03_arm_1k.jpg`,
-  ],
-  rock: [
-    "/world/canopy-v1/rock-color.webp",
-    `${ASSET_ROOT}/aerial_grass_rock/aerial_grass_rock_nor_gl_1k.jpg`,
-    `${ASSET_ROOT}/aerial_grass_rock/aerial_grass_rock_arm_1k.jpg`,
-  ],
-} as const;
-
 type V116Zone = "ridge" | "valley" | "lake" | "alpine";
 type DiagnosticMode = "grounding" | "water" | "zones" | null;
 type PlacementTuple = [
@@ -138,8 +119,6 @@ type TerrainSeamField = {
 
 type DetailedVegetationMode = "hero" | "mid";
 type DetailedTerrainZone = Exclude<V116Zone, "lake">;
-type DetailedTerrainMaterialZone = DetailedTerrainZone | "connected";
-type PbrTextureSet = { albedo: Texture; arm: Texture; normal: Texture };
 type DetailedVegetationPart = SpeciesPart & {
   foliage: boolean;
   sourceKey: string;
@@ -222,204 +201,9 @@ function activeTerrainChunks(zone: JourneyCheckpointId): Array<Exclude<V116Zone,
   return ["ridge", "valley", "alpine"];
 }
 
-function prepareTexture(texture: Texture) {
-  const result = texture.clone();
-  result.colorSpace = SRGBColorSpace;
-  result.wrapS = RepeatWrapping;
-  result.wrapT = RepeatWrapping;
-  result.needsUpdate = true;
-  return result;
-}
-
-function preparePbrTextureSet(source: Texture[], repeat: number): PbrTextureSet {
-  const [sourceAlbedo, sourceNormal, sourceArm] = source;
-  const albedo = sourceAlbedo.clone();
-  const normal = sourceNormal.clone();
-  const arm = sourceArm.clone();
-  [albedo, normal, arm].forEach((texture) => {
-    texture.wrapS = RepeatWrapping;
-    texture.wrapT = RepeatWrapping;
-    texture.repeat.set(repeat, repeat);
-    texture.needsUpdate = true;
-  });
-  albedo.colorSpace = SRGBColorSpace;
-  return { albedo, arm, normal };
-}
-
-function createTerrainMaterial(forest: Texture, rock: Texture, zone: V116Zone) {
-  const material = new MeshStandardMaterial({
-    color: zone === "alpine" ? "#807e77" : "#50574b",
-    metalness: 0,
-    roughness: zone === "alpine" ? 0.82 : 0.94,
-    side: FrontSide,
-  });
-  material.onBeforeCompile = (shader) => {
-    shader.uniforms.uV116Forest = { value: forest };
-    shader.uniforms.uV116Rock = { value: rock };
-    shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vV116WorldPosition;\nvarying vec3 vV116WorldNormal;")
-      .replace(
-        "#include <worldpos_vertex>",
-        "#include <worldpos_vertex>\nvV116WorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;\nvV116WorldNormal = normalize(mat3(modelMatrix) * objectNormal);",
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace(
-        "#include <common>",
-        `#include <common>
-        uniform sampler2D uV116Forest;
-        uniform sampler2D uV116Rock;
-        varying vec3 vV116WorldPosition;
-        varying vec3 vV116WorldNormal;
-        vec3 v116Triplanar(sampler2D source, vec3 p, vec3 n, float scale) {
-          vec3 blend = pow(abs(n), vec3(5.0));
-          blend /= max(dot(blend, vec3(1.0)), 0.0001);
-          vec3 x = texture2D(source, p.zy * scale).rgb;
-          vec3 y = texture2D(source, p.xz * scale).rgb;
-          vec3 z = texture2D(source, p.xy * scale).rgb;
-          return x * blend.x + y * blend.y + z * blend.z;
-        }
-        float v116Hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-        float v116Noise(vec2 p) {
-          vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
-          return mix(mix(v116Hash(i), v116Hash(i + vec2(1.0, 0.0)), f.x),
-            mix(v116Hash(i + vec2(0.0, 1.0)), v116Hash(i + vec2(1.0)), f.x), f.y);
-        }`,
-      )
-      .replace(
-        "#include <map_fragment>",
-        `#include <map_fragment>
-        vec3 worldNormal = normalize(vV116WorldNormal);
-        float slope = smoothstep(0.08, 0.9, 1.0 - abs(worldNormal.y));
-        float macro = v116Noise(vV116WorldPosition.xz * 0.035) * 0.68
-          + v116Noise(vV116WorldPosition.xz * 0.071 + vec2(11.7, -4.3)) * 0.32;
-        float micro = v116Noise(vV116WorldPosition.xz * 0.145 + vec2(-6.4, 13.8)) * 0.62
-          + v116Noise(vV116WorldPosition.xz * 0.31 + vec2(17.2, 4.1)) * 0.38;
-        vec3 forestSample = v116Triplanar(uV116Forest, vV116WorldPosition, worldNormal, 0.052);
-        vec3 rockSample = v116Triplanar(uV116Rock, vV116WorldPosition + vec3(19.0, 0.0, -7.0), worldNormal, 0.038);
-        float moisture = smoothstep(0.24, 0.76, macro * 0.68 + micro * 0.32);
-        vec3 damp = mix(
-          vec3(0.078, 0.07, 0.046),
-          vec3(0.052, 0.158, 0.068),
-          clamp(forestSample * 0.6 + moisture * 0.44, 0.0, 1.0)
-        );
-        vec3 basalt = mix(vec3(0.075, 0.095, 0.087), vec3(0.235, 0.19, 0.135), rockSample * 0.62);
-        float strataPhase = vV116WorldPosition.y * 0.125
-          + vV116WorldPosition.x * 0.039
-          - vV116WorldPosition.z * 0.017
-          + sin((vV116WorldPosition.x + vV116WorldPosition.z) * 0.021) * 1.35
-          + macro * 3.2;
-        float strata = smoothstep(0.38, 0.86, sin(strataPhase) * 0.5 + 0.5);
-        float fracture = v116Noise(vec2(vV116WorldPosition.x * 0.031 - vV116WorldPosition.y * 0.008, vV116WorldPosition.z * 0.025));
-        float rainStreak = v116Noise(vec2(vV116WorldPosition.x * 0.018 + vV116WorldPosition.y * 0.009, vV116WorldPosition.z * 0.012));
-        vec3 weatheredRock = mix(vec3(0.07, 0.09, 0.082), vec3(0.31, 0.215, 0.12), mix(strata, fracture, 0.56));
-        float alpine = smoothstep(90.0, 230.0, vV116WorldPosition.y) * ${zone === "alpine" ? "1.0" : "0.42"};
-        vec2 waterfallBasinCoordinate = vec2(
-          (vV116WorldPosition.x - 151.0) / 82.0,
-          (vV116WorldPosition.z + 696.0) / 62.0
-        );
-        float waterfallCatchment = 1.0 - smoothstep(0.72, 1.28, length(waterfallBasinCoordinate));
-        float wetCliff = waterfallCatchment * smoothstep(0.3, 0.88, slope);
-        basalt = mix(basalt, vec3(0.075, 0.105, 0.096), wetCliff * 0.68);
-        vec3 ground = mix(damp, basalt, clamp(slope * 0.92 + alpine * 0.5 + wetCliff * 0.52, 0.0, 1.0));
-        float regionalExposure = slope * (0.12 + macro * 0.2 + fracture * 0.2) * (1.0 - waterfallCatchment * 0.36);
-        ground = mix(ground, weatheredRock, clamp(regionalExposure + smoothstep(0.68, 0.9, rainStreak) * slope * 0.15, 0.0, 0.48));
-        ground = mix(ground, vec3(0.04, 0.115, 0.052), (1.0 - slope) * moisture * smoothstep(0.46, 0.82, micro) * 0.24);
-        ground = mix(ground, ground * vec3(0.68, 0.82, 0.75), waterfallCatchment * (0.2 + slope * 0.3));
-        float westernCliff = smoothstep(-975.0, -948.0, vV116WorldPosition.z)
-          * (1.0 - smoothstep(-746.0, -710.0, vV116WorldPosition.z))
-          * smoothstep(-296.0, -244.0, vV116WorldPosition.x)
-          * (1.0 - smoothstep(-20.0, 32.0, vV116WorldPosition.x))
-          * smoothstep(-58.0, -50.0, vV116WorldPosition.y)
-          * (1.0 - smoothstep(122.0, 158.0, vV116WorldPosition.y))
-          * smoothstep(0.22, 0.72, 1.0 - abs(worldNormal.y));
-        vec3 westernCliffRock = mix(
-          vec3(0.15, 0.18, 0.16),
-          vec3(0.36, 0.255, 0.155),
-          clamp(0.16 + strata * 0.38 + fracture * 0.24, 0.0, 0.72)
-        );
-        ground = mix(ground, westernCliffRock, westernCliff * (0.66 + micro * 0.13));
-        vec2 basinHeadwallCoordinate = vec2(
-          (vV116WorldPosition.x + 40.0) / 390.0,
-          (vV116WorldPosition.z + 805.0) / 240.0
-        );
-        float basinHeadwall = (1.0 - smoothstep(0.46, 1.08, length(basinHeadwallCoordinate)))
-          * smoothstep(-49.0, -34.0, vV116WorldPosition.y)
-          * (1.0 - smoothstep(70.0, 98.0, vV116WorldPosition.y))
-          * smoothstep(0.22, 0.72, 1.0 - abs(worldNormal.y))
-          * (0.22 + smoothstep(7.0, 25.0, abs(vV116WorldPosition.x - 190.0)) * 0.78);
-        float basinDrainage = v116Noise(vec2(
-          vV116WorldPosition.x * 0.028 + vV116WorldPosition.y * 0.012,
-          vV116WorldPosition.z * 0.024 - vV116WorldPosition.y * 0.009
-        ));
-        vec3 basinHeadwallRock = mix(
-          vec3(0.022, 0.035, 0.03),
-          vec3(0.225, 0.135, 0.068),
-          clamp(0.08 + strata * 0.25 + fracture * 0.15 + basinDrainage * 0.11, 0.0, 0.45)
-        );
-        basinHeadwallRock = mix(
-          basinHeadwallRock,
-          vec3(0.04, 0.11, 0.045),
-          smoothstep(0.72, 0.92, basinDrainage) * 0.22
-        );
-        ground = mix(ground, basinHeadwallRock, basinHeadwall * (0.8 + micro * 0.1));
-        float alpineInterior = ${zone === "alpine" ? "1.0" : "0.0"}
-          * smoothstep(-1665.0, -1590.0, vV116WorldPosition.z)
-          * (1.0 - smoothstep(-1080.0, -1008.0, vV116WorldPosition.z))
-          * smoothstep(-940.0, -850.0, vV116WorldPosition.x)
-          * (1.0 - smoothstep(850.0, 940.0, vV116WorldPosition.x))
-          * smoothstep(36.0, 92.0, vV116WorldPosition.y);
-        float alpineDrainage = v116Noise(vec2(
-          vV116WorldPosition.x * 0.012 + vV116WorldPosition.z * 0.0045,
-          vV116WorldPosition.y * 0.018 - vV116WorldPosition.z * 0.007
-        ));
-        float alpineOxidation = v116Noise(
-          vV116WorldPosition.xz * 0.0065
-            + vec2(vV116WorldPosition.y * 0.004, -vV116WorldPosition.y * 0.003)
-        );
-        float alpineExposure = alpineInterior * clamp(
-          0.18
-            + slope * 0.66
-            + smoothstep(0.58, 0.9, fracture) * 0.18
-            + smoothstep(0.62, 0.9, alpineDrainage) * 0.12,
-          0.0,
-          0.88
-        );
-        vec3 alpineBasalt = mix(
-          vec3(0.075, 0.09, 0.085),
-          vec3(0.39, 0.27, 0.14),
-          clamp(
-            smoothstep(0.48, 0.82, alpineOxidation) * 0.58
-              + strata * 0.16
-              + fracture * 0.1,
-            0.0,
-            0.78
-          )
-        );
-        ground = mix(ground, alpineBasalt, alpineExposure);
-        ground *= 0.88 + macro * 0.17;
-        diffuseColor.rgb = ground;`,
-      )
-      .replace(
-        "#include <lights_fragment_end>",
-        `#include <lights_fragment_end>
-        reflectedLight.indirectDiffuse += westernCliff
-          * westernCliffRock
-          * (0.11 + strata * 0.045);
-        reflectedLight.indirectDiffuse += basinHeadwall
-          * basinHeadwallRock
-          * (0.085 + basinDrainage * 0.045);`,
-      );
-  };
-  material.customProgramCacheKey = () => `madagin-v116-triplanar-ap8-${zone}`;
-  material.name = `Madagin v1.16 triplanar ${zone} terrain`;
-  return material;
-}
-
 function TerrainChunk({ shadows, zone }: { shadows: boolean; zone: Exclude<V116Zone, "lake"> }) {
   const gltf = useLoader(GLTFLoader, `${ROOT}/terrain-${zone}-v1.16.glb`, configureCompressedGltf);
-  const sourceTextures = useLoader(TextureLoader, GROUND_TEXTURE_URLS) as Texture[];
-  const textures = useMemo(() => sourceTextures.map(prepareTexture), [sourceTextures]);
-  const material = useMemo(() => createTerrainMaterial(textures[0], textures[1], zone), [textures, zone]);
+  const material = useTerrainSurface(true);
   const alpineGeometry = useMemo(() => {
     if (zone !== "alpine") return null;
     gltf.scene.updateMatrixWorld(true);
@@ -460,10 +244,8 @@ function TerrainChunk({ shadows, zone }: { shadows: boolean; zone: Exclude<V116Z
     return () => {
       alpineGeometry?.dispose();
       watershedGeometry?.dispose();
-      material.dispose();
-      textures.forEach((texture) => texture.dispose());
     };
-  }, [alpineGeometry, material, textures, watershedGeometry, zone]);
+  }, [alpineGeometry, material, watershedGeometry, zone]);
 
   return alpineGeometry ? (
     <mesh geometry={alpineGeometry} material={material} name="Madagin v1.16 compact fractured Alpine terrain" receiveShadow />
@@ -481,10 +263,8 @@ function firstMeshIn(object: Object3D): Mesh | null {
 function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
   const ridgeGltf = useLoader(GLTFLoader, `${ROOT}/terrain-ridge-v1.16.glb`, configureCompressedGltf);
   const valleyGltf = useLoader(GLTFLoader, `${ROOT}/terrain-valley-v1.16.glb`, configureCompressedGltf);
-  const sourceTextures = useLoader(TextureLoader, GROUND_TEXTURE_URLS) as Texture[];
-  const textures = useMemo(() => sourceTextures.map(prepareTexture), [sourceTextures]);
-  const ridgeMaterial = useMemo(() => createTerrainMaterial(textures[0], textures[1], "ridge"), [textures]);
-  const valleyMaterial = useMemo(() => createTerrainMaterial(textures[0], textures[1], "valley"), [textures]);
+  const ridgeMaterial = useTerrainSurface(true);
+  const valleyMaterial = ridgeMaterial;
   const sources = useMemo(() => {
     ridgeGltf.scene.updateMatrixWorld(true);
     valleyGltf.scene.updateMatrixWorld(true);
@@ -553,11 +333,8 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
       geometries.bridge?.dispose();
       geometries.ridge?.dispose();
       geometries.valley?.dispose();
-      ridgeMaterial.dispose();
-      valleyMaterial.dispose();
-      textures.forEach((texture) => texture.dispose());
     };
-  }, [geometries, ridgeMaterial, textures, valleyMaterial]);
+  }, [geometries, ridgeMaterial, valleyMaterial]);
   return (
     <group name="Madagin v1.16 exact-boundary compact journey Ridge-to-Valley terrain">
       {geometries.ridge ? (
@@ -576,9 +353,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
 function MobileTerminalTerrain({ shadows, tier }: { shadows: boolean; tier: WorldQualityTier }) {
   const ridgeGltf = useLoader(GLTFLoader, `${ROOT}/terrain-ridge-v1.16.glb`, configureCompressedGltf);
   const valleyGltf = useLoader(GLTFLoader, `${ROOT}/terrain-valley-v1.16.glb`, configureCompressedGltf);
-  const sourceTextures = useLoader(TextureLoader, GROUND_TEXTURE_URLS) as Texture[];
-  const textures = useMemo(() => sourceTextures.map(prepareTexture), [sourceTextures]);
-  const material = useMemo(() => createTerrainMaterial(textures[0], textures[1], "ridge"), [textures]);
+  const material = useTerrainSurface(true);
   const sources = useMemo(() => {
     ridgeGltf.scene.updateMatrixWorld(true);
     valleyGltf.scene.updateMatrixWorld(true);
@@ -652,10 +427,8 @@ function MobileTerminalTerrain({ shadows, tier }: { shadows: boolean; tier: Worl
     dispatchStage(1, "summit-tangent-remeshed-mobile-ridge-valley-ready", "ridge");
     return () => {
       geometries.connected?.dispose();
-      material.dispose();
-      textures.forEach((texture) => texture.dispose());
     };
-  }, [geometries, material, textures]);
+  }, [geometries, material]);
   return (
     <group name="Madagin v1.16 seam-smoothed mobile terminal terrain">
       {geometries.connected ? (
@@ -677,622 +450,6 @@ const DETAILED_TERRAIN_OBJECTS: Record<DetailedTerrainZone, string> = {
   valley: "TROPICAL_VALLEY_V115_HIGH",
   alpine: "ALPINE_VALLEY_V115_HIGH",
 };
-
-function createDetailedTerrainMaterial(zone: DetailedTerrainMaterialZone, textures: PbrTextureSet) {
-  const material = new MeshStandardMaterial({
-    // The decoded ARM atlas is split at nearly every large source face. Even
-    // at low intensity its AO and roughness islands reproduce the triangulated
-    // export as visible wedges. Candidate BX keeps the licensed albedo bound
-    // for continuous triplanar sampling, while scalar roughness plus physical
-    // scene lighting replace the discontinuous legacy ARM authority.
-    color: "#ffffff",
-    map: textures.albedo,
-    metalness: 0,
-    // The decoded normal atlas inherits coarse UV island orientation from the
-    // pre-remesh source and reintroduces face-sized shading discontinuities.
-    // Candidate BT replaces it with the continuous world-space micro normal
-    // below; the texture remains in the provenance-backed source package.
-    roughness: zone === "alpine" ? 0.88 : zone === "ridge" ? 0.91 : zone === "connected" ? 0.92 : 0.93,
-    side: FrontSide,
-  });
-  material.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader
-      .replace(
-        "#include <common>",
-        "#include <common>\nvarying vec3 vDetailedTerrainWorld;\nvarying vec3 vDetailedTerrainNormal;",
-      )
-      .replace(
-        "#include <worldpos_vertex>",
-        "#include <worldpos_vertex>\nvDetailedTerrainWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;\nvDetailedTerrainNormal = normalize(mat3(modelMatrix) * objectNormal);",
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace(
-        "#include <common>",
-        `#include <common>
-        varying vec3 vDetailedTerrainWorld;
-        varying vec3 vDetailedTerrainNormal;
-        float detailedTerrainHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
-        float detailedTerrainNoise(vec2 p) {
-          vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
-          return mix(mix(detailedTerrainHash(i), detailedTerrainHash(i + vec2(1.0, 0.0)), f.x),
-            mix(detailedTerrainHash(i + vec2(0.0, 1.0)), detailedTerrainHash(i + vec2(1.0)), f.x), f.y);
-        }
-        float detailedTerrainFbm(vec2 p) {
-          float value = 0.0; float amplitude = 0.55;
-          for (int i = 0; i < 3; i++) {
-            value += detailedTerrainNoise(p) * amplitude; p = p * 2.03 + 7.13; amplitude *= 0.48;
-          }
-          return value;
-        }
-        vec3 detailedTerrainTriplanar(sampler2D source, vec3 p, vec3 n, float scale) {
-          vec3 weights = pow(abs(normalize(n)), vec3(4.0));
-          weights /= max(weights.x + weights.y + weights.z, 0.0001);
-          vec3 alongX = texture2D(source, p.zy * scale).rgb;
-          vec3 alongY = texture2D(source, p.xz * scale).rgb;
-          vec3 alongZ = texture2D(source, p.xy * scale).rgb;
-          return alongX * weights.x + alongY * weights.y + alongZ * weights.z;
-        }`,
-      )
-      .replace(
-        "#include <normal_fragment_maps>",
-        `#include <normal_fragment_maps>
-        float terrainMicroCenter = detailedTerrainFbm(vDetailedTerrainWorld.xz * ${zone === "alpine" ? "0.21" : "0.29"} + 91.7);
-        float terrainMicroX = detailedTerrainFbm((vDetailedTerrainWorld.xz + vec2(0.32, 0.0)) * ${zone === "alpine" ? "0.21" : "0.29"} + 91.7);
-        float terrainMicroZ = detailedTerrainFbm((vDetailedTerrainWorld.xz + vec2(0.0, 0.32)) * ${zone === "alpine" ? "0.21" : "0.29"} + 91.7);
-        float terrainMicroSlope = smoothstep(0.08, 0.82, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
-        float terrainCeMesoCenter = detailedTerrainFbm(
-          vDetailedTerrainWorld.xz * ${zone === "alpine" ? "0.063" : zone === "valley" ? "0.079" : "0.087"} + 423.1
-        );
-        float terrainCeMesoX = detailedTerrainFbm(
-          (vDetailedTerrainWorld.xz + vec2(0.78, 0.0)) * ${zone === "alpine" ? "0.063" : zone === "valley" ? "0.079" : "0.087"} + 423.1
-        );
-        float terrainCeMesoZ = detailedTerrainFbm(
-          (vDetailedTerrainWorld.xz + vec2(0.0, 0.78)) * ${zone === "alpine" ? "0.063" : zone === "valley" ? "0.079" : "0.087"} + 423.1
-        );
-        vec3 terrainMicroWorldNormal = normalize(
-          normalize(vDetailedTerrainNormal)
-            + vec3(terrainMicroCenter - terrainMicroX, 0.0, terrainMicroCenter - terrainMicroZ)
-              * mix(1.45, 2.55, terrainMicroSlope)
-            + vec3(terrainCeMesoCenter - terrainCeMesoX, 0.0, terrainCeMesoCenter - terrainCeMesoZ)
-              * mix(1.7, 3.2, terrainMicroSlope)
-        );
-        normal = normalize(mix(
-          normal,
-          normalize(mat3(viewMatrix) * terrainMicroWorldNormal),
-          ${zone === "connected" ? "0.68" : zone === "valley" ? "0.72" : zone === "alpine" ? "0.76" : "0.7"}
-        ));`,
-      )
-      .replace(
-        "#include <color_fragment>",
-        `#include <color_fragment>
-        float terrainValley = ${zone === "connected" ? "1.0 - smoothstep(-365.0, -275.0, vDetailedTerrainWorld.z)" : zone === "valley" ? "1.0" : "0.0"};
-        float macroScale = ${zone === "alpine" ? "0.0065" : zone === "connected" ? "mix(0.018, 0.0095, terrainValley)" : zone === "valley" ? "0.0095" : "0.018"};
-        float macro = detailedTerrainFbm(vDetailedTerrainWorld.xz * macroScale);
-        float detail = detailedTerrainFbm(vDetailedTerrainWorld.xz * ${zone === "alpine" ? "0.027" : zone === "connected" ? "mix(0.052, 0.043, terrainValley)" : zone === "valley" ? "0.043" : "0.052"} + 31.7);
-        float geometricSlope = smoothstep(${zone === "alpine" ? "0.12, 0.82" : "0.1, 0.88"}, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
-        float continuousSlope = smoothstep(0.34, 0.76, detailedTerrainFbm(
-          vDetailedTerrainWorld.xz * ${zone === "alpine" ? "0.008" : "0.011"}
-            + vec2(vDetailedTerrainWorld.y * 0.0031, -vDetailedTerrainWorld.y * 0.0022)
-            + 74.2
-        ));
-        float slope = mix(continuousSlope, geometricSlope, ${zone === "alpine" ? "0.58" : "0.22"});
-        float elevation = smoothstep(${zone === "alpine" ? "18.0, 178.0" : "-34.0, 92.0"}, vDetailedTerrainWorld.y);
-        float drainage = detailedTerrainNoise(vDetailedTerrainWorld.xz * 0.017 - vec2(9.1, 3.7));
-        vec3 dampSoil = ${zone === "alpine" ? "vec3(0.082, 0.088, 0.084)" : zone === "connected" ? "mix(vec3(0.052, 0.047, 0.034), vec3(0.029, 0.052, 0.034), terrainValley)" : zone === "valley" ? "vec3(0.029, 0.052, 0.034)" : "vec3(0.052, 0.047, 0.034)"};
-        vec3 moss = ${zone === "alpine" ? "vec3(0.072, 0.096, 0.077)" : zone === "connected" ? "mix(vec3(0.041, 0.096, 0.043), vec3(0.026, 0.082, 0.039), terrainValley)" : zone === "valley" ? "vec3(0.026, 0.082, 0.039)" : "vec3(0.041, 0.096, 0.043)"};
-        vec3 litter = ${zone === "alpine" ? "vec3(0.145, 0.135, 0.112)" : zone === "connected" ? "mix(vec3(0.155, 0.102, 0.054), vec3(0.132, 0.085, 0.046), terrainValley)" : zone === "ridge" ? "vec3(0.155, 0.102, 0.054)" : "vec3(0.132, 0.085, 0.046)"};
-        vec3 basalt = ${zone === "alpine" ? "vec3(0.12, 0.124, 0.116)" : "vec3(0.071, 0.087, 0.078)"};
-        // Reproject the provenance-backed ground scan in world space. This
-        // gives every remeshed face a consistent metre scale instead of
-        // inheriting the decoded atlas's giant, differently oriented islands.
-        vec3 sourceSurface = detailedTerrainTriplanar(
-          map,
-          vDetailedTerrainWorld + vec3(17.0, 0.0, -31.0),
-          vDetailedTerrainNormal,
-          ${zone === "alpine" ? "0.075" : zone === "valley" ? "0.092" : "0.086"}
-        );
-        vec3 ground = mix(dampSoil, moss, smoothstep(0.32, 0.74, macro));
-        ground = mix(ground, litter, smoothstep(0.76, 0.94, detail) * (1.0 - drainage * 0.48));
-        vec3 authoredGround = mix(ground, basalt, clamp(slope * (0.56 + detail * 0.18) + ${zone === "alpine" ? "elevation * 0.4" : "0.0"}, 0.0, 1.0));
-        float weatheredMantle = smoothstep(0.22, 0.7, macro)
-          * (1.0 - smoothstep(0.46, 0.86, slope))
-          * (0.58 + (1.0 - drainage) * 0.34);
-        float depositionalBreak = smoothstep(0.66, 0.9, detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.018 + vDetailedTerrainWorld.z * 0.006,
-          vDetailedTerrainWorld.z * 0.021 - vDetailedTerrainWorld.y * 0.012
-        ) + 47.3));
-        vec3 weatheredSoil = mix(dampSoil * vec3(0.82, 0.78, 0.7), litter * vec3(0.72, 0.78, 0.62), depositionalBreak);
-        authoredGround = mix(authoredGround, weatheredSoil, weatheredMantle * (0.3 + depositionalBreak * 0.16));
-        float moistureMosaic = detailedTerrainFbm(
-          vDetailedTerrainWorld.xz * 0.012
-            + vec2(vDetailedTerrainWorld.y * 0.0025, -vDetailedTerrainWorld.y * 0.0018)
-            + 18.4
-        );
-        float windwardMoisture = clamp(
-          smoothstep(0.24, 0.78, moistureMosaic)
-            + normalize(vDetailedTerrainNormal).x * 0.11
-            - elevation * ${zone === "alpine" ? "0.13" : "0.04"},
-          0.0,
-          1.0
-        );
-        vec3 mesicGround = mix(
-          ${zone === "alpine" ? "vec3(0.11, 0.105, 0.078)" : "vec3(0.092, 0.106, 0.05)"},
-          ${zone === "alpine" ? "vec3(0.06, 0.09, 0.066)" : "vec3(0.026, 0.078, 0.036)"},
-          windwardMoisture
-        );
-        authoredGround = mix(
-          authoredGround,
-          mesicGround,
-          (1.0 - smoothstep(0.34, 0.76, slope)) * (0.08 + abs(windwardMoisture - 0.5) * 0.18)
-        );
-        float fractureField = detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.11 + vDetailedTerrainWorld.y * 0.028,
-          vDetailedTerrainWorld.z * 0.095 - vDetailedTerrainWorld.y * 0.041
-        ) + 14.9);
-        float crossingFracture = detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.z * 0.16 - vDetailedTerrainWorld.y * 0.019,
-          vDetailedTerrainWorld.x * 0.13 + vDetailedTerrainWorld.y * 0.033
-        ) - 8.4);
-        float openFissure = smoothstep(0.76, 0.91, fractureField)
-          * smoothstep(0.62, 0.84, crossingFracture)
-          * (0.18 + slope * 0.82);
-        authoredGround = mix(authoredGround, authoredGround * vec3(0.43, 0.52, 0.48), openFissure * 0.54);
-        vec2 waterfallBasinCoordinate = vec2(
-          (vDetailedTerrainWorld.x - 151.0) / 92.0,
-          (vDetailedTerrainWorld.z + 696.0) / 70.0
-        );
-        float waterfallCatchment = 1.0 - smoothstep(0.72, 1.32, length(waterfallBasinCoordinate));
-        float upperChannel = (1.0 - smoothstep(8.0, 34.0, abs(vDetailedTerrainWorld.x - (190.0 + clamp((-vDetailedTerrainWorld.z - 730.0) / 94.0, 0.0, 1.0) * 11.2))))
-          * smoothstep(-836.0, -818.0, vDetailedTerrainWorld.z)
-          * (1.0 - smoothstep(-742.0, -724.0, vDetailedTerrainWorld.z));
-        float cliffExposure = smoothstep(0.25, 0.78, slope) * (0.38 + waterfallCatchment * 0.72 + upperChannel * 0.24);
-        float strataPhase = vDetailedTerrainWorld.y * 0.115
-          + vDetailedTerrainWorld.x * 0.042
-          - vDetailedTerrainWorld.z * 0.02
-          + sin((vDetailedTerrainWorld.x + vDetailedTerrainWorld.z) * 0.018) * 1.4
-          + detail * 3.0;
-        float strata = smoothstep(0.36, 0.86, sin(strataPhase) * 0.5 + 0.5);
-        float erosionalRibs = detailedTerrainNoise(vec2(vDetailedTerrainWorld.x * 0.024 + vDetailedTerrainWorld.y * 0.009, vDetailedTerrainWorld.z * 0.019 - vDetailedTerrainWorld.y * 0.004));
-        vec3 wetBasalt = vec3(0.052, 0.073, 0.066);
-        vec3 oxidizedRock = vec3(0.205, 0.15, 0.092);
-        vec3 exposedGeology = mix(wetBasalt, oxidizedRock, mix(strata, erosionalRibs, 0.74) * (0.42 + (1.0 - drainage) * 0.25));
-        float regionalGeologyAuthority = smoothstep(0.18, 0.7, slope)
-          * (0.075 + detail * 0.16 + smoothstep(0.58, 0.9, erosionalRibs) * 0.085)
-          * (1.0 - waterfallCatchment * 0.42);
-        float waterfallGeologyAuthority = clamp(
-          cliffExposure * (0.5 + detail * 0.3)
-            + waterfallCatchment * (0.18 + detail * 0.18)
-            + regionalGeologyAuthority,
-          0.0,
-          0.68
-        );
-        authoredGround = mix(authoredGround, exposedGeology, waterfallGeologyAuthority);
-        authoredGround = mix(authoredGround, authoredGround * vec3(0.62, 0.75, 0.68), waterfallCatchment * (0.26 + slope * 0.3));
-        float westernCliff = terrainValley
-          * smoothstep(-975.0, -948.0, vDetailedTerrainWorld.z)
-          * (1.0 - smoothstep(-746.0, -710.0, vDetailedTerrainWorld.z))
-          * smoothstep(-296.0, -244.0, vDetailedTerrainWorld.x)
-          * (1.0 - smoothstep(-20.0, 32.0, vDetailedTerrainWorld.x))
-          * smoothstep(-58.0, -50.0, vDetailedTerrainWorld.y)
-          * (1.0 - smoothstep(122.0, 158.0, vDetailedTerrainWorld.y))
-          * smoothstep(0.22, 0.72, 1.0 - abs(normalize(vDetailedTerrainNormal).y));
-        vec3 westernWetBasalt = vec3(0.09, 0.118, 0.105);
-        vec3 westernOxidizedRock = vec3(0.235, 0.17, 0.105);
-        vec3 westernCliffRock = mix(
-          westernWetBasalt,
-          westernOxidizedRock,
-          clamp(0.18 + strata * 0.36 + erosionalRibs * 0.24, 0.0, 0.72)
-        );
-        authoredGround = mix(authoredGround, westernCliffRock, westernCliff * (0.72 + detail * 0.14));
-        // Candidate CA gives the new west-wall catchments a material response
-        // tied to their broad source-surface footprint: damp channel floors,
-        // mineral ribs, and lighter colluvial toes. This follows the physical
-        // relief rather than painting a screen-facing stripe over the Valley.
-        float westernWatershedEnvelope = terrainValley
-          * smoothstep(-646.0, -590.0, vDetailedTerrainWorld.x)
-          * (1.0 - smoothstep(-96.0, -54.0, vDetailedTerrainWorld.x))
-          * smoothstep(-958.0, -922.0, vDetailedTerrainWorld.z)
-          * (1.0 - smoothstep(-556.0, -512.0, vDetailedTerrainWorld.z));
-        float westernFlankDistance = -vDetailedTerrainWorld.x;
-        float westernUpslope = smoothstep(92.0, 610.0, westernFlankDistance);
-        float westernTrunkA = -902.0
-          + sin((westernFlankDistance - 148.0) * 0.0117 + 0.82) * 21.0
-          + sin((westernFlankDistance + 96.0) * 0.0044 - 0.82 * 0.57) * 10.0;
-        float westernTrunkB = -806.0
-          + sin((westernFlankDistance - 148.0) * 0.0117 + 2.18) * 21.0
-          + sin((westernFlankDistance + 96.0) * 0.0044 - 2.18 * 0.57) * 10.0;
-        float westernTrunkC = -704.0
-          + sin((westernFlankDistance - 148.0) * 0.0117 + 3.62) * 21.0
-          + sin((westernFlankDistance + 96.0) * 0.0044 - 3.62 * 0.57) * 10.0;
-        float westernTrunkD = -604.0
-          + sin((westernFlankDistance - 148.0) * 0.0117 + 5.08) * 21.0
-          + sin((westernFlankDistance + 96.0) * 0.0044 - 5.08 * 0.57) * 10.0;
-        float westernTrunkDistance = min(
-          min(abs(vDetailedTerrainWorld.z - westernTrunkA), abs(vDetailedTerrainWorld.z - westernTrunkB)),
-          min(abs(vDetailedTerrainWorld.z - westernTrunkC), abs(vDetailedTerrainWorld.z - westernTrunkD))
-        );
-        float westernChannelWidth = 29.0 - westernUpslope * 10.0;
-        float westernChannelCore = westernWatershedEnvelope
-          * (1.0 - smoothstep(westernChannelWidth * 0.31, westernChannelWidth * 0.98, westernTrunkDistance))
-          * (0.72 + detailedTerrainFbm(vec2(
-            vDetailedTerrainWorld.z * 0.033,
-            westernFlankDistance * 0.026
-          ) + 173.8) * 0.28);
-        float westernChannelShoulder = westernWatershedEnvelope
-          * (1.0 - smoothstep(westernChannelWidth * 0.92, westernChannelWidth * 1.72, westernTrunkDistance))
-          * (1.0 - westernChannelCore * 0.76)
-          * smoothstep(0.16, 0.72, slope);
-        float westernCatchmentPhaseA = sin(
-          vDetailedTerrainWorld.z * 0.039
-            - abs(vDetailedTerrainWorld.x) * 0.018
-            + sin(abs(vDetailedTerrainWorld.x) * 0.011) * 1.3
-        ) * 0.5 + 0.5;
-        float westernCatchmentPhaseB = sin(
-          vDetailedTerrainWorld.z * 0.071
-            + abs(vDetailedTerrainWorld.x) * 0.026
-            + 1.8
-        ) * 0.5 + 0.5;
-        float westernIncisionMoisture = westernWatershedEnvelope
-          * max(
-            smoothstep(0.71, 0.94, westernCatchmentPhaseA),
-            smoothstep(0.8, 0.965, westernCatchmentPhaseB) * 0.72
-          )
-          * (0.38 + slope * 0.62);
-        float westernInterfluve = westernWatershedEnvelope
-          * smoothstep(0.56, 0.84, 1.0 - westernCatchmentPhaseA)
-          * smoothstep(0.18, 0.7, slope);
-        float westernFanToe = westernWatershedEnvelope
-          * smoothstep(-286.0, -242.0, vDetailedTerrainWorld.x)
-          * (1.0 - smoothstep(-118.0, -82.0, vDetailedTerrainWorld.x))
-          * smoothstep(0.48, 0.82, detailedTerrainFbm(vec2(
-            vDetailedTerrainWorld.z * 0.024,
-            vDetailedTerrainWorld.x * 0.031
-          ) + 216.4))
-          * (1.0 - smoothstep(0.46, 0.78, slope));
-        vec3 westernWetChannel = mix(
-          vec3(0.024, 0.047, 0.039),
-          vec3(0.052, 0.102, 0.055),
-          smoothstep(0.34, 0.76, moistureMosaic)
-        );
-        vec3 westernMineralRib = mix(
-          vec3(0.058, 0.068, 0.062),
-          vec3(0.19, 0.137, 0.084),
-          strata * 0.52 + erosionalRibs * 0.24
-        );
-        vec3 westernColluvium = mix(vec3(0.108, 0.086, 0.054), moss, 0.22);
-        authoredGround = mix(authoredGround, westernWetChannel, max(westernIncisionMoisture * 0.68, westernChannelCore * 0.9));
-        authoredGround = mix(authoredGround, westernMineralRib, max(westernInterfluve * 0.44, westernChannelShoulder * 0.58));
-        authoredGround = mix(authoredGround, westernColluvium, westernFanToe * 0.42);
-        vec2 basinHeadwallCoordinate = vec2(
-          (vDetailedTerrainWorld.x + 40.0) / 390.0,
-          (vDetailedTerrainWorld.z + 805.0) / 240.0
-        );
-        float basinHeadwall = terrainValley
-          * (1.0 - smoothstep(0.46, 1.08, length(basinHeadwallCoordinate)))
-          * smoothstep(-49.0, -34.0, vDetailedTerrainWorld.y)
-          * (1.0 - smoothstep(70.0, 98.0, vDetailedTerrainWorld.y))
-          * smoothstep(0.22, 0.72, 1.0 - abs(normalize(vDetailedTerrainNormal).y))
-          * (0.22 + smoothstep(7.0, 25.0, abs(vDetailedTerrainWorld.x - 190.0)) * 0.78);
-        float basinDrainage = detailedTerrainNoise(vec2(
-          vDetailedTerrainWorld.x * 0.026 + vDetailedTerrainWorld.y * 0.011,
-          vDetailedTerrainWorld.z * 0.023 - vDetailedTerrainWorld.y * 0.008
-        ));
-        vec3 basinHeadwallRock = mix(
-          vec3(0.02, 0.033, 0.029),
-          vec3(0.16, 0.105, 0.06),
-          clamp(0.09 + strata * 0.26 + erosionalRibs * 0.15 + basinDrainage * 0.11, 0.0, 0.47)
-        );
-        basinHeadwallRock = mix(
-          basinHeadwallRock,
-          vec3(0.038, 0.105, 0.043),
-          smoothstep(0.71, 0.91, basinDrainage) * 0.24
-        );
-        authoredGround = mix(authoredGround, basinHeadwallRock, basinHeadwall * (0.84 + detail * 0.08));
-        float alpineInterior = ${zone === "alpine" ? "1.0" : "0.0"}
-          * smoothstep(-1665.0, -1590.0, vDetailedTerrainWorld.z)
-          * (1.0 - smoothstep(-1080.0, -1008.0, vDetailedTerrainWorld.z))
-          * smoothstep(-940.0, -850.0, vDetailedTerrainWorld.x)
-          * (1.0 - smoothstep(850.0, 940.0, vDetailedTerrainWorld.x))
-          * smoothstep(36.0, 92.0, vDetailedTerrainWorld.y);
-        float alpineDrainage = detailedTerrainNoise(vec2(
-          vDetailedTerrainWorld.x * 0.012 + vDetailedTerrainWorld.z * 0.0045,
-          vDetailedTerrainWorld.y * 0.018 - vDetailedTerrainWorld.z * 0.007
-        ));
-        float alpineOxidation = detailedTerrainNoise(
-          vDetailedTerrainWorld.xz * 0.0065
-            + vec2(vDetailedTerrainWorld.y * 0.004, -vDetailedTerrainWorld.y * 0.003)
-        );
-        float alpineExposure = alpineInterior * clamp(
-          0.2
-            + slope * 0.68
-            + smoothstep(0.58, 0.9, erosionalRibs) * 0.18
-            + smoothstep(0.62, 0.9, alpineDrainage) * 0.12,
-          0.0,
-          0.9
-        );
-        vec3 alpineBasalt = mix(
-          vec3(0.06, 0.078, 0.076),
-          vec3(0.17, 0.145, 0.112),
-          clamp(
-            smoothstep(0.48, 0.82, alpineOxidation) * 0.58
-              + strata * 0.17
-              + erosionalRibs * 0.1,
-            0.0,
-            0.64
-          )
-        );
-        authoredGround = mix(authoredGround, alpineBasalt, alpineExposure);
-        // Candidate CB separates the re-formed crest into wet windward scarps,
-        // oxidized remnant ribs, and darker fracture-fed hollows. The warped
-        // world-space fields avoid the horizontal bands and face-sized wedges
-        // that made the inherited summit read as a low-poly prop.
-        float alpineCrest = alpineInterior
-          * smoothstep(132.0, 206.0, vDetailedTerrainWorld.y)
-          * smoothstep(-1588.0, -1518.0, vDetailedTerrainWorld.z)
-          * (1.0 - smoothstep(-1128.0, -1054.0, vDetailedTerrainWorld.z))
-          * smoothstep(326.0, 404.0, vDetailedTerrainWorld.x)
-          * (1.0 - smoothstep(842.0, 918.0, vDetailedTerrainWorld.x));
-        float alpineWarp = detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.018 - vDetailedTerrainWorld.z * 0.006,
-          vDetailedTerrainWorld.z * 0.021 + vDetailedTerrainWorld.y * 0.011
-        ) + 287.4);
-        float alpineRemnantRibs = smoothstep(0.56, 0.88, detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.035 + vDetailedTerrainWorld.y * 0.014,
-          vDetailedTerrainWorld.z * 0.031 - vDetailedTerrainWorld.y * 0.018
-        ) + alpineWarp * 2.7));
-        float alpineWetHollows = smoothstep(0.62, 0.89, detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.024 - vDetailedTerrainWorld.y * 0.009,
-          vDetailedTerrainWorld.z * 0.027 + vDetailedTerrainWorld.y * 0.013
-        ) - alpineWarp * 1.9));
-        float alpineWindward = clamp(
-          0.48
-            - normalize(vDetailedTerrainNormal).x * 0.26
-            + normalize(vDetailedTerrainNormal).z * 0.18
-            + alpineWetHollows * 0.24,
-          0.0,
-          1.0
-        );
-        vec3 alpineWetScarp = mix(vec3(0.032, 0.049, 0.048), vec3(0.072, 0.096, 0.083), alpineWarp);
-        vec3 alpineOxidizedRib = mix(vec3(0.105, 0.092, 0.073), vec3(0.19, 0.132, 0.081), alpineOxidation);
-        vec3 alpineCrestRock = mix(alpineOxidizedRib, alpineWetScarp, alpineWindward);
-        alpineCrestRock = mix(alpineCrestRock, vec3(0.035, 0.043, 0.041), alpineWetHollows * 0.44);
-        authoredGround = mix(
-          authoredGround,
-          alpineCrestRock,
-          alpineCrest * clamp(0.3 + slope * 0.48 + alpineRemnantRibs * 0.26, 0.0, 0.86)
-        );
-        // Candidate BQ adds a material-scale counterpart to the physical
-        // headwalls and runoff networks. Broad talus aprons, narrow mineral
-        // seams, and damp concavities break the former tan/green painted sheet
-        // without hiding the source texture or introducing overlay geometry.
-        float mesoTalus = detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.033 - vDetailedTerrainWorld.z * 0.011,
-          vDetailedTerrainWorld.z * 0.029 + vDetailedTerrainWorld.y * 0.014
-        ) + 112.6);
-        float talusApron = smoothstep(0.54, 0.82, mesoTalus)
-          * smoothstep(0.12, 0.64, slope)
-          * (1.0 - smoothstep(0.78, 0.96, slope));
-        float mineralSeam = smoothstep(0.78, 0.92, abs(sin(
-          vDetailedTerrainWorld.y * 0.071
-            + vDetailedTerrainWorld.x * 0.012
-            - vDetailedTerrainWorld.z * 0.008
-            + fractureField * 2.2
-        ))) * smoothstep(0.24, 0.76, slope);
-        vec3 talusStone = mix(vec3(0.062, 0.073, 0.069), vec3(0.16, 0.135, 0.097), mesoTalus);
-        authoredGround = mix(authoredGround, talusStone, talusApron * ${zone === "alpine" ? "0.46" : "0.3"});
-        authoredGround = mix(authoredGround, vec3(0.035, 0.047, 0.044), mineralSeam * ${zone === "alpine" ? "0.34" : "0.22"});
-        authoredGround *= mix(0.84, 1.08, detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.071 + 141.3));
-        // Candidate BX resolves metre-to-tens-of-metres geology under the same
-        // continuous world projection. Cross-bedded scarps, damp joints, and
-        // colluvial fans follow slope/elevation instead of repeating one tint
-        // across every large inherited source face.
-        float crossBedPhase = vDetailedTerrainWorld.y * 0.19
-          + vDetailedTerrainWorld.x * 0.023
-          - vDetailedTerrainWorld.z * 0.014
-          + detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.018 + 203.4) * 2.8;
-        float crossBed = smoothstep(0.64, 0.91, sin(crossBedPhase) * 0.5 + 0.5)
-          * smoothstep(0.2, 0.72, slope);
-        float jointNetwork = smoothstep(0.77, 0.92, detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.086 + vDetailedTerrainWorld.y * 0.025,
-          vDetailedTerrainWorld.z * 0.078 - vDetailedTerrainWorld.y * 0.031
-        ) + 194.7)) * smoothstep(0.16, 0.78, slope);
-        float colluvialFan = smoothstep(0.54, 0.82, detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.014 - vDetailedTerrainWorld.z * 0.006,
-          vDetailedTerrainWorld.z * 0.017 + vDetailedTerrainWorld.y * 0.005
-        ) - 73.2)) * (1.0 - smoothstep(0.4, 0.82, slope));
-        vec3 beddedBasalt = mix(vec3(0.048, 0.061, 0.058), vec3(0.19, 0.145, 0.09), strata * 0.46 + erosionalRibs * 0.28);
-        authoredGround = mix(authoredGround, beddedBasalt, crossBed * ${zone === "alpine" ? "0.5" : "0.38"});
-        authoredGround = mix(authoredGround, vec3(0.024, 0.041, 0.038), jointNetwork * 0.42);
-        authoredGround = mix(authoredGround, mix(vec3(0.115, 0.09, 0.058), moss, 0.28), colluvialFan * 0.2);
-        // Give the shared lake boundary a readable littoral transition on the
-        // source terrain itself. This is material response on the active bank,
-        // not a detached shoreline collar: the same broad basin harmonics used
-        // by the water/terrain authority locate damp rock and deposited silt.
-        vec2 lakeCoordinate = vec2(
-          (vDetailedTerrainWorld.x + 2.04) / 152.816,
-          (vDetailedTerrainWorld.z + 884.765) / 118.075
-        );
-        float lakeAngle = atan(lakeCoordinate.y, lakeCoordinate.x);
-        float lakeBoundaryApproximation = 1.0
-          + sin(lakeAngle * 2.0 - 0.4) * 0.135
-          + sin(lakeAngle * 3.0 + 0.9) * 0.082
-          + sin(lakeAngle * 5.0 - 1.3) * 0.034;
-        float lakeRadialDistance = length(lakeCoordinate) / max(0.72, lakeBoundaryApproximation);
-        float littoralBand = terrainValley
-          * smoothstep(0.9, 0.985, lakeRadialDistance)
-          * (1.0 - smoothstep(1.0, 1.17, lakeRadialDistance))
-          * (1.0 - smoothstep(-45.0, -18.0, vDetailedTerrainWorld.y));
-        vec3 wetLittoralRock = mix(
-          vec3(0.025, 0.052, 0.045),
-          vec3(0.115, 0.105, 0.068),
-          clamp(detail * 0.45 + drainage * 0.3, 0.0, 0.68)
-        );
-        authoredGround = mix(authoredGround, wetLittoralRock, littoralBand * (0.62 + slope * 0.2));
-        // Candidate CC establishes one rain-to-water material response across
-        // the connected landform. Wet catchments, the waterfall headwall,
-        // littoral rock, and Alpine hollows share a darker basalt authority;
-        // exposed ribs retain warmer oxidized relief. This increases physical
-        // separation without adding a cover mesh or a camera-facing overlay.
-        float candidateCcWetness = clamp(max(
-          max(westernChannelCore * 0.9, waterfallCatchment * (0.42 + slope * 0.36)),
-          max(littoralBand * 0.86, alpineWetHollows * alpineCrest)
-        ), 0.0, 1.0);
-        float candidateCcExposure = clamp(max(
-          max(westernInterfluve * 0.56, crossBed * 0.42),
-          max(alpineRemnantRibs * alpineCrest, colluvialFan * 0.34)
-        ), 0.0, 1.0);
-        vec3 candidateCcWetBasalt = mix(
-          vec3(0.018, 0.031, 0.03),
-          vec3(0.052, 0.078, 0.066),
-          moistureMosaic
-        );
-        vec3 candidateCcExposedRock = mix(
-          vec3(0.092, 0.081, 0.064),
-          vec3(0.205, 0.139, 0.082),
-          clamp(strata * 0.52 + erosionalRibs * 0.31, 0.0, 0.82)
-        );
-        authoredGround = mix(authoredGround, candidateCcWetBasalt, candidateCcWetness * 0.5);
-        authoredGround = mix(authoredGround, candidateCcExposedRock, candidateCcExposure * 0.29);
-        float candidateCcMesoContrast = detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.046 - vDetailedTerrainWorld.z * 0.013,
-          vDetailedTerrainWorld.z * 0.039 + vDetailedTerrainWorld.y * 0.021
-        ) + 311.6);
-        authoredGround *= mix(0.82, 1.14, smoothstep(0.18, 0.86, candidateCcMesoContrast));
-        // Candidate CD extends the shared coastline authority onto the
-        // connected land surface. Runup-darkened basalt, salt-weathered rock,
-        // and deposited volcanic sediment now meet the ocean shader at the
-        // same four-octave boundary instead of ending as one green/brown hill.
-        float candidateCdCoastline = -690.0
-          + sin(vDetailedTerrainWorld.z * 0.012 + 0.8) * 18.0
-          + sin(vDetailedTerrainWorld.z * 0.029 - 1.3) * 7.5
-          + sin(vDetailedTerrainWorld.z * 0.061 + 0.35) * 2.8;
-        float candidateCdLandwardDistance = vDetailedTerrainWorld.x - candidateCdCoastline;
-        float candidateCdCoastalElevation = ${zone === "connected" ? "1.0" : "0.0"}
-          * (1.0 - smoothstep(-7.0, 27.0, vDetailedTerrainWorld.y));
-        float candidateCdRunup = candidateCdCoastalElevation
-          * smoothstep(-2.5, 1.5, candidateCdLandwardDistance)
-          * (1.0 - smoothstep(4.0, 19.0, candidateCdLandwardDistance));
-        float candidateCdSaltExposure = candidateCdCoastalElevation
-          * smoothstep(9.0, 25.0, candidateCdLandwardDistance)
-          * (1.0 - smoothstep(58.0, 112.0, candidateCdLandwardDistance))
-          * (0.44 + slope * 0.56);
-        float candidateCdForeshoreSediment = candidateCdCoastalElevation
-          * smoothstep(-1.0, 5.0, candidateCdLandwardDistance)
-          * (1.0 - smoothstep(30.0, 72.0, candidateCdLandwardDistance))
-          * (1.0 - smoothstep(0.42, 0.78, slope));
-        vec3 candidateCdWetCoast = mix(
-          vec3(0.012, 0.027, 0.029),
-          vec3(0.047, 0.064, 0.058),
-          detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.082 + 371.8)
-        );
-        vec3 candidateCdSaltRock = mix(
-          vec3(0.085, 0.083, 0.071),
-          vec3(0.185, 0.153, 0.105),
-          detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.044 - 128.3)
-        );
-        vec3 candidateCdSediment = mix(
-          vec3(0.056, 0.061, 0.052),
-          vec3(0.135, 0.116, 0.078),
-          detailedTerrainFbm(vDetailedTerrainWorld.xz * 0.095 + 43.7)
-        );
-        authoredGround = mix(authoredGround, candidateCdWetCoast, candidateCdRunup * 0.86);
-        authoredGround = mix(authoredGround, candidateCdSaltRock, candidateCdSaltExposure * 0.48);
-        authoredGround = mix(authoredGround, candidateCdSediment, candidateCdForeshoreSediment * 0.54);
-        // Candidate CE introduces a continuous basalt-to-colluvium weathering
-        // field at landform scale. It follows world position, slope, elevation,
-        // and drainage rather than source UV islands, breaking the broad
-        // green/brown polygons while retaining the real scanned PBR grain.
-        float candidateCeMacro = detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.009 - vDetailedTerrainWorld.z * 0.003,
-          vDetailedTerrainWorld.z * 0.0105 + vDetailedTerrainWorld.y * 0.004
-        ) + 401.8);
-        float candidateCeMeso = detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.047 + vDetailedTerrainWorld.y * 0.012,
-          vDetailedTerrainWorld.z * 0.041 - vDetailedTerrainWorld.y * 0.009
-        ) - 219.3);
-        float candidateCeDrainage = smoothstep(
-          0.62,
-          0.9,
-          detailedTerrainFbm(vec2(
-            vDetailedTerrainWorld.x * 0.021 - vDetailedTerrainWorld.z * 0.007,
-            vDetailedTerrainWorld.z * 0.025 + vDetailedTerrainWorld.y * 0.015
-          ) + 527.4)
-        ) * (0.34 + slope * 0.66);
-        float candidateCeTalus = smoothstep(0.52, 0.81, candidateCeMacro)
-          * smoothstep(0.14, 0.58, slope)
-          * (1.0 - smoothstep(0.78, 0.94, slope));
-        float candidateCeRockRib = smoothstep(0.61, 0.88, candidateCeMeso)
-          * smoothstep(0.3, 0.78, slope);
-        vec3 candidateCeColluvium = mix(
-          vec3(0.058, 0.066, 0.056),
-          vec3(0.135, 0.111, 0.074),
-          candidateCeMeso
-        );
-        vec3 candidateCeBasalt = mix(
-          vec3(0.026, 0.043, 0.042),
-          vec3(0.116, 0.104, 0.082),
-          candidateCeMacro
-        );
-        authoredGround = mix(authoredGround, candidateCeColluvium, candidateCeTalus * 0.38);
-        authoredGround = mix(authoredGround, candidateCeBasalt, candidateCeRockRib * 0.42);
-        authoredGround = mix(authoredGround, vec3(0.021, 0.052, 0.041), candidateCeDrainage * 0.31);
-        authoredGround *= mix(0.88, 1.1, smoothstep(0.18, 0.88, candidateCeMeso));
-        float sourceLuminance = dot(sourceSurface, vec3(0.2126, 0.7152, 0.0722));
-        vec3 sourceChroma = clamp(sourceSurface / max(sourceLuminance, 0.08), vec3(0.62), vec3(1.42));
-        float mineralGrain = detailedTerrainFbm(vec2(
-          vDetailedTerrainWorld.x * 0.19 - vDetailedTerrainWorld.z * 0.037,
-          vDetailedTerrainWorld.z * 0.17 + vDetailedTerrainWorld.y * 0.061
-        ) + 63.2);
-        vec3 microSurface = sourceChroma
-          * clamp(sourceLuminance * ${zone === "alpine" ? "1.05" : "1.18"}, 0.46, 1.18)
-          * mix(0.84, 1.08, mineralGrain);
-        // Apply the authored world-space material after Three's map chunk.
-        // Candidate BS performed this override in <color_fragment>, before
-        // <map_fragment> multiplied the legacy UV atlas back over it at full
-        // strength. That ordering bug is why the source triangles still read
-        // as giant painted polygons despite the low sourceAuthority below.
-        // Keep real PBR chroma and grain, but stop those UV faces from becoming
-        // the dominant landform signal in distant vistas.
-        float sourceAuthority = ${zone === "connected" ? "mix(0.2, 0.24, terrainValley)" : zone === "ridge" ? "0.2" : zone === "valley" ? "0.24" : "0.28"};
-        diffuseColor.rgb = clamp(
-          authoredGround * mix(vec3(0.9), microSurface, sourceAuthority) * 1.26,
-          vec3(0.0),
-          vec3(1.0)
-        );`,
-      )
-      .replace(
-        "#include <roughnessmap_fragment>",
-        `#include <roughnessmap_fragment>
-        roughnessFactor = clamp(
-          roughnessFactor
-            - candidateCcWetness * 0.22
-            + candidateCcExposure * 0.025
-            - candidateCdRunup * 0.2
-            + candidateCdSaltExposure * 0.045
-            + candidateCeTalus * 0.035
-            - candidateCeDrainage * 0.055,
-          0.58,
-          0.98
-        );`,
-      )
-      .replace(
-        "#include <lights_fragment_end>",
-        `#include <lights_fragment_end>
-        // The enclosed west wall receives very little direct sun. A bounded,
-        // world-space rock bounce preserves the valley's physical lighting
-        // hierarchy while keeping its fractures legible instead of black.
-        reflectedLight.indirectDiffuse += westernCliff
-          * westernCliffRock
-          * (0.13 + strata * 0.055);
-        reflectedLight.indirectDiffuse += basinHeadwall
-          * basinHeadwallRock
-          * (0.095 + basinDrainage * 0.05);`,
-      );
-  };
-  material.customProgramCacheKey = () => `madagin-candidate-ce-basin-to-ridge-material-${zone}`;
-  material.name = `Madagin Candidate CE basin-to-ridge weathered volcanic PBR ${zone} terrain`;
-  return material;
-}
 
 const LAKE_CENTER = { x: -2.04, z: -884.765 } as const;
 // Candidate BT pulls the inherited oversized oval back into a steep-sided
@@ -3630,19 +2787,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
       : new TextDecoder().decode(coastalHeightfieldRaw as ArrayBuffer);
     return JSON.parse(source) as CoastalHeightfieldSource;
   }, [coastalHeightfieldRaw]);
-  const materialZone: DetailedTerrainMaterialZone = connectedCoast ? "connected" : zone;
-  const textureUrls = connectedCoast || zone === "ridge"
-    ? [...DETAILED_GROUND_TEXTURES.forest]
-    : [...DETAILED_GROUND_TEXTURES.rock];
-  const sourceTextures = useLoader(TextureLoader, textureUrls) as Texture[];
-  const textures = useMemo(
-    () => preparePbrTextureSet(
-      sourceTextures,
-      materialZone === "connected" ? 94 : zone === "alpine" ? 138 : zone === "valley" ? 116 : 94,
-    ),
-    [materialZone, sourceTextures, zone],
-  );
-  const material = useMemo(() => createDetailedTerrainMaterial(materialZone, textures), [materialZone, textures]);
+  const material = useTerrainSurface();
   const ridgeGeometry = useMemo(() => {
     if (connectedCoast || zone !== "ridge") return null;
     gltf.scene.updateMatrixWorld(true);
@@ -3855,10 +3000,8 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
       terminalChunkGeometry?.dispose();
       terminalBridgeGeometry?.dispose();
       watershedGeometry?.dispose();
-      material.dispose();
-      Object.values(textures).forEach((texture) => texture.dispose());
     };
-  }, [alpineGeometry, coastalBoundary, coastalHeightfield, connectedGeometry, connectedValleyCoastGeometry, material, ridgeGeometry, southernCoastalBoundary, terminalBridgeGeometry, terminalChunkGeometry, textures, watershedGeometry, zone]);
+  }, [alpineGeometry, coastalBoundary, coastalHeightfield, connectedGeometry, connectedValleyCoastGeometry, material, ridgeGeometry, southernCoastalBoundary, terminalBridgeGeometry, terminalChunkGeometry, watershedGeometry, zone]);
 
   return connectedGeometry ? (
     <>
@@ -9431,7 +8574,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       coastalHeightfield: COASTAL_HEIGHTFIELD_URL,
       detachedTerrainShells: false,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_BZ__ = {
@@ -9447,7 +8590,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CA__ = {
@@ -9463,7 +8606,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
       westernCatchments: WESTERN_VALLEY_CATCHMENTS.length,
       westernSecondOrderRills: WESTERN_VALLEY_CATCHMENTS.length * 2,
@@ -9481,7 +8624,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CC__ = {
@@ -9497,7 +8640,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CD__ = {
@@ -9513,7 +8656,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CE__ = {
@@ -9532,7 +8675,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
       protectedOceanCandidate: "CD",
       protectedWaterCandidate: "CC",
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CF__ = {
@@ -9550,7 +8693,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
       normalDesktopLegacyCoreThinning: true,
       protectedOceanCandidate: "CD",
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...DETAILED_GROUND_TEXTURES.forest, ...DETAILED_GROUND_TEXTURES.rock],
+      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     document.documentElement.dataset.madaginRealismBy = JSON.stringify(host.__MADAGIN_REALISM_BY__);

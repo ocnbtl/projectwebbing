@@ -1,6 +1,7 @@
 import {createRequire} from 'node:module';
 import {promises as fs} from 'node:fs';
 import path from 'node:path';
+import assert from 'node:assert/strict';
 const require=createRequire('C:/Users/Ocean/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/world-review.cjs');
 const {chromium}=require('playwright');
 const origin=process.env.MADAGIN_REVIEW_ORIGIN??'http://localhost:3131';
@@ -30,6 +31,7 @@ try {
    views.push({id,samples,camera:await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginPublicCamera))});
   }
   const metrics=await page.evaluate(()=>({
+   terrainSurface:document.documentElement.dataset.madaginTerrainSurface ? JSON.parse(document.documentElement.dataset.madaginTerrainSurface) : null,
    worldResources:performance.getEntriesByType('resource').filter(r=>new URL(r.name).pathname.startsWith('/world/')).map(r=>({path:new URL(r.name).pathname,bytes:r.encodedBodySize,transfer:r.transferSize,durationMs:r.duration})),
    heapBytes:performance.memory?.usedJSHeapSize??null,
    renderer:window.__MADAGIN_RIDGE_BENCHMARK_V116__?.render??null,
@@ -37,6 +39,8 @@ try {
   }));
   const worldBytes=metrics.worldResources.reduce((sum,r)=>sum+r.bytes,0);
   const budget=viewport.width<700?report.budgets.compact:report.budgets.desktop;
+  if(process.env.MADAGIN_EXPECTED_TERRAIN_SURFACE)assert.equal(metrics.terrainSurface?.version,process.env.MADAGIN_EXPECTED_TERRAIN_SURFACE);
+  assert.deepEqual(errors,[]);
   const video=page.video();await context.close();
   report.cases.push({viewport,rendererReadyMarkerMs,meaningfulWorldMs,worldBytes,...metrics,views,errors,recording:path.relative(out,await video.path()).replaceAll('\\','/'),budgetChecks:{worldBytes:worldBytes<=budget.worldBytes,heap:metrics.heapBytes===null?'UNVERIFIED':metrics.heapBytes<=budget.heapBytes,steadyFrames:views.every(v=>v.samples.p95<=report.budgets.steadyFrameP95Ms&&v.samples.p99<=report.budgets.steadyFrameP99Ms),meaningfulWorld:meaningfulWorldMs<=report.budgets.meaningfulWorldMs}});
  }

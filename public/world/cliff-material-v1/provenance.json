@@ -1,0 +1,97 @@
+{
+  "source": "https://polyhaven.com/a/aerial_rocks_04",
+  "creator": "Rob Tuytel",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://polyhaven.com/license",
+  "sourceScaleMeters": 80,
+  "retrieved": "2026-09-07",
+  "compactGroundSource": "Retained CC0 Poly Haven forrest_ground_03; see public/world/canopy-v1/PROVENANCE.md",
+  "interpretation": "Photo-based rock material, not a Hawaii geological survey. No source geometry or inferred elevation is introduced. Authored slope cover and wetness are separate from the scan.",
+  "processing": "Pillow RGB conversion, 1024px desktop / 512px compact LANCZOS resampling and WebP encoding. No offline color grading or invented normal detail. Runtime normals are decoded and normalized. Original download MD5 verified against official Poly Haven API.",
+  "files": [
+    {
+      "source": "world-source/materials/polyhaven-aerial-rocks-04/aerial_rocks_04_diff_2k.jpg",
+      "sourceSha256": "774f50923f9c05c5011654bffc0f85240082c4b566393961c326ccbcb87e26c0",
+      "file": "color.webp",
+      "sha256": "0fc9cf92becf02c9d41e335562d9256dff3ca640395e210c2961a920160a9d7b",
+      "bytes": 360074,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "webpQuality": 84
+    },
+    {
+      "source": "world-source/materials/polyhaven-aerial-rocks-04/aerial_rocks_04_diff_2k.jpg",
+      "sourceSha256": "774f50923f9c05c5011654bffc0f85240082c4b566393961c326ccbcb87e26c0",
+      "file": "color-compact.webp",
+      "sha256": "98c0dde307e3134b96fa4e72a910393f2436dcb592d85a864e620930e768fd8b",
+      "bytes": 92038,
+      "dimensions": [
+        512,
+        512
+      ],
+      "webpQuality": 84
+    },
+    {
+      "source": "world-source/materials/polyhaven-aerial-rocks-04/aerial_rocks_04_nor_gl_2k.jpg",
+      "sourceSha256": "d61980fe9b6a16c1b1ea6ce5214fdaa6a868f741156d136d86b441ff99136441",
+      "file": "normal.webp",
+      "sha256": "f8dfbce0ae0cb724d6b9f40b982f2bba081ef2a8346c1dff39b345e83e5417eb",
+      "bytes": 501240,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "webpQuality": 90
+    },
+    {
+      "source": "world-source/materials/polyhaven-aerial-rocks-04/aerial_rocks_04_nor_gl_2k.jpg",
+      "sourceSha256": "d61980fe9b6a16c1b1ea6ce5214fdaa6a868f741156d136d86b441ff99136441",
+      "file": "normal-compact.webp",
+      "sha256": "84c418fcf94f770ba9baccecfdb0b0429e9f5e4c2895397284fbb0883c02549f",
+      "bytes": 134300,
+      "dimensions": [
+        512,
+        512
+      ],
+      "webpQuality": 90
+    },
+    {
+      "source": "world-source/materials/polyhaven-aerial-rocks-04/aerial_rocks_04_arm_2k.jpg",
+      "sourceSha256": "6ce622d51ebc56c297d86ea54ac86950948dc7e02bd25e1b2f157bba0911ec4d",
+      "file": "response.webp",
+      "sha256": "3d7110cc3b62be682f31c6950bdfc4706fa30fa30ea845d60b806f967152fd90",
+      "bytes": 206116,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "webpQuality": 82
+    },
+    {
+      "source": "world-source/materials/polyhaven-aerial-rocks-04/aerial_rocks_04_arm_2k.jpg",
+      "sourceSha256": "6ce622d51ebc56c297d86ea54ac86950948dc7e02bd25e1b2f157bba0911ec4d",
+      "file": "response-compact.webp",
+      "sha256": "63fc5000e881d55286785eced5758be3c596e4d1849e0831ff2ff5ed8371800f",
+      "bytes": 58388,
+      "dimensions": [
+        512,
+        512
+      ],
+      "webpQuality": 82
+    },
+    {
+      "source": "public/world/canopy-v1/forest-color.webp",
+      "sourceSha256": "50fa9cde769ab6b87c2efda594ebc42c0ed6f68b2b38050df33e23f5721c58fd",
+      "file": "ground-compact.webp",
+      "sha256": "050fdf2a1afbc9eddb0a30f5da91a0440d016ff7c0fd56d5714576f1b359e903",
+      "bytes": 90322,
+      "dimensions": [
+        512,
+        512
+      ],
+      "webpQuality": 84
+    }
+  ]
+}

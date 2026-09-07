@@ -6,7 +6,7 @@ const require=createRequire('C:/Users/Ocean/.cache/codex-runtimes/codex-primary-
 const {chromium}=require('playwright');
 const origin=process.env.MADAGIN_REVIEW_ORIGIN??'http://127.0.0.1:3142';
 const label=process.env.MADAGIN_PUBLIC_EVIDENCE_LABEL??'local';
-const out=path.resolve('output/playwright/madagin-world-progress/ocean-release-20260906',label);
+const out=path.resolve('output/playwright/madagin-world-progress',process.env.MADAGIN_EVIDENCE_CYCLE??'ocean-release-20260906',label);
 await fs.mkdir(out,{recursive:true});
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 const report={at:new Date().toISOString(),origin,cases:[]};
