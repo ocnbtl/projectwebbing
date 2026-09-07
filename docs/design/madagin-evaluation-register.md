@@ -91,3 +91,21 @@ Diagnostic AI judgments against real DLNR reference imagery, with no independent
 Selected evidence: `cliff-release-20260907/matched-views.json`, `after/`, `motion/`, `motion-public/`, `review.html`. The same camera positions and lighting are used, with reported small reading-look residuals; water/vegetation/weather phases are not synchronized. Original held videos include diagnostic setup jumps, distinctly labeled beside the separate automatic full flight. The pale first trial and larger mobile maps remain preserved, not hidden inside the selected captures.
 
 Real source: Hawaii DLNR Nāpali park photograph and Kalalau Trail Visitor Safety Video, https://www.youtube.com/watch?v=kxJIVCGPac8. Fresh browser playback included opening aerial coastline and near-ground vegetation. These reference scenes are not camera-matched formal pairs. Generic CC0 scanned rock is a runtime material source, not evidence of geographic accuracy. Broad realism stays 2/5; independent 45–55% still/motion equivalence remains UNVERIFIED.
+
+
+## September 7, 2026 — Rooted canopy checkpoint
+
+AI diagnostic review, not a blind human test. Existing anchors remain: 1 conspicuously synthetic, 2 coherent but obvious, 3 credible at selected distance, 4 convincing across views with minor tells, 5 independently tested photographic equivalence.
+
+| Views/category | Before → selected | Named result / remaining defect | Severity |
+|---|---|---|---|
+| Near-canopy pass, Valley, Lake / leaf and branch architecture | 2 → 3 | Shared root/part transforms and much smaller leaves; curved trunks and layered crowns read more coherently. Repeated two-source forms remain. | Medium/high |
+| Opening, Ridge, Summit / ecological distribution | 2 → 2 | Generic core trees improve; patchy cover, inherited secondary crowns and placement patterns remain. No native species reconstruction. | High |
+| Near-canopy, Waterfall / shadows | 2 → 3 at selected distance | Focused soft shadows follow matching wind geometry. Limited shadow range, some fine aliasing and physical-device cost remain to assess. | Medium |
+| All rail views / terrain and water | 2 → 2 macro; retained surface detail 3 locally | Accepted geometry/surface/ocean implementation retained. Native cliff proof, inland-water volume and turbulence remain unresolved. | High |
+| Compact coast / architecture and transfer | Scoped improvement | Source branching retained in a smaller far-only package. Compact inland placeholder ecology remains. Read final public budget result. | Open |
+| Full flight, About/Projects/Blog / motion and reading | Functional acceptance retained; realism 2 | Review original flight plus held canopy. Branch/wind coherence improves; repetition, shadow range and procedural atmosphere remain tells. | High realism / functional gate |
+
+Evidence: `ecology-release-20260907/matched-views.json`, `after/`, `motion/`, `motion-public/`, `review.html`, plus `tree-geometry-checks.json` and `scope-checks.json` in its release directory. The new near-canopy sample .58 supplements the prior seven views. Before/after position parity is exact; animation phases differ and shadow projection intentionally changes. Failed global reduction, packed-coordinate and alpha-coverage trials are retained, including the separate texture-loader error.
+
+Fresh reference comparison uses the source-verified DLNR Nāpali photo and actual Kalalau safety-video opening playback. Neither source is a matched formal test pair. Human still/motion equivalence remains UNVERIFIED. No percentage complete, averaged realism score or changed-pixel test is used. Final public checks and device-budget classifications belong to the publication evidence, not this perceptual matrix.

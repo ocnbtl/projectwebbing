@@ -1,4 +1,34 @@
 {
+  "rootedCanopy20260907": {
+    "date": "2026-09-07",
+    "releaseEvidence": "output/releases/madagin-ecology-20260907/publication.json",
+    "runtime": [
+      "src/components/internal/rooted-trees.tsx",
+      "src/components/internal/journey-sun.tsx"
+    ],
+    "sources": [
+      {
+        "url": "https://polyhaven.com/a/island_tree_02",
+        "license": "CC0-1.0"
+      },
+      {
+        "url": "https://polyhaven.com/a/tree_small_02",
+        "license": "CC0-1.0"
+      }
+    ],
+    "provenance": "public/world/rooted-trees-v1/provenance.json",
+    "classification": "Generic licensed source tree architecture; not measured Hawaiian species ecology.",
+    "method": "Near connected leaves retained individually; far one-in-six leaf sampling and bounded expansion. Shared root/transforms, calibrated layers, coverage-aware leaf maps, moving depth geometry and focused soft directional shadows.",
+    "acceptedScope": "Replacement of enlarged/promoted desktop crowns and eligible core forms; far-only compact coast. Existing terrain/water/route and secondary ridge layer retained.",
+    "rejections": [
+      "Global simplification lost crown coverage",
+      "Normalized integer transforms clamped geometry",
+      "Dark gutters and alpha threshold removed distant leaves",
+      "Static broad shadow map exposed coarse texels"
+    ],
+    "originalSourcesPreserved": true,
+    "independentHumanEquivalence": "UNVERIFIED"
+  },
   "schemaVersion": 2,
   "lastReverified": "2026-09-07",
   "currentStateRecord": "docs/design/madagin-current-state.md",

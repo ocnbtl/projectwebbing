@@ -31,6 +31,7 @@ try {
    views.push({id,samples,camera:await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginPublicCamera))});
   }
   const metrics=await page.evaluate(()=>({
+   rootedTrees:document.documentElement.dataset.madaginRootedTrees?JSON.parse(document.documentElement.dataset.madaginRootedTrees):null,
    terrainSurface:document.documentElement.dataset.madaginTerrainSurface ? JSON.parse(document.documentElement.dataset.madaginTerrainSurface) : null,
    worldResources:performance.getEntriesByType('resource').filter(r=>new URL(r.name).pathname.startsWith('/world/')).map(r=>({path:new URL(r.name).pathname,bytes:r.encodedBodySize,transfer:r.transferSize,durationMs:r.duration})),
    heapBytes:performance.memory?.usedJSHeapSize??null,
@@ -40,6 +41,11 @@ try {
   const worldBytes=metrics.worldResources.reduce((sum,r)=>sum+r.bytes,0);
   const budget=viewport.width<700?report.budgets.compact:report.budgets.desktop;
   if(process.env.MADAGIN_EXPECTED_TERRAIN_SURFACE)assert.equal(metrics.terrainSurface?.version,process.env.MADAGIN_EXPECTED_TERRAIN_SURFACE);
+  if(process.env.MADAGIN_EXPECTED_ROOTED_TREES){
+   const trees=Object.values(metrics.rootedTrees??{});assert.ok(trees.length>0);
+   assert.ok(trees.every(tree=>tree.version===process.env.MADAGIN_EXPECTED_ROOTED_TREES));
+   assert.ok(trees.every(tree=>tree.compact===(viewport.width<700)));
+  }
   assert.deepEqual(errors,[]);
   const video=page.video();await context.close();
   report.cases.push({viewport,rendererReadyMarkerMs,meaningfulWorldMs,worldBytes,...metrics,views,errors,recording:path.relative(out,await video.path()).replaceAll('\\','/'),budgetChecks:{worldBytes:worldBytes<=budget.worldBytes,heap:metrics.heapBytes===null?'UNVERIFIED':metrics.heapBytes<=budget.heapBytes,steadyFrames:views.every(v=>v.samples.p95<=report.budgets.steadyFrameP95Ms&&v.samples.p99<=report.budgets.steadyFrameP99Ms),meaningfulWorld:meaningfulWorldMs<=report.budgets.meaningfulWorldMs}});

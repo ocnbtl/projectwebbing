@@ -17,11 +17,8 @@ import {
   Mesh,
   MeshStandardMaterial,
   Object3D,
-  PlaneGeometry,
   Points,
   ShaderMaterial,
-  SRGBColorSpace,
-  TextureLoader,
   Vector3,
 } from "three";
 import type { BufferAttribute, InterleavedBufferAttribute } from "three";
@@ -32,26 +29,21 @@ import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
 import {RidgeCanopy} from "./ridge-canopy";
+import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
+import {JourneySun} from "./journey-sun";
 import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
 import { TERRAIN_SURFACE, useTerrainSurface } from "./terrain-surface";
 
 // Retain the visible sky's authored sun, and use it for environment, shadows
 // and water. These previously used three different azimuth/elevation pairs.
 const V116_SUN_DIRECTION = new Vector3(-0.78, 0.24, 0.56).normalize();
-const V116_SUN_POSITION = V116_SUN_DIRECTION.toArray().map(value => value * 720) as [number, number, number];
 
 const ROOT = "/world/v116";
 const SPECIES_URL = `${ROOT}/species-core-v1.16.glb`;
-const V115_MID_VEGETATION_URL = "/world/canopy-v1/vegetation-mid.glb";
-const V115_HERO_VEGETATION_URL = "/world/v115/madagin-ridge-vegetation-hero-v1.15.glb";
 const V115_HIGH_TERRAIN_URL = "/world/v115/madagin-ridge-to-valley-high-v1.15.glb";
-const SOURCE_QUALITY_PACHIRA_URL = "/world/canopy-v1/pachira.glb";
 const SOURCE_QUALITY_GEOLOGY_URL = "/world/canopy-v1/moss-rock.glb";
 const SOURCE_QUALITY_ISLAND_TREE_01_URL = "/world/canopy-v1/island-tree.glb";
 const COASTAL_HEIGHTFIELD_URL = `${ROOT}/coast-heightfield-bw.json`;
-const SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS = [1, 2, 3, 4].map(
-  (view) => `/world/v110/island-tree-03-impostors/island-tree-03-side-${view}.png`,
-);
 const WATERSHED_GROUNDCOVER_URLS = {
   fern: "/world/canopy-v1/fern.glb",
   rock: "/world/canopy-v1/rock.glb",
@@ -116,15 +108,10 @@ type TerrainSeamField = {
   valley: CoastalBoundarySample[];
   valleyInterior?: CoastalBoundarySample[];
 };
-
-type DetailedVegetationMode = "hero" | "mid";
 type DetailedTerrainZone = Exclude<V116Zone, "lake">;
 type DetailedVegetationPart = SpeciesPart & {
   foliage: boolean;
   sourceKey: string;
-};
-type SourceQualityVegetationPart = DetailedVegetationPart & {
-  sourceKey: "pachira_a" | "pachira_b" | "pachira_c" | "pachira_d";
 };
 type SourceQualityGeologyPart = SpeciesPart & { sourceKey: string };
 type SourceQualityIslandTreePart = DetailedVegetationPart & {
@@ -440,7 +427,7 @@ function MobileTerminalTerrain({ shadows, tier }: { shadows: boolean; tier: Worl
           receiveShadow
         />
       ) : null}
-      {coastalPlacements.length ? <CoastalEcology placements={coastalPlacements} shadows={shadows} /> : null}
+      {coastalPlacements.length ? <CoastalEcology placements={coastalPlacements} shadows={shadows} compact /> : null}
     </group>
   );
 }
@@ -3970,10 +3957,11 @@ function createCoastalPlacements(geometry: BufferGeometry, mobile: boolean, tier
     .map(({ placement }) => placement);
 }
 
-function CoastalEcology({ placements, shadows, zone = "coastal-north" }: {
+function CoastalEcology({ placements, shadows, compact=false, zone = "coastal-north" }: {
   placements: PlacementTuple[];
   shadows: boolean;
   zone?: Extract<SourceQualityIslandTreeZone, "coastal-north" | "coastal-south">;
+  compact?: boolean;
 }) {
   const gltf = useLoader(GLTFLoader, SPECIES_URL, configureCompressedGltf);
   const parts = useMemo(() => prepareSpecies(gltf.scene), [gltf.scene]);
@@ -4025,11 +4013,11 @@ function CoastalEcology({ placements, shadows, zone = "coastal-north" }: {
         )))}
       {sourceQualityPlacements.length ? (
         <Suspense fallback={null}>
-          <SourceQualityIslandTree01Anchors
+          {compact ? <RootedTrees placements={sourceQualityPlacements} zone={zone} shadows={false} compact /> : <SourceQualityIslandTree01Anchors
             placements={sourceQualityPlacements}
             shadows={shadows}
             zone={zone}
-          />
+          />}
         </Suspense>
       ) : null}
     </group>
@@ -4509,23 +4497,6 @@ function RidgeBasaltField({ placements, shadows, zone }: {
   );
 }
 
-const V115_HERO_FAMILIES = [
-  "pachira_a",
-  "pachira_b",
-  "pachira_c",
-  "pachira_d",
-  "island_01",
-  "island_02",
-  "island_03",
-  "small_02",
-] as const;
-const V115_CONTACT_HERO_FAMILIES = V115_HERO_FAMILIES.slice(0, 4);
-
-// The v1.15 island-tree mid LODs contain a few heavily decimated, multi-square-metre
-// trunk/canopy faces. They read as pale triangles in motion. Keep the sound Pachira
-// and small-tree variants in balanced mode; high mode can use the intact hero set.
-const V115_SAFE_MID_VARIANTS = [0, 1, 2, 3, 4, 5, 6, 7, 14, 15] as const;
-
 function detailedHierarchyName(object: Object3D) {
   const names: string[] = [];
   let current: Object3D | null = object;
@@ -4534,65 +4505,6 @@ function detailedHierarchyName(object: Object3D) {
     current = current.parent;
   }
   return names.join("/").toLowerCase();
-}
-
-function detailedSourceKey(object: Object3D, mode: DetailedVegetationMode) {
-  const name = detailedHierarchyName(object);
-  if (mode === "mid") return name.match(/mid_variant_\d{2}/)?.[0] ?? null;
-  return name.match(/hero_(pachira_[abcd]|island_0[123]|small_02)/)?.[1] ?? null;
-}
-
-function detailedVegetationTint(sourceKey: string, foliage: boolean) {
-  if (!foliage) return "#866a52";
-  const tints = ["#9aaa90", "#8fa385", "#a3a17d", "#8b9e89", "#a4a17a", "#91a18d", "#9a987b", "#899e8c"];
-  const signature = [...sourceKey].reduce((total, character) => total + character.charCodeAt(0), 0);
-  return tints[signature % tints.length];
-}
-
-const SOURCE_QUALITY_PACHIRA_FAMILIES = ["pachira_a", "pachira_b", "pachira_c", "pachira_d"] as const;
-
-function sourceQualityPachiraKey(object: Object3D) {
-  const match = detailedHierarchyName(object).match(/pachira_aquatica_01_(?:bark|leaves)_([abcd])/);
-  return match ? `pachira_${match[1]}` as SourceQualityVegetationPart["sourceKey"] : null;
-}
-
-function prepareSourceQualityPachira(scene: Object3D) {
-  scene.updateMatrixWorld(true);
-  const parts: SourceQualityVegetationPart[] = [];
-  scene.traverse((child) => {
-    if (!(child instanceof Mesh)) return;
-    const sourceKey = sourceQualityPachiraKey(child);
-    if (!sourceKey) return;
-    const originals = Array.isArray(child.material) ? child.material : [child.material];
-    const materials = originals.map((original) => {
-      const material = (original as MeshStandardMaterial).clone();
-      const foliage = /leaves/i.test(`${original.name}/${child.name}`);
-      material.color.set(foliage ? "#ccd7c5" : "#8d694e");
-      material.emissive.set(foliage ? "#234527" : "#0c0805");
-      material.emissiveIntensity = foliage ? 0.27 : 0.025;
-      material.emissiveMap = null;
-      material.envMapIntensity = foliage ? 0.38 : 0.24;
-      material.metalness = 0;
-      material.roughness = foliage ? 0.82 : 0.96;
-      material.side = foliage ? DoubleSide : FrontSide;
-      material.transparent = false;
-      material.depthWrite = true;
-      if (foliage) enableLivingWind(material, 0.11);
-      material.needsUpdate = true;
-      return material;
-    });
-    const matrixWorld = child.matrixWorld.clone();
-    matrixWorld.setPosition(0, 0, 0);
-    parts.push({
-      family: sourceKey,
-      foliage: /leaves/i.test(child.name),
-      geometry: child.geometry,
-      material: Array.isArray(child.material) ? materials : materials[0],
-      matrixWorld,
-      sourceKey,
-    });
-  });
-  return parts;
 }
 
 function sourceQualityPachiraSignature(placement: PlacementTuple) {
@@ -4618,120 +4530,6 @@ function selectSourceQualityPachiraPlacements(
     .sort((left, right) => sourceQualityPachiraSignature(left) - sourceQualityPachiraSignature(right))
     .filter((placement, index) => index % (zone === "lake" ? 3 : 5) === 0)
     .slice(0, limit);
-}
-
-function InstancedSourceQualityPachira({ part, placements, shadows, zone }: {
-  part: SourceQualityVegetationPart;
-  placements: PlacementTuple[];
-  shadows: boolean;
-  zone: V116Zone;
-}) {
-  const ref = useRef<InstancedMesh>(null);
-  useFrame(({ clock }) => updateLivingWind(part.material, clock.elapsedTime));
-  useLayoutEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const dummy = new Object3D();
-    const matrix = new Matrix4();
-    const instanceColor = new Color();
-    placements.forEach((placement, index) => {
-      const signature = sourceQualityPachiraSignature(placement) + index * 17;
-      const baseScale = zone === "lake" ? 8.8 : zone === "valley" ? 9.4 : 8.6;
-      const age = 0.58 + (signature % 13) * 0.052;
-      const crownWidth = 0.72 + ((signature * 5) % 15) * 0.036;
-      const crownDepth = 0.76 + ((signature * 7) % 13) * 0.041;
-      dummy.position.set(
-        placement[2],
-        placement[3] + (zone === "valley" ? contactTrailheadPlacementRelief(placement) : 0) - 0.08,
-        placement[4],
-      );
-      dummy.rotation.set(
-        ((signature % 7) - 3) * 0.012,
-        placement[5] + (signature % 13) * 0.17,
-        (((signature * 3) % 7) - 3) * 0.01,
-      );
-      dummy.scale.set(
-        placement[6] * baseScale * age * crownWidth,
-        placement[7] * baseScale * (0.9 + ((signature * 11) % 7) * 0.045),
-        placement[8] * baseScale * age * crownDepth,
-      );
-      dummy.updateMatrix();
-      matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
-      mesh.setMatrixAt(index, matrix);
-      const foliagePalette = ["#78956d", "#668761", "#84976a", "#5f8065", "#8b8c5d"];
-      const barkPalette = ["#75533d", "#896a50", "#604534", "#98765a"];
-      instanceColor.set(part.foliage
-        ? foliagePalette[signature % foliagePalette.length]
-        : barkPalette[signature % barkPalette.length]);
-      mesh.setColorAt(index, instanceColor);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    mesh.computeBoundingBox();
-    mesh.computeBoundingSphere();
-  }, [part.foliage, part.matrixWorld, placements, zone]);
-  return (
-    <instancedMesh
-      args={[part.geometry, part.material, placements.length]}
-      castShadow={shadows && !part.foliage}
-      receiveShadow={!part.foliage}
-      ref={ref}
-    />
-  );
-}
-
-function SourceQualityPachiraAnchors({ placements, shadows, zone }: {
-  placements: PlacementTuple[];
-  shadows: boolean;
-  zone: V116Zone;
-}) {
-  const gltf = useLoader(GLTFLoader, SOURCE_QUALITY_PACHIRA_URL, configureCompressedGltf);
-  const parts = useMemo(() => prepareSourceQualityPachira(gltf.scene), [gltf.scene]);
-  const bySource = useMemo(() => {
-    const result = new Map<SourceQualityVegetationPart["sourceKey"], PlacementTuple[]>();
-    placements.forEach((placement, index) => {
-      const sourceKey = SOURCE_QUALITY_PACHIRA_FAMILIES[
-        (placement[0] + placement[9] + sourceQualityPachiraSignature(placement) + index) % SOURCE_QUALITY_PACHIRA_FAMILIES.length
-      ];
-      result.set(sourceKey, [...(result.get(sourceKey) ?? []), placement]);
-    });
-    return result;
-  }, [placements]);
-  useEffect(() => {
-    const host = window as Window & { __MADAGIN_SOURCE_QUALITY_VEGETATION_BR__?: Record<string, unknown> };
-    host.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ = {
-      ...(host.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__ ?? {}),
-      [zone]: {
-        families: SOURCE_QUALITY_PACHIRA_FAMILIES,
-        placements: placements.length,
-        source: SOURCE_QUALITY_PACHIRA_URL,
-        sourceTriangles: 76914,
-      },
-    };
-    document.documentElement.dataset.madaginSourceQualityVegetationBr = JSON.stringify(
-      host.__MADAGIN_SOURCE_QUALITY_VEGETATION_BR__,
-    );
-    dispatchStage(3, `${zone}-source-quality-pachira-anchors-ready`, zone);
-    return () => parts.forEach((part) => {
-      (Array.isArray(part.material) ? part.material : [part.material]).forEach((material) => material.dispose());
-    });
-  }, [parts, placements.length, zone]);
-  return (
-    <group name={`Madagin Candidate BR ${zone} source-quality Pachira anchors · ${placements.length}`}>
-      {parts.flatMap((part, index) => {
-        const sourcePlacements = bySource.get(part.sourceKey) ?? [];
-        return sourcePlacements.length ? (
-          <InstancedSourceQualityPachira
-            key={`source-quality-${zone}-${part.sourceKey}-${index}`}
-            part={part}
-            placements={sourcePlacements}
-            shadows={shadows}
-            zone={zone}
-          />
-        ) : [];
-      })}
-    </group>
-  );
 }
 
 function sourceQualityIslandTree01Key(object: Object3D) {
@@ -5100,46 +4898,6 @@ function SourceQualityGeologyAnchors({ placements, shadows, zone }: {
   );
 }
 
-function prepareDetailedVegetation(scene: Object3D, mode: DetailedVegetationMode) {
-  scene.updateMatrixWorld(true);
-  const parts: DetailedVegetationPart[] = [];
-  scene.traverse((child) => {
-    if (!(child instanceof Mesh)) return;
-    const sourceKey = detailedSourceKey(child, mode);
-    if (!sourceKey) return;
-    const originals = Array.isArray(child.material) ? child.material : [child.material];
-    const materials = originals.map((original) => {
-      const material = (original as MeshStandardMaterial).clone();
-      const foliage = /lea|twig|branch/i.test(`${original.name}/${child.name}`);
-      material.alphaTest = foliage ? Math.max(mode === "hero" ? 0.46 : 0.42, material.alphaTest || 0) : material.alphaTest;
-      material.color.set(detailedVegetationTint(sourceKey, foliage));
-      material.vertexColors = true;
-      material.depthWrite = true;
-      material.emissive.set(foliage ? "#294b2d" : "#080604");
-      material.emissiveIntensity = foliage ? 0.32 : 0.018;
-      material.emissiveMap = null;
-      material.envMapIntensity = foliage ? 0.36 : 0.18;
-      material.metalness = 0;
-      material.roughness = Math.max(foliage ? 0.86 : 0.97, material.roughness ?? 0.86);
-      material.side = foliage ? DoubleSide : FrontSide;
-      material.transparent = false;
-      if (foliage) enableLivingWind(material, mode === "hero" ? 0.2 : 0.14);
-      material.needsUpdate = true;
-      return material;
-    });
-    const foliage = originals.some((material) => /lea|twig|branch/i.test(`${material.name}/${child.name}`));
-    parts.push({
-      family: sourceKey,
-      foliage,
-      geometry: child.geometry,
-      material: Array.isArray(child.material) ? materials : materials[0],
-      matrixWorld: child.matrixWorld.clone(),
-      sourceKey,
-    });
-  });
-  return parts;
-}
-
 function isLakeBankSuccessionPlacement(placement: PlacementTuple) {
   return placement[1] === 2
     && placement[2] >= 180
@@ -5453,238 +5211,6 @@ function selectDetailedPlacements(instances: PlacementTuple[], mobile: boolean, 
     ...westernValleyCatchmentHabitat,
     ...contactTrailheadHabitat,
   ];
-}
-
-function detailedPlacementSource(placement: PlacementTuple, index: number, mode: DetailedVegetationMode) {
-  if (mode === "hero") {
-    const families = isHighContactTrailheadCanopyPlacement(placement)
-      ? V115_CONTACT_HERO_FAMILIES
-      : V115_HERO_FAMILIES;
-    return families[(placement[0] + placement[9] + index) % families.length];
-  }
-  const variant = V115_SAFE_MID_VARIANTS[(placement[0] * 2 + placement[9] + index) % V115_SAFE_MID_VARIANTS.length];
-  return `mid_variant_${String(variant).padStart(2, "0")}`;
-}
-
-type CanopyArchitecture = "emergent" | "mature" | "umbrella" | "wind-pruned" | "columnar";
-
-function canopyArchitecture(placement: PlacementTuple, index: number, zone: V116Zone): CanopyArchitecture {
-  const signature = multiSlopeSuccessionSignature(placement) + index * 19;
-  if (zone === "ridge" && (placement[3] > 34 || signature % 11 < 3)) return "wind-pruned";
-  if ((zone === "valley" || zone === "lake") && signature % 9 < 3) return "umbrella";
-  if (placement[1] === 0 && signature % 7 < 2) return "emergent";
-  if (signature % 13 < 3) return "columnar";
-  return "mature";
-}
-
-function canopyArchitectureScale(architecture: CanopyArchitecture, foliage: boolean) {
-  if (architecture === "emergent") return foliage
-    ? { x: 0.8, y: 1.24, z: 0.86 }
-    : { x: 0.92, y: 1.24, z: 0.92 };
-  if (architecture === "umbrella") return foliage
-    ? { x: 1.36, y: 0.86, z: 1.22 }
-    : { x: 1.02, y: 0.9, z: 1.02 };
-  if (architecture === "wind-pruned") return foliage
-    ? { x: 1.23, y: 0.92, z: 0.72 }
-    : { x: 1.03, y: 0.95, z: 0.9 };
-  if (architecture === "columnar") return foliage
-    ? { x: 0.76, y: 1.16, z: 0.84 }
-    : { x: 0.9, y: 1.16, z: 0.9 };
-  return foliage
-    ? { x: 1.1, y: 1.04, z: 1.06 }
-    : { x: 1, y: 1.04, z: 1 };
-}
-
-function InstancedDetailedVegetation({ mode, part, placements, shadows, zone }: {
-  mode: DetailedVegetationMode;
-  part: DetailedVegetationPart;
-  placements: PlacementTuple[];
-  shadows: boolean;
-  zone: V116Zone;
-}) {
-  const ref = useRef<InstancedMesh>(null);
-  useFrame(({ clock }) => updateLivingWind(part.material, clock.elapsedTime));
-  useLayoutEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const dummy = new Object3D();
-    const matrix = new Matrix4();
-    const instanceColor = new Color();
-    const scale = mode === "hero" ? 1.08 : 1.62;
-    const sourceCanopySpread = part.foliage ? mode === "hero" ? 1.2 : 1.3 : 1.04;
-    const habitatCanopySpread = part.foliage
-      ? zone === "ridge" ? 1.12 : zone === "valley" || zone === "lake" ? 1.08 : 1
-      : 1;
-    placements.forEach((placement, index) => {
-      const signature = Math.abs(Math.round(
-        placement[2] * 0.31
-        + placement[4] * 0.19
-        + placement[3] * 0.47
-        + placement[9] * 17
-        + index * 23,
-      ));
-      const crownWidthVariation = 0.82 + (signature % 13) * 0.034;
-      const crownDepthVariation = 0.86 + ((signature * 7) % 11) * 0.032;
-      const heightVariation = 0.88 + ((signature * 11) % 9) * 0.036;
-      const architecture = canopyArchitecture(placement, index, zone);
-      const architectureScale = canopyArchitectureScale(architecture, part.foliage);
-      const lakeApproachMidstoryScale = mode === "mid" && isLakeApproachMidstoryPlacement(placement) ? 1.18 : 1;
-      // Keep the promoted anchors subordinate to the retained canopy. The high
-      // hero source needs less compensation than the compact balanced mid LOD.
-      const verticalSuccessionScale = isMultiSlopeSuccessionPlacement(placement, zone)
-        ? mode === "hero" ? 1.08 : 1.16
-        : 1;
-      const drainageSuccessionScale = zone === "ridge" && isRidgeDrainageSuccessionPlacement(placement)
-        ? mode === "hero"
-          ? 1
-          : placement[1] === 1 ? 1.06 : 1.42
-        : 1;
-      const easternValleyCatchmentScale = zone === "valley" && isEasternValleyCatchmentHabitatPlacement(placement)
-        ? mode === "hero"
-          ? 1
-          : placement[1] === 1 ? 1.14 : 1.48
-        : 1;
-      const westernValleyCatchmentScale = zone === "valley" && isWesternValleyCatchmentHabitatPlacement(placement)
-        ? mode === "hero"
-          ? 1
-          : placement[1] === 1 ? 1.16 : 1.5
-        : 1;
-      const contactTrailheadScale = zone === "valley" && (
-        mode === "hero"
-          ? isHighContactTrailheadCanopyPlacement(placement)
-          : isContactTrailheadHabitatPlacement(placement)
-      )
-        ? mode === "hero"
-          ? 1.55
-          : placement[1] === 1 ? 1.12 : 1.34
-        : 1;
-      dummy.position.set(
-        placement[2],
-        placement[3] + (zone === "valley" ? contactTrailheadPlacementRelief(placement) : 0),
-        placement[4],
-      );
-      const architectureLean = architecture === "wind-pruned" ? 1.95 : architecture === "emergent" ? 0.72 : 1;
-      const leanX = (((signature % 9) - 4) / 4) * (mode === "hero" ? 0.035 : 0.052) * architectureLean;
-      const leanZ = ((((signature * 5) % 11) - 5) / 5) * (mode === "hero" ? 0.03 : 0.047) * architectureLean;
-      dummy.rotation.set(leanX, placement[5] + (signature % 7) * 0.027, leanZ);
-      dummy.scale.set(
-        placement[6] * scale * sourceCanopySpread * habitatCanopySpread * crownWidthVariation * architectureScale.x * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * westernValleyCatchmentScale * contactTrailheadScale,
-        placement[7] * scale * heightVariation * architectureScale.y * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * westernValleyCatchmentScale * contactTrailheadScale,
-        placement[8] * scale * sourceCanopySpread * habitatCanopySpread * crownDepthVariation * architectureScale.z * lakeApproachMidstoryScale * verticalSuccessionScale * drainageSuccessionScale * easternValleyCatchmentScale * westernValleyCatchmentScale * contactTrailheadScale,
-      );
-      dummy.updateMatrix();
-      matrix.multiplyMatrices(dummy.matrix, part.matrixWorld);
-      mesh.setMatrixAt(index, matrix);
-      const foliagePalette = ["#829776", "#698966", "#8a8762", "#66816a", "#87946e", "#747f60", "#6b8973", "#91895f"];
-      const barkPalette = ["#80624c", "#6e523e", "#8b6c52", "#5f4838", "#92785f"];
-      instanceColor.set(part.foliage
-        ? foliagePalette[signature % foliagePalette.length]
-        : barkPalette[signature % barkPalette.length]);
-      mesh.setColorAt(index, instanceColor);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    mesh.computeBoundingBox();
-    mesh.computeBoundingSphere();
-  }, [mode, part.foliage, part.matrixWorld, placements, zone]);
-  return (
-    <instancedMesh
-      args={[part.geometry, part.material, placements.length]}
-      // Keep complete alpha-tested crown shadows on the high/hero path. In the
-      // balanced aerial path, dense alpha shadowing crushes crown volume.
-      castShadow={shadows && mode === "hero"}
-      receiveShadow={!part.foliage}
-      ref={ref}
-    />
-  );
-}
-
-function DetailedVegetationLod({ placements, shadows, tier, zone }: {
-  placements: PlacementTuple[];
-  shadows: boolean;
-  tier: WorldQualityTier;
-  zone: V116Zone;
-}) {
-  const mode: DetailedVegetationMode = tier === "high" ? "hero" : "mid";
-  const url = mode === "hero" ? V115_HERO_VEGETATION_URL : V115_MID_VEGETATION_URL;
-  const gltf = useLoader(GLTFLoader, url, configureCompressedGltf);
-  const parts = useMemo(() => prepareDetailedVegetation(gltf.scene, mode), [gltf.scene, mode]);
-  const bySource = useMemo(() => {
-    const result = new Map<string, PlacementTuple[]>();
-    placements.forEach((placement, index) => {
-      const sourceKey = detailedPlacementSource(placement, index, mode);
-      result.set(sourceKey, [...(result.get(sourceKey) ?? []), placement]);
-    });
-    return result;
-  }, [mode, placements]);
-  useEffect(() => {
-    const host = window as Window & { __MADAGIN_CUMULATIVE_VEGETATION_V116__?: Record<string, unknown> };
-    host.__MADAGIN_CUMULATIVE_VEGETATION_V116__ = {
-      ...(host.__MADAGIN_CUMULATIVE_VEGETATION_V116__ ?? {}),
-      [zone]: {
-        lakeApproachMidstoryPlacements: zone === "lake"
-          ? placements.filter(isLakeApproachMidstoryPlacement).length
-          : 0,
-        mode,
-        placements: placements.length,
-        ridgeDrainageAddedPlacements: zone === "ridge"
-          ? placements.filter(isAddedRidgeDrainageSuccessionPlacement).length
-          : 0,
-        ridgeDrainageHabitatPlacements: zone === "ridge"
-          ? placements.filter(isRidgeDrainageSuccessionPlacement).length
-          : 0,
-        easternValleyCatchmentAddedPlacements: zone === "valley"
-          ? placements.filter(isAddedEasternValleyCatchmentHabitatPlacement).length
-          : 0,
-        easternValleyCatchmentHabitatPlacements: zone === "valley"
-          ? placements.filter(isEasternValleyCatchmentHabitatPlacement).length
-          : 0,
-        westernValleyCatchmentAddedPlacements: zone === "valley"
-          ? placements.filter(isAddedWesternValleyCatchmentHabitatPlacement).length
-          : 0,
-        westernValleyCatchmentHabitatPlacements: zone === "valley"
-          ? placements.filter(isWesternValleyCatchmentHabitatPlacement).length
-          : 0,
-        contactTrailheadAddedPlacements: zone === "valley"
-          ? placements.filter(mode === "hero"
-            ? isHighContactTrailheadCanopyPlacement
-            : isAddedContactTrailheadHabitatPlacement).length
-          : 0,
-        contactTrailheadHabitatPlacements: zone === "valley"
-          ? placements.filter(mode === "hero"
-            ? isHighContactTrailheadCanopyPlacement
-            : isContactTrailheadHabitatPlacement).length
-          : 0,
-        architectureProfiles: ["emergent", "mature", "umbrella", "wind-pruned", "columnar"],
-        verticalSuccessionPlacements: placements.filter((placement) => (
-          isMultiSlopeSuccessionPlacement(placement, zone)
-        )).length,
-        source: url,
-      },
-    };
-    document.documentElement.dataset.madaginCumulativeVegetationV116 = JSON.stringify(host.__MADAGIN_CUMULATIVE_VEGETATION_V116__);
-    dispatchStage(2, `${zone}-restored-v115-${mode}-vegetation-ready`, zone);
-    return () => parts.forEach((part) => {
-      (Array.isArray(part.material) ? part.material : [part.material]).forEach((material) => material.dispose());
-    });
-  }, [mode, parts, placements, url, zone]);
-  return (
-    <group name={`Madagin v1.16 cumulative ${zone} · restored v1.15 ${mode} vegetation · ${placements.length}`}>
-      {parts.flatMap((part, index) => {
-        const sourcePlacements = bySource.get(part.sourceKey) ?? [];
-        return sourcePlacements.length ? (
-          <InstancedDetailedVegetation
-            key={`${zone}-${mode}-${part.sourceKey}-${index}`}
-            mode={mode}
-            part={part}
-            placements={sourcePlacements}
-            shadows={shadows}
-            zone={zone}
-          />
-        ) : [];
-      })}
-    </group>
-  );
 }
 
 function prepareWatershedGroundcover(scene: Object3D, sourceKey: WatershedGroundcoverKey) {
@@ -6141,90 +5667,6 @@ function selectSourceQualityIslandTreePlacements(
     .slice(0, limit);
 }
 
-function InstancedIslandTreeImpostorBatch({ angleOffset, material, placements }: {
-  angleOffset: number;
-  material: Material;
-  placements: PlacementTuple[];
-}) {
-  const ref = useRef<InstancedMesh>(null);
-  const geometry = useMemo(() => new PlaneGeometry(1, 1), []);
-  useLayoutEffect(() => {
-    const mesh = ref.current;
-    if (!mesh) return;
-    const dummy = new Object3D();
-    placements.forEach((placement, index) => {
-      const signature = Math.abs(Math.round(placement[2] * 0.37 + placement[4] * 0.21 + index * 17));
-      const width = (placement[6] + placement[8]) * (5.25 + (signature % 5) * 0.22);
-      const height = placement[7] * (7.1 + ((signature * 3) % 4) * 0.28);
-      dummy.position.set(placement[2], placement[3] + height * 0.49, placement[4]);
-      dummy.rotation.set(0, placement[5] + angleOffset, 0);
-      dummy.scale.set(width, height, 1);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(index, dummy.matrix);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingBox();
-    mesh.computeBoundingSphere();
-  }, [angleOffset, placements]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  return (
-    <instancedMesh args={[geometry, material, placements.length]} frustumCulled={false} ref={ref}>
-    </instancedMesh>
-  );
-}
-
-function SourceQualityIslandTreeCanopy({ placements, zone }: {
-  placements: PlacementTuple[];
-  zone: V116Zone;
-}) {
-  const textures = useLoader(TextureLoader, SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS);
-  const materials = useMemo(() => textures.map((texture) => {
-    texture.colorSpace = SRGBColorSpace;
-    texture.needsUpdate = true;
-    const material = new MeshStandardMaterial({
-      alphaTest: 0.26,
-      color: "#d5dfcf",
-      map: texture,
-      metalness: 0,
-      roughness: 0.94,
-      side: DoubleSide,
-    });
-    material.name = "Madagin Candidate BT Poly Haven Island Tree 03 impostor";
-    return material;
-  }), [textures]);
-  const batches = useMemo(() => materials.map((material, variant) => ({
-    material,
-    placements: placements.filter((placement, index) => (
-      Math.abs(Math.round(placement[2] * 0.37 + placement[4] * 0.21 + index * 17)) % materials.length
-    ) === variant),
-  })), [materials, placements]);
-  useEffect(() => {
-    const host = window as Window & { __MADAGIN_SOURCE_ISLAND_TREE_BT__?: Record<string, unknown> };
-    host.__MADAGIN_SOURCE_ISLAND_TREE_BT__ = {
-      ...(host.__MADAGIN_SOURCE_ISLAND_TREE_BT__ ?? {}),
-      [zone]: {
-        crossedPlanesPerPlacement: 2,
-        placements: placements.length,
-        source: "https://polyhaven.com/a/island_tree_03",
-        sourceLicense: "CC0 1.0 Universal",
-        sourceType: "scan-derived orthographic impostor",
-      },
-    };
-    document.documentElement.dataset.madaginSourceIslandTreeBt = JSON.stringify(
-      host.__MADAGIN_SOURCE_ISLAND_TREE_BT__,
-    );
-    return () => materials.forEach((material) => material.dispose());
-  }, [materials, placements.length, zone]);
-  return (
-    <group name={`Madagin Candidate BT Island Tree 03 canopy · ${placements.length}`}>
-      {batches.flatMap(({ material, placements: batch }, variant) => batch.length ? [
-        <InstancedIslandTreeImpostorBatch angleOffset={0} key={`${variant}-a`} material={material} placements={batch} />,
-        <InstancedIslandTreeImpostorBatch angleOffset={Math.PI / 2} key={`${variant}-b`} material={material} placements={batch} />,
-      ] : [])}
-    </group>
-  );
-}
-
 function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
   diagnosticMode?: DiagnosticMode;
   mobile: boolean;
@@ -6330,8 +5772,9 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
       ...sourceQualityGeologyPlacements,
       ...sourceQualityIslandTreePlacements,
       ...sourceQualityIslandTree01Placements,
+      ...sourceQualityPachiraPlacements,
     ]),
-    [contactTrailheadGroundcover, detailedPlacements, groundedRiparianEcology, regionalHabitatGroundcover, sourceQualityGeologyPlacements, sourceQualityIslandTree01Placements, sourceQualityIslandTreePlacements, watershedGroundcover],
+    [contactTrailheadGroundcover, detailedPlacements, groundedRiparianEcology, regionalHabitatGroundcover, sourceQualityGeologyPlacements, sourceQualityIslandTree01Placements, sourceQualityIslandTreePlacements, sourceQualityPachiraPlacements, watershedGroundcover],
   );
   const visible = useMemo(() => manifest.instances.filter((placement, index) => {
     if (zone === "alpine" && !isBelowCandidateCbAlpineTreeline(placement)) return false;
@@ -6350,6 +5793,13 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     if (mobile) return placement[1] === 0 ? index % 4 !== 1 : index % 2 === 0;
     return placement[1] === 0 ? index % 3 === 0 : index % 5 === 0;
   }), [detailedSet, manifest.instances, mobile, tier, zone]);
+  const rootedCore = useMemo(() => mobile || tier === "conservative" ? [] : visible.filter(p => [0,1,2,6,7].includes(p[0])), [mobile,tier,visible]);
+  const rootedCoreSet = useMemo(() => new Set(rootedCore), [rootedCore]);
+  const rootedPlacements = useMemo(() => [...detailedPlacements, ...sourceQualityPachiraPlacements, ...sourceQualityIslandTreePlacements, ...rootedCore].map(p => {
+    const copy = [...p];
+    if (zone === "valley") copy[3] += contactTrailheadPlacementRelief(p);
+    return copy;
+  }), [detailedPlacements,sourceQualityPachiraPlacements,sourceQualityIslandTreePlacements,rootedCore,zone]);
   const volumetricCrownStats = useMemo(() => visible.reduce((stats, placement) => {
     const family = manifest.families[placement[0]];
     const lobes = volumetricCrownLobeCount(family, placement, mobile);
@@ -6361,12 +5811,12 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
   }, { placements: 0, renderedLobes: 0 }), [manifest.families, mobile, visible]);
   const batches = useMemo(() => {
     const grouped = new Map<string, PlacementTuple[]>();
-    visible.forEach((placement) => {
+    visible.filter(p => !rootedCoreSet.has(p)).forEach((placement) => {
       const key = manifest.families[placement[0]];
       grouped.set(key, [...(grouped.get(key) ?? []), placement]);
     });
     return grouped;
-  }, [manifest.families, visible]);
+  }, [manifest.families, rootedCoreSet, visible]);
 
   useEffect(() => {
     const host = window as Window & {
@@ -6422,18 +5872,9 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
 
   return (
     <group name={`Madagin v1.16 ${zone} spatial ecology · ${visible.length} visible instances`}>
-      {detailedPlacements.length ? (
+      {rootedPlacements.length > 0 ? (
         <Suspense fallback={null}>
-          <DetailedVegetationLod placements={detailedPlacements} shadows={shadows} tier={tier} zone={zone} />
-        </Suspense>
-      ) : null}
-      {sourceQualityPachiraPlacements.length ? (
-        <Suspense fallback={null}>
-          <SourceQualityPachiraAnchors
-            placements={sourceQualityPachiraPlacements}
-            shadows={shadows}
-            zone={zone}
-          />
+          <RootedTrees placements={rootedPlacements} shadows={shadows} zone={zone} />
         </Suspense>
       ) : null}
       {sourceQualityGeologyPlacements.length ? (
@@ -6443,11 +5884,6 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
             shadows={shadows}
             zone={zone}
           />
-        </Suspense>
-      ) : null}
-      {sourceQualityIslandTreePlacements.length ? (
-        <Suspense fallback={null}>
-          <SourceQualityIslandTreeCanopy placements={sourceQualityIslandTreePlacements} zone={zone} />
         </Suspense>
       ) : null}
       {sourceQualityIslandTree01Placements.length ? (
@@ -8261,23 +7697,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       <PhysicalSkyEnvironment intensityScale={0.64} sunDirection={V116_SUN_DIRECTION} tier={tier} />
       <hemisphereLight args={["#a9c6cd", "#13231b", 0.56]} />
       <ambientLight color="#72878a" intensity={0.08} />
-      <directionalLight
-        castShadow={shadows}
-        color="#f4dac1"
-        intensity={2.62}
-        position={V116_SUN_POSITION}
-        shadow-bias={-0.00012}
-        shadow-normalBias={0.24}
-        shadow-radius={2.2}
-        shadow-camera-bottom={-430}
-        shadow-camera-far={1900}
-        shadow-camera-left={-520}
-        shadow-camera-near={2}
-        shadow-camera-right={520}
-        shadow-camera-top={430}
-        shadow-mapSize-height={tier === "high" ? 2048 : 1536}
-        shadow-mapSize-width={tier === "high" ? 2048 : 1536}
-      />
+      <JourneySun direction={V116_SUN_DIRECTION} shadows={shadows} />
       <directionalLight color="#bad2d5" intensity={0.18} position={[190, 150, -220]} />
       <group ref={cloudGroup}>
         {clouds.map((cloud, index) => (
@@ -8574,7 +7994,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       coastalHeightfield: COASTAL_HEIGHTFIELD_URL,
       detachedTerrainShells: false,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
+      sources: [...ROOTED_TREES.sources, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_BZ__ = {
@@ -8590,7 +8010,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
+      sources: [...ROOTED_TREES.sources, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CA__ = {
@@ -8606,7 +8026,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
+      sources: [...ROOTED_TREES.sources, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
       westernCatchments: WESTERN_VALLEY_CATCHMENTS.length,
       westernSecondOrderRills: WESTERN_VALLEY_CATCHMENTS.length * 2,
@@ -8624,7 +8044,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
+      sources: [...ROOTED_TREES.sources, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CC__ = {
@@ -8640,7 +8060,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
+      sources: [...ROOTED_TREES.sources, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CD__ = {
@@ -8656,7 +8076,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       detachedTerrainShells: false,
       exposedCoastalVoidClosed: true,
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
+      sources: [...ROOTED_TREES.sources, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CE__ = {
@@ -8675,7 +8095,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
       protectedOceanCandidate: "CD",
       protectedWaterCandidate: "CC",
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
+      sources: [...ROOTED_TREES.sources, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     host.__MADAGIN_REALISM_CF__ = {
@@ -8693,7 +8113,7 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
       lakeRadiusMeters: [LAKE_RADIUS.x, LAKE_RADIUS.z],
       normalDesktopLegacyCoreThinning: true,
       protectedOceanCandidate: "CD",
-      sources: [SOURCE_QUALITY_PACHIRA_URL, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, ...SOURCE_QUALITY_ISLAND_TREE_IMPOSTOR_URLS, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
+      sources: [...ROOTED_TREES.sources, SOURCE_QUALITY_GEOLOGY_URL, SOURCE_QUALITY_ISLAND_TREE_01_URL, COASTAL_HEIGHTFIELD_URL, V115_HIGH_TERRAIN_URL, ...Object.values(WATERSHED_GROUNDCOVER_URLS), ...TERRAIN_SURFACE.sources],
       waterNetworkProtected: true,
     };
     document.documentElement.dataset.madaginRealismBy = JSON.stringify(host.__MADAGIN_REALISM_BY__);
