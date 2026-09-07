@@ -9,7 +9,7 @@ const {chromium}=require('playwright');
 const root=path.resolve('output/playwright/madagin-world-progress/ecology-release-20260907');
 await fs.mkdir(root,{recursive:true});
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
-const report={at:new Date().toISOString(),method:'Optimized public renderer. Pause UI, set existing React MotionValue to fixed public-rail progress. Lighting unchanged. Animation phases not synchronized; still differences are qualitative.',cases:[]};
+const report={at:new Date().toISOString(),method:'Optimized public renderer. Pause UI, set existing React MotionValue to fixed public-rail progress. Sun direction and energy unchanged; shadow projection intentionally changes. Animation phases not synchronized; still differences are qualitative.',cases:[]};
 if(process.env.MADAGIN_CAPTURE_PHASE === "after") report.cases=JSON.parse(await fs.readFile(path.join(root,"matched-views.json"))).cases.filter(c=>c.release==="before");
 try {
  for(const [release,origin] of [['before',process.env.MADAGIN_BEFORE_ORIGIN??'http://127.0.0.1:3135'],['after',process.env.MADAGIN_REVIEW_ORIGIN??'http://127.0.0.1:3136']]) {
