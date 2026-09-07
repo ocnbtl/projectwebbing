@@ -2,7 +2,7 @@
 
 import type { MotionValue } from "motion/react";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { WorldViewId } from "@/lib/world-manifest";
 import styles from "./public-world-loader.module.css";
 
@@ -53,10 +53,16 @@ export function PublicWorldLoader({
   progress: MotionValue<number>;
 }) {
   const [eligibility, setEligibility] = useState<Eligibility>({ live: false, reason: "checking" });
+  const [worldReady,setWorldReady]=useState(false);
+  const [rendererFailed,setRendererFailed]=useState(false);
+  const handleReady=useCallback(()=>{setWorldReady(true);onReady();},[onReady]);
+  const handleUnavailable=useCallback(()=>{setWorldReady(false);setRendererFailed(true);},[]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setEligibility(inspectEligibility(motionOff));
+      setWorldReady(false);
+      setRendererFailed(false);
     });
     return () => window.cancelAnimationFrame(frame);
   }, [motionOff]);
@@ -64,13 +70,13 @@ export function PublicWorldLoader({
   return (
     <div className={styles.shell} data-public-world-loader={eligibility.reason}>
       {eligibility.live ? (
-        <PublicWorldExperience activeView={activeView} className={styles.renderer} onReady={onReady} progress={progress} />
+        <PublicWorldExperience activeView={activeView} className={styles.renderer} onReady={handleReady} onUnavailable={handleUnavailable} progress={progress} />
       ) : (
         <div aria-hidden="true" className={styles.visualFallback} />
       )}
       <p className={styles.status} role="status">
         {eligibility.live
-          ? "The mountain view is ready."
+          ? rendererFailed ? "A still mountain view is displayed." : worldReady ? "The mountain view is ready." : "Loading the mountain view."
           : eligibility.reason === "checking"
             ? "Loading the mountain view."
             : "A still mountain view is displayed."}

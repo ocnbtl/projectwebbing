@@ -11,7 +11,9 @@ const report={origin,at:new Date().toISOString(),classification:'Headless Chrome
 try {
  for(const viewport of [{width:1440,height:900},{width:390,height:844}]) {
   const context=await browser.newContext({viewport,recordVideo:{dir:path.join(out,'video'),size:viewport}});
+  if(['127.0.0.1','localhost'].includes(new URL(origin).hostname))await context.route('**/_vercel/insights/script.js',r=>r.fulfill({status:200,contentType:'application/javascript',body:''}));
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
   await page.goto(origin);await page.locator('[data-renderer-state="live"]').waitFor({timeout:60000});
   const rendererReadyMarkerMs=await page.evaluate(()=>performance.now());
   await page.waitForFunction(()=>document.documentElement.dataset.madaginMeaningfulWorldReady==='true',undefined,{timeout:60000});

@@ -2060,10 +2060,11 @@ type PublicWorldExperienceProps = {
   activeView: WorldViewId;
   className?: string;
   onReady?: () => void;
+  onUnavailable?: () => void;
   progress: MotionValue<number>;
 };
 
-export function PublicWorldExperience({ activeView, className, onReady, progress }: PublicWorldExperienceProps) {
+export function PublicWorldExperience({ activeView, className, onReady, onUnavailable, progress }: PublicWorldExperienceProps) {
   const [device] = useState<DeviceProfile | null>(() =>
     typeof document === "undefined" ? null : inspectDevice(false),
   );
@@ -2074,7 +2075,8 @@ export function PublicWorldExperience({ activeView, className, onReady, progress
   const handleRendererFailure = useCallback(() => {
     setCanvasReady(false);
     setCanvasFailed(true);
-  }, []);
+    onUnavailable?.();
+  }, [onUnavailable]);
   const ignoreStats = useCallback(() => {}, []);
 
   useEffect(() => {

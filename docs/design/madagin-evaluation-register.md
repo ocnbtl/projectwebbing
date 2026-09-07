@@ -53,3 +53,22 @@ Evidence: `ridge-release-20260906/matched-views.json` holds comparable optimized
 Real references freshly inspected: DLNR Nāpali photograph and actual DLNR footage around 03:06 (wet fractured cliff/narrow waterfall) and 04:39 (breaking shore waves). The canopy's finer detail is useful but does not reproduce the source's coherent geology, density or fluid motion. This is diagnostic AI review; the independent human gate remains UNVERIFIED. Rejected development renders used fallback fonts. Early canopy captures before the single-material draw fix did not display the added canopy and cannot establish its appearance.
 
 Acceptance correction: the first selected ridge captures missed a missing-terminal-terrain regression. Compact video at 42.50 seconds exposed visible vegetation above a terrain void; comparison with `7536e49` confirmed regression. The merge rejected mismatched attributes and returned null, which pageerror-only checks missed. The fixed compact geometry matches baseline positions and indices exactly; desktop uses a valid position-only merge of its eroded ridge. Repaired captures and motion replace the selected records; prior affected views and measurements remain in `rejected-terminal-merge/`. Actual-asset geometry checks and console-error capture supplement, rather than replace, visual inspection. Treat the initial runtime passes as interaction evidence only.
+
+
+## September 6, 2026 — Ocean motion and rejected geographic catchment
+
+Diagnostic AI review, not independent blind acceptance. Anchors remain 1 = conspicuously synthetic, 2 = coherent but obvious, 3 = credible at selected distance, 4 = convincing across views with minor tells, 5 = independently tested photographic equivalence. Keep individual categories visible.
+
+| Required views / category | Before → selected | Perceived delta / remaining defect | Severity |
+|---|---|---|---|
+| Ridge + terminal About / ocean motion | 2 → 2 | Shoreward surf translation and fading wakes accepted; regular directional wave structure, no overturning/spray and simplified reflection persist. | High |
+| Opening, Ridge, Valley, Lake, Waterfall, Summit / geology | 2 → 2 | Accepted geometry retained. All three full-catchment trials rejected for weak close detail; macroform alone is insufficient. | High |
+| Same views / ecology and grounding | 2 → 2 | Accepted 4082-root desktop layer retained. Giant legacy leaves, incomplete cliff cover and lighting remain. Catchment cards rejected. | High |
+| Lake/Waterfall / connected water | 2 → 2 | Authored inland water unchanged; ocean motion does not qualify watershed realism. | High |
+| All views / light, atmosphere, route | 2 → 2 | Retained world. Geographic trial route too fast and lacks a production distance/speed proof. | High |
+| About/Projects/Blog + ordinary routes / reading and input | Existing acceptance retained | Actual browser checks cover independent scroll, outside interaction, history/direct links, return/focus and capability fallbacks. See final publication result. | Functional gate |
+| Loading / failure | Premature ready → corrected | Held-asset, visible-world and actual context-loss assertions; fallback keeps usable navigation. | Closed scoped defect |
+
+Evidence: `ocean-release-20260906/before-final.json`, `after-final.json`, `camera-parity.json`, original held videos, `motion/review.json`, and `accepted-rejected.json`. Four coast comparisons use identical positions and lighting, look residual <0.00003 m, ocean time 40 s. Other animations are not phase locked. Original WebM streams are served with byte ranges; no transcoding or frame degradation. Full flight is separate from diagnostic jumps and clock freezes. No changed-pixel/hash score is used.
+
+Source-verified DLNR photograph and actual DLNR YouTube `kxJIVCGPac8` opening aerial playback were reviewed this run. DLNR Vimeo human challenge and NPS Flickr playback failure are explicitly unavailable fresh references; old DLNR motion observations remain historical. Current visible cliffs, dense varied canopy and broken surf exceed the render. Generated fallback imagery is not live geometry or a real-Hawaii evaluation reference. Final independent-human still and motion gate remains UNVERIFIED; no formal held-out test was run.

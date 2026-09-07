@@ -34,6 +34,7 @@ import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
 import {RidgeCanopy} from "./ridge-canopy";
+import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
 
 // Retain the visible sky's authored sun, and use it for environment, shadows
 // and water. These previously used three different azimuth/elevation pairs.
@@ -9163,93 +9164,53 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
   );
 }
 
-function createOceanMaterial() {
+function createOceanMaterial(meshSpacing: number) {
   return new ShaderMaterial({
     depthWrite: true,
     side: DoubleSide,
     toneMapped: true,
-    uniforms: { uTime: { value: 0 }, uSunDirection: { value: V116_SUN_DIRECTION.clone() } },
+    uniforms: { uWaveTime: { value: 0 }, uMeshSpacing: { value: meshSpacing }, uTime: { value: 0 }, uSunDirection: { value: V116_SUN_DIRECTION.clone() } },
     vertexShader: `
       uniform float uTime;
+      ${OCEAN_WAVE_FIELD}
       varying vec3 vWorldNormal;
       varying vec3 vWorldPosition;
       varying float vWaveHeight;
       varying float vWaveSlope;
       varying float vCoastDepth;
       varying float vOceanDistance;
-      varying float vBreaker;
       varying float vLongSwell;
-      varying float vRunupPulse;
       void main() {
         vec3 displaced = position;
-        vec2 p = position.xy;
         vec4 baseWorld = modelMatrix * vec4(position, 1.0);
-        float coastline = -690.0
-          + sin(baseWorld.z * 0.012 + 0.8) * 18.0
-          + sin(baseWorld.z * 0.029 - 1.3) * 7.5
-          + sin(baseWorld.z * 0.061 + 0.35) * 2.8;
-        float oceanDistance = coastline - baseWorld.x;
+        vec2 p = baseWorld.xz;
+        float oceanDistance = oceanCoast(p) - p.x;
         float coastDepth = smoothstep(5.0, 72.0, oceanDistance);
-        vCoastDepth = coastDepth;
-        vOceanDistance = oceanDistance;
-        float warpA = sin(p.x * 0.006 + p.y * 0.009 + 0.8) * 1.12
-          + sin(p.x * -0.013 + p.y * 0.005 - 1.7) * 0.68;
-        float warpB = sin(p.x * 0.011 - p.y * 0.007 + 2.1) * 0.82;
-        float phaseA = p.x * 0.016 + p.y * 0.009 + warpA * 0.2 + uTime * 0.49;
-        float phaseB = p.x * -0.026 + p.y * 0.035 + warpB * 0.24 + uTime * 0.36 + 1.7;
-        float phaseC = p.x * 0.061 + p.y * -0.053 + warpA * 0.12 + uTime * 0.68 + 4.2;
-        float phaseD = p.x * -0.132 + p.y * -0.108 + warpB * 0.16 + uTime * 0.94 + 2.4;
-        float phaseE = p.x * 0.0082 + p.y * 0.0038 + warpA * 0.14 + uTime * 0.27 - 0.9;
-        float phaseF = p.x * -0.041 + p.y * 0.019 + warpB * 0.12 + uTime * 0.58 + 5.3;
-        float swellA = sin(phaseA) * 1.78;
-        float swellB = sin(phaseB) * 0.88;
-        float swellC = sin(phaseC) * 0.31;
-        float swellD = sin(phaseD) * 0.11;
-        float swellE = sin(phaseE) * 1.42;
-        float swellF = sin(phaseF) * 0.56;
-        float movingBreak = 17.0 + sin(baseWorld.z * 0.021 - uTime * 0.72) * 4.8
-          + sin(baseWorld.z * 0.053 + uTime * 0.31) * 2.1;
-        float breaker = exp(-pow((oceanDistance - movingBreak) / 7.6, 2.0));
-        float secondaryBreaker = exp(-pow((oceanDistance - 33.0 - sin(baseWorld.z * 0.037 + uTime * 0.28) * 5.2) / 8.8, 2.0));
-        float outerBreaker = exp(-pow((oceanDistance - 52.0 - sin(baseWorld.z * 0.024 - uTime * 0.19) * 6.4) / 10.8, 2.0));
-        float backwash = exp(-pow((oceanDistance - 6.0 - sin(baseWorld.z * 0.034 - uTime * 0.5) * 2.5) / 4.4, 2.0));
-        float runupPulse = exp(-pow((oceanDistance - 2.8 - sin(baseWorld.z * 0.052 - uTime * 0.61) * 1.9) / 2.7, 2.0));
-        float waveEnvelope = 0.16 + coastDepth * 0.84;
-        float height = (swellA + swellB + swellC + swellD + swellE + swellF) * waveEnvelope
-          + breaker * (0.72 + sin(baseWorld.z * 0.105 - uTime * 1.18) * 0.18)
-          + secondaryBreaker * (0.3 + sin(baseWorld.z * 0.072 - uTime * 0.74) * 0.08)
-          + outerBreaker * (0.16 + sin(baseWorld.z * 0.051 - uTime * 0.52) * 0.04)
-          - backwash * 0.18
-          + runupPulse * 0.12;
-        displaced.x += (cos(phaseA) * 0.42 - cos(phaseB) * 0.18) * waveEnvelope - breaker * 0.42;
-        displaced.y += (cos(phaseA) * 0.28 + cos(phaseB) * 0.22) * waveEnvelope;
+        vec3 waves = oceanSwell(p);
+        float envelope = 0.16 + coastDepth * 0.84;
+        float height = waves.x * envelope;
+        // Derivative of the shoaling envelope belongs to the same surface.
+        float depthT = clamp((oceanDistance - 5.0) / 67.0, 0.0, 1.0);
+        float envelopeSlope = 0.84 * 6.0 * depthT * (1.0 - depthT) / 67.0;
+        float coastSlope = cos(p.y * 0.012 + 0.8) * 0.216
+          + cos(p.y * 0.029 - 1.3) * 0.2175
+          + cos(p.y * 0.061 + 0.35) * 0.1708;
+        vec2 slope = waves.yz * envelope + waves.x * envelopeSlope * vec2(-1.0, coastSlope);
         displaced.z += height;
-        float dx = (cos(phaseA) * 0.016 * 1.78
-          + cos(phaseB) * -0.026 * 0.88
-          + cos(phaseC) * 0.061 * 0.31
-          + cos(phaseD) * -0.132 * 0.11
-          + cos(phaseE) * 0.0082 * 1.42
-          + cos(phaseF) * -0.041 * 0.56) * waveEnvelope;
-        float dy = (cos(phaseA) * 0.009 * 1.78
-          + cos(phaseB) * 0.035 * 0.88
-          + cos(phaseC) * -0.053 * 0.31
-          + cos(phaseD) * -0.108 * 0.11
-          + cos(phaseE) * 0.0038 * 1.42
-          + cos(phaseF) * 0.019 * 0.56) * waveEnvelope;
-        vec3 localNormal = normalize(vec3(-dx, -dy, 1.0));
         vec4 worldPosition = modelMatrix * vec4(displaced, 1.0);
         vWorldPosition = worldPosition.xyz;
-        vWorldNormal = normalize(mat3(modelMatrix) * localNormal);
+        vWorldNormal = normalize(vec3(-slope.x, 1.0, -slope.y));
         vWaveHeight = height;
-        vWaveSlope = length(vec2(dx, dy)) + breaker * 0.11;
-        vBreaker = max(breaker, max(secondaryBreaker * 0.62, outerBreaker * 0.36));
-        vLongSwell = swellE + swellA * 0.44;
-        vRunupPulse = runupPulse;
+        vWaveSlope = length(slope);
+        vCoastDepth = coastDepth;
+        vOceanDistance = oceanDistance;
+        vLongSwell = waves.x;
         gl_Position = projectionMatrix * viewMatrix * worldPosition;
       }
     `,
     fragmentShader: `
       uniform float uTime;
+      ${OCEAN_WAVE_FIELD}
       uniform vec3 uSunDirection;
       varying vec3 vWorldNormal;
       varying vec3 vWorldPosition;
@@ -9257,26 +9218,22 @@ function createOceanMaterial() {
       varying float vWaveSlope;
       varying float vCoastDepth;
       varying float vOceanDistance;
-      varying float vBreaker;
       varying float vLongSwell;
-      varying float vRunupPulse;
       float oceanHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float oceanNoise(vec2 p) {
         vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
         return mix(mix(oceanHash(i), oceanHash(i + vec2(1.0, 0.0)), f.x),
           mix(oceanHash(i + vec2(0.0, 1.0)), oceanHash(i + vec2(1.0)), f.x), f.y);
       }
+      ${OCEAN_WIND_NORMAL}
       void main() {
         if (vOceanDistance < -1.5) discard;
         vec3 normal = normalize(vWorldNormal);
         vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
         float distanceToCamera = length(cameraPosition - vWorldPosition);
         float detailFade = 1.0 - smoothstep(120.0, 820.0, distanceToCamera);
-        vec2 capillary = vec2(
-          sin(vWorldPosition.x * 0.72 + vWorldPosition.z * 0.91 + uTime * 0.63),
-          cos(vWorldPosition.z * 0.77 - vWorldPosition.x * 0.66 + uTime * 0.57)
-        );
-        normal = normalize(normal + vec3(capillary.x * 0.016, 0.0, capillary.y * 0.016) * detailFade);
+        vec2 windSlope = oceanWindSlope(vWorldPosition.xz);
+        normal = normalize(normal + vec3(-windSlope.x, 0.0, -windSlope.y));
         vec3 reflected = reflect(-viewDirection, normal);
         float skyAmount = smoothstep(-0.08, 0.78, reflected.y);
         vec3 horizon = vec3(0.16, 0.305, 0.345);
@@ -9301,33 +9258,26 @@ function createOceanMaterial() {
         vec3 absorption = exp(-vec3(0.31, 0.12, 0.065) * opticalDepth);
         vec3 color = mix(baseWater * absorption, reflectedSky, 0.1 + fresnel * 0.5);
         color *= 0.7 + surfaceVariation * 0.29;
-        float longSwellLight = smoothstep(0.2, 1.35, vLongSwell) * (0.28 + fresnel * 0.72);
-        float longSwellTrough = 1.0 - smoothstep(-1.45, -0.08, vLongSwell);
-        color *= mix(1.0, 0.76, longSwellTrough * (0.38 + (1.0 - fresnel) * 0.22));
-        color = mix(color, reflectedSky * 1.1, longSwellLight * 0.29);
+        // Let the surface normal drive reflection; height-tinted crests made
+        // regularly spaced light stripes even where the sun could not light them.
         color += vec3(0.075, 0.105, 0.11) * smoothstep(0.035, 0.12, vWaveSlope) * detailFade * 0.12;
         float crest = smoothstep(0.05, 0.13, vWaveSlope) * smoothstep(0.3, 1.25, vWaveHeight);
         color = mix(color, vec3(0.43, 0.63, 0.66), crest * smoothstep(0.54, 0.87, surfaceVariation) * 0.29);
-        float shorePulseA = sin(vWorldPosition.z * 0.071 - uTime * 0.66 + sin(vWorldPosition.z * 0.017) * 1.4) * 3.8;
-        float shorePulseB = sin(vWorldPosition.z * 0.041 - uTime * 0.44 + 2.2) * 2.6;
-        float primaryBreak = exp(-pow((vOceanDistance - 17.0 - shorePulseA) / 4.0, 2.0));
-        float secondaryBreak = exp(-pow((vOceanDistance - 31.0 - shorePulseB) / 5.6, 2.0));
-        float tertiaryBreak = exp(-pow((vOceanDistance - 49.0 + shorePulseA * 0.4 - shorePulseB * 0.3) / 7.4, 2.0));
-        float outerBreak = exp(-pow((vOceanDistance - 67.0 + shorePulseB * 0.46) / 10.4, 2.0));
-        float backwash = exp(-pow((vOceanDistance - 5.5 + shorePulseA * 0.22) / 3.9, 2.0));
-        float shoreFeather = smoothstep(0.6, 4.4, vOceanDistance) * (1.0 - smoothstep(72.0, 94.0, vOceanDistance));
-        float foamNoise = oceanNoise(vWorldPosition.xz * 0.13 + vec2(-uTime * 0.035, uTime * 0.012));
-        float foamVeins = oceanNoise(vWorldPosition.xz * vec2(0.21, 0.082) + vec2(uTime * 0.022, -uTime * 0.008));
-        float brokenFoam = smoothstep(0.31, 0.74, foamNoise * 0.58 + foamVeins * 0.54 + surfaceVariation * 0.18);
-        float foamTongues = smoothstep(0.38, 0.77, oceanNoise(vWorldPosition.xz * vec2(0.087, 0.29) + vec2(uTime * 0.009, -uTime * 0.028)));
-        float alongshoreBreakup = 0.58 + oceanNoise(vec2(vWorldPosition.z * 0.026, uTime * 0.085)) * 0.54;
-        float runupLace = smoothstep(0.4, 0.78, oceanNoise(
-          vWorldPosition.xz * vec2(0.18, 0.34) + vec2(-uTime * 0.028, uTime * 0.014)
-        ));
-        float shoreFoam = (primaryBreak * 0.82 + secondaryBreak * 0.38 + tertiaryBreak * 0.23 + outerBreak * 0.14 + backwash * 0.3 + vRunupPulse * 0.38) * shoreFeather * brokenFoam * alongshoreBreakup;
-        shoreFoam *= 0.74 + foamTongues * 0.46;
-        shoreFoam += vRunupPulse * runupLace * 0.34;
-        shoreFoam = max(shoreFoam, vBreaker * shoreFeather * smoothstep(0.42, 0.78, foamVeins) * 0.66);
+        float phase = surfPhase(vWorldPosition.xz, vOceanDistance);
+        float surf = surfEnvelope(vOceanDistance);
+        // A narrow breaking front followed by a broader, fading foam wake.
+        // Phase is continuous in time: no wrapped band can jump offshore.
+        float front = pow(max(0.0, sin(phase)), 8.0);
+        float wake = pow(max(0.0, sin(phase - 0.7)), 2.0);
+        vec2 advected = vWorldPosition.xz - vec2(uWaveTime * 1.3, uWaveTime * 0.12);
+        float foamNoise = oceanNoise(advected * 0.13);
+        float foamVeins = oceanNoise(advected * vec2(0.21, 0.082));
+        float brokenFoam = smoothstep(0.28, 0.74, foamNoise * 0.58 + foamVeins * 0.54);
+        float alongshoreBreakup = 0.48 + oceanNoise(vec2(vWorldPosition.z * 0.026, uWaveTime * 0.026)) * 0.52;
+        float wash = exp(-pow((vOceanDistance - 4.2) / 4.5, 2.0))
+          * (0.5 + sin(phase - 1.0) * 0.5);
+        float shoreFoam = ((front * 0.85 + wake * 0.27) * surf + wash * 0.32)
+          * brokenFoam * alongshoreBreakup * smoothstep(0.0, 2.2, vOceanDistance);
         color = mix(color, vec3(0.63, 0.73, 0.69), clamp(shoreFoam * 1.16, 0.0, 0.88));
         vec3 sunDirection = normalize(uSunDirection);
         float broadGlint = pow(max(dot(reflected, sunDirection), 0.0), 118.0);
@@ -9347,11 +9297,13 @@ function createOceanMaterial() {
 
 function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion: boolean; tier: WorldQualityTier }) {
   const activeMaterial = useRef<ShaderMaterial | null>(null);
-  const material = useMemo(() => createOceanMaterial(), []);
   const segments = mobile ? 112 : tier === "high" ? 512 : tier === "balanced" ? 448 : 160;
+  const material = useMemo(() => createOceanMaterial(6000 / segments), [segments]);
   useFrame(({ clock }) => {
     const waterTime = activeMaterial.current?.uniforms.uTime;
     if (waterTime) waterTime.value = reducedMotion ? 0 : clock.elapsedTime * 0.55;
+    const waveTime = activeMaterial.current?.uniforms.uWaveTime;
+    if (waveTime) waveTime.value = reducedMotion ? 0 : clock.elapsedTime;
   });
   useEffect(() => {
     activeMaterial.current = material;
@@ -9404,11 +9356,19 @@ function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion
       surfPersistence: "five spatially broken crest, runup, and backwash authorities",
     };
     host.__MADAGIN_OCEAN_REALISM_CD__ = coastToHorizonEvidence;
+    document.documentElement.dataset.madaginOceanWaveField = JSON.stringify({
+      version: "dispersive-surf-1", swellComponents: 6, windNormalComponents: 7,
+      dispersion: "omega=sqrt(9.81*k); world metres and seconds",
+      surf: "continuous shoreward fronts and decaying foam; authored envelope",
+      meshSpacing: 6000 / segments, spatialFiltering: "mesh spacing and fragment derivatives",
+      limitations: "No bathymetric solver, wave overturning, spray or scene reflection",
+    });
     document.documentElement.dataset.madaginOceanRealismBy = JSON.stringify(retainedByEvidence);
     document.documentElement.dataset.madaginOceanRealismBz = JSON.stringify(evidence);
     document.documentElement.dataset.madaginOceanRealismCd = JSON.stringify(coastToHorizonEvidence);
     return () => {
       activeMaterial.current = null;
+      delete document.documentElement.dataset.madaginOceanWaveField;
       if (host.__MADAGIN_OCEAN_REALISM_BY__ === retainedByEvidence) {
         delete host.__MADAGIN_OCEAN_REALISM_BY__;
         delete document.documentElement.dataset.madaginOceanRealismBy;
@@ -9425,7 +9385,7 @@ function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion
     };
   }, [material, segments]);
   return (
-    <mesh material={material} name="Madagin Candidate CD coast-to-horizon six-swell five-breaker ocean" position={[-2500, -18, -700]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh material={material} name="Madagin dispersive swell and advancing surf ocean" position={[-2500, -18, -700]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[5200, 6000, segments, segments]} />
     </mesh>
   );

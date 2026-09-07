@@ -2,7 +2,25 @@
   "schemaVersion": 2,
   "lastReverified": "2026-09-06",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-ridge-20260906/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-ocean-20260906/publication.json",
+  "oceanMotionRelease": {
+    "runtime": "src/components/internal/ocean-wave-field.ts",
+    "assetsAdded": [],
+    "retained": "Exact analytic coastline, accepted terrain/ecology/materials/sky/camera and all licensed assets",
+    "method": "Linear deep-water offshore dispersion, bounded geometry frequencies, derivative-filtered wind normals; authored continuous surf/foam envelope",
+    "limitations": "No bathymetry solver, overturning, spray or actual scene reflections",
+    "localRejected": {
+      "paths": [
+        "src/components/internal/catchment-world.tsx",
+        "src/components/internal/catchment-canopy.tsx",
+        "tools/terrain/build-sourced-catchment.py",
+        "tools/terrain/build-catchment-daylight.mjs",
+        "public/world/napali-catchment-v1/"
+      ],
+      "sources": "Retained NOAA CUDEM, ESA WorldCover and original licensed models/HDR. Original source/foundation files unchanged.",
+      "decision": "Three render trials remain below accepted public world in close cliff detail, distant canopy and route. Not released."
+    }
+  },
   "ridgeSecondaryCanopy": {
     "manifest": "public/world/ridge-canopy-v1/manifest.json",
     "provenance": "public/world/ridge-canopy-v1/PROVENANCE.md",
