@@ -204,3 +204,23 @@ Evidence: `output/playwright/madagin-world-progress/canopy-lod-release-20260908/
 | Human still and motion equivalence | UNVERIFIED → UNVERIFIED | Independent held-out 45–55% equivalence with 95% CI still required |
 
 The compact workload reduction must preserve normal-size branch silhouettes and continuous transitions. Geometry counts do not establish speed, thermal behavior or realism. DLNR Nāpali photograph and actual Kalalau valley footage at 256.52–259.23 s are diagnostic real references, not formal matched pairs. Previous rejected no-MSAA and understory trials remain excluded. Inquiry domain/mailbox/delivery gates remain separate and unverified.
+
+
+## September 8 — Grounded drainage
+
+Baseline 27b6cd47; same 22 fixed camera/lens pairs, sun and resolution. Evidence: `headwater-release-20260908/review.html` and `output/releases/madagin-headwater-20260908/publication.json`. Held and uninterrupted motion are separate; phases differ.
+
+| Required view/category | Prior → selected | Remaining defect / severity |
+|---|---|---|
+| Ridge held/exit and Valley / channel contact | 2 → 3 diagnostic: authored tributary joins the grounded river; reject raised-bank-only trial | Smooth banks, sparse riparian layers, missing stream boulders / high |
+| River and waterfall source / flow direction and light | Downstream metric flow and common sun replace world-axis phase/light mismatch | Surface optics and turbulence remain synthetic / high |
+| Lake/Waterfall / catchment continuity | 2 retained | Artificial lake perimeter, outflow and broad catchment geography / high |
+| Opening/Near-canopy/Summit / ecology and landforms | Prior ratings retained | Generic trees, sparse understory and authored coast collar / high |
+| About/Projects/Blog / interaction | Separate local/public visitor and loading gates | Scroll, steering, history, focus, return and fallback must remain reliable |
+| Whole-world realism | 2 → 2 diagnostic | B integrated proof still open |
+| Independent human still/motion equivalence | UNVERIFIED | Held-out 45–55% equivalence with 95% CI remains required |
+
+No average score or percent-complete claim. No new source asset is fetched. Runtime channel incision/fill is authored and recorded separately from original NOAA/source geometry. Physical GPU/phone/thermal qualification and domain/mailbox delivery remain unverified. Exact release measurements report each transfer/readiness/heap/frame budget separately.
+
+
+Drainage finishing check: the new bank initially obstructed the existing waterfall outflow. That second trial is rejected in `trial-2-blocked-outflow`. The selected outflow now reaches inside the main channel and its bed is cut through the bank using the same graded path. Both terrain resolutions pass 84 additional outflow-center samples (minimum clearance 0.60 m). The river's right bank is intentionally open only at that inlet. Broader pool/bank appearance and the coarser terminal coastal terrain remain later continuity work, not a completed whole-catchment claim.

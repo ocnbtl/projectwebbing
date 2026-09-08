@@ -1,5 +1,6 @@
 "use client";
 
+import {ridgeHeadwaterPlantExclusion} from "./ridge-headwater";
 import {Suspense, useEffect, useMemo} from "react";
 import type {BufferGeometry} from "three";
 import field from "./native-cliff-field.json";
@@ -70,7 +71,7 @@ export function createNativeCliffPlants(geometry:BufferGeometry,compact:boolean)
   const step=compact?17:11;
   for(let z=field.z0+6;z<field.z0+field.depth-6;z+=step)for(let x=field.x0+6;x<field.x0+field.width-6;x+=step){
     const px=x+(random()-.5)*step*.86,pz=z+(random()-.5)*step*.86,y=sample(px,pz);
-    if(!Number.isFinite(y)||y<-1||nativeCliffWeight(px,pz)<.01)continue;
+    if(!Number.isFinite(y)||y<-1||nativeCliffWeight(px,pz)<.01||ridgeHeadwaterPlantExclusion(px,pz))continue;
     const gx=(sample(px+1,pz)-sample(px-1,pz))/2,gz=(sample(px,pz+1)-sample(px,pz-1))/2;
     const slope=Math.hypot(gx,gz);if(!Number.isFinite(slope)||slope>1.1)continue;
     const cover=.6+.28*Math.sin(px*.027+Math.sin(pz*.019)*2)*Math.sin(pz*.022);

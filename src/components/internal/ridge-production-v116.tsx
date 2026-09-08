@@ -28,6 +28,7 @@ import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
 import {RidgeCanopy} from "./ridge-canopy";
+import {RIDGE_HEADWATER_VERSION, RIDGE_HEADWATER_START, RIDGE_HEADWATER_END, ridgeHeadwaterLevel, ridgeHeadwaterHalfWidth, ridgeRiverCenter, valleyRiverLevel} from "./ridge-headwater";
 import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-cliff";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
@@ -511,7 +512,7 @@ function waterfallOutflowCenter(progress: number) {
   const start = PLUNGE_POOL_CENTER;
   const control = { x: 122, z: -736 };
   const end = {
-    x: v116RiverCenter(-757) + v116RiverHalfWidth(-757) + 1.4,
+    x: v116RiverCenter(-757) + v116RiverHalfWidth(-757) * .45,
     z: -757,
   };
   return {
@@ -1468,6 +1469,7 @@ function subdivideSelectedTerrainGeometry(
     b: number,
     c: number,
   ) => boolean,
+  recomputeNormals = true,
 ) {
   const sourcePositions = source.getAttribute("position");
   const sourceUvs = source.getAttribute("uv");
@@ -1554,7 +1556,7 @@ function subdivideSelectedTerrainGeometry(
   geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
   if (sourceUvs) geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
   geometry.setIndex(indices);
-  geometry.computeVertexNormals();
+  if(recomputeNormals)geometry.computeVertexNormals();
   geometry.userData[diagnosticKey] = {
     selectedTriangles,
     sharedEdges: splitEdges.size,
@@ -2139,7 +2141,7 @@ function createNativeRidgeSurface(source: BufferGeometry) {
     });
     geometry.dispose();geometry=refined;
   }
-  return applyNativeCliff(geometry);
+  return createRidgeHeadwaterTerrain(applyNativeCliff(geometry));
 }
 
 function createRidgeErosionTerrainGeometry(source: Mesh) {
@@ -2233,7 +2235,7 @@ function createRidgeErosionTerrainGeometry(source: Mesh) {
       worldBoundsProtected: true,
     },
   };
-  return applyNativeCliff(geometry);
+  return createRidgeHeadwaterTerrain(applyNativeCliff(geometry));
 }
 
 
@@ -2502,7 +2504,7 @@ function createIntegratedWatershedTerrainGeometry(
       const cross = Math.abs(x - v116RiverCenter(z));
       const channel = (1 - smoothRange(halfWidth * 0.72, halfWidth + 4.2, cross)) * longitudinal;
       if (channel > 0.001) {
-        const waterLevel = v116WatershedHeight(z) + 0.58;
+        const waterLevel = z>RIDGE_HEADWATER_END?ridgeHeadwaterLevel(z):valleyRiverLevel(z);
         const bedDepth = 0.74 + (1 - Math.min(1, cross / Math.max(halfWidth, 0.001))) * 0.62;
         const breakup = Math.sin(z * 0.093 + x * 0.17) * 0.11;
         const target = waterLevel - bedDepth + breakup;
@@ -2773,7 +2775,7 @@ function createIntegratedWatershedTerrainGeometry(
       waterfallTop: WATERFALL_TOP,
     },
   };
-  return geometry;
+  return createRidgeHeadwaterTerrain(geometry);
 }
 
 function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
@@ -3298,7 +3300,7 @@ function createExactDetailedRidgeValleyWeldGeometry(
   const uvDepth = Math.max(0.001, (bounds?.max.z ?? -315) - (bounds?.min.z ?? -980));
   for (let row = 0; row <= rows; row += 1) {
     const along = row / rows;
-    const samples = row === 0
+    const samples: Array<{x:number}> = row === 0
       ? valleyInterior
       : row === rows
         ? joinedBoundary
@@ -3467,18 +3469,29 @@ function createExactBoundaryTerrainSeamBridge(field: TerrainSeamField) {
 
   for (let row = 0; row <= rows; row += 1) {
     const along = row / rows;
-    const samples = row === 0
+    const samples: Array<{x:number}> = row === 0
       ? valley
       : row === rows
         ? ridge
         : Array.from({ length: interiorColumns + 1 }, (_, column) => ({
             x: minimumX + (maximumX - minimumX) * (column / interiorColumns),
           }));
+    if(row>0&&row<rows) {
+      const z=valleyBoundaryZ+seamSpan*along,center=v116RiverCenter(z),half=ridgeChannelWidth(z)*2.4;
+      for(let x=center-half;x<=center+half;x+=.4)samples.push({x});
+      samples.sort((a,b)=>a.x-b.x);
+    }
     const indices: number[] = [];
     samples.forEach(({ x }) => {
       const z = valleyBoundaryZ + seamSpan * along;
       indices.push(positions.length / 3);
-      positions.push(x, heightAt(x, along), z);
+      const baseHeight=heightAt(x,along);
+      const across=Math.abs(x-v116RiverCenter(z))/ridgeChannelWidth(z);
+      // The old Hermite seam can arch over a narrow incised channel. Keep its
+      // exact boundary rows, but carry the shared bed through the seam interior.
+      const channelWeight=(row===0||row===rows||z<RIDGE_HEADWATER_END||z>RIDGE_HEADWATER_START)?0:1-smoothRange(1.7,2.2,across);
+      const bed=ridgeHeadwaterLevel(z)-.5+Math.pow(Math.min(across,2.2),1.7)*.42;
+      positions.push(x,baseHeight+(bed-baseHeight)*channelWeight,z);
       uvs.push((x + 310) / 620, (285 - z) / 600);
     });
     rowIndices.push(indices);
@@ -5990,11 +6003,12 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     side: DoubleSide,
     toneMapped: true,
     transparent: true,
-    uniforms: { uTime: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uSunDirection: { value: V116_SUN_DIRECTION } },
     vertexShader: `
       uniform float uTime;
       varying vec3 vWorld;
       varying vec2 vWaterUv;
+      ${directional ? "attribute vec2 flow; varying vec2 vFlow;" : ""}
       void main() {
         vec3 p = position;
         ${lake ? `
@@ -6017,13 +6031,16 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         vec4 world = modelMatrix * vec4(p, 1.0);
         vWorld = world.xyz;
         vWaterUv = uv;
+        ${directional ? "vFlow = flow;" : ""}
         gl_Position = projectionMatrix * viewMatrix * world;
       }
     `,
     fragmentShader: `
       uniform float uTime;
+      uniform vec3 uSunDirection;
       varying vec3 vWorld;
       varying vec2 vWaterUv;
+      ${directional ? "varying vec2 vFlow;" : ""}
       float waterHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float waterNoise(vec2 p) {
         vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -6035,8 +6052,14 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         vec3 dy = dFdy(vWorld);
         vec3 n = normalize(cross(dx, dy));
         if (n.y < 0.0) n *= -1.0;
+        ${directional ? `
+        // Metres along the mesh centerline increase downhill, including bends
+        // and the oppositely oriented waterfall source. Crests advect downstream.
+        float phaseA = vFlow.x * .72 + vFlow.y * 2.64 - uTime * .94;
+        float phaseB = vFlow.x * -1.31 + vFlow.y * 4.22 - uTime * .71;` : `
         float phaseA = vWorld.x * ${lake ? "0.052" : directional ? "0.72" : "1.73"} + vWorld.z * ${lake ? "0.037" : directional ? "2.64" : "2.11"} + uTime * ${lake ? "0.21" : directional ? "0.94" : "0.72"};
         float phaseB = vWorld.x * ${lake ? "-0.029" : directional ? "-1.31" : "-2.31"} + vWorld.z * ${lake ? "0.083" : directional ? "4.22" : "3.67"} - uTime * ${lake ? "0.16" : directional ? "0.71" : "0.54"} + sin(vWorld.x * 0.009 + vWorld.z * 0.006) * ${lake ? "1.25" : "0.0"};
+        `}
         float capillary = vWorld.x * 0.31 - vWorld.z * 0.24 + uTime * 0.48 + sin(vWorld.z * 0.018) * 1.1;
         vec3 rippleNormal = normalize(vec3(
           cos(phaseA) * ${lake ? "0.072" : "0.105"} - cos(phaseB) * ${lake ? "0.046" : "0.065"} + cos(capillary) * ${lake ? "0.018" : "0.0"},
@@ -6064,7 +6087,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
     ? "clamp(0.5 + sin(vWorld.x * 0.038 - vWorld.z * 0.029 + uTime * 0.14 + sin(vWorld.z * 0.011) * 1.6) * 0.18 + sin(vWorld.x * -0.017 + vWorld.z * 0.052 - uTime * 0.1 + sin(vWorld.x * 0.008) * 1.2) * 0.14 + sin(vWorld.x * 0.013 + vWorld.z * 0.016 + uTime * 0.045) * 0.08, 0.0, 1.0)"
     : "sin(vWorld.x * 0.071 - vWorld.z * 0.054 + uTime * 0.19 + sin(vWorld.z * 0.017) * 1.8) * 0.5 + 0.5"};
         float glint = pow(
-          max(dot(reflect(-normalize(vec3(-0.72, 0.48, 0.38)), n), viewDirection), 0.0),
+          max(dot(reflect(-uSunDirection, n), viewDirection), 0.0),
           ${lake ? "96.0" : directional ? "72.0" : "48.0"}
         );
         ${lake ? `
@@ -6173,6 +6196,22 @@ function createCumulativeWaterfallGeometry() {
 
 
 
+function addChannelFlow(geometry: BufferGeometry, columns: number) {
+  const p=geometry.getAttribute("position"),rows=p.count/(columns+1),flow:number[]=[];
+  let distance=0;const center=(row:number)=>{
+    const a=row*(columns+1),b=a+columns;
+    return new Vector3((p.getX(a)+p.getX(b))*.5,(p.getY(a)+p.getY(b))*.5,(p.getZ(a)+p.getZ(b))*.5);
+  };
+  let previous=center(0);
+  for(let row=0;row<rows;row++) {
+    const current=center(row);distance+=current.distanceTo(previous);previous=current;
+    const a=row*(columns+1),b=a+columns,width=Math.hypot(p.getX(b)-p.getX(a),p.getZ(b)-p.getZ(a));
+    for(let col=0;col<=columns;col++)flow.push((col/columns-.5)*width,distance);
+  }
+  geometry.setAttribute("flow",new Float32BufferAttribute(flow,2));
+  return geometry;
+}
+
 function createWaterfallUpperStreamGeometry(longitudinalSegments: number, acrossSegments: number) {
   const positions: number[] = [];
   const uvs: number[] = [];
@@ -6221,7 +6260,7 @@ function createWaterfallUpperStreamGeometry(longitudinalSegments: number, across
     lipHalfWidth: waterfallUpperHalfWidth(WATERFALL_TOP.z),
     sourceHalfWidth: waterfallUpperHalfWidth(WATERFALL_HEADWATER_START_Z),
   };
-  return geometry;
+  return addChannelFlow(geometry,acrossSegments);
 }
 
 function createWaterfallPlungeGeometry(angularSegments: number, radialSegments: number) {
@@ -6277,7 +6316,7 @@ function createWaterfallOutflowGeometry(longitudinalSegments: number, acrossSegm
     const normalZ = tangentX / tangentLength;
     const confluenceTaper = 1 - smoothRange(0.72, 1, progress) * 0.86;
     const halfWidth = (8.8 + Math.sin(progress * 10.4 + 0.5) * 0.75 + progress * 1.9) * confluenceTaper;
-    const mergeLevel = v116WatershedHeight(-757) + 0.58;
+    const mergeLevel = valleyRiverLevel(-757);
     const level = WATERFALL_BOTTOM.y - 0.38 + (mergeLevel - WATERFALL_BOTTOM.y + 0.38) * smoothCoastalStep(progress);
     for (let column = 0; column <= acrossSegments; column += 1) {
       const horizontal = column / acrossSegments;
@@ -6311,9 +6350,9 @@ function createWaterfallOutflowGeometry(longitudinalSegments: number, acrossSegm
   geometry.name = "Madagin v1.16 connected plunge outflow";
   geometry.userData.outflowJoin = {
     method: "plunge outflow merges into the main river before its lake boundary",
-    riverCenter: [v116RiverCenter(-757), v116WatershedHeight(-757) + 0.58, -757],
+    riverCenter: [v116RiverCenter(-757), valleyRiverLevel(-757), -757],
   };
-  return geometry;
+  return addChannelFlow(geometry,acrossSegments);
 }
 
 function WaterfallMist({ reducedMotion, tier }: { reducedMotion: boolean; tier: WorldQualityTier }) {
@@ -6404,12 +6443,7 @@ function v116RiverConfluenceProgress(z: number) {
 }
 
 function v116RiverBaseCenter(z: number) {
-  const progress = Math.min(1, Math.max(0, (-315 - z) / 1395));
-  return 34
-    + Math.sin((z + 85) * 0.0085) * (34 + progress * 108)
-    + Math.sin(z * 0.021) * 16
-    + Math.sin(z * 0.053 + 0.6) * 4.5
-    + Math.sin(z * 0.127 - 0.3) * 1.4;
+  return ridgeRiverCenter(z);
 }
 
 function v116RiverCenter(z: number) {
@@ -6442,23 +6476,6 @@ function v116RiverHalfWidth(z: number) {
   return baseWidth * inletFlare;
 }
 
-function v116WatershedHeight(z: number) {
-  if (z >= -315) return 8.57;
-  const tropicalProgress = Math.min(1, Math.max(0, (-315 - z) / 665));
-  const gradeBlend = smoothCoastalStep(Math.min(1, tropicalProgress / 0.2));
-  const tropicalLevel = 7.95 * (1 - gradeBlend) + (-34 - tropicalProgress * 18) * gradeBlend + 0.9;
-  if (z >= -980) {
-    // The project-authored centerline first crosses the irregular lake boundary
-    // at z≈-777. Ease the final reach onto the lake plane before that crossing;
-    // the former unbroken grade arrived about 2.8 m high and read as a clear
-    // translucent step where the two live water surfaces overlapped.
-    const lakeJoin = 1 - smoothRange(-777, -744, z);
-    const connectedBedLevel = LAKE_WATER_LEVEL - 0.58;
-    return tropicalLevel * (1 - lakeJoin) + connectedBedLevel * lakeJoin;
-  }
-  const alpineProgress = Math.min(1, Math.max(0, (-980 - z) / 730));
-  return -51.1 - alpineProgress * 4;
-}
 
 function v116RiverEdgeX(z: number, across: number) {
   const edgeBreakup = 1
@@ -6484,6 +6501,89 @@ function v116RiverLakeJoinZ(across: number) {
   return inside + 1.25 - (1 - Math.abs(across)) * 1.75;
 }
 
+// Shared, bounded terrain and water authority for the cliff-to-valley reach.
+function ridgeChannelWidth(z: number) {
+  const join=smoothRange(-345,-320,z);
+  return v116RiverHalfWidth(z)*(1-join)+ridgeHeadwaterHalfWidth(z)*join;
+}
+function ridgeChannelEnvelope(x: number,z: number) {
+  return smoothRange(-777,-754,z)*(1-smoothRange(-118,-108,z))
+    *(1-smoothRange(ridgeChannelWidth(z)*2.2,Math.max(14,ridgeChannelWidth(z)*3.5),Math.abs(x-v116RiverCenter(z))));
+}
+function outflowTerrainSampler() {
+  const points=Array.from({length:33},(_,i)=>waterfallOutflowCenter(i/32));
+  return (x:number,z:number)=>{
+    if(z < -767 || z > -690 || x < 20 || x > 175)return null;
+    let distance=Infinity,progress=0;
+    for(let i=1;i<points.length;i++) {
+      const a=points[i-1],b=points[i],dx=b.x-a.x,dz=b.z-a.z;
+      const t=saturate(((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz));
+      const d=Math.hypot(x-a.x-dx*t,z-a.z-dz*t);
+      if(d<distance){distance=d;progress=(i-1+t)/32;}
+    }
+    const width=(8.8+Math.sin(progress*10.4+.5)*.75+progress*1.9)*(1-smoothRange(.72,1,progress)*.86);
+    const level=WATERFALL_BOTTOM.y-.38+(valleyRiverLevel(-757)-WATERFALL_BOTTOM.y+.38)*smoothCoastalStep(progress);
+    return distance<width+4?{distance,width,level}:null;
+  };
+}
+function createRidgeHeadwaterTerrain(source: BufferGeometry) {
+  let geometry=source;
+  const outflowAt=outflowTerrainSampler();
+  for(let pass=0;pass<6;pass++) {
+    const refined=subdivideSelectedTerrainGeometry(geometry,"ridgeHeadwaterSubdivision",(p,a,b,c)=>{
+      const ax=p.getX(a),az=p.getZ(a),bx=p.getX(b),bz=p.getZ(b),cx=p.getX(c),cz=p.getZ(c);
+      if(Math.max(az,bz,cz)<-780||Math.min(az,bz,cz)>-108||Math.max(ax,bx,cx)<-50||Math.min(ax,bx,cx)>240)return false;
+      const x=(ax+bx+cx)/3,z=(az+bz+cz)/3;
+      const edge=Math.max(Math.hypot(ax-bx,az-bz),Math.hypot(bx-cx,bz-cz),Math.hypot(cx-ax,cz-az));
+      const across=Math.abs(x-v116RiverCenter(z)),width=ridgeChannelWidth(z),outflow=outflowAt(x,z);
+      if(outflow&&edge>Math.min(2,Math.max(.8,outflow.width*.65)))return true;
+      return across<Math.max(14,width*3.5)+edge && edge>(across<width*2.4+edge?Math.min(2,width*.65):4.5);
+    },false);
+    refined.userData={...geometry.userData,...refined.userData};
+    geometry.dispose();geometry=refined;
+  }
+  const p=geometry.getAttribute("position");let changed=0,maxCut=0,maxFill=0;
+  for(let i=0;i<p.count;i++) {
+    const x=p.getX(i),z=p.getZ(i),weight=ridgeChannelEnvelope(x,z),outflow=outflowAt(x,z);
+    if(weight===0&&!outflow)continue;
+    const width=ridgeChannelWidth(z),across=Math.abs(x-v116RiverCenter(z))/width;
+    const level=z<RIDGE_HEADWATER_END?valleyRiverLevel(z):ridgeHeadwaterLevel(z);
+    // A submerged bed and continuous low banks replace the floating source.
+    const bed=level-.5+Math.pow(Math.min(across,2.2),1.7)*.42;
+    const old=p.getY(i);let next=old+(bed-old)*weight;
+    if(outflow) {
+      // Cut an inlet through the new bank and into the main channel. The old
+      // outflow stopped outside the bank and its fixed bed datum obstructed it.
+      const envelope=1-smoothRange(outflow.width*.8,outflow.width+4,outflow.distance);
+      const target=outflow.level-.65+Math.pow(Math.min(outflow.distance/outflow.width,1.5),1.7)*.3;
+      next=Math.min(next,next+(target-next)*envelope);
+    }
+    p.setY(i,next);changed++;maxCut=Math.max(maxCut,old-next);maxFill=Math.max(maxFill,next-old);
+  }
+  p.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
+  geometry.userData.ridgeHeadwater={version:RIDGE_HEADWATER_VERSION,changed,maxCut,maxFill,authored:true,sourceAssetsUnchanged:true};
+  if(geometry.userData.nativeCliff)geometry.userData.nativeCliff={...geometry.userData.nativeCliff,sourceInteriorPreserved:false,authoredHeadwaterCorridor:true};
+  return geometry;
+}
+function createRidgeHeadwaterGeometry() {
+  const g=new BufferGeometry(),positions:number[]=[],uvs:number[]=[],indices:number[]=[];
+  const rows=244,columns=8;
+  for(let row=0;row<rows;row++) {
+    const t=row/(rows-1),z=RIDGE_HEADWATER_START+(RIDGE_HEADWATER_END-RIDGE_HEADWATER_START)*t;
+    for(let col=0;col<=columns;col++) {
+      const u=col/columns,across=u*2-1;
+      positions.push(v116RiverEdgeX(z,across)-(v116RiverHalfWidth(z)-ridgeChannelWidth(z))*across,
+        ridgeHeadwaterLevel(z)-Math.pow(Math.abs(across),1.55)*.055,z);
+      uvs.push(u,t);
+      if(row<rows-1&&col<columns) {const a=row*(columns+1)+col,b=a+1,c=a+columns+1;indices.push(a,c,b,b,c,c+1);}
+    }
+  }
+  g.setAttribute("position",new Float32BufferAttribute(positions,3));g.setAttribute("uv",new Float32BufferAttribute(uvs,2));g.setIndex(indices);
+  g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();
+  g.userData.ridgeHeadwater={version:RIDGE_HEADWATER_VERSION,start:RIDGE_HEADWATER_START,end:RIDGE_HEADWATER_END,drop:ridgeHeadwaterLevel(RIDGE_HEADWATER_START)-ridgeHeadwaterLevel(RIDGE_HEADWATER_END)};
+  return addChannelFlow(g,columns);
+}
+
 function createIntegratedRiverGeometry(samples: number, columns: number) {
   const geometry = new BufferGeometry();
   const positions: number[] = [];
@@ -6497,9 +6597,9 @@ function createIntegratedRiverGeometry(samples: number, columns: number) {
     for (let column = 0; column <= columns; column += 1) {
       const horizontal = column / columns;
       const across = horizontal * 2 - 1;
-      const z = -313 + (lakeJoinZ[column] + 313) * progress;
+      const z = RIDGE_HEADWATER_END + (lakeJoinZ[column] - RIDGE_HEADWATER_END) * progress;
       const joinBlend = smoothRange(0.82, 1, progress);
-      const waterLevel = (v116WatershedHeight(z) + 0.58) * (1 - joinBlend) + LAKE_WATER_LEVEL * joinBlend;
+      const waterLevel = (valleyRiverLevel(z)) * (1 - joinBlend) + LAKE_WATER_LEVEL * joinBlend;
       const camber = -Math.pow(Math.abs(across), 1.55) * 0.055;
       positions.push(v116RiverEdgeX(z, across), waterLevel + camber * (1 - joinBlend), z);
       uvs.push(horizontal, progress);
@@ -6536,9 +6636,9 @@ function createIntegratedRiverGeometry(samples: number, columns: number) {
       centrelineJoinInsetMeters: 0.5,
       zRange: [Math.min(...lakeJoinZ), Math.max(...lakeJoinZ)],
     },
-    zRange: [Math.min(...lakeJoinZ), -313],
+    zRange: [Math.min(...lakeJoinZ), RIDGE_HEADWATER_END],
   };
-  return geometry;
+  return addChannelFlow(geometry,columns);
 }
 
 function createIntegratedLakeGeometry(angularSegments: number, radialSegments: number, edgeOverlap: number) {
@@ -6768,6 +6868,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     () => createLittoralGeologyPlacements(mobile, tier),
     [mobile, tier],
   );
+  const ridgeHeadwaterGeometry = useMemo(() => createRidgeHeadwaterGeometry(), []);
   const riverGeometry = useMemo(
     () => createIntegratedRiverGeometry(mobile ? 74 : tier === "high" ? 156 : 118, mobile ? 5 : tier === "high" ? 12 : 8),
     [mobile, tier],
@@ -6854,7 +6955,8 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       ...lakeGeometry.userData.watershedSurface,
       basinBed: lakeBedGeometry.userData.watershedBed,
     };
-    host.__MADAGIN_RIVER_CORRIDOR_V116__ = riverGeometry.userData.riverCorridor;
+    host.__MADAGIN_RIVER_CORRIDOR_V116__ = {...riverGeometry.userData.riverCorridor,ridgeHeadwater:ridgeHeadwaterGeometry.userData.ridgeHeadwater};
+    document.documentElement.dataset.madaginRidgeHeadwater=RIDGE_HEADWATER_VERSION;
     host.__MADAGIN_WATERFALL_LANDFORM_V116__ = {
       authority: "runtime remesh of active Valley terrain plus connected project-authored water surfaces",
       body: waterfallGeometry.userData.waterfallBody,
@@ -6984,6 +7086,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       lakeBedMaterial.dispose();
       lakeGeometry.dispose();
       poolMaterial.dispose();
+      ridgeHeadwaterGeometry.dispose();
       riverGeometry.dispose();
       riverMaterial.dispose();
       headwaterMaterial.dispose();
@@ -7004,6 +7107,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     littoralGeologyPlacements.length,
     mobile,
     poolMaterial,
+    ridgeHeadwaterGeometry,
     riverGeometry,
     riverMaterial,
     waterfallGeometry,
@@ -7027,6 +7131,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       ) : null}
       <mesh geometry={lakeBedGeometry} material={lakeBedMaterial} name="Madagin Candidate CC dark depth-graded irregular lake basin bed" receiveShadow />
       <mesh geometry={lakeGeometry} material={waterMaterial} name="Madagin Candidate CF translucent anisotropic reflective irregular lake surface" />
+      <mesh geometry={ridgeHeadwaterGeometry} material={headwaterMaterial} name="Madagin incised ridge tributary" />
       <mesh geometry={riverGeometry} material={riverMaterial} name="Madagin v1.16 centerline-following irregular river surface" />
       <primitive object={scene} />
       {waterfallVisible ? (

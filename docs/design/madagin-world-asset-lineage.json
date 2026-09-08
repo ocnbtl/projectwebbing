@@ -1,4 +1,27 @@
 {
+  "ridgeValleyDrainage20260908": {
+    "runtime": [
+      "src/components/internal/ridge-headwater.ts",
+      "src/components/internal/ridge-production-v116.tsx",
+      "src/components/internal/native-cliff.tsx"
+    ],
+    "version": "ridge-headwater-1",
+    "classification": "Authored channel through the assembled Ridge/Valley terrain, not surveyed drainage",
+    "source": "Existing source GLBs and rendered native cliff/collar; shared water profile fitted to actual desktop/compact triangle samples",
+    "originalAssetsUnchanged": true,
+    "newDownloads": false,
+    "tributaryMeters": 243,
+    "tributaryElevation": [
+      39,
+      -7.3843
+    ],
+    "lakeDatum": -47.9439,
+    "maximumRuntimeIncisionMeters": 5.842,
+    "maximumRuntimeFillMeters": 5.242,
+    "rejected": "Tributary-only raised banks and compact Hermite seam obstruction",
+    "evidence": "output/releases/madagin-headwater-20260908/publication.json",
+    "limits": "Broader catchment reconstruction, boulders, riparian layers and lake/coastal perimeter remain"
+  },
   "compactDistantCanopy20260908": {
     "runtime": [
       "src/components/internal/compact-tree-lod.ts",
