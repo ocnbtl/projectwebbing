@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 const require=createRequire('C:/Users/Ocean/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/verify.cjs');
 const {chromium}=require('playwright');
 const origin=process.env.MADAGIN_REVIEW_ORIGIN??'http://127.0.0.1:3150';
-const out=path.resolve('output/playwright/madagin-world-progress/terrain-readiness-release-20260908',process.env.MADAGIN_PUBLIC_EVIDENCE_LABEL??'ordering-local');
+const out=path.resolve('output/playwright/madagin-world-progress',process.env.MADAGIN_EVIDENCE_CYCLE??'terrain-readiness-release-20260908',process.env.MADAGIN_PUBLIC_EVIDENCE_LABEL??'ordering-local');
 await fs.mkdir(out,{recursive:true});
 const report={origin,at:new Date().toISOString(),cases:[]};
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});

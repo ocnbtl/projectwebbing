@@ -9,7 +9,7 @@ const {chromium}=require('playwright');
 const root=path.resolve('output/playwright/madagin-world-progress',process.env.MADAGIN_EVIDENCE_CYCLE??'native-cliff-release-20260908');
 await fs.mkdir(root,{recursive:true});
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
-const report={at:new Date().toISOString(),method:'Optimized public renderer. Pause UI, set existing React MotionValue to fixed public-rail progress. Sun and shadow settings unchanged; native cliff geometry and ecology intentionally change. Animation phases not synchronized; still differences are qualitative.',cases:[]};
+const report={at:new Date().toISOString(),method:'Optimized public renderer. Pause UI, set existing React MotionValue to fixed public-rail progress. Sun, terrain and camera rail remain unchanged for the compact framing release; compact vertical field of view intentionally changes from 42 to 60 degrees. Earlier fixed-lens ecology trials are preserved separately and rejected. Animation phases not synchronized; still differences are qualitative.',cases:[]};
 if(process.env.MADAGIN_CAPTURE_PHASE === "after") report.cases=JSON.parse(await fs.readFile(path.join(root,"matched-views.json"))).cases.filter(c=>c.release==="before");
 try {
  for(const [release,origin] of [['before',process.env.MADAGIN_BEFORE_ORIGIN??'http://127.0.0.1:3135'],['after',process.env.MADAGIN_REVIEW_ORIGIN??'http://127.0.0.1:3136']]) {
@@ -33,7 +33,7 @@ try {
     await page.waitForTimeout(id==='ridge-held'||id==='waterfall'||id==='near-canopy'?12000:1600);
     await page.screenshot({path:path.join(out,`${id}.png`)});
     const data=await page.evaluate(()=>({camera:JSON.parse(document.documentElement.dataset.madaginPublicCamera),nativeCliff:document.documentElement.dataset.madaginNativeCliff?JSON.parse(document.documentElement.dataset.madaginNativeCliff):null,rootedTrees:document.documentElement.dataset.madaginRootedTrees??null,surface:document.documentElement.dataset.madaginTerrainSurface?JSON.parse(document.documentElement.dataset.madaginTerrainSurface):null,canopy:document.documentElement.dataset.madaginRidgeCanopy??null,canvasCount:document.querySelectorAll('canvas').length,render:window.__MADAGIN_RIDGE_BENCHMARK_V116__?.render??null}));
-    assert.equal(data.camera.progress,progress);assert.equal(data.canvasCount,1);views.push({id,...data});
+    assert.equal(data.camera.progress,progress);assert.equal(data.canvasCount,1);if(process.env.MADAGIN_EXPECTED_COMPACT_FOV && release==='after')assert.equal(data.camera.fov,viewport.width===390?Number(process.env.MADAGIN_EXPECTED_COMPACT_FOV):42);views.push({id,...data});
    }
    for(const [action,id] of [['ocean','about'],['sky','projects'],['blog','blog']]) {
     await page.locator(`[data-journey-action="${action}"]`).click();await page.waitForTimeout(2400);

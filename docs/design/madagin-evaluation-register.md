@@ -161,3 +161,16 @@ Evidence: `cliff-profile-release-20260908/review.html`, 22 fresh matched pairs, 
 | Budgets | Re-measure after correcting the early readiness marker. | New publication record separates each pass/fail; old compact 1.23 s is invalid as terrain-ready evidence. |
 
 Human still/motion and physical-device gates remain unverified. Domain/mailbox delivery stays unverified; copy/download behavior is retained.
+
+
+## September 8, 2026 — Compact field of view and rejected ecology variants
+
+| View / category | Anchored decision | Severity and evidence |
+|---|---|---|
+| Compact opening / spatial framing | 2 → 3 for framing only: cliff silhouette and neighboring gully become legible at 60° vertical FOV. | Moderate framing defect reduced. Exact rail/targets unchanged; `cliff-ecology-release-20260908/before/390/opening.png` versus `after/390/opening.png`. |
+| Desktop opening and ridge / ecology | Remains 2. Reject small trees, patch-only shrub, wider shrub and fern-layer trials. | High: sparse crowns, weak lower cover and exposed roots. `trial-*` and `fixed-lens-ferns/` preserve alternatives. |
+| Compact secondary views / ecology | Remains 2; broader lens exposes existing faceted foreground plants. | High. Inspect all 11 compact checkpoints and uninterrupted motion. |
+| Terrain/water/atmosphere across journey | Prior ratings retained; no changes to these systems. | High: authored coastal collar, absent cliff-to-valley drainage, synthetic water/atmosphere. |
+| Reading / return and loading | Technical gates evaluated separately from visual quality. | Local/public reading, fallback, brief, loading-order matrices and full flights in this cycle. |
+
+Release evidence: `output/releases/madagin-cliff-ecology-20260908/publication.json`. The local review distinguishes composition pairs (compact lens changed) from rejected same-lens ecology pairs. No averaged score, percentage complete or AI-only human-equivalence pass is reported.

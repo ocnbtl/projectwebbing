@@ -887,7 +887,7 @@ function CameraDirector({
       camera.lookAt(currentLook.current);
       if (performance.now() - publicCameraSampleAt.current > 200) {
         publicCameraSampleAt.current = performance.now();
-        document.documentElement.dataset.madaginPublicCamera = JSON.stringify({ position: camera.position.toArray(), look: currentLook.current.toArray(), view: activeView, progress: rawProgress });
+        document.documentElement.dataset.madaginPublicCamera = JSON.stringify({ position: camera.position.toArray(), look: currentLook.current.toArray(), fov: "fov" in camera ? camera.fov : null, view: activeView, progress: rawProgress });
       }
       let chapterIndex = 0;
       JOURNEY_CHECKPOINTS.forEach((item, index) => {
@@ -2172,7 +2172,7 @@ export function PublicWorldExperience({ activeView, className, onReady, onUnavai
       {rendererAvailable ? (
         <WorldCanvasBoundary onFailure={handleRendererFailure}>
           <Canvas
-            camera={{ position: [112, 82, 280], fov: 42, near: 0.2, far: 2600 }}
+            camera={{ position: [112, 82, 280], fov: device.mobile ? 60 : 42, near: 0.2, far: 2600 }}
             dpr={device.mobile ? [0.75, 1] : [0.85, 1]}
             gl={{ antialias: device.tier !== "conservative", powerPreference: "high-performance" }}
             shadows={device.tier !== "conservative" && !device.mobile ? "soft" : false}

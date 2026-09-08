@@ -1,4 +1,14 @@
 {
+  "compactFraming20260908": {
+    "runtime": "src/components/internal/world-lab.tsx",
+    "compactVerticalFovBefore": 42,
+    "compactVerticalFovAfter": 60,
+    "desktopVerticalFov": 42,
+    "sourceAssetsAdded": false,
+    "geometryAndEcology": "Exact 00bbb48 retained; native-cliff-2 and 301/128 native trees",
+    "rejectedLocalTrials": "output/releases/madagin-cliff-ecology-20260908/accepted-rejected.json",
+    "classification": "Framing and route legibility only; not measured Hawaiian ecology or a realism pass"
+  },
   "nativeCliffProfile20260908": {
     "version": "native-cliff-2",
     "sourceSha256": "1c73d38004fa26eeba80b0a9e1bdd317b097eb007cebe53bcf76f39149e0bcec",
@@ -167,7 +177,7 @@
   "schemaVersion": 2,
   "lastReverified": "2026-09-08",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-native-cliff-20260908/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-cliff-ecology-20260908/publication.json",
   "cliffSurfaceRelease": {
     "runtime": "src/components/internal/terrain-surface.ts",
     "provenance": "public/world/cliff-material-v1/provenance.json",
