@@ -3,6 +3,7 @@
 import {useFrame, useLoader} from "@react-three/fiber";
 import {useEffect, useLayoutEffect, useMemo, useRef} from "react";
 import {Box3, Color, DoubleSide, FileLoader, InstancedMesh, Material, Mesh, MeshStandardMaterial, Object3D} from "three";
+import {nativeCliffWeight} from "./native-cliff";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
@@ -34,7 +35,7 @@ export function RidgeCanopy() {
   const raw=useLoader(FileLoader,"/world/ridge-canopy-v1/canopy.json") as unknown as string;
   const placements=useMemo(()=>{
     const all=JSON.parse(typeof raw==="string"?raw:new TextDecoder().decode(raw as unknown as ArrayBuffer)) as Crown[];
-    return all;
+    return all.filter(p=>nativeCliffWeight(p[0],p[2])===0);
   },[raw]);
   const parts=useMemo(()=>[14,15,4,6].flatMap((index,variant)=>{
     const group=gltf.scene.getObjectByName(`mid_variant_${String(index).padStart(2,"0")}`);

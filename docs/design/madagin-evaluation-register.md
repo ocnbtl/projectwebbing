@@ -122,3 +122,16 @@ Fresh reference comparison uses the source-verified DLNR Nāpali photo and actua
 | About, Projects, Blog / reading | Functional gate retained | Full fresh local/public scroll, input, history, return and fallback checks required by publication record. | Functional |
 
 Evidence: `falls-release-20260907/review.html`, matched views and separate held/full-motion recordings. Actual GoHawaii Wailua photo and Go Visit Hawaii's 16-second Wailua clip (0-8 s) were viewed, including real irregular lobes, frayed edges and a substantial soft impact plume. Reference and render are diagnostic subjects, not matched formal pairs. The first flat-strip candidate is explicitly rejected and retained. Whole-world realism remains 2/5; independent 45-55% human still and motion gates remain UNVERIFIED. Final budget results are reported individually in the publication record, with no physical-device claim.
+
+
+## September 8, 2026 — Native-grid foreland checkpoint
+
+| Required views/category | Before → selected | Named result and remaining defect | Severity |
+|---|---|---|---|
+| Opening, Ridge held/exit / landform | 2 → 2 | More continuous source-shaped slope; artificial cliff walls from trials 1/2 rejected. Selected crop remains rounded, without strong buttress architecture. | High |
+| Opening, Ridge / ecology | 2 → 2 | Triangle-grounded replacement with two tree layers. Repetition, sparse understory and exposed pale roots remain. | High |
+| Valley, Lake, Near-canopy, Waterfall, Summit | Prior ratings retained | Outside-field geometry, light, water and route retained. Remaining inland-water/atmospheric defects remain. | High |
+| About, Projects, Blog / continuity and reading | Functional gate | Native ground persists in terminal renderer; compact merge repaired. Fresh visitor checks and public full flight required. | Functional |
+| Human still and motion equivalence | UNVERIFIED | No independent randomized evaluation; no average or percent-complete claim. | Final gate |
+
+Evidence: `native-cliff-release-20260908/matched-views.json`, `after/`, original held video, separate `motion/` and `motion-public/`, `review.html`; source and geometry gates under `output/releases/madagin-native-cliff-20260908`. Compare actual DLNR photo and Kalalau opening footage. Camera positions exact; sun/camera retained, geometry/ecology change and animation phases differ. References are diagnostic, not matched formal pairs. Original rejected wall candidates are preserved. Final performance results distinguish emulation, script transfer and world transfer from physical-device qualification.

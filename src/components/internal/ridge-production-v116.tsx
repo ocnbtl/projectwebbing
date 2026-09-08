@@ -28,6 +28,7 @@ import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
 import {RidgeCanopy} from "./ridge-canopy";
+import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-cliff";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
 import {FALLING_WATER, FallingSpray, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
@@ -156,8 +157,9 @@ function useEcologyManifest(zone: V116Zone) {
   const raw = useLoader(FileLoader, `${ROOT}/ecology-${zone}-v1.16.json`) as unknown;
   return useMemo(() => {
     const source = typeof raw === "string" ? raw : new TextDecoder().decode(raw as ArrayBuffer);
-    return JSON.parse(source) as EcologyManifest;
-  }, [raw]);
+    const manifest=JSON.parse(source) as EcologyManifest;
+    return zone === "ridge" ? {...manifest,instances:manifest.instances.filter(p=>nativeCliffWeight(p[2],p[4])===0)} : manifest;
+  }, [raw,zone]);
 }
 
 function activeChunks(zone: JourneyCheckpointId): V116Zone[] {
@@ -261,7 +263,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     if (!sources.ridge || !sources.valley) {
       return { bridge: null, diagnostics: null, ridge: null, valley: null };
     }
-    const ridge = geometrySurfaceForMerge(sources.ridge.geometry, sources.ridge.matrixWorld);
+    const ridge = createNativeRidgeSurface(geometrySurfaceForMerge(sources.ridge.geometry, sources.ridge.matrixWorld));
     // The compact camera resolves the source mesh's waterline crossings as
     // visible steps. Two conforming shared-edge passes refine only the actual
     // analytic shoreline and its immediate triangle neighbors. That retained
@@ -324,6 +326,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
   }, [geometries, ridgeMaterial, valleyMaterial]);
   return (
     <group name="Madagin v1.16 exact-boundary compact journey Ridge-to-Valley terrain">
+      <NativeCliffPlants geometry={geometries.ridge} compact shadows={shadows}/>
       {geometries.ridge ? (
         <mesh castShadow={shadows} geometry={geometries.ridge} material={ridgeMaterial} receiveShadow />
       ) : null}
@@ -418,6 +421,7 @@ function MobileTerminalTerrain({ shadows, tier }: { shadows: boolean; tier: Worl
   }, [geometries, material]);
   return (
     <group name="Madagin v1.16 seam-smoothed mobile terminal terrain">
+      <NativeCliffPlants geometry={geometries.connected} compact shadows={shadows}/>
       {geometries.connected ? (
         <mesh
           castShadow={shadows}
@@ -2126,6 +2130,18 @@ function ridgeErosionRelief(x: number, z: number) {
   return Math.max(-12.2, Math.min(5.4, primaryButtresses + secondaryButtresses + terraceBreaks + drainage));
 }
 
+function createNativeRidgeSurface(source: BufferGeometry) {
+  let geometry=source;
+  for(let pass=0;pass<2;pass++) {
+    const refined=subdivideSelectedTerrainGeometry(geometry,"nativeCliffSubdivision",(p,a,b,c)=>{
+      if(![a,b,c].some(i=>nativeCliffWeight(p.getX(i),p.getZ(i))>0))return false;
+      return Math.max(...[[a,b],[b,c],[c,a]].map(([i,j])=>Math.hypot(p.getX(i)-p.getX(j),p.getZ(i)-p.getZ(j))))>4.4;
+    });
+    geometry.dispose();geometry=refined;
+  }
+  return applyNativeCliff(geometry);
+}
+
 function createRidgeErosionTerrainGeometry(source: Mesh) {
   const sourceGeometry = createWeldedTerrainSourceGeometry(source);
   const sourceWeld = sourceGeometry.userData.sourceWeld;
@@ -2217,7 +2233,7 @@ function createRidgeErosionTerrainGeometry(source: Mesh) {
       worldBoundsProtected: true,
     },
   };
-  return geometry;
+  return applyNativeCliff(geometry);
 }
 
 
@@ -2990,7 +3006,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     };
   }, [alpineGeometry, coastalBoundary, coastalHeightfield, connectedGeometry, connectedValleyCoastGeometry, material, ridgeGeometry, southernCoastalBoundary, terminalBridgeGeometry, terminalChunkGeometry, watershedGeometry, zone]);
 
-  return connectedGeometry ? (
+  return (<><NativeCliffPlants geometry={ridgeGeometry ?? connectedGeometry} shadows={shadows}/>{connectedGeometry ? (
     <>
       <mesh
         castShadow={shadows}
@@ -3028,7 +3044,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     <mesh geometry={alpineGeometry} material={material} name="Madagin v1.16 detailed fractured Alpine terrain" receiveShadow />
   ) : watershedGeometry ? (
     <mesh geometry={watershedGeometry} material={material} name="Madagin v1.16 integrated irregular watershed terrain" receiveShadow />
-  ) : <primitive object={object} />;
+  ) : <primitive object={object} />}</>);
 }
 
 const COASTAL_RIDGE_WEST_PROFILE: Array<[z: number, height: number]> = [
@@ -4197,7 +4213,12 @@ function createConnectedRidgeGeometry(source: Mesh, shoulder: BufferGeometry, re
   const eroded = retainErosion ? createRidgeErosionTerrainGeometry(source) : null;
   const ridgeSurface = eroded
     ? geometrySurfaceForMerge(eroded)
-    : geometrySurfaceForMerge(source.geometry, source.matrixWorld);
+    : (() => {
+      const native = createNativeRidgeSurface(geometrySurfaceForMerge(source.geometry, source.matrixWorld));
+      const surface = geometrySurfaceForMerge(native);
+      native.dispose();
+      return surface;
+    })();
   eroded?.dispose();
   const ridgePositions = ridgeSurface.getAttribute("position");
   let terminalZ = Number.POSITIVE_INFINITY;

@@ -1,4 +1,65 @@
 {
+  "nativeForeland20260908": {
+    "status": "Intermediate source-shaped foreland; convincing cliff and integrated B proof remain open",
+    "version": "native-cliff-1",
+    "sourceSha256": "1c73d38004fa26eeba80b0a9e1bdd317b097eb007cebe53bcf76f39149e0bcec",
+    "source": "NOAA CUDEM Hawaii 2021",
+    "sourceUrl": "https://chs.coast.noaa.gov/htdata/raster2/elevation/NCEI_ninth_Topobathy_Hawaii_9428/tiles/ncei19_n22x25_w159x75_2021v1.tif",
+    "sourcePixelWindow": [
+      3203,
+      2423,
+      152,
+      91
+    ],
+    "sourceCenter": [
+      -159.649,
+      22.174
+    ],
+    "sceneYawDegrees": 90,
+    "rotationConvention": "Clockwise in the raster east/south plane, equivalent to -90 degrees around Three.js positive Y.",
+    "sourceGridMeters": [
+      3.4358024647804157,
+      3.1816972080670625
+    ],
+    "rows": 152,
+    "columns": 91,
+    "x0": -300,
+    "z0": -250,
+    "width": 309.2222218302374,
+    "depth": 480.43627841812645,
+    "verticalTranslation": -40,
+    "collarMeters": 40,
+    "sourceRange": [
+      50.45193862915039,
+      181.63584899902344
+    ],
+    "precisionMeters": 0.01,
+    "rights": "NOAA public domain in the United States; CIRES CUDEM DOI 10.25921/ds9v-ky35",
+    "accuracy": "Nominal 1/9 arc-second grid, mixed/interpolated sources; not uniform 3 m survey accuracy",
+    "transform": "Native source grid and metres retained. Geographic window rotated 90 degrees about vertical and translated into an authored scene. Only 40 m boundary collar blends to retained terrain. No residual extraction, relief exaggeration or geographic continuity claim for the whole world.",
+    "fieldBytes": 89745,
+    "fieldSha256": "6853bc8d23e95697c676be3d30668635da98ad0259a62dfd062baa141d5cd2e3",
+    "quantizationMaxErrorMeters": 0.0050048828125,
+    "runtime": "src/components/internal/native-cliff.tsx",
+    "builder": "tools/terrain/build-native-cliff.py",
+    "geometryEvidence": "output/releases/madagin-native-cliff-20260908/geometry-scope.json",
+    "plants": [
+      {
+        "tier": "desktop",
+        "count": 536,
+        "rootBurialMeters": 0.085
+      },
+      {
+        "tier": "compact",
+        "count": 214,
+        "rootBurialMeters": 0.085
+      }
+    ],
+    "decisions": "output/releases/madagin-native-cliff-20260908/accepted-rejected.json",
+    "publication": "output/releases/madagin-native-cliff-20260908/publication.json",
+    "originalSourceIncluded": false,
+    "existingBroadStudiesIncluded": false
+  },
   "fallingWater20260907": {
     "runtime": "src/components/internal/falling-water.tsx",
     "source": "Authored geometry and GLSL; no new external assets",
@@ -43,9 +104,9 @@
     "independentHumanEquivalence": "UNVERIFIED"
   },
   "schemaVersion": 2,
-  "lastReverified": "2026-09-07",
+  "lastReverified": "2026-09-08",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-falls-20260907/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-native-cliff-20260908/publication.json",
   "cliffSurfaceRelease": {
     "runtime": "src/components/internal/terrain-surface.ts",
     "provenance": "public/world/cliff-material-v1/provenance.json",
