@@ -17,7 +17,6 @@ import {
   Mesh,
   MeshStandardMaterial,
   Object3D,
-  Points,
   ShaderMaterial,
   Vector3,
 } from "three";
@@ -31,6 +30,7 @@ import { PhysicalSkyEnvironment } from "./world-atmosphere";
 import {RidgeCanopy} from "./ridge-canopy";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
+import {FALLING_WATER, FallingSpray, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
 import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
 import { TERRAIN_SURFACE, useTerrainSurface } from "./terrain-surface";
 
@@ -6123,243 +6123,24 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
   return material;
 }
 
-function createWaterfallMaterial() {
-  const material = new ShaderMaterial({
-    depthTest: true,
-    depthWrite: false,
-    side: DoubleSide,
-    toneMapped: true,
-    transparent: true,
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: `
-      uniform float uTime;
-      varying vec3 vWorld;
-      varying vec2 vFallUv;
-      void main() {
-        vec3 p = position;
-        p.x += sin(position.y * 0.19 + uTime * 1.7) * 0.18;
-        p.z += sin(position.y * 0.11 - uTime * 1.15 + position.x * 0.31) * 0.16;
-        vec4 world = modelMatrix * vec4(p, 1.0);
-        vWorld = world.xyz;
-        vFallUv = uv;
-        gl_Position = projectionMatrix * viewMatrix * world;
-      }
-    `,
-    fragmentShader: `
-      uniform float uTime;
-      varying vec3 vWorld;
-      varying vec2 vFallUv;
-      float fallHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      float fallNoise(vec2 p) {
-        vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(fallHash(i), fallHash(i + vec2(1.0, 0.0)), f.x),
-          mix(fallHash(i + vec2(0.0, 1.0)), fallHash(i + vec2(1.0)), f.x), f.y);
-      }
-      void main() {
-        vec2 flowUv = vec2(vWorld.x * 0.24, -vWorld.y * 0.071);
-        float verticalFlow = fallNoise(flowUv + vec2(0.0, -uTime * 0.82));
-        float fineThreads = fallNoise(flowUv * vec2(3.8, 2.45) + vec2(8.7, -uTime * 1.48));
-        float microThreads = fallNoise(vec2(vFallUv.x * 46.0 + sin(vFallUv.y * 13.0), -vWorld.y * 0.21 - uTime * 2.1));
-        float crossFlow = sin(-vWorld.y * 0.68 - uTime * 6.8 + fineThreads * 3.5) * 0.5 + 0.5;
-        float runnel = smoothstep(0.39, 0.74, fineThreads * 0.44 + microThreads * 0.56);
-        float body = smoothstep(0.3, 0.76, verticalFlow * 0.48 + runnel * 0.39 + crossFlow * 0.13);
-        float breakup = smoothstep(0.2, 0.69, fallNoise(flowUv * vec2(1.15, 3.8) + vec2(uTime * 0.07, -uTime * 1.18)));
-        float braidedGap = smoothstep(0.64, 0.82, fallNoise(vec2(vFallUv.x * 13.0, vFallUv.y * 8.0 - uTime * 0.18)));
-        float edgeNoise = fallNoise(vec2(vFallUv.y * 12.0, uTime * 0.11)) * 0.038;
-        float edge = smoothstep(0.0, 0.052 + edgeNoise, vFallUv.x)
-          * smoothstep(0.0, 0.052 + edgeNoise, 1.0 - vFallUv.x);
-        vec3 geometricNormal = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
-        vec3 viewDirection = normalize(cameraPosition - vWorld);
-        float faceLight = 0.58 + abs(dot(geometricNormal, normalize(vec3(-0.52, 0.58, 0.63)))) * 0.42;
-        float fresnel = pow(1.0 - abs(dot(geometricNormal, viewDirection)), 2.2);
-        float descent = smoothstep(0.16, 0.95, vFallUv.y);
-        float upperCascade = exp(-pow((vFallUv.y - 0.34) / 0.055, 2.0));
-        float lowerCascade = exp(-pow((vFallUv.y - 0.67) / 0.072, 2.0));
-        float cascadeAeration = max(upperCascade, lowerCascade) * (0.28 + breakup * 0.42);
-        float aeration = descent * (0.18 + runnel * 0.48 + body * 0.34);
-        float transparentGap = braidedGap * (0.2 + descent * 0.72) * (1.0 - runnel * 0.58);
-        float plungeTurbulence = smoothstep(0.72, 0.98, vFallUv.y)
-          * (0.42 + fallNoise(vec2(vFallUv.x * 21.0, -vWorld.y * 0.16 - uTime * 1.8)) * 0.58);
-        float alpha = edge * (0.035 + body * 0.31 + runnel * 0.11 + aeration * 0.14 + cascadeAeration * 0.2 + plungeTurbulence * 0.1)
-          * mix(0.48, 0.92, breakup) * (1.0 - transparentGap * 0.9);
-        vec3 deepWater = vec3(0.008, 0.041, 0.047);
-        vec3 whiteWater = vec3(0.48, 0.66, 0.65);
-        vec3 color = mix(deepWater, whiteWater, body * 0.22 + runnel * 0.17 + crossFlow * 0.035 + aeration * 0.19 + cascadeAeration * 0.22 + plungeTurbulence * 0.12 + fresnel * 0.055);
-        color *= faceLight;
-        if (alpha < 0.07) discard;
-        gl_FragColor = vec4(color, alpha);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }
-    `,
-  });
-  material.name = "Madagin Candidate CF transparent broken-runnel aerated waterfall";
-  return material;
-}
+function createWaterfallMaterial() { return createFallingWaterMaterial(V116_SUN_DIRECTION); }
 
-function seededRandom(seed: number) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
 
-function waterfallCurtainWindow(progress: number, start: number, peak: number, end: number) {
-  if (progress <= start || progress >= end) return 0;
-  return progress <= peak
-    ? smoothRange(start, peak, progress)
-    : 1 - smoothRange(peak, end, progress);
-}
 
-function waterfallCurtainState(progress: number) {
-  const upperFan = waterfallCurtainWindow(progress, 0.2, 0.34, 0.5);
-  const lowerFan = waterfallCurtainWindow(progress, 0.52, 0.68, 0.86);
-  const waist = waterfallCurtainWindow(progress, 0.43, 0.51, 0.6);
-  return {
-    fan: Math.max(0, upperFan * 3.8 + lowerFan * 2.65 - waist * 1.1),
-    lowerFan,
-    upperFan,
-    waist,
-  };
-}
 
-function waterfallCascadeState(progress: number) {
-  const upper = smoothRange(0.27, 0.34, progress) * (1 - smoothRange(0.42, 0.48, progress));
-  const lower = smoothRange(0.57, 0.66, progress) * (1 - smoothRange(0.76, 0.83, progress));
-  return {
-    forwardOffset: upper * 2.1 + lower * 3.15,
-    shelf: upper * 0.82 + lower * 1.18,
-    upper,
-    lower,
-  };
-}
+
+
+
+
 
 function createCumulativeWaterfallGeometry() {
-  const columns = 38;
-  const rows = 72;
-  const positions: number[] = [];
-  const uvs: number[] = [];
-  const indices: number[] = [];
-  for (let row = 0; row <= rows; row += 1) {
-    const progress = row / rows;
-    const curtain = waterfallCurtainState(progress);
-    const cascade = waterfallCascadeState(progress);
-    const drop = Math.pow(progress, 1.04);
-    const y = WATERFALL_TOP.y + (WATERFALL_BOTTOM.y - WATERFALL_TOP.y) * drop + cascade.shelf;
-    const centerX = WATERFALL_TOP.x + (WATERFALL_BOTTOM.x - WATERFALL_TOP.x) * Math.pow(progress, 1.18)
-      + Math.sin(progress * 7.2 + 0.2) * (0.55 + progress * 0.5);
-    const centerZ = WATERFALL_TOP.z + (WATERFALL_BOTTOM.z - WATERFALL_TOP.z) * Math.pow(progress, 1.42)
-      + Math.sin(progress * 6.1) * 0.42;
-    const halfWidth = 10.2 + progress * 15.4 + Math.sin(progress * 8.7 + 0.6) * (0.8 + progress * 0.62)
-      + curtain.fan * 1.78 + cascade.upper * 1.25 + cascade.lower * 1.85;
-    for (let column = 0; column <= columns; column += 1) {
-      const horizontal = column / columns;
-      const across = horizontal * 2 - 1;
-      const brokenEdge = 0.94 + Math.sin(progress * 12.0 + across * 3.4)
-        * (0.052 + curtain.upperFan * 0.022 + curtain.lowerFan * 0.016);
-      const thread = Math.sin(column * 1.91 + progress * 19.0) * (0.16 + progress * 0.14);
-      const bankFan = Math.max(0, across) * curtain.upperFan * 1.55
-        + Math.max(0, -across) * curtain.lowerFan * 1.15;
-      const braidDepth = Math.sin(across * 7.6 + progress * 12.4)
-        * (0.3 + curtain.upperFan * 0.58 + curtain.lowerFan * 0.46);
-      const runnelDepth = Math.sin(across * 16.2 - progress * 20.1) * (0.12 + progress * 0.13);
-      const faceCurvature = across * across * (0.92 + progress * 1.72 + curtain.fan * 0.3);
-      const z = centerZ + cascade.forwardOffset + faceCurvature + Math.sin(progress * 6.1 + across * 2.5) * 0.28
-        + thread + braidDepth + runnelDepth;
-      positions.push(centerX + across * (halfWidth + bankFan) * brokenEdge, y, z);
-      uvs.push(horizontal, progress);
-    }
-  }
-  for (let row = 0; row < rows; row += 1) {
-    for (let column = 0; column < columns; column += 1) {
-      const stride = columns + 1;
-      const a = row * stride + column;
-      const b = a + 1;
-      const c = a + stride;
-      const d = c + 1;
-      indices.push(a, c, b, b, c, d);
-    }
-  }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  geometry.computeBoundingBox();
-  geometry.computeBoundingSphere();
-  geometry.name = "Madagin v1.16 curved connected waterfall body";
-  geometry.userData.waterfallBody = {
-    columns,
-    rows,
-    bottom: WATERFALL_BOTTOM,
-    top: WATERFALL_TOP,
-    curtainFans: [
-      { favoredBank: "positive-x", maximumAddedHalfWidthMeters: 6.55, progressRange: [0.2, 0.5] },
-      { favoredBank: "negative-x", maximumAddedHalfWidthMeters: 4.55, progressRange: [0.52, 0.86] },
-    ],
-    centralSpineContinuous: true,
-    constriction: { maximumHalfWidthReductionMeters: 1.1, progressRange: [0.43, 0.6] },
-    connectedGeometry: true,
-    detachedGeometry: false,
-    cascadeShelves: [
-      { maximumForwardOffsetMeters: 2.1, progressRange: [0.27, 0.48] },
-      { maximumForwardOffsetMeters: 3.15, progressRange: [0.57, 0.83] },
-    ],
-    lipHalfWidthMeters: 10.2,
-    lowerHalfWidthMeters: 25.6,
-    topology: "continuous two-stage, two-fan braided curtain with asymmetric bank spread, runnel folds, transparent gaps, and cascade depth",
-  };
-  return geometry;
+  return createFallingWaterGeometry(
+    {x:waterfallUpperCenter(WATERFALL_TOP.z),y:waterfallUpperLevel(WATERFALL_TOP.z)+.145,z:WATERFALL_TOP.z},
+    {...WATERFALL_BOTTOM,y:WATERFALL_BOTTOM.y-.35},waterfallUpperHalfWidth(WATERFALL_TOP.z),
+  );
 }
 
-function createSecondaryWaterfallGeometry() {
-  const columns = 12;
-  const rows = 52;
-  const positions: number[] = [];
-  const uvs: number[] = [];
-  const indices: number[] = [];
-  for (let row = 0; row <= rows; row += 1) {
-    const progress = row / rows;
-    const fallProgress = 0.08 + progress * 0.92;
-    const curtain = waterfallCurtainState(fallProgress);
-    const y = WATERFALL_TOP.y + (WATERFALL_BOTTOM.y - WATERFALL_TOP.y) * fallProgress;
-    const centerX = WATERFALL_TOP.x + (WATERFALL_BOTTOM.x - WATERFALL_TOP.x) * Math.pow(fallProgress, 1.14)
-      - 7.2 + Math.sin(fallProgress * 12.0) * 1.1;
-    const centerZ = WATERFALL_TOP.z + (WATERFALL_BOTTOM.z - WATERFALL_TOP.z) * Math.pow(fallProgress, 1.38)
-      + 2.1 + Math.sin(fallProgress * 8.3) * 0.48;
-    const halfWidth = 3.4 + progress * 2.5 + Math.sin(progress * 9.1) * 0.46 + curtain.fan * 0.42;
-    for (let column = 0; column <= columns; column += 1) {
-      const horizontal = column / columns;
-      const across = horizontal * 2 - 1;
-      positions.push(
-        centerX + across * halfWidth,
-        y,
-        centerZ + across * across * (0.42 + progress * 0.72) + Math.sin(column * 1.7 + progress * 16.0) * 0.14,
-      );
-      uvs.push(horizontal, progress);
-    }
-  }
-  const stride = columns + 1;
-  for (let row = 0; row < rows; row += 1) {
-    for (let column = 0; column < columns; column += 1) {
-      const a = row * stride + column;
-      const b = a + 1;
-      const c = a + stride;
-      const d = c + 1;
-      indices.push(a, c, b, b, c, d);
-    }
-  }
-  const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  geometry.computeBoundingBox();
-  geometry.computeBoundingSphere();
-  geometry.name = "Madagin v1.16 broken secondary waterfall sheet";
-  return geometry;
-}
+
 
 function createWaterfallUpperStreamGeometry(longitudinalSegments: number, acrossSegments: number) {
   const positions: number[] = [];
@@ -6505,156 +6286,10 @@ function createWaterfallOutflowGeometry(longitudinalSegments: number, acrossSegm
 }
 
 function WaterfallMist({ reducedMotion, tier }: { reducedMotion: boolean; tier: WorldQualityTier }) {
-  const sprayRef = useRef<Points<BufferGeometry, ShaderMaterial> | null>(null);
-  const count = tier === "high" ? 920 : tier === "balanced" ? 640 : 180;
-  const geometry = useMemo(() => {
-    const random = seededRandom(116880214);
-    const positions = new Float32Array(count * 3);
-    const phases = new Float32Array(count);
-    const sizes = new Float32Array(count);
-    const impacts = new Float32Array(count);
-    let impactCount = 0;
-    for (let index = 0; index < count; index += 1) {
-      const impact = index < Math.floor(count * 0.78);
-      const angle = random() * Math.PI * 2;
-      const radius = impact ? random() ** 0.68 * 25 : random() * 8.2;
-      const fallProgress = random();
-      const fallX = WATERFALL_TOP.x + (WATERFALL_BOTTOM.x - WATERFALL_TOP.x) * Math.pow(fallProgress, 1.18);
-      const fallY = WATERFALL_TOP.y + (WATERFALL_BOTTOM.y - WATERFALL_TOP.y) * fallProgress;
-      const fallZ = WATERFALL_TOP.z + (WATERFALL_BOTTOM.z - WATERFALL_TOP.z) * Math.pow(fallProgress, 1.42);
-      positions[index * 3] = impact
-        ? PLUNGE_POOL_CENTER.x + Math.cos(angle) * radius
-        : fallX + Math.cos(angle) * radius;
-      positions[index * 3 + 1] = impact ? WATERFALL_BOTTOM.y + random() ** 2.0 * 11.5 : fallY + (random() - 0.5) * 5.2;
-      positions[index * 3 + 2] = impact
-        ? PLUNGE_POOL_CENTER.z + Math.sin(angle) * radius * 0.48
-        : fallZ + (random() - 0.5) * 4.6;
-      phases[index] = random() * Math.PI * 2;
-      sizes[index] = impact ? 5.8 + random() * 10.2 : 3.6 + random() * 6.2;
-      impacts[index] = impact ? 1 : 0;
-      if (impact) impactCount += 1;
-    }
-    const result = new BufferGeometry();
-    result.setAttribute("position", new Float32BufferAttribute(positions, 3));
-    result.setAttribute("sprayPhase", new Float32BufferAttribute(phases, 1));
-    result.setAttribute("spraySize", new Float32BufferAttribute(sizes, 1));
-    result.setAttribute("sprayImpact", new Float32BufferAttribute(impacts, 1));
-    result.computeBoundingSphere();
-    result.userData.waterfallSpray = {
-      fallingThreadCount: count - impactCount,
-      impactMistCount: impactCount,
-      method: "seeded anisotropic impact mist plus falling aerated threads and two cascade-shelf spray fields",
-      pointCount: count,
-    };
-    return result;
-  }, [count]);
-  const material = useMemo(() => new ShaderMaterial({
-    depthWrite: false,
-    transparent: true,
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: `
-      attribute float sprayPhase;
-      attribute float spraySize;
-      attribute float sprayImpact;
-      uniform float uTime;
-      varying float vAlpha;
-      varying float vImpact;
-      varying float vPhase;
-      void main() {
-        vec3 moved = position;
-        float age = fract(sprayPhase * 0.159 + uTime * 0.065);
-        if (sprayImpact > 0.5) {
-          moved.x += cos(sprayPhase + uTime * 0.18) * age * 5.8;
-          moved.y += age * 5.4 - age * age * 1.7;
-          moved.z += sin(sprayPhase * 1.37 + uTime * 0.14) * age * 2.8;
-        } else {
-          moved.x += sin(sprayPhase + uTime * 0.34) * age * 1.35;
-          moved.y -= age * 9.2;
-          moved.z += cos(sprayPhase * 1.7 + uTime * 0.25) * age * 1.1;
-        }
-        vec4 mvPosition = modelViewMatrix * vec4(moved, 1.0);
-        gl_PointSize = spraySize * mix(300.0, 500.0, sprayImpact) / max(1.0, -mvPosition.z);
-        gl_Position = projectionMatrix * mvPosition;
-        vAlpha = sin(age * 3.14159265) * mix(0.24, 0.32, sprayImpact);
-        vImpact = sprayImpact;
-        vPhase = sprayPhase;
-      }
-    `,
-    fragmentShader: `
-      varying float vAlpha;
-      varying float vImpact;
-      varying float vPhase;
-      void main() {
-        vec2 point = gl_PointCoord - 0.5;
-        float rotation = vImpact > 0.5 ? vPhase * 0.18 : vPhase * 0.07;
-        mat2 turn = mat2(cos(rotation), -sin(rotation), sin(rotation), cos(rotation));
-        vec2 rotated = turn * point;
-        vec2 anisotropic = vImpact > 0.5
-          ? rotated * vec2(0.68, 1.6)
-          : rotated * vec2(2.0, 0.68);
-        float soft = 1.0 - smoothstep(0.08, 0.5, length(anisotropic));
-        float breakup = 0.88 + sin((rotated.x - rotated.y) * 19.0 + vPhase * 2.1) * 0.12;
-        float alpha = soft * breakup * vAlpha;
-        if (alpha < 0.012) discard;
-        vec3 mistColor = mix(vec3(0.52, 0.68, 0.7), vec3(0.72, 0.84, 0.84), soft);
-        gl_FragColor = vec4(mistColor, alpha);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }
-    `,
-  }), []);
-  useFrame(({ clock }) => {
-    if (sprayRef.current) sprayRef.current.material.uniforms.uTime.value = reducedMotion ? 0 : clock.elapsedTime;
-  });
-  useEffect(() => {
-    const host = window as Window & { __MADAGIN_WATERFALL_SPRAY_V116__?: Record<string, unknown> };
-    const evidence = geometry.userData.waterfallSpray as Record<string, unknown>;
-    host.__MADAGIN_WATERFALL_SPRAY_V116__ = evidence;
-    document.documentElement.dataset.madaginWaterfallSprayV116 = JSON.stringify(evidence);
-    return () => {
-      if (host.__MADAGIN_WATERFALL_SPRAY_V116__ === evidence) {
-        delete host.__MADAGIN_WATERFALL_SPRAY_V116__;
-        delete document.documentElement.dataset.madaginWaterfallSprayV116;
-      }
-      geometry.dispose();
-      material.dispose();
-    };
-  }, [geometry, material]);
-  return <points geometry={geometry} material={material} ref={sprayRef} renderOrder={10} />;
+  return <FallingSpray compact={tier === "conservative"} reducedMotion={reducedMotion} origin={{...WATERFALL_BOTTOM,y:WATERFALL_BOTTOM.y-.35}}/>;
 }
 
-function createImpactFoamMaterial() {
-  return new ShaderMaterial({
-    depthWrite: false,
-    side: DoubleSide,
-    toneMapped: true,
-    transparent: true,
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: "varying vec2 vFoamUv; void main(){vFoamUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
-    fragmentShader: `
-      uniform float uTime;
-      varying vec2 vFoamUv;
-      void main() {
-        vec2 p = vFoamUv - 0.5;
-        float radius = length(p * vec2(1.0, 1.55));
-        float turbulenceA = sin(p.x * 46.0 + p.y * 17.0 + uTime * 1.8) * 0.5 + 0.5;
-        float turbulenceB = sin(p.y * 53.0 - p.x * 21.0 - uTime * 1.25) * 0.5 + 0.5;
-        float angle = atan(p.y, p.x);
-        float brokenArc = smoothstep(0.064, 0.0, abs(radius - 0.25 - sin(angle * 4.0 + uTime * 0.42) * 0.035));
-        float outerArc = smoothstep(0.052, 0.0, abs(radius - 0.39 - sin(angle * 7.0 - uTime * 0.31) * 0.024));
-        float trailingArc = smoothstep(0.044, 0.0, abs(radius - 0.47 - sin(angle * 9.0 + uTime * 0.24) * 0.018));
-        float impact = 1.0 - smoothstep(0.04, 0.28, radius);
-        float edge = 1.0 - smoothstep(0.34, 0.52, radius);
-        float torn = smoothstep(0.22, 0.74, turbulenceA * 0.56 + turbulenceB * 0.44);
-        float alpha = edge * (impact * (0.11 + torn * 0.21) + brokenArc * torn * 0.22 + outerArc * turbulenceB * 0.14 + trailingArc * turbulenceA * 0.09);
-        if (alpha < 0.018) discard;
-        gl_FragColor = vec4(0.57, 0.75, 0.76, alpha);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }
-    `,
-  });
-}
+function createImpactFoamMaterial() { return createFallingImpactMaterial(); }
 
 // Retained for comparison with rejected Candidate M; mounting it produced a
 // visibly stacked rock border instead of a credible weathered cliff edge.
@@ -7069,7 +6704,6 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   const waterfallMaterial = useMemo(() => createWaterfallMaterial(), []);
   const impactMaterial = useMemo(() => createImpactFoamMaterial(), []);
   const waterfallGeometry = useMemo(() => createCumulativeWaterfallGeometry(), []);
-  const waterfallSecondaryGeometry = useMemo(() => createSecondaryWaterfallGeometry(), []);
   const waterfallUpperGeometry = useMemo(
     () => createWaterfallUpperStreamGeometry(mobile ? 42 : tier === "high" ? 92 : 68, mobile ? 6 : 10),
     [mobile, tier],
@@ -7169,6 +6803,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     if (impactTime) impactTime.value = time;
   });
   useEffect(() => {
+    document.documentElement.dataset.madaginFallingWater = JSON.stringify({...FALLING_WATER,...waterfallGeometry.userData.waterfallBody});
     activeWaterMaterial.current = waterMaterial;
     activePoolMaterial.current = poolMaterial;
     activeRiverMaterial.current = riverMaterial;
@@ -7197,7 +6832,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       outflowJoin: waterfallOutflowGeometry.userData.outflowJoin,
       outflowVertices: waterfallOutflowGeometry.getAttribute("position").count,
       plungeVertices: waterfallPlungeGeometry.getAttribute("position").count,
-      secondarySheetVertices: waterfallSecondaryGeometry.getAttribute("position").count,
+      secondarySheetVertices: 0,
       sourceChannelVertices: waterfallUpperGeometry.getAttribute("position").count,
       sourceChannel: waterfallUpperGeometry.userData.headwaterChannel,
       replaces: ["waterfall_upper_stream_v116", "waterfall_plunge_pool_v116", "flat impact rings"],
@@ -7325,7 +6960,6 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       waterfallGeometry.dispose();
       waterfallOutflowGeometry.dispose();
       waterfallPlungeGeometry.dispose();
-      waterfallSecondaryGeometry.dispose();
       waterfallUpperGeometry.dispose();
       waterMaterial.dispose();
     };
@@ -7345,7 +6979,6 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     waterfallMaterial,
     waterfallOutflowGeometry,
     waterfallPlungeGeometry,
-    waterfallSecondaryGeometry,
     waterfallUpperGeometry,
     waterMaterial,
     tier,
@@ -7368,11 +7001,10 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       {waterfallVisible ? (
         <>
           <mesh geometry={waterfallUpperGeometry} material={headwaterMaterial} name="Madagin v1.16 terrain-following waterfall source" />
-          <mesh geometry={waterfallGeometry} material={waterfallMaterial} name="Madagin Candidate CF transparent broken-runnel connected waterfall body" renderOrder={8} />
-          <mesh geometry={waterfallSecondaryGeometry} material={waterfallMaterial} name="Madagin Candidate CF transparent aerated secondary runnel sheet" renderOrder={8} />
+          <mesh geometry={waterfallGeometry} material={waterfallMaterial} name="Madagin lip-aligned accelerating waterfall" renderOrder={8} />
           <mesh geometry={waterfallPlungeGeometry} material={poolMaterial} name="Madagin v1.16 integrated plunge pool" />
           <mesh geometry={waterfallOutflowGeometry} material={riverMaterial} name="Madagin v1.16 connected plunge outflow" />
-          <mesh material={impactMaterial} position={[PLUNGE_POOL_CENTER.x, WATERFALL_BOTTOM.y - 0.12, PLUNGE_POOL_CENTER.z]} renderOrder={9} rotation={[-Math.PI / 2, 0, 0]} scale={[31, 17, 1]}>
+          <mesh material={impactMaterial} position={[WATERFALL_BOTTOM.x, WATERFALL_BOTTOM.y - 0.31, WATERFALL_BOTTOM.z]} renderOrder={9} rotation={[-Math.PI / 2, 0, 0]} scale={[16, 13, 1]}>
             <circleGeometry args={[1, 64]} />
           </mesh>
           <WaterfallMist reducedMotion={reducedMotion} tier={tier} />

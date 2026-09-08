@@ -109,3 +109,16 @@ AI diagnostic review, not a blind human test. Existing anchors remain: 1 conspic
 Evidence: `ecology-release-20260907/matched-views.json`, `after/`, `motion/`, `motion-public/`, `review.html`, plus `tree-geometry-checks.json` and `scope-checks.json` in its release directory. The new near-canopy sample .58 supplements the prior seven views. Before/after position parity is exact; animation phases differ and shadow projection intentionally changes. Failed global reduction, packed-coordinate and alpha-coverage trials are retained, including the separate texture-loader error.
 
 Fresh reference comparison uses the source-verified DLNR Nāpali photo and actual Kalalau safety-video opening playback. Neither source is a matched formal test pair. Human still/motion equivalence remains UNVERIFIED. No percentage complete, averaged realism score or changed-pixel test is used. Final public checks and device-budget classifications belong to the publication evidence, not this perceptual matrix.
+
+
+## September 7, 2026 — Falling water checkpoint
+
+| View/category | Before to selected | Named result / remaining defect | Severity |
+|---|---|---|---|
+| Waterfall / source continuity | 2 to 3 locally | Body now matches the 9.006 m feed instead of an oversized fan; core reaches the retained pool. | Scoped improvement |
+| Waterfall / optical volume and motion | 2 to 2 | Depth and accelerating advection added, but silhouette remains regular and mist is weak behind foliage. Not a fluid simulation. | High |
+| Lake, pool and river | 2 retained | Existing downstream geometry unchanged; hard pool margins and plate-like inland water remain. | High |
+| Other required views / terrain, ecology, light, atmosphere and camera | Prior ratings retained | 161 unrelated renderer functions match; native cliff geometry, sparse cover and procedural weather remain limiting. | High |
+| About, Projects, Blog / reading | Functional gate retained | Full fresh local/public scroll, input, history, return and fallback checks required by publication record. | Functional |
+
+Evidence: `falls-release-20260907/review.html`, matched views and separate held/full-motion recordings. Actual GoHawaii Wailua photo and Go Visit Hawaii's 16-second Wailua clip (0-8 s) were viewed, including real irregular lobes, frayed edges and a substantial soft impact plume. Reference and render are diagnostic subjects, not matched formal pairs. The first flat-strip candidate is explicitly rejected and retained. Whole-world realism remains 2/5; independent 45-55% human still and motion gates remain UNVERIFIED. Final budget results are reported individually in the publication record, with no physical-device claim.

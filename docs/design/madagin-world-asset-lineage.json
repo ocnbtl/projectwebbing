@@ -1,4 +1,17 @@
 {
+  "fallingWater20260907": {
+    "runtime": "src/components/internal/falling-water.tsx",
+    "source": "Authored geometry and GLSL; no new external assets",
+    "retained": "Current upper feed, pool, downstream network, terrain, tree packages, sun and public camera",
+    "method": "Feed-width elliptic cross section, authored contact path, gravity-timed downward advection, local impact and spray",
+    "referenceOnly": [
+      "https://www.gohawaii.com/islands/kauai/regions/lihue/wailua-falls",
+      "https://www.youtube.com/watch?v=YVhCXj7R5NI"
+    ],
+    "rejected": "Trial 1 paper-flat sheet",
+    "limits": "Not a fluid simulation; regular outline and weak impact remain; no photographic equivalence or full drainage proof",
+    "releaseEvidence": "output/releases/madagin-falls-20260907/publication.json"
+  },
   "rootedCanopy20260907": {
     "date": "2026-09-07",
     "releaseEvidence": "output/releases/madagin-ecology-20260907/publication.json",
@@ -32,7 +45,7 @@
   "schemaVersion": 2,
   "lastReverified": "2026-09-07",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-cliff-20260907/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-falls-20260907/publication.json",
   "cliffSurfaceRelease": {
     "runtime": "src/components/internal/terrain-surface.ts",
     "provenance": "public/world/cliff-material-v1/provenance.json",
