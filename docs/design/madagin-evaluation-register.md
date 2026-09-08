@@ -224,3 +224,15 @@ No average score or percent-complete claim. No new source asset is fetched. Runt
 
 
 Drainage finishing check: the new bank initially obstructed the existing waterfall outflow. That second trial is rejected in `trial-2-blocked-outflow`. The selected outflow now reaches inside the main channel and its bed is cut through the bank using the same graded path. Both terrain resolutions pass 84 additional outflow-center samples (minimum clearance 0.60 m). The river's right bank is intentionally open only at that inlet. Broader pool/bank appearance and the coarser terminal coastal terrain remain later continuity work, not a completed whole-catchment claim.
+
+
+## September 8, 2026 — Lake shoreline contact
+
+| Required views / category | Before → selected | Evidence and remaining defect | Severity |
+|---|---|---|---|
+| Lake + Waterfall / lake contact | 2 → 2 | Shared coves/depth remove the abrupt sheet edge; damp low-bank soil joins the shallows. The smooth basin and soft optical transition remain obviously authored. | High |
+| Ridge through Waterfall / drainage | Retained | Actual terrain positions/indices and previous bed/bank/outflow checks pass at both resolutions. No wider-catchment claim. | High |
+| Complete journey / vegetation, geology, light/weather | 2 → 2 | Generic repeated trees, sparse riparian layers, coarse pool geometry and synthetic environmental motion remain. | High |
+| Human still/motion equivalence + physical devices | UNVERIFIED | Host browser captures and AI review cannot pass these gates. | Open |
+
+Accepted shared-shore calculation and selected visual attachment; rejected extended substrate collar is preserved. See `lake-shore-release-20260908/review.html` for 22 camera pairs and uninterrupted/held motion; `output/releases/madagin-lake-shore-20260908/publication.json` for actual local/public budgets and provenance. Earlier transfer/readiness misses remain visible, not averaged away. Real NPS ʻOheʻo coastal-mouth photography and DLNR Kalalau stream footage are diagnostic material/contact references, not matched lake pairs. The formal still/motion plan and 45–55% equivalence requirement remain unchanged.

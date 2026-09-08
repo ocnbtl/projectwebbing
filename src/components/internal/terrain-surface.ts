@@ -1,3 +1,4 @@
+import {LAKE_SHORE_VERSION, LAKE_SHORE_GLSL} from "./lake-shore";
 import { useLoader } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import { FrontSide, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, TextureLoader } from "three";
@@ -16,7 +17,7 @@ export const TERRAIN_SURFACE = {
 export function createTerrainSurface(textures: Texture[]) {
   const material = new MeshStandardMaterial({color: "white", roughness: 1, metalness: 0, side: FrontSide});
   material.name = "Madagin scanned rock and slope cover";
-  material.customProgramCacheKey = () => TERRAIN_SURFACE.version;
+  material.customProgramCacheKey = () => TERRAIN_SURFACE.version + LAKE_SHORE_VERSION;
   material.onBeforeCompile = shader => {
     ["uCliffColor", "uCliffNormal", "uCliffResponse", "uGroundColor"].forEach((name, i) => {shader.uniforms[name] = {value: textures[i]};});
     shader.vertexShader = shader.vertexShader
@@ -24,6 +25,7 @@ export function createTerrainSurface(textures: Texture[]) {
       .replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvGroundWorld = (modelMatrix * vec4(transformed, 1.0)).xyz; vGroundNormal = inverseTransformDirection(transformedNormal, viewMatrix);");
     shader.fragmentShader = shader.fragmentShader
       .replace("#include <common>", `#include <common>
+        ${LAKE_SHORE_GLSL}
         varying vec3 vGroundWorld; varying vec3 vGroundNormal;
         uniform sampler2D uCliffColor, uCliffNormal, uCliffResponse, uGroundColor;
         vec3 groundWeights(vec3 n) {
@@ -59,15 +61,21 @@ export function createTerrainSurface(textures: Texture[]) {
           + sin(vGroundWorld.z*.029-1.3)*7.5 + sin(vGroundWorld.z*.061+.35)*2.8;
         float coastWet = (1.0 - smoothstep(2.0, 19.0, vGroundWorld.x-coastX))
           * (1.0 - smoothstep(-7.0, 6.0, vGroundWorld.y));
-        float lakeWet = (1.0 - smoothstep(-48.0, -44.0, vGroundWorld.y))
-          * (1.0 - smoothstep(.85, 1.2, length(vec2((vGroundWorld.x+2.04)/185.0, (vGroundWorld.z+884.765)/145.0))));
-        float surfaceWet = max(max(waterfall * .55, coastWet * .8), lakeWet * .65);
+        vec2 basin = lakeShore(vGroundWorld.xz);
+        float lakeMargin = (1.0-smoothstep(1.12,1.24,basin.x))
+          * (1.0-smoothstep(-46.9,-44.5,vGroundWorld.y));
+        float lakeWet = lakeMargin*(1.0-smoothstep(-47.8,-46.5,vGroundWorld.y));
+        float surfaceWet = max(max(waterfall * .55, coastWet * .8), lakeWet * .34);
         // Bounded authored reflectance adjustment keeps the generic scan's
         // contrast while placing it beside this world's shaded forest. This
         // is an art-directed material, not measured Hawaiian rock reflectance.
         vec3 soil = ground * vec3(.26, .52, .23);
         vec3 weatheredRock = cliff * vec3(.58, .65, .64);
-        diffuseColor.rgb = mix(weatheredRock, soil, cover * .96) * mix(1.0, .56, surfaceWet);
+        // Exposed low banks reveal damp mineral soil instead of grass growing
+        // beneath the lake. The scanned detail and common sun remain active.
+        vec3 shoreSoil = mix(cliff * vec3(.49,.46,.37), ground * vec3(.33,.34,.21), .32);
+        vec3 groundCover = mix(soil, shoreSoil, lakeMargin * (.35 + .5 * response.r));
+        diffuseColor.rgb = mix(weatheredRock, groundCover, cover * .96) * mix(1.0, .56, surfaceWet);
       `)
       .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
         roughnessFactor = clamp(mix(response.g, .94, cover) - surfaceWet * .18, .52, .98);

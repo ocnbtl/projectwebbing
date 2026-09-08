@@ -1,4 +1,19 @@
 {
+  "lakeShore": {
+    "version": "lake-shore-1",
+    "files": [
+      "src/components/internal/lake-shore.ts",
+      "src/components/internal/ridge-production-v116.tsx",
+      "src/components/internal/terrain-surface.ts"
+    ],
+    "source": "Existing authored basin boundary/bed and existing licensed surface scans; no new asset",
+    "accepted": "Shared CPU/GLSL coves and depth; water reaches the wet bank, depth-based extinction and edge wave attenuation, damp scanned mineral soil, common bed sun",
+    "terrainPositionsAndTopology": "Retained exactly against baseline production builders at both resolutions",
+    "sourceAssetsChanged": false,
+    "rejected": "Extended separate substrate created a continuous dark collar; original substrate footprint retained",
+    "evidence": "output/releases/madagin-lake-shore-20260908/publication.json",
+    "limits": "Synthetic basin/reflection, sparse riparian layers and broader catchment continuity; not survey reconstruction or human realism proof"
+  },
   "ridgeValleyDrainage20260908": {
     "runtime": [
       "src/components/internal/ridge-headwater.ts",
