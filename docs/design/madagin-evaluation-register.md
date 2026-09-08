@@ -135,3 +135,17 @@ Evidence: `falls-release-20260907/review.html`, matched views and separate held/
 | Human still and motion equivalence | UNVERIFIED | No independent randomized evaluation; no average or percent-complete claim. | Final gate |
 
 Evidence: `native-cliff-release-20260908/matched-views.json`, `after/`, original held video, separate `motion/` and `motion-public/`, `review.html`; source and geometry gates under `output/releases/madagin-native-cliff-20260908`. Compare actual DLNR photo and Kalalau opening footage. Camera positions exact; sun/camera retained, geometry/ecology change and animation phases differ. References are diagnostic, not matched formal pairs. Original rejected wall candidates are preserved. Final performance results distinguish emulation, script transfer and world transfer from physical-device qualification.
+
+
+## September 8, 2026 — Cliff-profile checkpoint
+
+| Required views/category | Before → selected | Named result and remaining defect | Severity |
+|---|---|---|---|
+| Opening, Ridge held / landform | 2 → 3 locally | Substantial source-shaped rock face and recessed gully; source elevation range about 249 m. Close compact framing and collar remain apparent. | Scoped improvement / high remaining |
+| Opening, Ridge / ecology | 2 → 2 | Fewer trees on steep rock, actual-triangle grounding retained. Sparse foot cover, repeated crowns and pale roots remain. | High |
+| Ridge exit, Valley, Lake, Near-canopy, Waterfall, Summit | Prior ratings retained | Unchanged geometry outside the patch and unchanged water/light/atmosphere/camera. Patch still has no connected drainage. | High |
+| About/Ocean / terrain continuity | 2 → 2 | New rocky edge visible at left; coast-facing smooth shoulder/collar remains. | High |
+| About, Projects, Blog / reading | Functional gate | Persistent canvas, readable surface and input/history/return/fallback checks recorded separately in publication evidence. | Functional |
+| Human still and motion equivalence | UNVERIFIED | No independent randomized evaluation or supported equivalence interval. | Final gate |
+
+Evidence: `cliff-profile-release-20260908/review.html`, 22 fresh matched pairs, held recordings and separate full local/public recordings. Actual DLNR Nāpali photograph and Kalalau safety-video opening through 29 s were inspected; screenshot observations at 0.15 and 28.9 s show coast and later helicopter/vegetation footage, not 29 s of continuous aerial footage. Real buttress scale, dense layered foliage, occlusion and atmospheric depth remain stronger. These are diagnostic references, not matched formal pairs. Source scans are not rendered rejection evidence. Existing crop and rejected earlier wall trials remain recoverable. No average or changed-pixel metric establishes realism.

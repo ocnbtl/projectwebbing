@@ -6,7 +6,7 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 const require=createRequire('C:/Users/Ocean/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/verify.cjs');
 const {chromium}=require('playwright');
-const root=path.resolve('output/playwright/madagin-world-progress/native-cliff-release-20260908');
+const root=path.resolve('output/playwright/madagin-world-progress',process.env.MADAGIN_EVIDENCE_CYCLE??'native-cliff-release-20260908');
 await fs.mkdir(root,{recursive:true});
 const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
 const report={at:new Date().toISOString(),method:'Optimized public renderer. Pause UI, set existing React MotionValue to fixed public-rail progress. Sun and shadow settings unchanged; native cliff geometry and ecology intentionally change. Animation phases not synchronized; still differences are qualitative.',cases:[]};

@@ -1,6 +1,67 @@
 {
+  "nativeCliffProfile20260908": {
+    "version": "native-cliff-2",
+    "sourceSha256": "1c73d38004fa26eeba80b0a9e1bdd317b097eb007cebe53bcf76f39149e0bcec",
+    "source": "NOAA CUDEM Hawaii 2021",
+    "sourceUrl": "https://chs.coast.noaa.gov/htdata/raster2/elevation/NCEI_ninth_Topobathy_Hawaii_9428/tiles/ncei19_n22x25_w159x75_2021v1.tif",
+    "sourcePixelWindow": [
+      2814,
+      2552,
+      152,
+      91
+    ],
+    "sourceCenter": [
+      -159.661,
+      22.17
+    ],
+    "sceneYawDegrees": 90,
+    "sourceGridMeters": [
+      3.4358024647804157,
+      3.1816972080670625
+    ],
+    "rows": 152,
+    "columns": 91,
+    "x0": -300,
+    "z0": -250,
+    "width": 309.2222218302374,
+    "depth": 480.43627841812645,
+    "verticalTranslation": 0,
+    "collarMeters": 40,
+    "sourceRange": [
+      -3.786945343017578,
+      244.79954528808594
+    ],
+    "precisionMeters": 0.01,
+    "rights": "NOAA public domain in the United States; CIRES CUDEM DOI 10.25921/ds9v-ky35",
+    "accuracy": "Nominal 1/9 arc-second grid, mixed/interpolated sources; not uniform 3 m survey accuracy",
+    "transform": "Native source grid and metres retained. Geographic window rotated 90 degrees about vertical and translated into an authored scene. Only 40 m boundary collar blends to retained terrain. No residual extraction, relief exaggeration or geographic continuity claim for the whole world.",
+    "fieldBytes": 90161,
+    "fieldSha256": "bca9d2b35ba15c52d40aa0bade94cb3582b911e233a11bbf18685b3f48f6c901",
+    "quantizationMaxErrorMeters": 0.0050048828125,
+    "status": "Accepted intermediate cliff profile; B integrated proof remains open",
+    "projection": "Same local tangent-plane longitude scale at 22.174 N as the previous field; no rescaling of elevations.",
+    "rotationConvention": "Clockwise in raster east/south plane; -90 degrees around Three.js positive Y.",
+    "runtime": "src/components/internal/native-cliff.tsx",
+    "builder": "tools/terrain/build-native-cliff.py",
+    "geometryEvidence": "output/releases/madagin-cliff-profile-20260908/geometry-scope.json",
+    "plants": [
+      {
+        "tier": "desktop",
+        "count": 301
+      },
+      {
+        "tier": "compact",
+        "count": 128
+      }
+    ],
+    "rootBurialMeters": 0.085,
+    "decisions": "output/releases/madagin-cliff-profile-20260908/accepted-rejected.json",
+    "publication": "output/releases/madagin-cliff-profile-20260908/publication.json",
+    "originalSourceIncluded": false,
+    "existingBroadStudiesIncluded": false
+  },
   "nativeForeland20260908": {
-    "status": "Intermediate source-shaped foreland; convincing cliff and integrated B proof remain open",
+    "status": "Superseded by native-cliff-2; prior rolling foreland remains recoverable at dceed488",
     "version": "native-cliff-1",
     "sourceSha256": "1c73d38004fa26eeba80b0a9e1bdd317b097eb007cebe53bcf76f39149e0bcec",
     "source": "NOAA CUDEM Hawaii 2021",

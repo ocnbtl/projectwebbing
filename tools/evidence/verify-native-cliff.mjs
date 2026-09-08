@@ -7,8 +7,8 @@ import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
 import {BufferGeometry,BufferAttribute,Mesh,Matrix4} from 'three';
-const root=path.resolve('.'),out=path.resolve('output/releases/madagin-native-cliff-20260908');
-const baseline='70666ce936a8adca6f58394cdea7f5a9a7370402';
+const root=path.resolve('.'),out=path.resolve('output/releases/madagin-cliff-profile-20260908');
+const baseline='dceed48884ab3490973df45ca3b3ea979f3a06d6';
 const require=createRequire(path.join(root,'output/releases/madagin-canopy-20260906/pipeline/package.json'));
 const {NodeIO}=require('@gltf-transform/core'),{ALL_EXTENSIONS}=require('@gltf-transform/extensions'),{MeshoptDecoder}=require('meshoptimizer');
 await MeshoptDecoder.ready;
@@ -19,18 +19,24 @@ const previous=execFileSync('git',['show',`${baseline}:src/components/internal/r
 const parse=s=>ts.createSourceFile('fixture.tsx',s,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
 const funcs=s=>new Map(parse(s).statements.filter(n=>ts.isFunctionDeclaration(n)&&n.name).map(n=>[n.name.text,n.getText().replaceAll('\r\n','\n')]));
 const old=funcs(previous),now=funcs(current);
-const changed=['useEcologyManifest','CompactJourneyTerrain','MobileTerminalTerrain','createRidgeErosionTerrainGeometry','DetailedTerrainChunk','createConnectedRidgeGeometry'];
+const changed=[];
 const identical=[];for(const [name,body] of old){if(changed.includes(name))continue;assert.equal(now.get(name),body,name);identical.push(name);}
-const added=[...now.keys()].filter(n=>!old.has(n));assert.deepEqual(added,['createNativeRidgeSurface']);
+const added=[...now.keys()].filter(n=>!old.has(n));assert.deepEqual(added,[]);
 const compile=async(name,source)=>{const target=path.join(out,name+'.mjs');await fs.writeFile(target,ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText);return import(pathToFileURL(target).href);};
 let native=await fs.readFile('src/components/internal/native-cliff.tsx','utf8');
 native=native.replace('import field from "./native-cliff-field.json";',`const field=${JSON.stringify(field)};`).replace('import {RootedTrees} from "./rooted-trees";','const RootedTrees=()=>null;');
 const cliff=await compile('fixture-native',native);
+// The baseline must import its own height field, otherwise both meshes would
+// silently use the candidate and the outside-footprint comparison is circular.
+const previousField=JSON.parse(execFileSync('git',['show',`${baseline}:src/components/internal/native-cliff-field.json`],{encoding:'utf8',maxBuffer:1024*1024}));
+const previousNative=execFileSync('git',['show',`${baseline}:src/components/internal/native-cliff.tsx`],{encoding:'utf8'})
+ .replace('import field from "./native-cliff-field.json";',`const field=${JSON.stringify(previousField)};`).replace('import {RootedTrees} from "./rooted-trees";','const RootedTrees=()=>null;');
+await compile('fixture-native-before',previousNative);
 async function renderer(name,source,extra){
  source=parse(source).statements.map(n=>{
   if(!ts.isImportDeclaration(n)||!(n.moduleSpecifier.text.startsWith('.')||n.moduleSpecifier.text.startsWith('@')))return n.getText();
   if(n.importClause?.isTypeOnly)return '';
-  if(n.moduleSpecifier.text==='./native-cliff')return `import {applyNativeCliff,nativeCliffWeight,NativeCliffPlants} from './fixture-native.mjs';`;
+  if(n.moduleSpecifier.text==='./native-cliff')return `import {applyNativeCliff,nativeCliffWeight,NativeCliffPlants} from './fixture-native${name==='fixture-before'?'-before':''}.mjs';`;
   return [...(n.importClause?.namedBindings?.elements??[])].filter(e=>!e.isTypeOnly).map(e=>`const ${e.name.text}={};`).join('\n');
  }).join('\n')+`\nexport {${extra}};`;
  return compile(name,source);
@@ -45,13 +51,15 @@ geometry.setIndex(new BufferAttribute(primitive.getIndices().getArray(),1));
 const mesh=new Mesh(geometry);mesh.matrixWorld=new Matrix4().fromArray(node.getWorldMatrix());
 const base=before.createRidgeErosionTerrainGeometry(mesh),candidate=after.createRidgeErosionTerrainGeometry(mesh);
 const p=base.getAttribute('position'),q=candidate.getAttribute('position');assert.equal(p.count,q.count);
-let outside=0,inside=0,collar=0,maxSourceError=0;
+let outside=0,inside=0,collar=0,maxSourceError=0,changedHeights=0,maxHeightChange=0;
 for(let i=0;i<p.count;i++){
  const x=p.getX(i),z=p.getZ(i),w=cliff.nativeCliffWeight(x,z);assert.equal(q.getX(i),x);assert.equal(q.getZ(i),z);
+ const delta=Math.abs(q.getY(i)-p.getY(i));if(delta>.00001)changedHeights++;maxHeightChange=Math.max(maxHeightChange,delta);
  if(w===0){assert.equal(q.getY(i),p.getY(i));outside++;}
  else if(w===1){const e=Math.abs(q.getY(i)-cliff.nativeCliffElevation(x,z));assert.ok(e<.00002);maxSourceError=Math.max(e,maxSourceError);inside++;}else collar++;
 }
 assert.ok(inside>1000&&outside>1000&&collar>1000);
+assert.notEqual(previousField.version,field.version);assert.ok(changedHeights>1000&&maxHeightChange>50,'Candidate must differ from the actual accepted height field');
 assert.deepEqual(Array.from(base.index.array),Array.from(candidate.index.array));
 const compactDoc=await io.read('public/world/v116/terrain-ridge-v1.16.glb');
 const compactNode=compactDoc.getRoot().listNodes().find(n=>n.getMesh());assert.ok(compactNode);
@@ -75,6 +83,6 @@ const results=[];for(const [tier,g] of [['desktop',candidate],['compact',compact
  results.push({tier,asset:tier==='compact'?'v116/terrain-ridge-v1.16.glb':'v115/madagin-ridge-to-valley-high-v1.15.glb',vertices:g.getAttribute('position').count,triangles:g.index.count/3,plants:placements.length,maxGroundError,rootBurialMeters:.085,terminalMergePassed:true,maxTerminalRootDrift,source:g.userData.nativeCliff});
  terminal.dispose();shoulder.dispose();
 }
-const report={passed:true,baseline,identicalRendererFunctions:identical.length,changed,added,outsideVerticesExact:outside,sourceInteriorVertices:inside,authoredCollarVertices:collar,maxSourceInterpolationErrorMeters:maxSourceError,topologyRetainedDesktop:true,sourceYawDegrees:field.sceneYawDegrees,results,limits:'The interior samples a native mixed-source NOAA field. Triangulation and a 40 m collar remain authored. Root-center grounding is tested, not every lateral root. No integrated hydrology or human realism gate is established.'};
+const report={passed:true,baseline,baselineField:previousField.version,candidateField:field.version,changedHeights,maxHeightChange,identicalRendererFunctions:identical.length,changed,added,outsideVerticesExact:outside,sourceInteriorVertices:inside,authoredCollarVertices:collar,maxSourceInterpolationErrorMeters:maxSourceError,topologyRetainedDesktop:true,sourceYawDegrees:field.sceneYawDegrees,results,limits:'The interior samples a native mixed-source NOAA field. Triangulation and a 40 m collar remain authored. Root-center grounding is tested, not every lateral root. No integrated hydrology or human realism gate is established.'};
 await fs.writeFile(path.join(out,'geometry-scope.json'),JSON.stringify(report,null,2)+'\n');
 for(const g of [geometry,base,candidate,compact,compactSource])g.dispose();console.log(JSON.stringify(report,null,2));
