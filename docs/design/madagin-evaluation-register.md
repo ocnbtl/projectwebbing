@@ -174,3 +174,18 @@ Human still/motion and physical-device gates remain unverified. Domain/mailbox d
 | Reading / return and loading | Technical gates evaluated separately from visual quality. | Local/public reading, fallback, brief, loading-order matrices and full flights in this cycle. |
 
 Release evidence: `output/releases/madagin-cliff-ecology-20260908/publication.json`. The local review distinguishes composition pairs (compact lens changed) from rejected same-lens ecology pairs. No averaged score, percentage complete or AI-only human-equivalence pass is reported.
+
+
+## September 8, 2026 — Compact branching architecture
+
+| Required views/category | Anchored decision | Remaining defect / severity |
+|---|---|---|
+| Compact Ridge held/exit, Valley, Near-canopy, Waterfall / tree architecture | 2 → 3 at selected distances: trunks, branching crowns and fine foliage replace polygonal blobs. | Generic two-source repetition, thin distant crowns and sparse understory remain high priority. |
+| Compact fine edges / motion | Reject first no-MSAA trial; accept multisample coverage. Existing subtle sway retained. | No realistic living-motion claim; full flight and held intervals are separate evidence. |
+| Opening / cliff foot and Summit / ecology | Overall 2 retained. | Sparse lower layers and exposed pale roots remain; count changes are not acceptance evidence. |
+| Desktop, terrain, water, atmosphere and camera | Prior ratings retained; scoped source invariants pass. | Collar, disconnected cliff drainage and synthetic water/weather remain high priority. |
+| About, Projects, Blog / readability and interaction | Functional gates recorded separately. | Preserve scroll/steering/history/return/fallback behavior. |
+| Performance | Compact full-flight measurements added beyond held views; existing desktop transfer/readiness failures stay visible. | Headless host cadence is not physical-device or GPU qualification. |
+| Independent human still/motion equivalence | UNVERIFIED | No formal blind result or averaged realism score. |
+
+Evidence: `compact-canopy-release-20260908/review.html`, 22 same-position/same-lens pairs, `trial-1-no-msaa`, held and uninterrupted recordings. Publication and frame-profile details: `output/releases/madagin-compact-canopy-20260908`. Diagnostic reference: DLNR Nāpali photo and Kalalau safety film valley near 256 s; real canopy remains stronger. Animation phases are not synchronized and source scenes are not formal viewpoint-matched pairs.

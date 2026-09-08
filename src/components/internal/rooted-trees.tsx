@@ -2,7 +2,7 @@
 
 import {useFrame, useLoader} from "@react-three/fiber";
 import {useEffect, useMemo, useRef} from "react";
-import {Box3, Color, DoubleSide, Float32BufferAttribute, FrontSide, InstancedMesh, Matrix4, Mesh, MeshDepthMaterial, MeshStandardMaterial, Object3D, RGBADepthPacking, Vector3} from "three";
+import {Box3, Color, DoubleSide, Float32BufferAttribute, FrontSide, Frustum, InstancedMesh, Matrix4, Mesh, MeshDepthMaterial, MeshStandardMaterial, Object3D, RGBADepthPacking, Sphere, Vector3} from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
@@ -92,11 +92,23 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false):Part[] {
 
 function TreeBatch({part,trees,shadows,compact}:{part:Part;trees:Tree[];shadows:boolean;compact:boolean}) {
   const ref=useRef<InstancedMesh>(null);
+  const culling=useMemo(()=>{
+    if(!compact)return null;
+    part.geometry.computeBoundingSphere();
+    const bounds=part.geometry.boundingSphere!.clone();
+    // Bound the complete moving part, not just its root. The normalized wind
+    // displacement is below .03; retain crowns crossing the viewport edge.
+    bounds.radius+=.03;
+    return {frustum:new Frustum(),projection:new Matrix4(),bounds:trees.map(tree=>new Sphere().copy(bounds).applyMatrix4(tree.matrix))};
+  },[compact,part.geometry,trees]);
   useFrame(({clock,camera})=>{
     part.update(clock.elapsedTime);
     const mesh=ref.current;if(!mesh)return;
+    if(culling)culling.frustum.setFromProjectionMatrix(culling.projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
     let count=0;
-    for(const tree of trees){
+    for(let index=0;index<trees.length;index++){
+      const tree=trees[index];
+      if(culling&&!culling.frustum.intersectsSphere(culling.bounds[index]))continue;
       const distance=camera.position.distanceTo(tree.root);
       if(!compact&&(part.far?distance<145:distance>205))continue;
       mesh.setMatrixAt(count,tree.matrix);mesh.setColorAt(count,tree.color);count++;
@@ -107,7 +119,7 @@ function TreeBatch({part,trees,shadows,compact}:{part:Part;trees:Tree[];shadows:
   return <instancedMesh ref={ref} args={[part.geometry,part.material,trees.length]} customDepthMaterial={part.depth} frustumCulled={false} castShadow={shadows&&!part.far} receiveShadow />;
 }
 
-export function RootedTrees({placements,zone,shadows,compact=false}:{placements:Placement[];zone:string;shadows:boolean;compact?:boolean}) {
+export function RootedTrees({placements,zone,shadows,compact=false,onReady}:{placements:Placement[];zone:string;shadows:boolean;compact?:boolean;onReady?:()=>void}) {
   const scenes=useLoader(GLTFLoader,compact?ROOTED_TREES.sources.filter(url=>url.includes("far")):ROOTED_TREES.sources,loader=>loader.setMeshoptDecoder(MeshoptDecoder));
   const parts=useMemo(()=>compact?[prepareTrees(scenes[0].scene,scenes[0].scene,true),prepareTrees(scenes[1].scene,scenes[1].scene,true)]:[prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)],[compact,scenes]);
   const groups=useMemo(()=>{
@@ -130,8 +142,9 @@ export function RootedTrees({placements,zone,shadows,compact=false}:{placements:
     const element=document.documentElement;
     const previous=JSON.parse(element.dataset.madaginRootedTrees??"{}");
     element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,compact,count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
+    onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
-  },[compact,groups,placements.length,zone]);
+  },[compact,groups,placements.length,zone,onReady]);
   useEffect(()=>()=>parts.flat().forEach(p=>{p.geometry.dispose();p.material.dispose();p.depth.dispose();}),[parts]);
   return <group name={`Rooted trees ${zone}`}>{parts.flatMap((variant,i)=>variant.map((part,j)=><TreeBatch key={`${i}-${j}`} part={part} trees={groups[i]} shadows={shadows} compact={compact}/>))}</group>;
 }

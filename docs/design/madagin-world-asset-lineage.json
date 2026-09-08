@@ -1,4 +1,26 @@
 {
+  "compactBranchingCanopy20260908": {
+    "runtime": [
+      "src/components/internal/ridge-production-v116.tsx",
+      "src/components/internal/rooted-trees.tsx",
+      "src/components/internal/world-lab.tsx"
+    ],
+    "sources": "Existing rooted-trees-v1 far variants; generic CC0 Poly Haven architecture, not measured Hawaiian species",
+    "provenance": "public/world/rooted-trees-v1/provenance.json",
+    "newAssets": false,
+    "placementPolicy": "Replace eligible compact broadleaf slots in place; retain palms, tree ferns, deadwood, conifers and native-cliff placement authority",
+    "counts": {
+      "ridge": 1046,
+      "valley": 1330,
+      "lake": 252,
+      "alpine": 84
+    },
+    "finishing": "Compact MSAA plus wind-padded per-part frustum culling; shared source/part/root transforms exact",
+    "rejected": "No-MSAA trial: noisy fine foliage; actual renders preserved",
+    "scopeProof": "output/releases/madagin-compact-canopy-20260908/geometry-retained.json",
+    "release": "output/releases/madagin-compact-canopy-20260908/publication.json",
+    "limits": "Sparse generic cover and high opening triangle count remain. No physical-device or human-realism pass."
+  },
   "compactFraming20260908": {
     "runtime": "src/components/internal/world-lab.tsx",
     "compactVerticalFovBefore": 42,

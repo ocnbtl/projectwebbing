@@ -2174,7 +2174,7 @@ export function PublicWorldExperience({ activeView, className, onReady, onUnavai
           <Canvas
             camera={{ position: [112, 82, 280], fov: device.mobile ? 60 : 42, near: 0.2, far: 2600 }}
             dpr={device.mobile ? [0.75, 1] : [0.85, 1]}
-            gl={{ antialias: device.tier !== "conservative", powerPreference: "high-performance" }}
+            gl={{ antialias: device.mobile || device.tier !== "conservative", powerPreference: "high-performance" }}
             shadows={device.tier !== "conservative" && !device.mobile ? "soft" : false}
             onCreated={({ gl }) => {
               gl.toneMapping = ACESFilmicToneMapping;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame, useLoader } from "@react-three/fiber";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
   BackSide,
   BufferGeometry,
@@ -5814,13 +5814,19 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
     if (mobile) return placement[1] === 0 ? index % 4 !== 1 : index % 2 === 0;
     return placement[1] === 0 ? index % 3 === 0 : index % 5 === 0;
   }), [detailedSet, manifest.instances, mobile, tier, zone]);
-  const rootedCore = useMemo(() => mobile || tier === "conservative" ? [] : visible.filter(p => [0,1,2,6,7].includes(p[0])), [mobile,tier,visible]);
+  // Compact uses the same branching architecture already loaded at the coast.
+  // Replace eligible broadleaf placeholders in place; palms, ferns, deadwood
+  // and alpine conifers keep their distinct forms and placement authorities.
+  const rootedCore = useMemo(() => !mobile && tier === "conservative" ? [] : visible.filter(p => [0,1,2,6,7].includes(p[0])), [mobile,tier,visible]);
   const rootedCoreSet = useMemo(() => new Set(rootedCore), [rootedCore]);
   const rootedPlacements = useMemo(() => [...detailedPlacements, ...sourceQualityPachiraPlacements, ...sourceQualityIslandTreePlacements, ...rootedCore].map(p => {
     const copy = [...p];
-    if (zone === "valley") copy[3] += contactTrailheadPlacementRelief(p);
+    if (!mobile && zone === "valley") copy[3] += contactTrailheadPlacementRelief(p);
     return copy;
-  }), [detailedPlacements,sourceQualityPachiraPlacements,sourceQualityIslandTreePlacements,rootedCore,zone]);
+  }), [detailedPlacements,sourceQualityPachiraPlacements,sourceQualityIslandTreePlacements,rootedCore,zone,mobile]);
+  const onRootedReady = useCallback(() => {
+    if (mobile) dispatchStage(2, `${zone}-ecology-ready`, zone);
+  }, [mobile, zone]);
   const volumetricCrownStats = useMemo(() => visible.reduce((stats, placement) => {
     const family = manifest.families[placement[0]];
     const lobes = volumetricCrownLobeCount(family, placement, mobile);
@@ -5884,18 +5890,22 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
         volumetricCrownPlacements: volumetricCrownStats.placements,
         volumetricCrownRenderedLobes: volumetricCrownStats.renderedLobes,
         visibleInstances: visible.length,
+        rootedCoreInstances: rootedCore.length,
+        rootedMode: mobile ? "compact-branching-1" : "desktop-rooted-1",
       },
     };
     document.documentElement.dataset.madaginRidgeGroundingV116 = JSON.stringify(host.__MADAGIN_RIDGE_GROUNDING_V116__);
     document.documentElement.dataset.madaginEcologyDebugV116 = JSON.stringify(host.__MADAGIN_ECOLOGY_DEBUG_V116__);
-    dispatchStage(2, `${zone}-ecology-ready`, zone);
-  }, [batches, contactTrailheadGroundcover.length, detailedPlacements.length, detailedVegetationSet, lakeBankSuccession.length, manifest.coverage.grounding, manifest.instances, mobile, parts, regionalHabitatGroundcover.length, riparianGroundcover.length, sourceQualityGeologyPlacements.length, sourceQualityIslandTree01Placements.length, sourceQualityIslandTreePlacements.length, sourceQualityPachiraPlacements.length, tier, visible.length, volumetricCrownStats, watershedGroundcover.length, zone]);
+    // A loaded manifest/core kit is not ready foliage after replacing compact
+    // placeholders. The child signals only after both far GLBs and maps mount.
+    if (!mobile || rootedPlacements.length === 0) dispatchStage(2, `${zone}-ecology-ready`, zone);
+  }, [batches, contactTrailheadGroundcover.length, detailedPlacements.length, detailedVegetationSet, lakeBankSuccession.length, manifest.coverage.grounding, manifest.instances, mobile, parts, regionalHabitatGroundcover.length, riparianGroundcover.length, sourceQualityGeologyPlacements.length, sourceQualityIslandTree01Placements.length, sourceQualityIslandTreePlacements.length, sourceQualityPachiraPlacements.length, tier, visible.length, volumetricCrownStats, watershedGroundcover.length, zone, rootedCore.length, rootedPlacements.length]);
 
   return (
     <group name={`Madagin v1.16 ${zone} spatial ecology · ${visible.length} visible instances`}>
       {rootedPlacements.length > 0 ? (
         <Suspense fallback={null}>
-          <RootedTrees placements={rootedPlacements} shadows={shadows} zone={zone} />
+          <RootedTrees placements={rootedPlacements} shadows={shadows} zone={zone} compact={mobile} onReady={onRootedReady} />
         </Suspense>
       ) : null}
       {sourceQualityGeologyPlacements.length ? (
