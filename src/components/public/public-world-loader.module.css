@@ -27,6 +27,12 @@
   height: 100% !important;
 }
 
+/* Keep the existing still visible while independently streamed terrain and
+   ecology assemble. Opacity preserves rendering behind the loading surface. */
+.renderer[data-renderer-state="loading"] canvas {
+  opacity: 0;
+}
+
 .status {
   position: absolute;
   width: 1px;

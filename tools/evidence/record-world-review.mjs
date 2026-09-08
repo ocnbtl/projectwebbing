@@ -31,6 +31,7 @@ try {
    views.push({id,samples,camera:await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginPublicCamera))});
   }
   const metrics=await page.evaluate(()=>({
+   readinessPolicy:document.documentElement.dataset.madaginWorldReadyPolicy??null,
    nativeCliff:document.documentElement.dataset.madaginNativeCliff?JSON.parse(document.documentElement.dataset.madaginNativeCliff):null,
    scriptBytes:performance.getEntriesByType('resource').filter(r=>r.initiatorType==='script').reduce((sum,r)=>sum+r.encodedBodySize,0),
    fallingWater:document.documentElement.dataset.madaginFallingWater?JSON.parse(document.documentElement.dataset.madaginFallingWater):null,
@@ -46,6 +47,7 @@ try {
   if(process.env.MADAGIN_EXPECTED_TERRAIN_SURFACE)assert.equal(metrics.terrainSurface?.version,process.env.MADAGIN_EXPECTED_TERRAIN_SURFACE);
   if(process.env.MADAGIN_EXPECTED_FALLING_WATER)assert.equal(metrics.fallingWater?.version,process.env.MADAGIN_EXPECTED_FALLING_WATER);
   if(process.env.MADAGIN_EXPECTED_NATIVE_CLIFF)assert.equal(metrics.nativeCliff?.version,process.env.MADAGIN_EXPECTED_NATIVE_CLIFF);
+  if(process.env.MADAGIN_EXPECTED_READINESS_POLICY)assert.equal(metrics.readinessPolicy,process.env.MADAGIN_EXPECTED_READINESS_POLICY);
   if(process.env.MADAGIN_EXPECTED_ROOTED_TREES){
    const trees=Object.values(metrics.rootedTrees??{});assert.ok(trees.length>0);
    assert.ok(trees.every(tree=>tree.version===process.env.MADAGIN_EXPECTED_ROOTED_TREES));

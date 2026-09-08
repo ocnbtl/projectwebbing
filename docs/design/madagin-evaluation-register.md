@@ -149,3 +149,15 @@ Evidence: `native-cliff-release-20260908/matched-views.json`, `after/`, original
 | Human still and motion equivalence | UNVERIFIED | No independent randomized evaluation or supported equivalence interval. | Final gate |
 
 Evidence: `cliff-profile-release-20260908/review.html`, 22 fresh matched pairs, held recordings and separate full local/public recordings. Actual DLNR Nāpali photograph and Kalalau safety-video opening through 29 s were inspected; screenshot observations at 0.15 and 28.9 s show coast and later helicopter/vegetation footage, not 29 s of continuous aerial footage. Real buttress scale, dense layered foliage, occlusion and atmospheric depth remain stronger. These are diagnostic references, not matched formal pairs. Source scans are not rendered rejection evidence. Existing crop and rejected earlier wall trials remain recoverable. No average or changed-pixel metric establishes realism.
+
+
+## September 8, 2026 — Startup ordering correction
+
+| View/category | Decision | Evidence / limit |
+|---|---|---|
+| Compact opening / completeness | Reject premature ready state and floating trees in c8371f5 playback at 3 s. | Original `cliff-profile-release-20260908/motion-public/` and `terrain-readiness-release-20260908/ordering-baseline-reproduction/`. |
+| Desktop and compact / asynchronous loading | Accept current terrain-plus-foliage readiness and retained loading still after both ordering tests pass. | Four independent terrain/foliage holds; stale mount history included. The still is not rendered-realism evidence. |
+| Completed cliff and full journey / quality | Retain c8371f5 geometry; B remains open, world 2/5. | Original 22 matched geometry comparisons plus corrected local/public full flights and held Ocean/Blog observations. |
+| Budgets | Re-measure after correcting the early readiness marker. | New publication record separates each pass/fail; old compact 1.23 s is invalid as terrain-ready evidence. |
+
+Human still/motion and physical-device gates remain unverified. Domain/mailbox delivery stays unverified; copy/download behavior is retained.

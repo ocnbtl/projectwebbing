@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import type { MotionValue } from "motion/react";
-import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode, type WheelEvent as ReactWheelEvent } from "react";
+import { Component, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode, type WheelEvent as ReactWheelEvent } from "react";
 import {
   ACESFilmicToneMapping,
   BufferGeometry,
@@ -2071,9 +2071,16 @@ export function PublicWorldExperience({ activeView, className, onReady, onUnavai
   const [journeyCheckpoint, setJourneyCheckpoint] = useState(0);
   const [canvasReady, setCanvasReady] = useState(false);
   const [canvasFailed, setCanvasFailed] = useState(false);
+  const [meaningfulReady, setMeaningfulReady] = useState(false);
+  const readinessStartedAt = useRef(0);
   const meaningfulReadySent = useRef(false);
+  useLayoutEffect(() => {
+    readinessStartedAt.current = performance.now();
+  }, []);
   const handleRendererFailure = useCallback(() => {
     setCanvasReady(false);
+    setMeaningfulReady(false);
+    delete document.documentElement.dataset.madaginMeaningfulWorldReady;
     setCanvasFailed(true);
     onUnavailable?.();
   }, [onUnavailable]);
@@ -2091,25 +2098,48 @@ export function PublicWorldExperience({ activeView, className, onReady, onUnavai
   }, []);
 
   useEffect(() => {
+    let terrainReady = false;
+    let ecologyReady = false;
+    let frame = 0;
     const markMeaningfulReady = () => {
-      if (meaningfulReadySent.current) return;
-      meaningfulReadySent.current = true;
-      document.documentElement.dataset.madaginMeaningfulWorldReady = "true";
-      onReady?.();
+      if (meaningfulReadySent.current || frame || !terrainReady || !ecologyReady) return;
+      // Effects report committed meshes. Allow their first render before the
+      // poster is removed or the flight starts, even when ecology loads first.
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(() => {
+          meaningfulReadySent.current = true;
+          setMeaningfulReady(true);
+          document.documentElement.dataset.madaginWorldReadyPolicy = "terrain-and-ecology-1";
+          document.documentElement.dataset.madaginMeaningfulWorldReady = "true";
+          onReady?.();
+        });
+      });
+    };
+    type ReadinessStage = { at?: number; stage?: number; zone?: JourneyCheckpointId; label?: string };
+    const acceptStage = (detail: ReadinessStage | undefined) => {
+      if (!detail || detail.zone !== "ridge" || (detail.at ?? 0) < readinessStartedAt.current) return;
+      if (detail.stage === 0 && detail.label?.includes("terrain-ready")) terrainReady = true;
+      if (detail.stage === 2 && detail.label === "ridge-ecology-ready") ecologyReady = true;
+      markMeaningfulReady();
     };
     const handleRidgeStage = (event: Event) => {
-      const detail = (event as CustomEvent<{ stage?: number; zone?: JourneyCheckpointId }>).detail;
-      if (!meaningfulReadySent.current && detail?.zone === "ridge" && (detail.stage ?? 0) >= 2) {
-        markMeaningfulReady();
-      }
+      acceptStage((event as CustomEvent<ReadinessStage>).detail);
     };
     window.addEventListener("madagin:ridge-stage", handleRidgeStage);
     const stages = (window as Window & {
-      __MADAGIN_RIDGE_STAGES_V116__?: Array<{ stage?: number; zone?: JourneyCheckpointId }>;
+      __MADAGIN_RIDGE_STAGES_V116__?: ReadinessStage[];
     }).__MADAGIN_RIDGE_STAGES_V116__ ?? [];
-    if (stages.some((stage) => stage.zone === "ridge" && (stage.stage ?? 0) >= 2)) markMeaningfulReady();
-    return () => window.removeEventListener("madagin:ridge-stage", handleRidgeStage);
+    stages.forEach(acceptStage);
+    return () => {
+      window.removeEventListener("madagin:ridge-stage", handleRidgeStage);
+      cancelAnimationFrame(frame);
+    };
   }, [onReady]);
+
+  useEffect(() => () => {
+    delete document.documentElement.dataset.madaginMeaningfulWorldReady;
+    delete document.documentElement.dataset.madaginWorldReadyPolicy;
+  }, []);
 
   if (!device) {
     return (
@@ -2131,7 +2161,7 @@ export function PublicWorldExperience({ activeView, className, onReady, onUnavai
       className={className}
       data-public-world="true"
       data-quality-tier={device.tier}
-      data-renderer-state={rendererAvailable ? (canvasReady ? "live" : "loading") : "fallback"}
+      data-renderer-state={rendererAvailable ? (canvasReady && meaningfulReady ? "live" : "loading") : "fallback"}
       data-world-view={activeView}
       data-world-chapter={JOURNEY_CHECKPOINTS[journeyCheckpoint].id}
     >
