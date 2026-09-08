@@ -5,15 +5,16 @@ import {useEffect, useMemo, useRef} from "react";
 import {Box3, Color, DoubleSide, Float32BufferAttribute, FrontSide, Frustum, InstancedMesh, Matrix4, Mesh, MeshDepthMaterial, MeshStandardMaterial, Object3D, RGBADepthPacking, Sphere, Vector3} from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js";
+import {createDistantLeaves} from "./compact-tree-lod";
 
 // Species labels are deliberately absent: these licensed trees provide generic
 // branching architecture, not a measured reconstruction of Hawaiian ecology.
 export const ROOTED_TREES = {version:"rooted-trees-1",sources:[0,1].flatMap(i=>["near","far"].map(lod=>`/world/rooted-trees-v1/tree-${i}-${lod}.glb`))};
 type Placement = number[];
 type Tree = {matrix:Matrix4;root:Vector3;color:Color;height:number};
-type Part = {geometry:Mesh["geometry"];material:MeshStandardMaterial;depth:MeshDepthMaterial;update:(time:number)=>void;far:boolean};
+type Part = {geometry:Mesh["geometry"];material:MeshStandardMaterial;depth:MeshDepthMaterial;update:(time:number)=>void;far:boolean;distant:boolean};
 
-function prepareTrees(near:Object3D,far:Object3D,compact=false):Part[] {
+function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false):Part[] {
   near.updateMatrixWorld(true);far.updateMatrixWorld(true);
   const box=new Box3().setFromObject(near),height=box.max.y-box.min.y;
   const root=new Vector3();let count=0;
@@ -36,7 +37,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false):Part[] {
       if(materials.length!==1)throw new Error("Rooted tree primitive must have one material");
       const material=(materials[0] as MeshStandardMaterial).clone();
       const leaf=/leaves/.test(material.name),time={value:0};
-      const geometry=child.geometry.clone();
+      let geometry=child.geometry.clone();
       // glTF quantization uses normalized integer attributes. Transforming them
       // in place clamps world coordinates to [-1,1]; decode before baking.
       for(const name of ["position","normal","tangent"]){
@@ -47,6 +48,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false):Part[] {
       }
       geometry.applyMatrix4(child.matrixWorld);
       geometry.translate(-root.x,-root.y,-root.z);geometry.scale(1/height,1/height,1/height);
+      if(distant&&leaf){const original=geometry;geometry=createDistantLeaves(original);original.dispose();}
       material.color.set("#ffffff");material.emissive.set("#000000");material.emissiveIntensity=0;
       material.metalness=0;material.roughness=Math.max(.84,material.roughness);
       material.envMapIntensity=.7;material.aoMapIntensity=.65;
@@ -54,7 +56,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false):Part[] {
       material.transparent=false;material.depthWrite=true;
       material.onBeforeCompile=shader=>{
         shader.uniforms.uTreeTime=time;
-        shader.vertexShader=`uniform float uTreeTime; varying float vTreeDistance;\n${shader.vertexShader}`
+        shader.vertexShader=`uniform float uTreeTime; varying float vTreeDistance; varying float vTreeHeight;\n${shader.vertexShader}`
           .replace("#include <begin_vertex>",`#include <begin_vertex>
             vec3 treeRoot=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;
             float gust=sin(uTreeTime*.66+treeRoot.x*.021+treeRoot.z*.014)
@@ -64,15 +66,16 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false):Part[] {
             transformed.z+=gust*flex*.0048;
             ${leaf?"transformed+=normal*sin(uTreeTime*2.8+position.x*91.+position.z*67.)*flex*.0015;":""}
             vTreeDistance=distance(cameraPosition,treeRoot);
+            vTreeHeight=length(instanceMatrix[1].xyz);
           `);
-        shader.fragmentShader=`varying float vTreeDistance;\n${shader.fragmentShader}`
+        shader.fragmentShader=`varying float vTreeDistance; varying float vTreeHeight;\n${shader.fragmentShader}`
           .replace("#include <alphatest_fragment>",`#include <alphatest_fragment>
-            float transition=smoothstep(145.,205.,vTreeDistance);
+            float transition=${compact?"smoothstep(16.,24.,vTreeDistance/max(vTreeHeight,.01))":"smoothstep(145.,205.,vTreeDistance)"};
             float threshold=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));
-            ${compact?"":"if("+(lod===1?"threshold >= transition":"threshold < transition")+")discard;"}
+            if(${(compact?distant:lod===1)?"threshold >= transition":"threshold < transition"})discard;
           `);
       };
-      material.customProgramCacheKey=()=>`rooted-tree-${lod}-${leaf}`;
+      material.customProgramCacheKey=()=>`rooted-tree-${lod}-${leaf}-${compact}-${distant}`;
       const depth=new MeshDepthMaterial({depthPacking:RGBADepthPacking,map:material.map,alphaTest:material.alphaTest,side:material.side});
       depth.onBeforeCompile=(shader,renderer)=>{
         material.onBeforeCompile(shader,renderer);
@@ -81,7 +84,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false):Part[] {
         shader.fragmentShader=shader.fragmentShader.replace(/float transition=smoothstep[\s\S]*?discard;/,"");
       };
       depth.customProgramCacheKey=()=>`rooted-tree-depth-${leaf}`;
-      parts.push({geometry,material,depth,update:value=>{time.value=value;},far:lod===1});
+      parts.push({geometry,material,depth,update:value=>{time.value=value;},far:lod===1,distant});
     });
     const rootedBounds=new Box3();
     parts.forEach(p=>{p.geometry.computeBoundingBox();rootedBounds.union(p.geometry.boundingBox!);});
@@ -110,6 +113,7 @@ function TreeBatch({part,trees,shadows,compact}:{part:Part;trees:Tree[];shadows:
       const tree=trees[index];
       if(culling&&!culling.frustum.intersectsSphere(culling.bounds[index]))continue;
       const distance=camera.position.distanceTo(tree.root);
+      if(compact&&(part.distant?distance/tree.height<16:distance/tree.height>24))continue;
       if(!compact&&(part.far?distance<145:distance>205))continue;
       mesh.setMatrixAt(count,tree.matrix);mesh.setColorAt(count,tree.color);count++;
     }
@@ -121,7 +125,7 @@ function TreeBatch({part,trees,shadows,compact}:{part:Part;trees:Tree[];shadows:
 
 export function RootedTrees({placements,zone,shadows,compact=false,onReady}:{placements:Placement[];zone:string;shadows:boolean;compact?:boolean;onReady?:()=>void}) {
   const scenes=useLoader(GLTFLoader,compact?ROOTED_TREES.sources.filter(url=>url.includes("far")):ROOTED_TREES.sources,loader=>loader.setMeshoptDecoder(MeshoptDecoder));
-  const parts=useMemo(()=>compact?[prepareTrees(scenes[0].scene,scenes[0].scene,true),prepareTrees(scenes[1].scene,scenes[1].scene,true)]:[prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)],[compact,scenes]);
+  const parts=useMemo(()=>compact?scenes.map(scene=>[...prepareTrees(scene.scene,scene.scene,true),...prepareTrees(scene.scene,scene.scene,true,true)]):[prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)],[compact,scenes]);
   const groups=useMemo(()=>{
     const result:Tree[][]=[[],[]];
     placements.forEach(p=>{
@@ -141,7 +145,7 @@ export function RootedTrees({placements,zone,shadows,compact=false,onReady}:{pla
   useEffect(()=>{
     const element=document.documentElement;
     const previous=JSON.parse(element.dataset.madaginRootedTrees??"{}");
-    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,compact,count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
+    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,compact,lod:compact?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
     onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
   },[compact,groups,placements.length,zone,onReady]);

@@ -1,4 +1,25 @@
 {
+  "compactDistantCanopy20260908": {
+    "runtime": [
+      "src/components/internal/compact-tree-lod.ts",
+      "src/components/internal/rooted-trees.tsx"
+    ],
+    "source": "Existing rooted-trees-v1 far variants, unchanged generic CC0 Poly Haven sources",
+    "provenance": "public/world/rooted-trees-v1/provenance.json",
+    "newDownloads": false,
+    "derivative": "Runtime connected-leaf sampling: 1 in 4, 2x local expansion, distant crowns only",
+    "transition": "distance/tree height 16-24; complementary dithering; nearby geometry and roots retained",
+    "sourceLeafTriangles": [
+      16836,
+      10455
+    ],
+    "distantLeafTriangles": [
+      4176,
+      2574
+    ],
+    "classification": "Performance preparation for layered ecology; not measured Hawaiian species or higher realism",
+    "evidence": "output/releases/madagin-canopy-lod-20260908/publication.json"
+  },
   "compactBranchingCanopy20260908": {
     "runtime": [
       "src/components/internal/ridge-production-v116.tsx",

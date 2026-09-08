@@ -189,3 +189,18 @@ Release evidence: `output/releases/madagin-cliff-ecology-20260908/publication.js
 | Independent human still/motion equivalence | UNVERIFIED | No formal blind result or averaged realism score. |
 
 Evidence: `compact-canopy-release-20260908/review.html`, 22 same-position/same-lens pairs, `trial-1-no-msaa`, held and uninterrupted recordings. Publication and frame-profile details: `output/releases/madagin-compact-canopy-20260908`. Diagnostic reference: DLNR Nāpali photo and Kalalau safety film valley near 256 s; real canopy remains stronger. Animation phases are not synchronized and source scenes are not formal viewpoint-matched pairs.
+
+
+## September 8 — Compact distant canopy cost
+
+Evidence: `output/playwright/madagin-world-progress/canopy-lod-release-20260908/review.html`, `output/releases/madagin-canopy-lod-20260908/publication.json` and `leaf-geometry.json`. Baseline b4f7e78; exact same 22 camera/lens pairs, sun, resolution and MSAA. Compact distant leaf representation changes; wind phases differ.
+
+| Required view/category | Prior → selected | Remaining defect / severity |
+|---|---|---|
+| Compact Opening/Ridge/Valley/Near-canopy/Waterfall branch architecture | 3 → 3 diagnostic | Generic repeated crowns and sparse lower layers / high |
+| Compact geometry workload | ~12.7M → first trial 6.73M peak triangles | Final local/public profiles in publication record; physical GPU/phone evidence unverified / high |
+| Lake/Summit/Ocean/About/Sky/Projects/Blog continuity | 2 → 2 diagnostic | Authored geography, water/weather and sparse ecology / high |
+| Whole-world realism | 2 → 2 diagnostic | Integrated B exit unmet; no percentage-complete claim |
+| Human still and motion equivalence | UNVERIFIED → UNVERIFIED | Independent held-out 45–55% equivalence with 95% CI still required |
+
+The compact workload reduction must preserve normal-size branch silhouettes and continuous transitions. Geometry counts do not establish speed, thermal behavior or realism. DLNR Nāpali photograph and actual Kalalau valley footage at 256.52–259.23 s are diagnostic real references, not formal matched pairs. Previous rejected no-MSAA and understory trials remain excluded. Inquiry domain/mailbox/delivery gates remain separate and unverified.
