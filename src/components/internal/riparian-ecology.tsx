@@ -9,6 +9,7 @@ import {normalizeRiparianPlant} from "./riparian-plant-geometry";
 import {RootedTrees} from "./rooted-trees";
 import data from "./riparian-placements.json";
 import bank from "./groundcover-bank-placements.json";
+import canopy from "./bank-canopy-placements.json";
 
 type Plant = {family: string; x: number; y: number; z: number; yaw: number; height: number; tint: number};
 type Part = {family: string; geometry: Mesh["geometry"]; material: MeshStandardMaterial; depth: MeshDepthMaterial; update: (time: number) => void};
@@ -92,5 +93,7 @@ export function RiparianEcology({compact, shadows, onReady}: {compact: boolean; 
   return <group name="Layered dry riverbank vegetation">
     {batches.map(batch => <FernBatch key={batch.part.family} {...batch} shadows={shadows} />)}
     <RootedTrees placements={selected.saplings} zone="riparian" compact={compact} shadows={shadows} />
+    {/* Small crowns share the accepted efficient branching LOD on both tiers. */}
+    <RootedTrees placements={canopy[compact ? "compact" : "desktop"]} zone="bank-canopy" compact={compact} efficient shadows={shadows} castFarShadows={!compact} />
   </group>;
 }

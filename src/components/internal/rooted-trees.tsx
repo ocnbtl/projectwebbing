@@ -93,7 +93,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false):Pa
   });
 }
 
-function TreeBatch({part,trees,shadows,compact}:{part:Part;trees:Tree[];shadows:boolean;compact:boolean}) {
+function TreeBatch({part,trees,shadows,compact,castFarShadows}:{part:Part;trees:Tree[];shadows:boolean;compact:boolean;castFarShadows:boolean}) {
   const ref=useRef<InstancedMesh>(null);
   const culling=useMemo(()=>{
     if(!compact)return null;
@@ -120,12 +120,14 @@ function TreeBatch({part,trees,shadows,compact}:{part:Part;trees:Tree[];shadows:
     mesh.count=count;mesh.instanceMatrix.needsUpdate=true;
     if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
   });
-  return <instancedMesh ref={ref} args={[part.geometry,part.material,trees.length]} customDepthMaterial={part.depth} frustumCulled={false} castShadow={shadows&&!part.far} receiveShadow />;
+  return <instancedMesh ref={ref} args={[part.geometry,part.material,trees.length]} customDepthMaterial={part.depth} frustumCulled={false} castShadow={shadows&&(castFarShadows?!part.distant:!part.far)} receiveShadow />;
 }
 
-export function RootedTrees({placements,zone,shadows,compact=false,onReady}:{placements:Placement[];zone:string;shadows:boolean;compact?:boolean;onReady?:()=>void}) {
+export function RootedTrees({placements,zone,shadows,compact=false,efficient=false,castFarShadows=false,onReady}:{placements:Placement[];zone:string;shadows:boolean;compact?:boolean;efficient?:boolean;castFarShadows?:boolean;onReady?:()=>void}) {
   const scenes=useLoader(GLTFLoader,compact?ROOTED_TREES.sources.filter(url=>url.includes("far")):ROOTED_TREES.sources,loader=>loader.setMeshoptDecoder(MeshoptDecoder));
-  const parts=useMemo(()=>compact?scenes.map(scene=>[...prepareTrees(scene.scene,scene.scene,true),...prepareTrees(scene.scene,scene.scene,true,true)]):[prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)],[compact,scenes]);
+  // Keep the same loader key as the rest of this device tier. Smaller desktop
+  // crowns reuse the far scenes from that cache instead of downloading a pair again.
+  const parts=useMemo(()=>compact||efficient?(compact?scenes:[scenes[1],scenes[3]]).map(scene=>[...prepareTrees(scene.scene,scene.scene,true),...prepareTrees(scene.scene,scene.scene,true,true)]):[prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)],[compact,efficient,scenes]);
   const groups=useMemo(()=>{
     const result:Tree[][]=[[],[]];
     placements.forEach(p=>{
@@ -145,10 +147,10 @@ export function RootedTrees({placements,zone,shadows,compact=false,onReady}:{pla
   useEffect(()=>{
     const element=document.documentElement;
     const previous=JSON.parse(element.dataset.madaginRootedTrees??"{}");
-    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,compact,lod:compact?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
+    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
     onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
-  },[compact,groups,placements.length,zone,onReady]);
+  },[compact,efficient,groups,placements.length,zone,onReady]);
   useEffect(()=>()=>parts.flat().forEach(p=>{p.geometry.dispose();p.material.dispose();p.depth.dispose();}),[parts]);
-  return <group name={`Rooted trees ${zone}`}>{parts.flatMap((variant,i)=>variant.map((part,j)=><TreeBatch key={`${i}-${j}`} part={part} trees={groups[i]} shadows={shadows} compact={compact}/>))}</group>;
+  return <group name={`Rooted trees ${zone}`}>{parts.flatMap((variant,i)=>variant.map((part,j)=><TreeBatch key={`${i}-${j}`} part={part} trees={groups[i]} shadows={shadows} compact={compact||efficient} castFarShadows={castFarShadows}/>))}</group>;
 }

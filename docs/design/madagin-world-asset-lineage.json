@@ -1,4 +1,47 @@
 {
+  "bankCanopy": {
+    "version": "bank-canopy-1",
+    "runtime": [
+      "src/components/internal/bank-canopy-placements.json",
+      "src/components/internal/riparian-ecology.tsx",
+      "src/components/internal/rooted-trees.tsx"
+    ],
+    "sources": [
+      {
+        "file": "tree-0-far.glb",
+        "sha256": "1f005be4b56416c75bb42a67b621eb38b608571468fc15f979988cb3a7613a93",
+        "url": "https://polyhaven.com/a/island_tree_02",
+        "triangles": 18335
+      },
+      {
+        "file": "tree-1-far.glb",
+        "sha256": "3be4934810d775942eba8db78d41c0d5e5a9c66f7612d713d754ca9ea2e4059a",
+        "url": "https://polyhaven.com/a/tree_small_02",
+        "triangles": 11909
+      }
+    ],
+    "sourceProvenance": "public/world/rooted-trees-v1/provenance.json",
+    "license": "CC0-1.0",
+    "classification": "Generic branching forms; not measured Hawaiian species",
+    "counts": {
+      "desktop": 260,
+      "compact": 260
+    },
+    "heightMetres": [
+      3.8,
+      14
+    ],
+    "layout": "Five unequal overlapping lobes; younger understory and middle crowns; retained older trees and fern groups",
+    "grounding": "Separate actual desktop/compact Valley triangles, nine buried supports, water/rock/trunk exclusion; 1001 actual rail samples with measured source envelope plus 4 m margin",
+    "sourceEnvelopeRadiusPerHeight": 1.12,
+    "windAndLod": "Existing source normalization, shared wind/depth and compact-crown-lod-1 reused for the small layer on both tiers",
+    "loading": "Efficient geometry is independent of device policy; reuse the established four-source desktop or two-source compact loader key. The first separate-pair desktop loading trial was rejected and preserved.",
+    "shadows": "Opt-in desktop nearby efficient-crown shadow; defaults off for existing callers and compact",
+    "originalAssetsChanged": false,
+    "additionalUniqueAssetRequests": 0,
+    "evidence": "output/releases/madagin-bank-canopy-20260909/publication.json",
+    "limits": "Local enclosure improves; repeated architecture, fine speckled foliage/shadows and broader landscape remain synthetic."
+  },
   "groundcoverBank": {
     "version": "groundcover-bank-1",
     "runtime": [

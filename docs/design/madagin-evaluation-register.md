@@ -324,3 +324,17 @@ Six decoded source forms lack COLOR_0. Production-function regression exercises 
 | Whole world / formal evaluation | 2 diagnostic / UNVERIFIED | Human still/motion equivalence and physical-phone/GPU/thermal remain unverified. Individual public budgets retain their targets. |
 
 The reindexed first trial is rejected for altering surviving foliage outside the patch; the final version preserves original variation indices. The official Rainbow Falls photo and played DLNR stream-bank interval (257.36–259.49 s) show denser overlapping layers, varied green illumination and irregular boulder flow. Actual terrain root fits establish support separately from visual acceptance. `groundcover-bank-release-20260909/review.html`, `visual-review.json` and final `publication.json` retain selected views, original local/public motion, every budget and exact source/alias/rollback proof. No new source assets or broader realism qualification.
+
+## September 9, 2026 — Connected near-bank canopy
+
+| View / category | Before to selected | Named defect and evidence |
+|---|---|---|
+| Near canopy / enclosure | 1 to 2 diagnostic | Connected young/middle crowns replace a broad gap on both sizes. Repeated fine architecture and speckled leaf/shadow patterns remain high severity. |
+| Waterfall / ecology | 2 retained, local upper-bank gain | Unequal canopy groups visible beyond the fall; sparse cliff foot, broad outlet and bare surrounding slopes remain high severity. |
+| Lake, Ridge, Summit / integrated continuity | 2 retained | Same geometry, water, camera and sun; existing trees and accepted ferns remain. Fixed 22-pair comparison has differing animation phases. |
+| Roots / camera clearance | Scoped technical pass | Actual terrain supports and source-derived envelope plus sampled rail clearance; separate from visual judgment. |
+| Held/full-flight motion | Diagnostic only | Original recordings and actual observed intervals are in visual-review.json; repeated mild wind and idealized water/weather remain. |
+| Reading / resource orders / inquiry | Retained | Nineteen local/public cases each; added canopy model/maps held through readiness, including constrained desktop. No inquiry transmission. |
+| Whole world / formal human and device gate | 2 diagnostic / UNVERIFIED | No averaged realism score, independent equivalence claim, physical-phone/GPU/thermal or working-mailbox claim. All actual budgets remain separate. |
+
+Real Rainbow Falls photography and official DLNR motion at 254.94–257.96 s show varied overlapping crowns, fine illuminated leaves and irregular exposed stream rock. Selected source bounds corrected the initial camera-envelope estimate before rendering. The first rendered trial improved enclosure but used a separate efficient-model loader key, adding about 1.7 MiB to desktop resource accounting. Reject that loading arrangement; retain planting and share each device tier's existing loader key. Final captures and gates repeat after the correction. `trial-1-loader-pair` preserves the original trial and its measurements. `bank-canopy-release-20260909/review.html` links matched views and original local/public motion; `output/releases/madagin-bank-canopy-20260909/publication.json` records exact source, provider/alias/rollback, final gates and individual budgets.
