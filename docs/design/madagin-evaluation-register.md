@@ -295,3 +295,18 @@ Evidence: `channel-rocks-release-20260908/review.html`, actual-source `rock-grou
 | Whole world / independent evaluation / devices | 2 diagnostic / UNVERIFIED | No category average, human 45-55% equivalence claim, physical-phone/GPU/thermal or mailbox qualification. |
 
 The first 38-tree trial was too sparse and remains preserved. The selected 111-tree revision is a partial bank-layer improvement. Real Rainbow Falls photography and played DLNR stream footage show much denser, better-lit enclosure and complex water/rock contact. `riparian-ecology-release-20260909/review.html` links 22 matched pairs and original local/public flight/held evidence. Actual-source root fits and final source/alias, sixty visitor/loading cases and every budget appear in `plant-grounding.json` and `publication.json`. The overlapped initial local motion measurement is excluded and repeated separately. Original assets, study work and prior rejected approaches remain untouched.
+
+
+## September 9, 2026 - Groundcover source color
+
+| View / category | Before to selected | Named defect and evidence |
+|---|---|---|
+| Near canopy / groundcover material | Black cast corrected; overall 2 retained | Lower foreground branches recover dark green detail. Flat oversized arrangements, sparse repeated trees and bare slopes remain high severity. |
+| Waterfall and Lake / groundcover material | Local color restored; overall 2 retained | Scattered dark patches better share scene illumination. Broad outlet, sparse cliff-foot ecology and idealized water remain high severity. |
+| Compact / scene continuity | 2 retained, no new visual benefit claimed | Legacy layer is omitted on compact/constrained desktop. Camera, geometry, ecology and asset requests remain exact. |
+| Other fixed views / integrated world | 2 retained | Recorded at unchanged cameras/sun. A material fix does not close geology, atmosphere or canopy architecture. |
+| Held and full-flight motion | Retained, diagnostic only | Actual original local/public motion is separate from still comparison. No new wind model or realistic-motion claim. |
+| Reading / loading / delivery | Retained | Persistent world, scrolling, steering, return/focus/history, fallbacks and resource orders checked separately. Inquiry is still copy/download-only. |
+| Whole world / independent evaluation | 2 diagnostic / UNVERIFIED | Human 45-55% equivalence and physical-phone/GPU/thermal evidence remain unverified. Individual public budgets stay explicit. |
+
+Six decoded source forms lack COLOR_0. Production-function regression exercises both absent and supplied color attributes while preserving transforms and shared source materials. Source correctness and 22 matched camera pairs do not replace visual judgment. The official Rainbow Falls photo and played DLNR stream-bank footage show stronger green variation, dense overlapping vegetation and irregular boulder flow. `groundcover-lighting-release-20260909/review.html` and final `publication.json` link original evidence and accepted scope. No extra visual trial or new asset was introduced; historical rejects remain preserved.

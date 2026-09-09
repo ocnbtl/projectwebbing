@@ -5208,7 +5208,8 @@ function prepareWatershedGroundcover(scene: Object3D, sourceKey: WatershedGround
       material.color.multiply(new Color(
         sourceKey === "fern" ? "#8f9f84" : sourceKey === "shrub" ? "#81957c" : "#70766f",
       ));
-      material.vertexColors = true;
+      // Instance tints are separate; only multiply source colors when they exist.
+      material.vertexColors = child.geometry.hasAttribute("color");
       material.depthWrite = true;
       material.emissive.set(foliage ? "#141f14" : "#0b0e0c");
       material.emissiveIntensity = foliage ? 0.09 : 0.025;

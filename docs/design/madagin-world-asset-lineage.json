@@ -1,4 +1,29 @@
 {
+  "groundcoverSourceColor": {
+    "version": "source-color-attribute-1",
+    "runtime": "src/components/internal/ridge-production-v116.tsx",
+    "method": "Enable vertex colors only for a geometry color attribute; instance tints remain independent. Source maps, geometry, transforms, palette, light and wind unchanged.",
+    "sources": [
+      {
+        "asset": "public/world/canopy-v1/fern.glb",
+        "sha256": "b1ff4cded168e4ebb321fdc6e208a5582d8c2449f6c031f0ac0871a52f7538be"
+      },
+      {
+        "asset": "public/world/canopy-v1/shrub.glb",
+        "sha256": "c5393d663eddf25c8eaff1e2c85eac2d26a7ba3bb6da067851ce8f7d7ad9c344"
+      },
+      {
+        "asset": "public/world/canopy-v1/rock.glb",
+        "sha256": "7c50d07519b3fcb9a2c8ca3971e5271af1fb682d83222936cc07fa0e95843e30"
+      }
+    ],
+    "originalAssetsChanged": false,
+    "additionalRequests": 0,
+    "additionalTriangles": 0,
+    "verification": "tools/evidence/verify-groundcover-materials.mjs",
+    "scope": "Legacy desktop scanned groundcover only; compact/constrained tier omits it. Existing source lineage and licensing below retained.",
+    "limits": "Flat overscaled source arrangements and insufficient overlapping canopy remain."
+  },
   "riparianEcology": {
     "version": "riparian-ecology-1",
     "runtime": [
