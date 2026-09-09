@@ -9,7 +9,7 @@ import {createDistantLeaves} from "./compact-tree-lod";
 
 // Species labels are deliberately absent: these licensed trees provide generic
 // branching architecture, not a measured reconstruction of Hawaiian ecology.
-export const ROOTED_TREES = {version:"rooted-trees-1",sources:[0,1].flatMap(i=>["near","far"].map(lod=>`/world/rooted-trees-v1/tree-${i}-${lod}.glb`))};
+export const ROOTED_TREES = {version:"rooted-trees-1",sources:[0,1].flatMap(i=>["near","far"].map(lod=>`/world/${lod==="far"?"leaf-canopy-v1":"rooted-trees-v1"}/tree-${i}-${lod}.glb`))};
 type Placement = number[];
 type Tree = {matrix:Matrix4;root:Vector3;color:Color;height:number};
 type Part = {geometry:Mesh["geometry"];material:MeshStandardMaterial;depth:MeshDepthMaterial;update:(time:number)=>void;far:boolean;distant:boolean};
@@ -147,7 +147,7 @@ export function RootedTrees({placements,zone,shadows,compact=false,efficient=fal
   useEffect(()=>{
     const element=document.documentElement;
     const previous=JSON.parse(element.dataset.madaginRootedTrees??"{}");
-    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
+    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,leafCoverage:"leaf-coverage-1",compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
     onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
   },[compact,efficient,groups,placements.length,zone,onReady]);

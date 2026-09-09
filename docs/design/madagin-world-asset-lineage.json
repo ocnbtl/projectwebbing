@@ -1,4 +1,61 @@
 {
+  "leafCoverage": {
+    "version": "leaf-coverage-1",
+    "runtime": "src/components/internal/rooted-trees.tsx",
+    "builder": "tools/gltf/build-canopy-leaf-coverage.mjs",
+    "sourceProvenance": "public/world/leaf-canopy-v1/provenance.json",
+    "sources": [
+      {
+        "path": "public/world/leaf-canopy-v1/tree-0-far.glb",
+        "sha256": "047bc6d3a72181117c174b58285ab1eb6ac97a06dde6d6cf080b2d648c3d137a",
+        "bytes": 828748,
+        "previousBytes": 433188,
+        "triangles": 35763,
+        "leaves": 9927,
+        "sourceLeaves": 29781,
+        "passed": true
+      },
+      {
+        "path": "public/world/leaf-canopy-v1/tree-1-far.glb",
+        "sha256": "f19c822c285e047db3dbfdc0b579e350eabf1a9a75ae86243f15786205958324",
+        "bytes": 667020,
+        "previousBytes": 353356,
+        "triangles": 22283,
+        "leaves": 10084,
+        "sourceLeaves": 30250,
+        "passed": true
+      }
+    ],
+    "license": "CC0-1.0",
+    "classification": "Existing generic Poly Haven branching forms; not measured Hawaiian species",
+    "reduction": "Keep one in three connected source leaves, retain original 2.05x local expansion; original near sources and all bark retained.",
+    "texturePolicy": "Reuse exact existing rooted-trees-v1 texture files; no new maps.",
+    "originalAssetsChanged": false,
+    "rawGlbByteDelta": 709224,
+    "sourcePairTriangleDelta": 27802,
+    "placement": "Existing tree counts, root supports, transforms and bank layout unchanged.",
+    "sourceEnvelopeRadiusPerHeight": 1.13,
+    "flightClearance": [
+      {
+        "compact": false,
+        "points": 1001,
+        "minClearance": 13.427327533960469,
+        "required": 4,
+        "passed": true
+      },
+      {
+        "compact": true,
+        "points": 1001,
+        "minClearance": 20.229989198234115,
+        "required": 4,
+        "passed": true
+      }
+    ],
+    "behavior": "Original lighting, cutouts, wind/depth, height-relative LOD, device loader key, cache/disposal and surrounding world code retained.",
+    "rejected": "Lighting-only trial was insufficient at normal viewing size; local source, stills and checkpoint holds retained. No full trial flight.",
+    "evidence": "output/releases/madagin-leaf-lighting-20260909/publication.json",
+    "limits": "Fuller efficient crowns improve local coverage. Fine speckles, generic repetition, broad bare landscape and synthetic water/weather remain; whole world 2/5 diagnostic."
+  },
   "bankCanopy": {
     "version": "bank-canopy-1",
     "runtime": [
@@ -32,15 +89,16 @@
       14
     ],
     "layout": "Five unequal overlapping lobes; younger understory and middle crowns; retained older trees and fern groups",
-    "grounding": "Separate actual desktop/compact Valley triangles, nine buried supports, water/rock/trunk exclusion; 1001 actual rail samples with measured source envelope plus 4 m margin",
-    "sourceEnvelopeRadiusPerHeight": 1.12,
+    "grounding": "Separate actual desktop/compact Valley triangles, nine buried supports, water/rock/trunk exclusion; 1001 actual rail samples with measured source envelope plus 4 m margin; fuller leafCoverage revision supersedes original 1.12 envelope and rail clearance, preserving root supports.",
+    "sourceEnvelopeRadiusPerHeight": 1.13,
     "windAndLod": "Existing source normalization, shared wind/depth and compact-crown-lod-1 reused for the small layer on both tiers",
     "loading": "Efficient geometry is independent of device policy; reuse the established four-source desktop or two-source compact loader key. The first separate-pair desktop loading trial was rejected and preserved.",
     "shadows": "Opt-in desktop nearby efficient-crown shadow; defaults off for existing callers and compact",
     "originalAssetsChanged": false,
     "additionalUniqueAssetRequests": 0,
     "evidence": "output/releases/madagin-bank-canopy-20260909/publication.json",
-    "limits": "Local enclosure improves; repeated architecture, fine speckled foliage/shadows and broader landscape remain synthetic."
+    "limits": "Local enclosure improves; repeated architecture, fine speckled foliage/shadows and broader landscape remain synthetic.",
+    "currentSourceRevision": "leafCoverage"
   },
   "groundcoverBank": {
     "version": "groundcover-bank-1",
@@ -3365,7 +3423,7 @@
         "cameraDelta": 0,
         "exactTimingSeconds": [
           27.5,
-          41.0,
+          41,
           45.5,
           49.5
         ],
@@ -3405,7 +3463,7 @@
         "beforeScore": 1,
         "afterScore": 3,
         "exactTimingSeconds": [
-          41.0,
+          41,
           45.5
         ],
         "newAssetBytes": 0,
