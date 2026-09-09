@@ -353,3 +353,19 @@ Real Rainbow Falls photography and official DLNR motion at 254.94–257.96 s sho
 | Cost / independent evaluation | Explicit tradeoff / UNVERIFIED | 709,224 additional raw GLB bytes; 27,802 more triangles per complete source pair, multiplied by visible instances. Actual transfer/readiness/heap/frame gates remain separate; no physical-device or human equivalence claim. |
 
 The official Rainbow Falls photograph and DLNR Kalalau stream-bank playback at 255.43–258.16 s show denser overlapping growth, brighter exposed leaf clusters, darker interiors and irregular wet boulders. The first lighting-only trial did not materially repair the normal-size sparse crown and remains under trial-1-lighting with stills and checkpoint holds; no uninterrupted trial flight was captured. Selected source coverage keeps one in three whole leaves with the existing 2.05x expansion and original lighting. Initial verification against the previous 1.12 envelope failed; the measured 1.12448 bound was corrected to a 1.13 verification envelope and freshly checked against both rails. This is a modest local acceptance, not closure of the speckle or integrated-world defect. leaf-lighting-release-20260909/review.html and the final publication record link exact source, reference/motion judgment, all gates and rollback.
+
+
+## September 9, 2026 — Supported desktop shadow filtering
+
+| View / criterion | Before → selected | Named change / remaining defect | Severity |
+|---|---|---|---|
+| Desktop near bank, Ridge held and Waterfall / shadow coherence | 1 → 2 | Harsh blocky foliage shadows become softer ground and crown shade; contact remains. Leaf geometry speckles and generic light response remain visible. | Medium remaining |
+| Compact and constrained desktop / shadows | Retained | Shadows stay disabled; no compact visual improvement claimed. | Existing limitation |
+| All required views / integrated lighting and realism | 2 → 2 | No change to sun, atmosphere, landforms, water, plant architecture or camera. This fixes a filtering defect; it does not close B. | High |
+| Navigation, reading, inquiry and startup | Retained functional acceptance | Nineteen original cases plus two actual program audits per environment. Exact final results are in publication.json. | Functional gate |
+
+Installed Three r182 does not map deprecated PCFSoftShadowMap to a filter and its internal fallback does not correct the renderer setting. The prior live 57 bound shadow-mode programs compiled Basic. Both R3F Canvas settings now use percentage/PCF; actual receiver functions verify filtered sampling and existing radius use. Compact remains disabled. Two runtime string changes, 15 surrounding modules and six unchanged tree GLBs are checked separately. No new sources or rendering dependency upgrade.
+
+Normal-size matched views and original flight/held observations, actual intervals and decisions: `output/releases/madagin-shadow-filter-20260909/visual-review.json`; public provenance and all individual unchanged budgets: `publication.json`; review: `shadow-filter-release-20260909/review.html`. Real Rainbow Falls imagery and fresh DLNR stream-bank playback show more coherent natural architecture, illumination and contact. These comparisons are diagnostic AI observations, not matched blind pairs or independent human judgments. The 45–55% still/motion gate remains UNVERIFIED, as do physical devices and mailbox delivery. No overall score increase.
+
+The first program fixture incorrectly required shadow-sampling functions in all mode-defined programs, including custom shaders that do not receive shadows. Its failed output is retained. The corrected fixture checks mode defines for every observed program and sampling/radius code only for actual receivers. This is a fixture correction, not a rejected visual implementation or runtime regression. Historical rejects remain preserved.

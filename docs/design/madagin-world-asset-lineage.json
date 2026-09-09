@@ -1,4 +1,17 @@
 {
+  "shadowFilter": {
+    "version": "supported-pcf-1",
+    "runtime": "src/components/internal/world-lab.tsx",
+    "change": "Both canvases: soft -> percentage for eligible desktop shadows; compact and constrained desktop remain disabled.",
+    "cause": "Installed R3F selects deprecated constant 2 for soft; Three r182 maps it to Basic. Actual prior public bound programs confirmed Basic.",
+    "selected": "Supported PCF with hardware shadow comparison and the retained radius 2.2.",
+    "sourceAssetsChanged": false,
+    "newAssets": 0,
+    "retained": "Sun direction/energy, 2048 map, 360 m footprint, snapped shadow target, bias, geometry, materials, source maps, foliage placement, wind and camera.",
+    "verification": "tools/evidence/verify-world-shadow-filter.mjs and tools/evidence/verify-shadow-retained.mjs",
+    "evidence": "output/releases/madagin-shadow-filter-20260909/publication.json",
+    "limits": "Desktop local shadow coherence improves. Compact visual policy unchanged. Generic leaf architecture and broader world remain synthetic; whole-world 2/5 diagnostic."
+  },
   "leafCoverage": {
     "version": "leaf-coverage-1",
     "runtime": "src/components/internal/rooted-trees.tsx",

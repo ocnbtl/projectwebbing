@@ -1862,7 +1862,7 @@ export function WorldLab() {
                 camera={{ position: [112, 82, 280], fov: 42, near: 0.2, far: 2600 }}
                 dpr={device.mobile ? [0.75, 1] : device.tier === "high" ? [1, 1.25] : [0.85, 1]}
                 gl={{ antialias: device.tier !== "conservative", powerPreference: "high-performance" }}
-                shadows={device.tier !== "conservative" && !device.mobile ? "soft" : false}
+                shadows={device.tier !== "conservative" && !device.mobile ? "percentage" : false}
                 onCreated={({ gl }) => {
                   gl.toneMapping = ACESFilmicToneMapping;
                   gl.toneMappingExposure = device.mobile ? 1.02 : 1.12;
@@ -2179,7 +2179,7 @@ export function PublicWorldExperience({ activeView, className, onReady, onUnavai
             camera={{ position: [112, 82, 280], fov: device.mobile ? 60 : 42, near: 0.2, far: 2600 }}
             dpr={device.mobile ? [0.75, 1] : [0.85, 1]}
             gl={{ antialias: device.mobile || device.tier !== "conservative", powerPreference: "high-performance" }}
-            shadows={device.tier !== "conservative" && !device.mobile ? "soft" : false}
+            shadows={device.tier !== "conservative" && !device.mobile ? "percentage" : false}
             onCreated={({ gl }) => {
               gl.toneMapping = ACESFilmicToneMapping;
               gl.toneMappingExposure = device.mobile ? 0.98 : 1.05;
