@@ -280,3 +280,18 @@ Evidence: `terrain-startup-release-20260908/review.html`, `output/releases/madag
 | Whole-world / independent evaluation | 2 diagnostic / UNVERIFIED | No category average or self-certified 45–55% human equivalence. Still and motion, physical devices and delivery remain separate gates. |
 
 Evidence: `channel-rocks-release-20260908/review.html`, actual-source `rock-grounding.json`, unchanged-function `retained-source.json` and final `publication.json`. Twenty-two matched camera pairs preserve sun/FOV/rail; animation phases differ. Original full flights and stationary holds remain distinct from reference footage and formal testing. Official Rainbow Falls photography and the DLNR Kalalau boulder-stream interval explain why layered dense vegetation, uneven exposed rock and local flow interruption are still needed. Actual observed intervals and accept/reject decisions are in the current visual record. All budgets retain their existing thresholds; compact additional downloads and any desktop/readiness failures remain visible.
+
+## September 9, 2026 - Rooted riparian layers
+
+| View / category | Before to selected | Named defect and evidence |
+|---|---|---|
+| Waterfall / bank ecology, both sizes | 1 to 2 diagnostic | Fern/small-tree groups add a middle layer beside outlet and river. Broad exposed areas and sparse cliff-foot canopy remain high severity. |
+| Lake / channel approach | 2 retained, local layering improved | Separated plants join some rock shoulders to larger trees. Engineered channel and missing local flow response remain high severity. |
+| Near canopy / architecture and light | 2 retained | Bare slope, thin repeated canopy and older dark branch patches remain high severity; new plants do not solve this view. |
+| Opening, Ridge held/exit, Summit / continuity | 2 retained | Same terrain/water/rail/sun/original ecology. Integrated realism remains open. |
+| Stationary and full-flight motion | Diagnostic only | Original recordings and observed intervals in visual record; shared mild wind and moving water are not proof of photographic realism. |
+| About, Projects, Blog / reading and steering | Retained | Persistent canvas, independent scrolling, outside steering, return/history/focus/routes/fallbacks checked separately. |
+| Plant loading / resource order | Added | Five model/map cases include constrained desktop and stale stages. Current-mount meshes precede flight/poster release. Readiness target remains 8 seconds. |
+| Whole world / independent evaluation / devices | 2 diagnostic / UNVERIFIED | No category average, human 45-55% equivalence claim, physical-phone/GPU/thermal or mailbox qualification. |
+
+The first 38-tree trial was too sparse and remains preserved. The selected 111-tree revision is a partial bank-layer improvement. Real Rainbow Falls photography and played DLNR stream footage show much denser, better-lit enclosure and complex water/rock contact. `riparian-ecology-release-20260909/review.html` links 22 matched pairs and original local/public flight/held evidence. Actual-source root fits and final source/alias, sixty visitor/loading cases and every budget appear in `plant-grounding.json` and `publication.json`. The overlapped initial local motion measurement is excluded and repeated separately. Original assets, study work and prior rejected approaches remain untouched.

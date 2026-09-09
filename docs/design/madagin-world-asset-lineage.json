@@ -1,4 +1,44 @@
 {
+  "riparianEcology": {
+    "version": "riparian-ecology-1",
+    "runtime": [
+      "src/components/internal/riparian-ecology.tsx",
+      "src/components/internal/riparian-plant-geometry.ts",
+      "src/components/internal/riparian-placements.json"
+    ],
+    "source": "public/world/canopy-v1/fern.glb",
+    "sourceUrl": "https://polyhaven.com/a/fern_02",
+    "creators": [
+      "Rico Cilliers (modeling)",
+      "Rob Tuytel (scanning)"
+    ],
+    "license": "CC0",
+    "sourceSha256": "b1ff4cded168e4ebb321fdc6e208a5582d8c2449f6c031f0ac0871a52f7538be",
+    "originalAssetsChanged": false,
+    "sourceForms": 4,
+    "counts": {
+      "desktop": {
+        "ferns": 214,
+        "smallTrees": 111
+      },
+      "compact": {
+        "ferns": 219,
+        "smallTrees": 111
+      }
+    },
+    "smallTrees": "Retained rooted-trees-v1 pair and original lineage; generic source architecture, no Hawaiian species claim",
+    "placement": "Separate actual desktop/compact Valley triangles, nine embedded root samples; wet, rock-overlap, steep-root and buried-fern exclusion; eleven irregular candidate clusters",
+    "fernTriangles": {
+      "desktop": 333424,
+      "compact": 343304
+    },
+    "additionalCompactRawBytes": 610762,
+    "additionalDesktopAssets": false,
+    "materials": "Source maps and common light; roughness .88, AO .55, nonmetallic, alpha coverage .18 cutoff; restrained spatial wind with matching depth pass",
+    "rejected": "First sparse 38-tree trial superseded by 111-tree revision; Shrub 04 low branches not used as upright new plants",
+    "evidence": "output/releases/madagin-riparian-ecology-20260909/publication.json",
+    "limits": "Authored generic ecology; enclosed canopy, legacy dark groundcover and local water response remain open"
+  },
   "channelRocks": {
     "version": "channel-rocks-1",
     "runtime": [
