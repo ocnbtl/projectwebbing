@@ -1,4 +1,48 @@
 {
+  "groundcoverBank": {
+    "version": "groundcover-bank-1",
+    "runtime": [
+      "src/components/internal/groundcover-bank.ts",
+      "src/components/internal/groundcover-bank-placements.json",
+      "src/components/internal/riparian-ecology.tsx"
+    ],
+    "source": "public/world/canopy-v1/fern.glb",
+    "sourceUrl": "https://polyhaven.com/a/fern_02",
+    "creators": [
+      "Rico Cilliers (modeling)",
+      "Rob Tuytel (scanning)"
+    ],
+    "license": "CC0",
+    "sourceSha256": "b1ff4cded168e4ebb321fdc6e208a5582d8c2449f6c031f0ac0871a52f7538be",
+    "sourceForms": 4,
+    "originalAssetsChanged": false,
+    "additionalAssetRequests": 0,
+    "bounds": {
+      "minX": 250,
+      "maxX": 430,
+      "minZ": -745,
+      "maxZ": -575
+    },
+    "legacyFoliageAnchorsReplaced": 68,
+    "counts": {
+      "desktop": 655,
+      "compact": 0,
+      "constrainedDesktop": 0
+    },
+    "heightMetres": [
+      0.8,
+      1.9
+    ],
+    "fernTriangles": 959856,
+    "placement": "Actual desktop Valley triangles; nine embedded root supports, wet/rock-overlap/steep/buried-crown rejection; irregular groups seeded from existing habitat anchors.",
+    "sharedBehavior": "Existing riparian source normalizer, UVs/normals/maps, wind, deformed depth, readiness and disposal; original surviving legacy variation indices and rocks retained.",
+    "verification": [
+      "tools/evidence/bake-groundcover-bank.mjs",
+      "tools/evidence/verify-groundcover-bank.mjs",
+      "tools/evidence/verify-riparian-readiness.mjs"
+    ],
+    "limits": "Generic fern source, no Hawaiian species claim. Bounded local improvement; old arrangements outside bank and sparse repeated canopy remain. Added fern triangle count is not a measured net-scene delta."
+  },
   "groundcoverSourceColor": {
     "version": "source-color-attribute-1",
     "runtime": "src/components/internal/ridge-production-v116.tsx",

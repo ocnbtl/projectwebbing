@@ -32,6 +32,8 @@ try {
    await page.waitForTimeout(300);
    assert.ok(await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginRiparianEcology).version==='riparian-ecology-1'));
    assert.equal(await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginRiparianEcology).compact),width===390||constrained);
+   const bank=await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginGroundcoverBank));
+   assert.equal(bank.version,'groundcover-bank-1');assert.equal(bank.compact,width===390||constrained);assert.equal(bank.count,width===390||constrained?0:655);
    if(constrained)assert.equal(await page.locator('[data-public-world]').getAttribute('data-quality-tier'),'conservative');
    assert.ok(await page.evaluate(()=>window.__MADAGIN_RIDGE_STAGES_V116__.some(s=>s.at>0&&s.label==='riparian-ecology-ready')));
    assert.equal(await page.locator('canvas').evaluate(c=>getComputedStyle(c).opacity),'1');assert.deepEqual(errors,[]);

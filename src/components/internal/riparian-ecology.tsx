@@ -8,6 +8,7 @@ import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import {normalizeRiparianPlant} from "./riparian-plant-geometry";
 import {RootedTrees} from "./rooted-trees";
 import data from "./riparian-placements.json";
+import bank from "./groundcover-bank-placements.json";
 
 type Plant = {family: string; x: number; y: number; z: number; yaw: number; height: number; tint: number};
 type Part = {family: string; geometry: Mesh["geometry"]; material: MeshStandardMaterial; depth: MeshDepthMaterial; update: (time: number) => void};
@@ -77,11 +78,15 @@ export function RiparianEcology({compact, shadows, onReady}: {compact: boolean; 
     return result;
   }, [scene]);
   const selected = data[compact ? "compact" : "desktop"];
-  const batches = useMemo(() => parts.map(part => ({part, plants: selected.ferns.filter(p => p.family === part.family)})), [parts, selected]);
+  const batches = useMemo(() => {
+    const plants = compact ? selected.ferns : [...selected.ferns, ...bank.ferns];
+    return parts.map(part => ({part, plants: plants.filter(p => p.family === part.family)}));
+  }, [parts, selected, compact]);
   useEffect(() => {
     document.documentElement.dataset.madaginRiparianEcology = JSON.stringify({version: "riparian-ecology-1", compact, ferns: selected.ferns.length, saplings: selected.saplings.length, placement: "offline-dry-bank-triangles"});
+    document.documentElement.dataset.madaginGroundcoverBank = JSON.stringify({version: bank.version, count: compact ? 0 : bank.ferns.length, compact});
     onReady();
-    return () => {delete document.documentElement.dataset.madaginRiparianEcology;};
+    return () => {delete document.documentElement.dataset.madaginRiparianEcology; delete document.documentElement.dataset.madaginGroundcoverBank;};
   }, [compact, selected, onReady]);
   useEffect(() => () => parts.forEach(p => {p.geometry.dispose(); p.material.dispose(); p.depth.dispose();}), [parts]);
   return <group name="Layered dry riverbank vegetation">

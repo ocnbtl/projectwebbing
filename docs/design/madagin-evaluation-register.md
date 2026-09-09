@@ -310,3 +310,17 @@ The first 38-tree trial was too sparse and remains preserved. The selected 111-t
 | Whole world / independent evaluation | 2 diagnostic / UNVERIFIED | Human 45-55% equivalence and physical-phone/GPU/thermal evidence remain unverified. Individual public budgets stay explicit. |
 
 Six decoded source forms lack COLOR_0. Production-function regression exercises both absent and supplied color attributes while preserving transforms and shared source materials. Source correctness and 22 matched camera pairs do not replace visual judgment. The official Rainbow Falls photo and played DLNR stream-bank footage show stronger green variation, dense overlapping vegetation and irregular boulder flow. `groundcover-lighting-release-20260909/review.html` and final `publication.json` link original evidence and accepted scope. No extra visual trial or new asset was introduced; historical rejects remain preserved.
+
+## September 9, 2026 — Individually rooted bank ferns
+
+| View / category | Before to selected | Named defect and evidence |
+|---|---|---|
+| Near canopy / groundcover scale and support | Local improvement; overall 2 retained | Smaller rooted green fern groups replace a few oversized dark branch islands. Broad bare slope and thin repeated canopy remain high severity. |
+| Waterfall / bank ecology | Bounded improvement; overall 2 retained | Selected near-bank footprint improves; legacy arrangements outside it, sparse cliff foot and engineered water remain high severity. |
+| Compact / scene continuity | 2 retained, no new benefit claimed | Patch omitted on compact/constrained desktop; base riparian ferns, rocks and larger trees remain. |
+| Other fixed views / integrated world | 2 retained | Same camera/sun/world geometry and retained plant indices. Twenty-two matched camera pairs; animation phase differs. |
+| Held and continuous motion | Diagnostic only | Original source recordings and actual observation intervals are in the visual record. Shared mild wind is not proof of realistic motion. |
+| Reading / loading / delivery | Retained | Nineteen relevant local/public cases each; fern model/map readiness includes constrained desktop. Unchanged other resource-order source retains earlier proof. No inquiry transmission. |
+| Whole world / formal evaluation | 2 diagnostic / UNVERIFIED | Human still/motion equivalence and physical-phone/GPU/thermal remain unverified. Individual public budgets retain their targets. |
+
+The reindexed first trial is rejected for altering surviving foliage outside the patch; the final version preserves original variation indices. The official Rainbow Falls photo and played DLNR stream-bank interval (257.36–259.49 s) show denser overlapping layers, varied green illumination and irregular boulder flow. Actual terrain root fits establish support separately from visual acceptance. `groundcover-bank-release-20260909/review.html`, `visual-review.json` and final `publication.json` retain selected views, original local/public motion, every budget and exact source/alias/rollback proof. No new source assets or broader realism qualification.

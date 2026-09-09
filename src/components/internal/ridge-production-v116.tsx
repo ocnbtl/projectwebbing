@@ -30,6 +30,7 @@ import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
 import {ChannelRocks} from "./channel-rocks";
 import {RiparianEcology} from "./riparian-ecology";
+import {inGroundcoverBank} from "./groundcover-bank";
 import {RidgeCanopy} from "./ridge-canopy";
 import {RIDGE_HEADWATER_VERSION, RIDGE_HEADWATER_START, RIDGE_HEADWATER_END, ridgeHeadwaterLevel, ridgeHeadwaterHalfWidth, ridgeRiverCenter, valleyRiverLevel} from "./ridge-headwater";
 import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-cliff";
@@ -5333,11 +5334,14 @@ function regionalGroundcoverSource(placement: PlacementTuple, index: number, zon
   return signature % 3 === 0 ? "shrub" : "fern";
 }
 
-function InstancedWatershedGroundcover({ part, placements, shadows }: {
+function InstancedWatershedGroundcover({ part, placements: originalPlacements, shadows }: {
   part: WatershedGroundcoverPart;
   placements: PlacementTuple[];
   shadows: boolean;
 }) {
+  const placements = useMemo(() => part.sourceKey === "rock" ? originalPlacements
+    : originalPlacements.filter(p => !inGroundcoverBank(p[2], p[4])), [originalPlacements, part.sourceKey]);
+  const sourceIndices = useMemo(() => new Map(originalPlacements.map((p, i) => [p, i])), [originalPlacements]);
   const ref = useRef<InstancedMesh>(null);
   useFrame(({ clock }) => updateLivingWind(part.material, clock.elapsedTime));
   useLayoutEffect(() => {
@@ -5348,7 +5352,7 @@ function InstancedWatershedGroundcover({ part, placements, shadows }: {
     const instanceColor = new Color();
     const baseScale = part.sourceKey === "fern" ? 8.5 : part.sourceKey === "shrub" ? 14.5 : 38;
     placements.forEach((placement, index) => {
-      const signature = Math.abs(Math.round(placement[2] * 0.43 + placement[4] * 0.29 + index * 17 + placement[9]));
+      const signature = Math.abs(Math.round(placement[2] * 0.43 + placement[4] * 0.29 + sourceIndices.get(placement)! * 17 + placement[9]));
       const variation = 0.82 + (signature % 11) * 0.042;
       const widthVariation = 0.78 + ((signature * 5) % 13) * 0.041;
       const depthVariation = 0.82 + ((signature * 7) % 9) * 0.047;
@@ -5383,15 +5387,15 @@ function InstancedWatershedGroundcover({ part, placements, shadows }: {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.computeBoundingBox();
     mesh.computeBoundingSphere();
-  }, [part.matrixWorld, part.sourceKey, placements]);
-  return (
+  }, [part.matrixWorld, part.sourceKey, placements, sourceIndices]);
+  return placements.length ? (
     <instancedMesh
       args={[part.geometry, part.material, placements.length]}
       castShadow={shadows && part.sourceKey === "rock"}
       receiveShadow
       ref={ref}
     />
-  );
+  ) : null;
 }
 
 function DetailedWatershedGroundcover({ placements, shadows }: {
