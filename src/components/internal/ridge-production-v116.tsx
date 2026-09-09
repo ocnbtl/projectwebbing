@@ -34,6 +34,7 @@ import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
 import {FALLING_WATER, FallingSpray, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
 import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
+import {PLUNGE_BASIN_VERSION, PLUNGE_POOL_CENTER, PLUNGE_POOL_RADIUS, PLUNGE_POOL_LEVEL, plungeBoundaryScale, plungeDistance, plungeBedLevel, plungeTerrainWeight, isPlungeWetPlant, createPlungeWaterMaterial} from "./plunge-basin";
 import {LAKE_SHORE_VERSION, LAKE_CENTER, LAKE_RADIUS, LAKE_WATER_LEVEL, LAKE_SHORE_GLSL, lakeBoundaryScale, lakeBoundaryDistance, lakeBedLevel} from "./lake-shore";
 import { TERRAIN_SURFACE, useTerrainSurface } from "./terrain-surface";
 
@@ -159,7 +160,8 @@ function useEcologyManifest(zone: V116Zone) {
   const raw = useLoader(FileLoader, `${ROOT}/ecology-${zone}-v1.16.json`) as unknown;
   return useMemo(() => {
     const source = typeof raw === "string" ? raw : new TextDecoder().decode(raw as ArrayBuffer);
-    const manifest=JSON.parse(source) as EcologyManifest;
+    const parsed=JSON.parse(source) as EcologyManifest;
+    const manifest={...parsed,instances:parsed.instances.filter(p=>!isPlungeWetPlant(p[2],p[3],p[4]))};
     return zone === "ridge" ? {...manifest,instances:manifest.instances.filter(p=>nativeCliffWeight(p[2],p[4])===0)} : manifest;
   }, [raw,zone]);
 }
@@ -450,7 +452,7 @@ const DETAILED_TERRAIN_OBJECTS: Record<DetailedTerrainZone, string> = {
 // a real continuous valley floor rather than hiding it with a decorative rim.
 const WATERFALL_TOP = { x: 190, y: 19.2, z: -730 } as const;
 const WATERFALL_BOTTOM = { x: 154, y: -43.7, z: -704 } as const;
-const PLUNGE_POOL_CENTER = { x: 151, z: -696 } as const;
+
 
 function saturate(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -6205,17 +6207,17 @@ function createWaterfallUpperStreamGeometry(longitudinalSegments: number, across
 }
 
 function createWaterfallPlungeGeometry(angularSegments: number, radialSegments: number) {
-  const positions: number[] = [PLUNGE_POOL_CENTER.x, WATERFALL_BOTTOM.y - 0.35, PLUNGE_POOL_CENTER.z];
+  const positions: number[] = [PLUNGE_POOL_CENTER.x, PLUNGE_POOL_LEVEL, PLUNGE_POOL_CENTER.z];
   const uvs: number[] = [0.5, 0.5];
   const indices: number[] = [];
   for (let ring = 1; ring <= radialSegments; ring += 1) {
-    const radius = Math.pow(ring / radialSegments, 0.88);
+    const radius = Math.pow(ring / radialSegments, 0.88) * 1.04;
     for (let segment = 0; segment < angularSegments; segment += 1) {
       const angle = segment / angularSegments * Math.PI * 2;
-      const irregular = 1 + Math.sin(angle * 3 + 0.6) * 0.085 + Math.sin(angle * 7 - 0.9) * 0.035;
-      const x = PLUNGE_POOL_CENTER.x + Math.cos(angle) * 39 * radius * irregular;
-      const z = PLUNGE_POOL_CENTER.z + Math.sin(angle) * 24 * radius * irregular;
-      positions.push(x, WATERFALL_BOTTOM.y - 0.35 - radius * 0.18, z);
+      const irregular = plungeBoundaryScale(angle);
+      const x = PLUNGE_POOL_CENTER.x + Math.cos(angle) * PLUNGE_POOL_RADIUS.x * radius * irregular;
+      const z = PLUNGE_POOL_CENTER.z + Math.sin(angle) * PLUNGE_POOL_RADIUS.z * radius * irregular;
+      positions.push(x, PLUNGE_POOL_LEVEL, z);
       uvs.push(0.5 + Math.cos(angle) * radius * 0.5, 0.5 + Math.sin(angle) * radius * 0.5);
     }
   }
@@ -6477,6 +6479,7 @@ function createRidgeHeadwaterTerrain(source: BufferGeometry) {
       const x=(ax+bx+cx)/3,z=(az+bz+cz)/3;
       const edge=Math.max(Math.hypot(ax-bx,az-bz),Math.hypot(bx-cx,bz-cz),Math.hypot(cx-ax,cz-az));
       const across=Math.abs(x-v116RiverCenter(z)),width=ridgeChannelWidth(z),outflow=outflowAt(x,z);
+      if(Math.abs(z+696)<50+edge && Math.abs(x-151)<55+edge && plungeDistance(x,z)<1.45+edge/21 && edge>1.8)return true;
       if(outflow&&edge>Math.min(2,Math.max(.8,outflow.width*.65)))return true;
       return across<Math.max(14,width*3.5)+edge && edge>(across<width*2.4+edge?Math.min(2,width*.65):4.5);
     },false);
@@ -6486,12 +6489,14 @@ function createRidgeHeadwaterTerrain(source: BufferGeometry) {
   const p=geometry.getAttribute("position");let changed=0,maxCut=0,maxFill=0;
   for(let i=0;i<p.count;i++) {
     const x=p.getX(i),z=p.getZ(i),weight=ridgeChannelEnvelope(x,z),outflow=outflowAt(x,z);
-    if(weight===0&&!outflow)continue;
+    const poolWeight=plungeTerrainWeight(x,z);
+    if(weight===0&&!outflow&&poolWeight===0)continue;
     const width=ridgeChannelWidth(z),across=Math.abs(x-v116RiverCenter(z))/width;
     const level=z<RIDGE_HEADWATER_END?valleyRiverLevel(z):ridgeHeadwaterLevel(z);
     // A submerged bed and continuous low banks replace the floating source.
     const bed=level-.5+Math.pow(Math.min(across,2.2),1.7)*.42;
     const old=p.getY(i);let next=old+(bed-old)*weight;
+    if(poolWeight>0)next+=(plungeBedLevel(x,z)-next)*poolWeight;
     if(outflow) {
       // Cut an inlet through the new bank and into the main channel. The old
       // outflow stopped outside the bank and its fixed bed datum obstructed it.
@@ -6770,7 +6775,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   const activeWaterfallMaterial = useRef<ShaderMaterial | null>(null);
   const activeImpactMaterial = useRef<ShaderMaterial | null>(null);
   const waterMaterial = useMemo(() => createWaterMaterial(), []);
-  const poolMaterial = useMemo(() => createWaterMaterial("pool"), []);
+  const poolMaterial = useMemo(() => createPlungeWaterMaterial(V116_SUN_DIRECTION), []);
   const riverMaterial = useMemo(() => createWaterMaterial("river"), []);
   const headwaterMaterial = useMemo(() => createWaterMaterial("headwater"), []);
   const waterfallMaterial = useMemo(() => createWaterfallMaterial(), []);
@@ -6899,6 +6904,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     host.__MADAGIN_RIVER_CORRIDOR_V116__ = {...riverGeometry.userData.riverCorridor,ridgeHeadwater:ridgeHeadwaterGeometry.userData.ridgeHeadwater};
     document.documentElement.dataset.madaginRidgeHeadwater=RIDGE_HEADWATER_VERSION;
     document.documentElement.dataset.madaginLakeShore=LAKE_SHORE_VERSION;
+    document.documentElement.dataset.madaginPlungeBasin=PLUNGE_BASIN_VERSION;
     host.__MADAGIN_WATERFALL_LANDFORM_V116__ = {
       authority: "runtime remesh of active Valley terrain plus connected project-authored water surfaces",
       body: waterfallGeometry.userData.waterfallBody,

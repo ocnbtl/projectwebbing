@@ -1,4 +1,31 @@
 {
+  "plungeBasin": {
+    "version": "plunge-basin-1",
+    "runtime": [
+      "src/components/internal/plunge-basin.ts",
+      "src/components/internal/ridge-production-v116.tsx",
+      "src/components/internal/terrain-surface.ts"
+    ],
+    "source": "Authored scour profile in existing active Valley terrain; existing licensed surface scans and falling-water geometry",
+    "originalAssetsChanged": false,
+    "newRequests": false,
+    "profile": {
+      "center": [
+        151,
+        -696
+      ],
+      "radii": [
+        28,
+        21
+      ],
+      "waterLevel": -44.08,
+      "authoredBathymetry": true
+    },
+    "accepted": "Shared terrain/water/low-rock-bank profile, depth-dependent opacity, dissipating radial impact ripples, exclusion of submerged plant roots, retained macro cliff clearance and connected outlet",
+    "rejected": "Trial 1 removed macro basin and restored terrain across falling curtain; retained as trial-1-occluded-curtain",
+    "evidence": "output/releases/madagin-plunge-basin-20260908/publication.json",
+    "limits": "Smooth authored banks, broad outlet, missing stream boulders and dense riparian layers; no surveyed catchment or human realism claim"
+  },
   "lakeShore": {
     "version": "lake-shore-1",
     "files": [
@@ -311,7 +338,11 @@
   "spatialReadingRelease": {
     "assetsAdded": [],
     "sourcePolicy": "Existing accepted CF geometry, ecology and licensed textures; continuous early western coast and one shared sky/ocean/key-light sun direction. NOAA/WorldCover source experiment remains excluded.",
-    "runtimeFiles": ["src/components/internal/ridge-production-v116.tsx", "src/components/internal/world-atmosphere.tsx", "src/components/internal/world-lab.tsx"],
+    "runtimeFiles": [
+      "src/components/internal/ridge-production-v116.tsx",
+      "src/components/internal/world-atmosphere.tsx",
+      "src/components/internal/world-lab.tsx"
+    ],
     "verification": "output/playwright/madagin-world-progress/spatial-release-20260906/",
     "evaluation": "docs/design/madagin-evaluation-register.md",
     "publicationAuthority": "Owner standing authorization on September 6, 2026 for scoped website/world commits, pushes and production releases through the existing infrastructure."
@@ -524,9 +555,18 @@
     "productionTelemetry": {
       "architectureProfiles": 5,
       "regionalGroundcoverPlacements": 349,
-      "releasedPrimaryCanopyPlacements": [930, 938],
-      "volumetricCrownPlacements": [670, 715],
-      "volumetricCrownRenderedLobes": [1928, 2026],
+      "releasedPrimaryCanopyPlacements": [
+        930,
+        938
+      ],
+      "volumetricCrownPlacements": [
+        670,
+        715
+      ],
+      "volumetricCrownRenderedLobes": [
+        1928,
+        2026
+      ],
       "terrainContactMistBanks": 4,
       "canvasCount": 1,
       "videoCount": 0
@@ -709,7 +749,12 @@
       "bytes": 5140529,
       "vertices": 49228,
       "triangles": 76914,
-      "architectures": ["pachira_a", "pachira_b", "pachira_c", "pachira_d"],
+      "architectures": [
+        "pachira_a",
+        "pachira_b",
+        "pachira_c",
+        "pachira_d"
+      ],
       "policy": "balanced desktop Ridge, Valley, and Lake replacement anchors only; excluded from conservative/mobile and Alpine habitat"
     },
     "rejectedIterations": [
@@ -853,7 +898,10 @@
     "sourceAsset": {
       "provider": "Poly Haven",
       "asset": "Island Tree 03",
-      "authors": ["Rico Cilliers", "Rob Tuytel"],
+      "authors": [
+        "Rico Cilliers",
+        "Rob Tuytel"
+      ],
       "license": "CC0 1.0 Universal",
       "sourceUrl": "https://polyhaven.com/a/island_tree_03",
       "licenseUrl": "https://polyhaven.com/license",
@@ -888,7 +936,10 @@
       "sourceIslandTreeRidgePlacements": 26,
       "sourceIslandTreeValleyPlacements": 34,
       "crossedPlanesPerPlacement": 2,
-      "lakeRadiusMeters": [132.4, 94.6],
+      "lakeRadiusMeters": [
+        132.4,
+        94.6
+      ],
       "alpineSurfaceRelaxationIterations": 5,
       "alpineSurfaceRelaxationAdjustedVertices": 277700,
       "alpineSurfaceRelaxationMaximumAdjustmentMeters": 5.5,
@@ -955,8 +1006,14 @@
       "waterfallLowerHalfWidthMeters": 21.2,
       "waterfallFanCount": 2,
       "waterfallBraidedTransparentGaps": true,
-      "lakeRadiusMeters": [132.4, 94.6],
-      "lakeBedDepthRangeMeters": [0.34, 8.75],
+      "lakeRadiusMeters": [
+        132.4,
+        94.6
+      ],
+      "lakeBedDepthRangeMeters": [
+        0.34,
+        8.75
+      ],
       "lakeBedShorelineBands": 3,
       "oceanBreakerBands": 2,
       "oceanDisplacedPrimaryBreaker": true,
@@ -1287,7 +1344,10 @@
     "selectedTelemetry": {
       "candidate": "BZ",
       "northernCoastalBoundarySamples": 179,
-      "northernCoastalHeightfieldDimensions": [77, 179],
+      "northernCoastalHeightfieldDimensions": [
+        77,
+        179
+      ],
       "northernCoastalHeightfieldTriangles": 27056,
       "southernCoastalBoundarySamples": 39,
       "southernCoastalTriangles": 3648,
@@ -1675,7 +1735,11 @@
       "cloudBanks": 5,
       "cloudLobes": 20,
       "normalDesktopLegacyCoreThinning": true,
-      "visibleEcologyInstances": { "lake": 244, "ridge": 1466, "valley": 880 },
+      "visibleEcologyInstances": {
+        "lake": 244,
+        "ridge": 1466,
+        "valley": 880
+      },
       "canvasCount": 1,
       "videoCount": 0
     },
@@ -1768,8 +1832,28 @@
         "highDesktop": "Use v1.15 hero families plus a bounded stride-8 set of grounded Lake layer-1 placements and 7 eligible AJ Lake-approach layer-2 placements; render all 64 Candidate AV low-succession anchors through the existing fern/shrub path. Candidate AW selects one of every eight eligible Ridge / Valley / Alpine placements through the same deterministic signature, producing 52 / 50 / 7 sparse hero succession placements with a target-only 1.08 scale multiplier. Candidate AY adds zero Ridge placements and applies no Ridge scale change. Candidate BG then restores all 22 already-grounded layer-0/layer-1 canopy anchors inside BF's exact Contact bounds, adds 19 over BF's retained three, constrains the corridor to intact Pachira hero families, and applies a target-only 1.55 scale with no new asset or transfer.",
         "riparianDesktop": "Candidate AA20 supplies grounded lake-manifest layer-2 fern_02/shrub_04 habitat. Candidate AJ excludes every promoted tuple from both watershed and riparian selectors. Candidate AV separately allocates all 64 new anchors after the retained detailed/watershed/riparian selections, suppresses duplicate procedural geometry at those tuples, and records 105 balanced or 139 high combined grounded fern/shrub placements with one geometry authority per coordinate and no ornamental bank mesh. Candidate AW explicitly excludes Lake, so it does not alter the AV/AJ allocation or riparian authority.",
         "mobileOrConservative": "Retain v1.16 procedural species, expose three of every four grounded layer-0 placements plus one of every two secondary placements, retain the pre-AV lake-manifest riparian coordinates, explicitly exclude the 64 Candidate AV near-bank anchors from rendered geometry, return zero Candidate AW detailed or succession placements and zero Candidate AY drainage-coupled placements, and do not fetch v1.15 detailed GLBs.",
-        "safeMidVariants": [0, 1, 2, 3, 4, 5, 6, 7, 14, 15],
-        "excludedMidVariants": [8, 9, 10, 11, 12, 13, 16, 17],
+        "safeMidVariants": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          14,
+          15
+        ],
+        "excludedMidVariants": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          16,
+          17
+        ],
         "exclusionReason": "Blender inspection and Candidate B/C motion exposed very large decimated island-tree faces as pale triangular artifacts."
       },
       "status": "Candidate F source quality, T1 lake-zone density, V1 coastal dressing, X4 canopy, Z8 compact visibility, AA20 localized real fern/shrub structure, and AB3 compact visibility remain. Candidate AH increases balanced Valley/Lake real mid-asset replacement coverage by 406 already-grounded placements and removes unmatched branch-like shadow scratches without new assets or transfer bytes. Candidate AJ adds a visible but localized Lake-approach habitat-continuity gain through 56 balanced / 7 high already-grounded promotions. Candidate AV fills one former near-bank inventory void with 64 camera-safe grounded low anchors on balanced/high desktop, reuses the existing fern/shrub assets and draw path, adds 1,720 transferred manifest bytes per recorded mode, and leaves mobile rendering unchanged. Candidate AW reuses already-grounded Ridge, Valley, and Alpine placements to add a bounded intermediate-height stratum through 426 balanced or 109 high deterministic promotions at zero additional asset or transfer bytes and zero mobile geometry. Candidate AY couples balanced Ridge habitat to AX's actual drainage authority through 383 additional already-grounded placements and target-only scale, with zero added high/mobile placements and zero asset or transfer-byte change. Candidate BD couples the balanced eastern-Valley response to BB's exact catchment equations through 190 additional already-grounded placements, zero added high/mobile placements, and zero asset or transfer-byte change. Candidate BG closes the inverted high-versus-balanced Contact hierarchy with 19 additional already-grounded high-only Pachira hero anchors, zero balanced/mobile placements, zero new resources, and unchanged transfer. Repeated source forms, incomplete canopy continuity and diversity, other broad authored gaps, and the simplified mobile path keep overall ecology at score 2."
@@ -1967,108 +2051,414 @@
       "eight narrow second-order rills nested inside the four retained protected eastern-Valley catchments plus modestly strengthened unequal source-surface buttress wavelengths, reaching 25.134220 metres maximum incision and 9.716611 metres maximum uplift with zero topology, asset, transfer, draw-call, geometry-object, texture, camera, water, ecology-selector, or mobile-path change"
     ],
     "rejectedIterations": [
-      { "id": "v116-water-h", "reason": "The legacy wet-cliff support geometry rendered as a large black slab." },
-      { "id": "v116-water-i", "reason": "Over-aggressive alpha breakup made the waterfall body disappear." },
-      { "id": "v116-water-j-k", "reason": "The original waterfall geometry remained separated vertical strips and water normal motion read as bands." },
-      { "id": "v116-geology-m", "reason": "A waterfall rock-frame experiment stacked elongated source rocks into an artificial border; it is excluded from Q2." },
-      { "id": "v116-cumulative-reality-q", "reason": "Ten procedural terrain-noise octaves added redundant fragment cost; Q2 reduces the shader to three octaves while preserving the recorded image." },
-      { "id": "v116-cumulative-shoreline-s1", "reason": "Custom water and a full shoreline habitat treatment produced a pale seam plus a continuous black picket ring." },
-      { "id": "v116-cumulative-shoreline-s2", "reason": "The narrowed wet shelf still read as a continuous artificial pale ring and was removed." },
-      { "id": "v116-cumulative-reality-s4", "reason": "The first ocean calibration was milky and over-bright." },
-      { "id": "v116-cumulative-reality-s5", "reason": "A procedural foam term created a long unsupported white line across open water and was removed." },
-      { "id": "v116-cumulative-reality-s7-s9", "reason": "Camera-target experiments either slid the vertical world edge through the frame or exposed the finite ocean plane; Q2 targets were restored exactly." },
-      { "id": "v116-cumulative-coast-u1", "reason": "A measured PBR escarpment failed to hide the perfectly vertical source-terrain boundary and was removed from active source." },
-      { "id": "v116-cumulative-coast-u2-u17", "reason": "Direct wedges, relief/material variants, and overlap-profile experiments remained smooth, holed, disconnected, or visibly artificial and were not selected." },
-      { "id": "v116-cumulative-coast-u18-u22-u28", "reason": "Later welded/seam variants retained a harsher join or unnecessary terminal ecology cost; V1 keeps the bounded welded topology and trims duplicate Ridge ecology at summit." },
-      { "id": "w1-w3-watershed-bank", "reason": "Continuous and partially submerged lake-bank meshes still read as a dark ornamental collar or isolated black shelf; all lake-bank geometry was removed from active W2 source." },
-      { "id": "v116-cumulative-reality-w1", "reason": "The first recorded atmosphere/ecology mix loaded fern, moss, shrub, and moss-rock packages for a subtle delta, adding 5,890,157 transferred /world/ bytes on desktop/high; W2 rejects that cost and reuses rock_09 instead." },
-      { "id": "v116-cumulative-reality-x2", "reason": "The source-matched v1.15 continuous-water ribbon exposed a dark center seam and extended beyond the active v1.16 chunks; it was removed before X4 recording." },
-      { "id": "v116-cumulative-reality-y1", "reason": "The first connected waterfall body was too wide and opaque and still read as a flat card." },
-      { "id": "v116-cumulative-reality-y2", "reason": "A separate curved headwall mesh rendered as a black artificial slab; it was removed completely rather than used to disguise the source terrain." },
-      { "id": "v116-cumulative-reality-y4-y5", "reason": "The connected geometry improved the waterfall chapter, but chapter-gated water let the carved notch appear first and then pop into existence; Y6 keeps the full system visible across Clearing and Waterfall." },
-      { "id": "v116-cumulative-reality-z1-z3", "reason": "Early river surfaces ended at a full-width upstream cut or continued beneath the lake, producing an exposed cap and transparent overlap wedge; Z8 tapers the source and stops at the measured lake boundary." },
-      { "id": "v116-cumulative-reality-z5", "reason": "A widened multi-strip bank read as a pale runway and small dark rock instances read as scattered debris; both were removed." },
-      { "id": "v116-cumulative-reality-z6-z7", "reason": "Larger textured and neutralized rock variants still read as repeated brown or bright pasted debris, especially on mobile; the selected Z8 source mounts no new river-rock field." },
-      { "id": "v116-cumulative-reality-aa1-aa8", "reason": "Guessed seam caps, resolved boundary rows, and narrow tangent bridges either failed to mount or replaced the blue crack with a runway, shelf, lip, or visible draw boundary." },
-      { "id": "v116-cumulative-reality-aa9-aa18", "reason": "Single-mesh, boundary-wall, overlap-profile, measured-slope, and lateral-feather experiments still retained a hard grade or T-junction because their uniform bridge grid did not share the source boundary vertices." },
-      { "id": "v116-cumulative-reality-ab4", "reason": "A wet-basalt headwall shader amplified coarse waterfall terrain facets into broad horizontal color blocks and was fully removed; AB3 remained the selected mix for that cycle." },
-      { "id": "v116-cumulative-reality-ac1", "reason": "The genuine four-times active-Valley subdivision was retained, but subdivision alone produced too little visible change and did not remove the inherited horizontal headwall bands." },
-      { "id": "v116-cumulative-reality-ac2", "reason": "Reduced lake harmonics and oblique compact strata improved the compact path, but the detailed desktop waterfall headwall still carried elevation-dominant horizontal bands; AC3 supersedes the iteration." },
-      { "id": "v116-cumulative-reality-ad2-ad3", "reason": "A derived/welded western terrain shoulder made no visible change because exact-timing raycasts established that the dark Lake-side mass belongs to the retained Valley interior rather than an unloaded edge; both variants were removed." },
-      { "id": "v116-cumulative-reality-ad6", "reason": "Changing water depth-write/render ordering produced no defensible visible gain and was reverted." },
-      { "id": "v116-cumulative-reality-ad8", "reason": "Higher compact lake/river tessellation did not visibly improve the mobile checkpoint and was reverted." },
-      { "id": "v116-cumulative-reality-ad9", "reason": "Shoreline-only terrain subdivision created a translucent triangular comb, so the experiment was removed completely." },
-      { "id": "v116-cumulative-reality-ae1-ae2", "reason": "Removing hypothetical export walls affected zero triangles, and widening the Alpine transition produced no image change; exact-timing raycasts proved the remaining dark face is real Valley terrain, not an Alpine seam. Both experiments and their diagnostic picker were removed." },
-      { "id": "v116-cumulative-reality-af1-af2", "reason": "A first 604-vertex cliff envelope and Valley AO reduction were too narrow to repair the full 22.5-second wall; their useful diagnosis was retained while the selected envelope was widened." },
-      { "id": "v116-cumulative-reality-af5", "reason": "Increasing lake angular segments from 96/192/256 to 192/320/384 did not remove shoreline intersection steps and was reverted to avoid unsupported runtime cost." },
-      { "id": "v116-cumulative-reality-af6", "reason": "An exact analytic lake-boundary triangle cut followed by raised boundary vertices reproduced a translucent triangular comb across desktop and mobile; the entire cut and boundary lift were removed." },
-      { "id": "v116-cumulative-reality-ah1", "reason": "The first decoded Alpine-boundary remesh closed the later slit, but a shadow-bias-only adjustment was visually insufficient and the earlier Ridge-to-Valley slit remained; the useful Alpine topology change was retained and extended." },
-      { "id": "v116-cumulative-reality-ah2", "reason": "Replacing every eligible balanced Ridge/Valley/Lake anchor with detailed mid vegetation improved canopy mass but raised the Valley-first frame to roughly 10.3 million triangles; AH restores stride 2 on Ridge/Valley while retaining all eligible Lake replacements." },
-      { "id": "v116-cumulative-reality-ai1", "reason": "Extending and grading the shared-bank feeder reduced the blunt cutoff but preserved too much of the broad bright ribbon read; its structural terrain foundation was retained and narrowed." },
-      { "id": "v116-cumulative-reality-ai2", "reason": "Small source-aligned rock instances were effectively invisible from the journey camera and did not justify their additional scene complexity." },
-      { "id": "v116-cumulative-reality-ai3", "reason": "Larger source and riffle rocks became isolated black flecks across the headwall; the whole rock layer was removed before the selected AI recording." },
-      { "id": "v116-cumulative-reality-aj1-aj2", "reason": "Two real lake-planform cove/spur edits produced no defensible journey-camera improvement and were fully removed." },
-      { "id": "v116-cumulative-reality-aj3-aj6", "reason": "Subdivided active-terrain gully/rib variants were either visually insufficient or introduced an artificial notch or shelf; the entire terrain experiment was fully removed before AJ ecology work." },
-      { "id": "v116-cumulative-reality-aj9", "reason": "The broader Lake-approach promotion exposed a low water-adjacent tree; AJ excludes that anchor while retaining only the useful upper/mid-slope habitat gain." },
-      { "id": "v116-cumulative-reality-ak1-evidence", "reason": "The first diagnostic capture used the Ridge checkpoint rather than the Summit context reached by the full recorder, so it was retained only as a diagnostic and was not used for acceptance. AK2 re-ran every Contact form state in the correct Summit context before the source was recorded as AK." },
-      { "id": "v116-cumulative-reality-al1", "reason": "Supplying Ridge boundary heights to the compact Valley without spanning the measured 18.25 metre spatial separation converted intermittent bright pre-crest slits into one continuous crack; the edit was removed." },
-      { "id": "v116-cumulative-reality-al2", "reason": "The first exact-boundary connector established the correct topology but the copied Ridge surface lacked recomputed normals and rendered nearly black; the defective surface was rejected, normals were restored, and the corrected source was recorded as AL." },
-      { "id": "v116-cumulative-reality-am1", "reason": "The first real-source Alpine remesh proved geometry motion on detailed and compact paths, but short-frequency multi-scale relief made the face read as uniformly crumpled; that surface state was not selected." },
-      { "id": "v116-cumulative-reality-am2-material", "reason": "The longer-rib AM2 geometry established the selected structural direction, but its basalt and oxidized-rock range remained compressed toward tan; AM3 retained the geometry and supplied the selected bounded material separation before recording as AM." },
-      { "id": "v116-cumulative-reality-an1", "reason": "A depth-tested instanced 3D orographic field intersected the Alpine source but broad flattened bodies read as stacked saucers, especially on mobile; the field was not selected." },
-      { "id": "v116-cumulative-reality-an2", "reason": "Smaller overlapping cloud bodies removed the saucers but formed a rising smoke column rather than a terrain-following bank; the field was not selected." },
-      { "id": "v116-cumulative-reality-an3-an4", "reason": "A connected marching-cubes volume first exposed broad faint ellipses, then a contour-compressed density pass still exposed its smooth shell. The entire cloud branch and import were removed, and ridge-production-v116.tsx was restored byte-for-byte to AM." },
-      { "id": "v116-cumulative-reality-ao1-ao5", "reason": "Three grounded talus variants read as black flecks or orange slugs; two real-source Alpine ecotone variants were subpixel or raised checkpoint render cost without a defensible image gain. All talus and ecotone code was removed." },
-      { "id": "v116-cumulative-reality-ao6-ao8", "reason": "Higher lake segments, a full second uniform Valley subdivision, and increased water overlap isolated the source-grid shoreline as the cause, but segment/overlap-only states left the comb and the uniform pass was unnecessarily expensive." },
-      { "id": "v116-cumulative-reality-ao9-ao21", "reason": "Conforming topology, radial UV/opacity, full basin carving, river visibility, legacy-water visibility, opaque-water, and submerged-shader diagnostics isolated the remaining pale wedge to source terrain showing through transparent water; every diagnostic visibility/material override was removed." },
-      { "id": "v116-cumulative-reality-ao27", "reason": "One conforming shoreline pass saved about 123,000 active compact Valley triangles but visibly reintroduced the steep right-bank comb; the selected AO retains two passes, the smallest tested configuration that clears the exact P0." },
-      { "id": "v116-cumulative-reality-ap1-ap3", "reason": "The first bounded headwall remesh and material passes affected only the fall-side buttress while leaving most of the broad Lake-side curtain unchanged. A temporary magenta diagnostic isolated the footprint mismatch and was removed completely before natural material work continued." },
-      { "id": "v116-cumulative-reality-ap4-ap6", "reason": "Stronger macro relief, an expanded geometric footprint, and a talus/recession profile produced deep black folds, tears, or over-articulated upper-slope lines, especially in the compact checkpoint. Those amplitudes, profiles, and widened geometry selection were rejected." },
-      { "id": "v116-cumulative-reality-ap7", "reason": "A smoother basin-radial direction removed the black fold lines, but its natural 41-second compact frame retained a shelf-like inset on the left escarpment. The selected relief amplitude and vertical ledge lift were reduced before the candidate was recorded." },
-      { "id": "v116-cumulative-reality-ap8-compact-extra-pass", "reason": "The clean visual state initially stacked a headwall pass after AO's two compact shoreline passes, raising the active compact Valley from 308,222 to 571,997 triangles. AP removes that redundant compact pass, preserves AO topology, and retains the visible material/relief response without the 263,775-triangle increase." },
-      { "id": "v116-cumulative-reality-aq1-aq4", "reason": "River-bend, mouth, bidirectional terrain-correction, and targeted-subdivision experiments established that the analytic river surface sits several metres above the inherited source valley. The attempted corrections either made no visible incision or tore a dark trench through the active terrain; all AQ source edits were removed and AP was restored byte-for-byte." },
-      { "id": "v116-cumulative-reality-ar1", "reason": "A stronger Alpine-relief calibration made no defensible exact-frame gain and was fully removed." },
-      { "id": "v116-cumulative-reality-ar2-ar3", "reason": "Waterfall habitat-density variants repeated the same source forms at uniform spacing, contradicting the grounded ecological-authority boundary; the entire habitat branch was removed." },
-      { "id": "v116-cumulative-reality-ar4-ar6", "reason": "Accepted cloud-volume experiments were placed on and across the waterfall camera ray but remained invisible in the exact frame, so the volume branch was removed rather than claimed." },
-      { "id": "v116-cumulative-reality-ar7-ar8", "reason": "The first anisotropic spray calibrations were structurally valid but too faint at natural journey timing. AR retains the same deterministic split with a bounded visibility calibration that clears the dot artifact across balanced, high, and mobile evidence." },
-      { "id": "v116-cumulative-reality-as1", "reason": "Three broad near-bank coves moved real terrain, water, basin-bed, and river/lake boundaries together but left the far bank and pointed eastern leaf silhouette too smooth at the natural journey timings." },
-      { "id": "v116-cumulative-reality-as2", "reason": "A stronger near-bank calibration made the paired shoreline movement clearer without breaking the broad pale platter read; the near-bank direction was retained while structural far-bank features were added." },
-      { "id": "v116-cumulative-reality-as3", "reason": "Six broad far-bank cove/spur fields established the accepted irregular structural language, but the eastern terminus still pinched into a pointed leaf; AS adds one broad eastern recession and records the cleanest bounded state." },
-      { "id": "v116-cumulative-reality-at1", "reason": "The first lake-only macro-wave and irregular-normal response removed the dense diagonal comb but left a uniformly pale, nearly blank sheet with weaker readable basin depth than AS." },
-      { "id": "v116-cumulative-reality-at2", "reason": "The deeper basin calibration established the retained structural direction, but its strongest wind-facing band was too dark and exaggerated the lake-to-river value jump. AT retains the geometry and lowers that contrast while lightening the fixed shallow edge." },
-      { "id": "v116-cumulative-reality-au1", "reason": "The first shared terrain/water inlet flare established the useful structural width but carried 7.5 to 13 metres of transparent river geometry beneath the lake, exposing a dark polygonal footprint." },
-      { "id": "v116-cumulative-reality-au2-au3", "reason": "Reduced-overlap and edge-overlap variants removed most coplanar geometry but retained an overly long terminal optical band that still read as a rectangular patch." },
-      { "id": "v116-cumulative-reality-au4", "reason": "Fading the larger submerged overlap did not remove its visible footprint. AU rejects the under-lake branch and retains only the short rounded edge-overlap handoff." },
-      { "id": "v116-cumulative-reality-au5-au6", "reason": "AU5 established the retained geometry/material direction. AU6 then separated the original habitat centreline/width selector from the widened hydrologic authority so the accepted water/terrain repair does not reclassify ecology." },
-      { "id": "v116-cumulative-reality-au7", "reason": "Shortening the terminal optical transition from the final 10 percent to the final 6 percent removes the broad band while retaining the lake-matched handoff; this calibration is recorded as Candidate AU." },
-      { "id": "v116-cumulative-reality-av1", "reason": "Selecting 61 pre-existing deep-bank anchors by shader noise produced correct telemetry but no defensible exact-frame structure, so the selector was removed." },
-      { "id": "v116-cumulative-reality-av2-av3", "reason": "The 64 new grounded anchors at the retained groundcover scale were under-resolved; promoting 22 to detailed midstory made the layer visible but still sparse while adding a separate higher-cost vegetation path. AV retains neither calibration." },
-      { "id": "v116-cumulative-reality-av4", "reason": "Doubling the new inventory to 128 and retaining midstory promotion gave marginal image gain while the exact checkpoint rose from 84 to 98 calls and roughly 5.53 million triangles. The selected state restores 64 low anchors and the existing two-draw fern/shrub path." },
-      { "id": "v116-cumulative-reality-aw1", "reason": "The first multi-slope selector produced only 134 Ridge / 128 Valley / 20 Alpine balanced placements. It was structurally correct but under-resolved at the natural journey timings, so the sparse calibration was not selected." },
-      { "id": "v116-cumulative-reality-aw2-high", "reason": "The selected balanced density was retained, but the first high calibration mounted 113 Ridge / 92 Valley / 13 Alpine hero placements, reached 7,087,170 terminal triangles, and amplified dark branch-like scratches for a modest aerial gain. AW reduces high to 52 / 50 / 7 while retaining the balanced direction." },
-      { "id": "v116-cumulative-reality-ax1", "reason": "The first conforming Ridge remesh protected every source boundary and produced real-source channels, but its three drainage catchments left the right foreground mound under-resolved at the exact natural 0/5/15-second views. AX retains the same topology and envelope while distributing five irregular catchments across the visible Ridge interior." },
-      { "id": "v116-cumulative-reality-ay1-ay2", "reason": "The first two drainage-coupled ecology calibrations reused the correct AX catchment authority but remained too sparse to read clearly across the exact natural 0/5/15-second balanced views; neither density survives in selected AY." },
-      { "id": "v116-cumulative-reality-ay3", "reason": "The stronger catchment response became obvious, but its enlarged crowns read as oversized rather than subordinate ravine succession. AY retains the selection direction with lower bounded target scales." },
-      { "id": "v116-cumulative-reality-ay4-high", "reason": "The balanced calibration established the selected visible response, but an additional high branch produced no useful visual gain. AY removes all added high placements and preserves high as an independent control." },
-      { "id": "v116-cumulative-reality-az1", "reason": "Replacing the full 28-metre AH transition proved the independent-edge topology diagnosis and closed the bright slit, but visibly straightened the Valley into a broad planar ramp. AZ retains the exact Ridge boundary authority while narrowing source-surface replacement to the first 2.5-metre native cell." },
-      { "id": "v116-cumulative-reality-ba1-ba2", "reason": "The first two source-surface shoulder/drainage calibrations were structurally valid but remained under-resolved or read as the same isolated cone with a sharper needle at the natural 49.5-second view." },
-      { "id": "v116-cumulative-reality-ba3", "reason": "Near-equal uplift across three measured source summits proved the macroform direction but formed a crenellated tabletop, so the shoulder heights were reduced and separated into a descending crest." },
-      { "id": "v116-cumulative-reality-ba4-ba6", "reason": "Reduced-shoulder plus narrow/broad subtractive-crown calibrations exposed or pinched the authored dominant crown cluster into a thin spike, especially at the exact 53.7-second view. BA7 removes crown subtraction entirely and preserves the authored crown." },
-      { "id": "v116-cumulative-reality-bc1-bc2", "reason": "The first two monotonic staged-grade waterfall profiles were connected but projected their lateral/depth offsets as a serpentine curtain at the exact desktop Waterfall views; neither survives in active source." },
-      { "id": "v116-cumulative-reality-bc3", "reason": "Binding lateral progress to drop removed the explicit side offset, but the remaining depth ledges became an exaggerated zigzag in the 390x844 portrait control; BC3 is preserved only as rejected source/evidence." },
-      { "id": "v116-cumulative-reality-bc4", "reason": "The straight-centerline asymmetric braided-fan topology removed the portrait regression and established the selected structural direction, but its exact BB comparison was too subtle at scene scale. BC5 retains the topology with stronger bounded fan/waist amplitudes." },
-      { "id": "v116-cumulative-reality-bd1-bd3", "reason": "Three catchment-coupled ecology-only density/scale calibrations reused the correct BB trunk and branch equations but remained too subtle at natural Waterfall timing; none survives in active source." },
-      { "id": "v116-cumulative-reality-bd-structural1", "reason": "The first materially visible structural calibration deepened the right catchments but exposed too much broad tan relief across the shoulder. BD retains the hierarchy direction with lower incision, branch, buttress, and clamp amplitudes." },
-      { "id": "v116-cumulative-reality-be1-be3", "reason": "The first three near-bank source-surface calibrations ran too far across the measured fall line: visible amplitudes produced a shelf or enlarged tan face, while the safe upper-bank calibration was too subtle. None survives in active source." },
-      { "id": "v116-cumulative-reality-be4-be6", "reason": "Uplift-led controls removed the hard shelf but remained modest and retained the wrong cross-slope bias. Their evidence was kept as diagnostic control while exact raycasts and source normals established the selected fall-line direction." },
-      { "id": "v116-cumulative-reality-be9", "reason": "Doubling the adjoining upper-bank field improved the 25-second frame but became an oversized smooth trench and lip at the 30-second crossing. BE restores BE8's lower amplitudes and records the clean bounded state." },
-      { "id": "v116-cumulative-reality-bf1-bf3", "reason": "Habitat-only, rill-only, and combined close-camera calibrations were structurally valid but remained too subtle while the near-camera grass wall continued to dominate the Contact trailhead." },
-      { "id": "v116-cumulative-reality-bf4-bf9", "reason": "The first six desktop Contact camera searches exposed near-camera canopy/trunk obstruction, excessive aerial distance, or another broad slope. None survives in the selected anchor." },
-      { "id": "v116-cumulative-reality-bf11", "reason": "The right-shifted look target removed the left Valley wall but flattened the composition back into a broad slope. BF restores BF10's deeper Valley framing." },
-      { "id": "v116-cumulative-reality-bg1", "reason": "Restoring the seven missing high Contact layer-1 anchors was structurally bounded but inherited sparse bare hero-family silhouettes and remained materially below balanced." },
-      { "id": "v116-cumulative-reality-bg2", "reason": "Constraining those seven anchors to intact Pachira hero families removed the bare silhouettes but remained too sparse to close the visible quality inversion." },
-      { "id": "v116-cumulative-reality-bg3", "reason": "A Contact-only Pachira scale increase improved legibility but still left the 12 grounded layer-0 corridor anchors on the stride-14 base path. BG4 restores those anchors and is selected." },
-      { "id": "v116-cumulative-reality-bh1-bh3", "reason": "Three high-only catchment-canopy calibrations promoted 79, 115, and all 222 previously unselected grounded anchors inside the existing eastern-Valley envelope. Even the all-anchor state remained visually modest at exact 41.0/45.5/49.5-second timing relative to its geometry cost, so the entire added-canopy branch was removed and BG's selectors were restored byte-for-byte before structural terrain work." }
+      {
+        "id": "v116-water-h",
+        "reason": "The legacy wet-cliff support geometry rendered as a large black slab."
+      },
+      {
+        "id": "v116-water-i",
+        "reason": "Over-aggressive alpha breakup made the waterfall body disappear."
+      },
+      {
+        "id": "v116-water-j-k",
+        "reason": "The original waterfall geometry remained separated vertical strips and water normal motion read as bands."
+      },
+      {
+        "id": "v116-geology-m",
+        "reason": "A waterfall rock-frame experiment stacked elongated source rocks into an artificial border; it is excluded from Q2."
+      },
+      {
+        "id": "v116-cumulative-reality-q",
+        "reason": "Ten procedural terrain-noise octaves added redundant fragment cost; Q2 reduces the shader to three octaves while preserving the recorded image."
+      },
+      {
+        "id": "v116-cumulative-shoreline-s1",
+        "reason": "Custom water and a full shoreline habitat treatment produced a pale seam plus a continuous black picket ring."
+      },
+      {
+        "id": "v116-cumulative-shoreline-s2",
+        "reason": "The narrowed wet shelf still read as a continuous artificial pale ring and was removed."
+      },
+      {
+        "id": "v116-cumulative-reality-s4",
+        "reason": "The first ocean calibration was milky and over-bright."
+      },
+      {
+        "id": "v116-cumulative-reality-s5",
+        "reason": "A procedural foam term created a long unsupported white line across open water and was removed."
+      },
+      {
+        "id": "v116-cumulative-reality-s7-s9",
+        "reason": "Camera-target experiments either slid the vertical world edge through the frame or exposed the finite ocean plane; Q2 targets were restored exactly."
+      },
+      {
+        "id": "v116-cumulative-coast-u1",
+        "reason": "A measured PBR escarpment failed to hide the perfectly vertical source-terrain boundary and was removed from active source."
+      },
+      {
+        "id": "v116-cumulative-coast-u2-u17",
+        "reason": "Direct wedges, relief/material variants, and overlap-profile experiments remained smooth, holed, disconnected, or visibly artificial and were not selected."
+      },
+      {
+        "id": "v116-cumulative-coast-u18-u22-u28",
+        "reason": "Later welded/seam variants retained a harsher join or unnecessary terminal ecology cost; V1 keeps the bounded welded topology and trims duplicate Ridge ecology at summit."
+      },
+      {
+        "id": "w1-w3-watershed-bank",
+        "reason": "Continuous and partially submerged lake-bank meshes still read as a dark ornamental collar or isolated black shelf; all lake-bank geometry was removed from active W2 source."
+      },
+      {
+        "id": "v116-cumulative-reality-w1",
+        "reason": "The first recorded atmosphere/ecology mix loaded fern, moss, shrub, and moss-rock packages for a subtle delta, adding 5,890,157 transferred /world/ bytes on desktop/high; W2 rejects that cost and reuses rock_09 instead."
+      },
+      {
+        "id": "v116-cumulative-reality-x2",
+        "reason": "The source-matched v1.15 continuous-water ribbon exposed a dark center seam and extended beyond the active v1.16 chunks; it was removed before X4 recording."
+      },
+      {
+        "id": "v116-cumulative-reality-y1",
+        "reason": "The first connected waterfall body was too wide and opaque and still read as a flat card."
+      },
+      {
+        "id": "v116-cumulative-reality-y2",
+        "reason": "A separate curved headwall mesh rendered as a black artificial slab; it was removed completely rather than used to disguise the source terrain."
+      },
+      {
+        "id": "v116-cumulative-reality-y4-y5",
+        "reason": "The connected geometry improved the waterfall chapter, but chapter-gated water let the carved notch appear first and then pop into existence; Y6 keeps the full system visible across Clearing and Waterfall."
+      },
+      {
+        "id": "v116-cumulative-reality-z1-z3",
+        "reason": "Early river surfaces ended at a full-width upstream cut or continued beneath the lake, producing an exposed cap and transparent overlap wedge; Z8 tapers the source and stops at the measured lake boundary."
+      },
+      {
+        "id": "v116-cumulative-reality-z5",
+        "reason": "A widened multi-strip bank read as a pale runway and small dark rock instances read as scattered debris; both were removed."
+      },
+      {
+        "id": "v116-cumulative-reality-z6-z7",
+        "reason": "Larger textured and neutralized rock variants still read as repeated brown or bright pasted debris, especially on mobile; the selected Z8 source mounts no new river-rock field."
+      },
+      {
+        "id": "v116-cumulative-reality-aa1-aa8",
+        "reason": "Guessed seam caps, resolved boundary rows, and narrow tangent bridges either failed to mount or replaced the blue crack with a runway, shelf, lip, or visible draw boundary."
+      },
+      {
+        "id": "v116-cumulative-reality-aa9-aa18",
+        "reason": "Single-mesh, boundary-wall, overlap-profile, measured-slope, and lateral-feather experiments still retained a hard grade or T-junction because their uniform bridge grid did not share the source boundary vertices."
+      },
+      {
+        "id": "v116-cumulative-reality-ab4",
+        "reason": "A wet-basalt headwall shader amplified coarse waterfall terrain facets into broad horizontal color blocks and was fully removed; AB3 remained the selected mix for that cycle."
+      },
+      {
+        "id": "v116-cumulative-reality-ac1",
+        "reason": "The genuine four-times active-Valley subdivision was retained, but subdivision alone produced too little visible change and did not remove the inherited horizontal headwall bands."
+      },
+      {
+        "id": "v116-cumulative-reality-ac2",
+        "reason": "Reduced lake harmonics and oblique compact strata improved the compact path, but the detailed desktop waterfall headwall still carried elevation-dominant horizontal bands; AC3 supersedes the iteration."
+      },
+      {
+        "id": "v116-cumulative-reality-ad2-ad3",
+        "reason": "A derived/welded western terrain shoulder made no visible change because exact-timing raycasts established that the dark Lake-side mass belongs to the retained Valley interior rather than an unloaded edge; both variants were removed."
+      },
+      {
+        "id": "v116-cumulative-reality-ad6",
+        "reason": "Changing water depth-write/render ordering produced no defensible visible gain and was reverted."
+      },
+      {
+        "id": "v116-cumulative-reality-ad8",
+        "reason": "Higher compact lake/river tessellation did not visibly improve the mobile checkpoint and was reverted."
+      },
+      {
+        "id": "v116-cumulative-reality-ad9",
+        "reason": "Shoreline-only terrain subdivision created a translucent triangular comb, so the experiment was removed completely."
+      },
+      {
+        "id": "v116-cumulative-reality-ae1-ae2",
+        "reason": "Removing hypothetical export walls affected zero triangles, and widening the Alpine transition produced no image change; exact-timing raycasts proved the remaining dark face is real Valley terrain, not an Alpine seam. Both experiments and their diagnostic picker were removed."
+      },
+      {
+        "id": "v116-cumulative-reality-af1-af2",
+        "reason": "A first 604-vertex cliff envelope and Valley AO reduction were too narrow to repair the full 22.5-second wall; their useful diagnosis was retained while the selected envelope was widened."
+      },
+      {
+        "id": "v116-cumulative-reality-af5",
+        "reason": "Increasing lake angular segments from 96/192/256 to 192/320/384 did not remove shoreline intersection steps and was reverted to avoid unsupported runtime cost."
+      },
+      {
+        "id": "v116-cumulative-reality-af6",
+        "reason": "An exact analytic lake-boundary triangle cut followed by raised boundary vertices reproduced a translucent triangular comb across desktop and mobile; the entire cut and boundary lift were removed."
+      },
+      {
+        "id": "v116-cumulative-reality-ah1",
+        "reason": "The first decoded Alpine-boundary remesh closed the later slit, but a shadow-bias-only adjustment was visually insufficient and the earlier Ridge-to-Valley slit remained; the useful Alpine topology change was retained and extended."
+      },
+      {
+        "id": "v116-cumulative-reality-ah2",
+        "reason": "Replacing every eligible balanced Ridge/Valley/Lake anchor with detailed mid vegetation improved canopy mass but raised the Valley-first frame to roughly 10.3 million triangles; AH restores stride 2 on Ridge/Valley while retaining all eligible Lake replacements."
+      },
+      {
+        "id": "v116-cumulative-reality-ai1",
+        "reason": "Extending and grading the shared-bank feeder reduced the blunt cutoff but preserved too much of the broad bright ribbon read; its structural terrain foundation was retained and narrowed."
+      },
+      {
+        "id": "v116-cumulative-reality-ai2",
+        "reason": "Small source-aligned rock instances were effectively invisible from the journey camera and did not justify their additional scene complexity."
+      },
+      {
+        "id": "v116-cumulative-reality-ai3",
+        "reason": "Larger source and riffle rocks became isolated black flecks across the headwall; the whole rock layer was removed before the selected AI recording."
+      },
+      {
+        "id": "v116-cumulative-reality-aj1-aj2",
+        "reason": "Two real lake-planform cove/spur edits produced no defensible journey-camera improvement and were fully removed."
+      },
+      {
+        "id": "v116-cumulative-reality-aj3-aj6",
+        "reason": "Subdivided active-terrain gully/rib variants were either visually insufficient or introduced an artificial notch or shelf; the entire terrain experiment was fully removed before AJ ecology work."
+      },
+      {
+        "id": "v116-cumulative-reality-aj9",
+        "reason": "The broader Lake-approach promotion exposed a low water-adjacent tree; AJ excludes that anchor while retaining only the useful upper/mid-slope habitat gain."
+      },
+      {
+        "id": "v116-cumulative-reality-ak1-evidence",
+        "reason": "The first diagnostic capture used the Ridge checkpoint rather than the Summit context reached by the full recorder, so it was retained only as a diagnostic and was not used for acceptance. AK2 re-ran every Contact form state in the correct Summit context before the source was recorded as AK."
+      },
+      {
+        "id": "v116-cumulative-reality-al1",
+        "reason": "Supplying Ridge boundary heights to the compact Valley without spanning the measured 18.25 metre spatial separation converted intermittent bright pre-crest slits into one continuous crack; the edit was removed."
+      },
+      {
+        "id": "v116-cumulative-reality-al2",
+        "reason": "The first exact-boundary connector established the correct topology but the copied Ridge surface lacked recomputed normals and rendered nearly black; the defective surface was rejected, normals were restored, and the corrected source was recorded as AL."
+      },
+      {
+        "id": "v116-cumulative-reality-am1",
+        "reason": "The first real-source Alpine remesh proved geometry motion on detailed and compact paths, but short-frequency multi-scale relief made the face read as uniformly crumpled; that surface state was not selected."
+      },
+      {
+        "id": "v116-cumulative-reality-am2-material",
+        "reason": "The longer-rib AM2 geometry established the selected structural direction, but its basalt and oxidized-rock range remained compressed toward tan; AM3 retained the geometry and supplied the selected bounded material separation before recording as AM."
+      },
+      {
+        "id": "v116-cumulative-reality-an1",
+        "reason": "A depth-tested instanced 3D orographic field intersected the Alpine source but broad flattened bodies read as stacked saucers, especially on mobile; the field was not selected."
+      },
+      {
+        "id": "v116-cumulative-reality-an2",
+        "reason": "Smaller overlapping cloud bodies removed the saucers but formed a rising smoke column rather than a terrain-following bank; the field was not selected."
+      },
+      {
+        "id": "v116-cumulative-reality-an3-an4",
+        "reason": "A connected marching-cubes volume first exposed broad faint ellipses, then a contour-compressed density pass still exposed its smooth shell. The entire cloud branch and import were removed, and ridge-production-v116.tsx was restored byte-for-byte to AM."
+      },
+      {
+        "id": "v116-cumulative-reality-ao1-ao5",
+        "reason": "Three grounded talus variants read as black flecks or orange slugs; two real-source Alpine ecotone variants were subpixel or raised checkpoint render cost without a defensible image gain. All talus and ecotone code was removed."
+      },
+      {
+        "id": "v116-cumulative-reality-ao6-ao8",
+        "reason": "Higher lake segments, a full second uniform Valley subdivision, and increased water overlap isolated the source-grid shoreline as the cause, but segment/overlap-only states left the comb and the uniform pass was unnecessarily expensive."
+      },
+      {
+        "id": "v116-cumulative-reality-ao9-ao21",
+        "reason": "Conforming topology, radial UV/opacity, full basin carving, river visibility, legacy-water visibility, opaque-water, and submerged-shader diagnostics isolated the remaining pale wedge to source terrain showing through transparent water; every diagnostic visibility/material override was removed."
+      },
+      {
+        "id": "v116-cumulative-reality-ao27",
+        "reason": "One conforming shoreline pass saved about 123,000 active compact Valley triangles but visibly reintroduced the steep right-bank comb; the selected AO retains two passes, the smallest tested configuration that clears the exact P0."
+      },
+      {
+        "id": "v116-cumulative-reality-ap1-ap3",
+        "reason": "The first bounded headwall remesh and material passes affected only the fall-side buttress while leaving most of the broad Lake-side curtain unchanged. A temporary magenta diagnostic isolated the footprint mismatch and was removed completely before natural material work continued."
+      },
+      {
+        "id": "v116-cumulative-reality-ap4-ap6",
+        "reason": "Stronger macro relief, an expanded geometric footprint, and a talus/recession profile produced deep black folds, tears, or over-articulated upper-slope lines, especially in the compact checkpoint. Those amplitudes, profiles, and widened geometry selection were rejected."
+      },
+      {
+        "id": "v116-cumulative-reality-ap7",
+        "reason": "A smoother basin-radial direction removed the black fold lines, but its natural 41-second compact frame retained a shelf-like inset on the left escarpment. The selected relief amplitude and vertical ledge lift were reduced before the candidate was recorded."
+      },
+      {
+        "id": "v116-cumulative-reality-ap8-compact-extra-pass",
+        "reason": "The clean visual state initially stacked a headwall pass after AO's two compact shoreline passes, raising the active compact Valley from 308,222 to 571,997 triangles. AP removes that redundant compact pass, preserves AO topology, and retains the visible material/relief response without the 263,775-triangle increase."
+      },
+      {
+        "id": "v116-cumulative-reality-aq1-aq4",
+        "reason": "River-bend, mouth, bidirectional terrain-correction, and targeted-subdivision experiments established that the analytic river surface sits several metres above the inherited source valley. The attempted corrections either made no visible incision or tore a dark trench through the active terrain; all AQ source edits were removed and AP was restored byte-for-byte."
+      },
+      {
+        "id": "v116-cumulative-reality-ar1",
+        "reason": "A stronger Alpine-relief calibration made no defensible exact-frame gain and was fully removed."
+      },
+      {
+        "id": "v116-cumulative-reality-ar2-ar3",
+        "reason": "Waterfall habitat-density variants repeated the same source forms at uniform spacing, contradicting the grounded ecological-authority boundary; the entire habitat branch was removed."
+      },
+      {
+        "id": "v116-cumulative-reality-ar4-ar6",
+        "reason": "Accepted cloud-volume experiments were placed on and across the waterfall camera ray but remained invisible in the exact frame, so the volume branch was removed rather than claimed."
+      },
+      {
+        "id": "v116-cumulative-reality-ar7-ar8",
+        "reason": "The first anisotropic spray calibrations were structurally valid but too faint at natural journey timing. AR retains the same deterministic split with a bounded visibility calibration that clears the dot artifact across balanced, high, and mobile evidence."
+      },
+      {
+        "id": "v116-cumulative-reality-as1",
+        "reason": "Three broad near-bank coves moved real terrain, water, basin-bed, and river/lake boundaries together but left the far bank and pointed eastern leaf silhouette too smooth at the natural journey timings."
+      },
+      {
+        "id": "v116-cumulative-reality-as2",
+        "reason": "A stronger near-bank calibration made the paired shoreline movement clearer without breaking the broad pale platter read; the near-bank direction was retained while structural far-bank features were added."
+      },
+      {
+        "id": "v116-cumulative-reality-as3",
+        "reason": "Six broad far-bank cove/spur fields established the accepted irregular structural language, but the eastern terminus still pinched into a pointed leaf; AS adds one broad eastern recession and records the cleanest bounded state."
+      },
+      {
+        "id": "v116-cumulative-reality-at1",
+        "reason": "The first lake-only macro-wave and irregular-normal response removed the dense diagonal comb but left a uniformly pale, nearly blank sheet with weaker readable basin depth than AS."
+      },
+      {
+        "id": "v116-cumulative-reality-at2",
+        "reason": "The deeper basin calibration established the retained structural direction, but its strongest wind-facing band was too dark and exaggerated the lake-to-river value jump. AT retains the geometry and lowers that contrast while lightening the fixed shallow edge."
+      },
+      {
+        "id": "v116-cumulative-reality-au1",
+        "reason": "The first shared terrain/water inlet flare established the useful structural width but carried 7.5 to 13 metres of transparent river geometry beneath the lake, exposing a dark polygonal footprint."
+      },
+      {
+        "id": "v116-cumulative-reality-au2-au3",
+        "reason": "Reduced-overlap and edge-overlap variants removed most coplanar geometry but retained an overly long terminal optical band that still read as a rectangular patch."
+      },
+      {
+        "id": "v116-cumulative-reality-au4",
+        "reason": "Fading the larger submerged overlap did not remove its visible footprint. AU rejects the under-lake branch and retains only the short rounded edge-overlap handoff."
+      },
+      {
+        "id": "v116-cumulative-reality-au5-au6",
+        "reason": "AU5 established the retained geometry/material direction. AU6 then separated the original habitat centreline/width selector from the widened hydrologic authority so the accepted water/terrain repair does not reclassify ecology."
+      },
+      {
+        "id": "v116-cumulative-reality-au7",
+        "reason": "Shortening the terminal optical transition from the final 10 percent to the final 6 percent removes the broad band while retaining the lake-matched handoff; this calibration is recorded as Candidate AU."
+      },
+      {
+        "id": "v116-cumulative-reality-av1",
+        "reason": "Selecting 61 pre-existing deep-bank anchors by shader noise produced correct telemetry but no defensible exact-frame structure, so the selector was removed."
+      },
+      {
+        "id": "v116-cumulative-reality-av2-av3",
+        "reason": "The 64 new grounded anchors at the retained groundcover scale were under-resolved; promoting 22 to detailed midstory made the layer visible but still sparse while adding a separate higher-cost vegetation path. AV retains neither calibration."
+      },
+      {
+        "id": "v116-cumulative-reality-av4",
+        "reason": "Doubling the new inventory to 128 and retaining midstory promotion gave marginal image gain while the exact checkpoint rose from 84 to 98 calls and roughly 5.53 million triangles. The selected state restores 64 low anchors and the existing two-draw fern/shrub path."
+      },
+      {
+        "id": "v116-cumulative-reality-aw1",
+        "reason": "The first multi-slope selector produced only 134 Ridge / 128 Valley / 20 Alpine balanced placements. It was structurally correct but under-resolved at the natural journey timings, so the sparse calibration was not selected."
+      },
+      {
+        "id": "v116-cumulative-reality-aw2-high",
+        "reason": "The selected balanced density was retained, but the first high calibration mounted 113 Ridge / 92 Valley / 13 Alpine hero placements, reached 7,087,170 terminal triangles, and amplified dark branch-like scratches for a modest aerial gain. AW reduces high to 52 / 50 / 7 while retaining the balanced direction."
+      },
+      {
+        "id": "v116-cumulative-reality-ax1",
+        "reason": "The first conforming Ridge remesh protected every source boundary and produced real-source channels, but its three drainage catchments left the right foreground mound under-resolved at the exact natural 0/5/15-second views. AX retains the same topology and envelope while distributing five irregular catchments across the visible Ridge interior."
+      },
+      {
+        "id": "v116-cumulative-reality-ay1-ay2",
+        "reason": "The first two drainage-coupled ecology calibrations reused the correct AX catchment authority but remained too sparse to read clearly across the exact natural 0/5/15-second balanced views; neither density survives in selected AY."
+      },
+      {
+        "id": "v116-cumulative-reality-ay3",
+        "reason": "The stronger catchment response became obvious, but its enlarged crowns read as oversized rather than subordinate ravine succession. AY retains the selection direction with lower bounded target scales."
+      },
+      {
+        "id": "v116-cumulative-reality-ay4-high",
+        "reason": "The balanced calibration established the selected visible response, but an additional high branch produced no useful visual gain. AY removes all added high placements and preserves high as an independent control."
+      },
+      {
+        "id": "v116-cumulative-reality-az1",
+        "reason": "Replacing the full 28-metre AH transition proved the independent-edge topology diagnosis and closed the bright slit, but visibly straightened the Valley into a broad planar ramp. AZ retains the exact Ridge boundary authority while narrowing source-surface replacement to the first 2.5-metre native cell."
+      },
+      {
+        "id": "v116-cumulative-reality-ba1-ba2",
+        "reason": "The first two source-surface shoulder/drainage calibrations were structurally valid but remained under-resolved or read as the same isolated cone with a sharper needle at the natural 49.5-second view."
+      },
+      {
+        "id": "v116-cumulative-reality-ba3",
+        "reason": "Near-equal uplift across three measured source summits proved the macroform direction but formed a crenellated tabletop, so the shoulder heights were reduced and separated into a descending crest."
+      },
+      {
+        "id": "v116-cumulative-reality-ba4-ba6",
+        "reason": "Reduced-shoulder plus narrow/broad subtractive-crown calibrations exposed or pinched the authored dominant crown cluster into a thin spike, especially at the exact 53.7-second view. BA7 removes crown subtraction entirely and preserves the authored crown."
+      },
+      {
+        "id": "v116-cumulative-reality-bc1-bc2",
+        "reason": "The first two monotonic staged-grade waterfall profiles were connected but projected their lateral/depth offsets as a serpentine curtain at the exact desktop Waterfall views; neither survives in active source."
+      },
+      {
+        "id": "v116-cumulative-reality-bc3",
+        "reason": "Binding lateral progress to drop removed the explicit side offset, but the remaining depth ledges became an exaggerated zigzag in the 390x844 portrait control; BC3 is preserved only as rejected source/evidence."
+      },
+      {
+        "id": "v116-cumulative-reality-bc4",
+        "reason": "The straight-centerline asymmetric braided-fan topology removed the portrait regression and established the selected structural direction, but its exact BB comparison was too subtle at scene scale. BC5 retains the topology with stronger bounded fan/waist amplitudes."
+      },
+      {
+        "id": "v116-cumulative-reality-bd1-bd3",
+        "reason": "Three catchment-coupled ecology-only density/scale calibrations reused the correct BB trunk and branch equations but remained too subtle at natural Waterfall timing; none survives in active source."
+      },
+      {
+        "id": "v116-cumulative-reality-bd-structural1",
+        "reason": "The first materially visible structural calibration deepened the right catchments but exposed too much broad tan relief across the shoulder. BD retains the hierarchy direction with lower incision, branch, buttress, and clamp amplitudes."
+      },
+      {
+        "id": "v116-cumulative-reality-be1-be3",
+        "reason": "The first three near-bank source-surface calibrations ran too far across the measured fall line: visible amplitudes produced a shelf or enlarged tan face, while the safe upper-bank calibration was too subtle. None survives in active source."
+      },
+      {
+        "id": "v116-cumulative-reality-be4-be6",
+        "reason": "Uplift-led controls removed the hard shelf but remained modest and retained the wrong cross-slope bias. Their evidence was kept as diagnostic control while exact raycasts and source normals established the selected fall-line direction."
+      },
+      {
+        "id": "v116-cumulative-reality-be9",
+        "reason": "Doubling the adjoining upper-bank field improved the 25-second frame but became an oversized smooth trench and lip at the 30-second crossing. BE restores BE8's lower amplitudes and records the clean bounded state."
+      },
+      {
+        "id": "v116-cumulative-reality-bf1-bf3",
+        "reason": "Habitat-only, rill-only, and combined close-camera calibrations were structurally valid but remained too subtle while the near-camera grass wall continued to dominate the Contact trailhead."
+      },
+      {
+        "id": "v116-cumulative-reality-bf4-bf9",
+        "reason": "The first six desktop Contact camera searches exposed near-camera canopy/trunk obstruction, excessive aerial distance, or another broad slope. None survives in the selected anchor."
+      },
+      {
+        "id": "v116-cumulative-reality-bf11",
+        "reason": "The right-shifted look target removed the left Valley wall but flattened the composition back into a broad slope. BF restores BF10's deeper Valley framing."
+      },
+      {
+        "id": "v116-cumulative-reality-bg1",
+        "reason": "Restoring the seven missing high Contact layer-1 anchors was structurally bounded but inherited sparse bare hero-family silhouettes and remained materially below balanced."
+      },
+      {
+        "id": "v116-cumulative-reality-bg2",
+        "reason": "Constraining those seven anchors to intact Pachira hero families removed the bare silhouettes but remained too sparse to close the visible quality inversion."
+      },
+      {
+        "id": "v116-cumulative-reality-bg3",
+        "reason": "A Contact-only Pachira scale increase improved legibility but still left the 12 grounded layer-0 corridor anchors on the stride-14 base path. BG4 restores those anchors and is selected."
+      },
+      {
+        "id": "v116-cumulative-reality-bh1-bh3",
+        "reason": "Three high-only catchment-canopy calibrations promoted 79, 115, and all 222 previously unselected grounded anchors inside the existing eastern-Valley envelope. Even the all-anchor state remained visually modest at exact 41.0/45.5/49.5-second timing relative to its geometry cost, so the entire added-canopy branch was removed and BG's selectors were restored byte-for-byte before structural terrain work."
+      }
     ],
     "evidence": {
       "mandatoryBaselineDesktop": "output/playwright/madagin-world-progress/v116-cumulative-reality-v1/desktop/journey.webm",
@@ -2243,7 +2633,10 @@
       "riparianEcology": {
         "balancedPlacements": 52,
         "highPlacements": 78,
-        "sources": ["Poly Haven fern_02", "Poly Haven shrub_04"],
+        "sources": [
+          "Poly Haven fern_02",
+          "Poly Haven shrub_04"
+        ],
         "desktopTransferDeltaBytes": 3049305,
         "mobileTransferDeltaBytes": 0,
         "scope": "localized grounded habitat structure; overall ecology remains score 2"
@@ -2261,7 +2654,10 @@
       },
       "compactLakeShoreline": {
         "method": "two conforming shared-edge adaptive shoreline passes plus full inside-boundary submergence and a continuous radial basin bed",
-        "analyticSelectionDistance": [0.7, 1.34],
+        "analyticSelectionDistance": [
+          0.7,
+          1.34
+        ],
         "sourceTriangles": 38400,
         "uniformPassTriangles": 153600,
         "firstAdaptivePass": {
@@ -2285,12 +2681,17 @@
         "basinBed": {
           "mobileVertices": 5761,
           "mobileTriangles": 11200,
-          "depthRangeMeters": [0.28, 2.18],
+          "depthRangeMeters": [
+            0.28,
+            2.18
+          ],
           "boundary": "same two-, three-, and five-lobe analytic shoreline as live water"
         },
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [27.5],
+        "exactTimingSeconds": [
+          27.5
+        ],
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
         "scope": "compact Lake shoreline comb and submerged source-grid wedge only; overall water and terrain remain score 2 and physical-device performance is unverified"
@@ -2320,7 +2721,12 @@
         },
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [22.5, 35, 41, 45.5],
+        "exactTimingSeconds": [
+          22.5,
+          35,
+          41,
+          45.5
+        ],
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
         "scope": "flat rectangular waterfall-basin escarpment response only; whole-terrain realism remains 2, waterfall realism remains 3, reference realism remains 1, and physical-device performance remains unverified"
@@ -2336,7 +2742,10 @@
         "balancedFallingThreadPoints": 68,
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [41, 45.5],
+        "exactTimingSeconds": [
+          41,
+          45.5
+        ],
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
         "renderGeometryDelta": 0,
@@ -2354,11 +2763,22 @@
           "continuous submerged basin bed",
           "per-column river/lake solve"
         ],
-        "riverJoinZBefore": [-778.6828, -774.687],
-        "riverJoinZAfter": [-795.1443, -791.3573],
+        "riverJoinZBefore": [
+          -778.6828,
+          -774.687
+        ],
+        "riverJoinZAfter": [
+          -795.1443,
+          -791.3573
+        ],
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [27.5, 35, 41, 45.5],
+        "exactTimingSeconds": [
+          27.5,
+          35,
+          41,
+          45.5
+        ],
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
         "renderTriangleDelta": 0,
@@ -2367,7 +2787,10 @@
       },
       "lakeOpticalResponse": {
         "method": "two shore-damped physical macro-wave fields plus irregular low/mid-frequency analytic normals, interfering wind fields, basin-depth-aware color/opacity, and normal-facing light response on the existing live lake surface",
-        "lakeWaveAmplitudesMeters": [0.24, 0.13],
+        "lakeWaveAmplitudesMeters": [
+          0.24,
+          0.13
+        ],
         "fixedBoundaryEnvelope": "smoothstep over the normalized radial lake interior; displacement is zero on the final shared shoreline ring",
         "isolatedConsumers": [
           "lake watershed material receives AT motion and optical response",
@@ -2376,7 +2799,12 @@
         ],
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [27.5, 35, 41, 45.5],
+        "exactTimingSeconds": [
+          27.5,
+          35,
+          41,
+          45.5
+        ],
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
         "renderTriangleDelta": 0,
@@ -2387,7 +2815,10 @@
         "adjustedVertices": 3537,
         "maximumReliefMeters": 6.520068304751443,
         "method": "normal-directed ribs, fractured ledges, and subtractive drainage in the subdivided active Valley surface",
-        "exactTimingSeconds": [22.5, 27.5],
+        "exactTimingSeconds": [
+          22.5,
+          27.5
+        ],
         "newAssetBytes": 0,
         "scope": "bounded repair of the west-Valley near-black slab response; broad terrain remains authored and whole-terrain realism remains score 2"
       },
@@ -2396,13 +2827,18 @@
           "adjustedVertices": 1903,
           "boundarySamples": 193,
           "maximumAdjustmentMeters": 3.6656540406341107,
-          "exactTimingSeconds": [18.8]
+          "exactTimingSeconds": [
+            18.8
+          ]
         },
         "valleyToAlpine": {
           "adjustedVertices": 4499,
           "boundarySamples": 213,
           "maximumAdjustmentMeters": 12.75143098044449,
-          "exactTimingSeconds": [22.5, 27.5]
+          "exactTimingSeconds": [
+            22.5,
+            27.5
+          ]
         },
         "method": "decoded neighbor-boundary alignment eased through 28 metres of the active subdivided Valley source surface",
         "newAssetBytes": 0,
@@ -2410,7 +2846,10 @@
       },
       "waterfallHeadwater": {
         "method": "shared irregular water/terrain banks with three graded riffles and a dark fast-water response",
-        "zRange": [-858, -730],
+        "zRange": [
+          -858,
+          -730
+        ],
         "sourceHalfWidthMeters": 0.48,
         "lipHalfWidthMeters": 4.503183537764847,
         "primaryFallLipHalfWidthMeters": 4.8,
@@ -2420,8 +2859,14 @@
       "lakeApproachMidstory": {
         "method": "bounded replacement of already-grounded Lake layer-2 placements with the already-loaded safe v1.15 mid source plus duplicate watershed/riparian suppression",
         "bounds": {
-          "x": [160, 310],
-          "z": [-720, -650]
+          "x": [
+            160,
+            310
+          ],
+          "z": [
+            -720,
+            -650
+          ]
         },
         "balancedPromotedPlacements": 56,
         "balancedLakeDetailedPlacements": 307,
@@ -2437,8 +2882,14 @@
       "lakeBankSuccession": {
         "method": "append deterministic moisture-gated layer-2 anchors to the Lake manifest, allocate them after retained detailed/watershed/riparian selectors, suppress duplicate procedural geometry, and render through the existing fern/shrub instancing path with a target-only scale",
         "bounds": {
-          "x": [180, 430],
-          "z": [-649.5, -540]
+          "x": [
+            180,
+            430
+          ],
+          "z": [
+            -649.5,
+            -540
+          ]
         },
         "minimumTerrainMoisture": 0.18,
         "cameraClearanceMeters": 24,
@@ -2449,14 +2900,21 @@
         "highRenderedPlacements": 64,
         "mobileRenderedPlacements": 0,
         "targetOnlyScale": 2,
-        "sources": ["Poly Haven fern_02", "Poly Haven shrub_04"],
+        "sources": [
+          "Poly Haven fern_02",
+          "Poly Haven shrub_04"
+        ],
         "floatingCount": 0,
         "buriedCount": 0,
         "maximumRootGapMeters": 0.018,
         "maximumRootBurialMeters": 0.0715,
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [27.5, 35, 41],
+        "exactTimingSeconds": [
+          27.5,
+          35,
+          41
+        ],
         "newAssetPackageBytes": 0,
         "transferredWorldByteDeltaPerMode": 1720,
         "renderTriangleDeltaAtSummit": 0,
@@ -2491,7 +2949,14 @@
         "highTargetOnlyScaleMultiplier": 1.08,
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [0, 5, 18.8, 22.5, 49.5, 53.7],
+        "exactTimingSeconds": [
+          0,
+          5,
+          18.8,
+          22.5,
+          49.5,
+          53.7
+        ],
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
         "manifestDelta": 0,
@@ -2514,17 +2979,33 @@
         "afterScore": 3,
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
-        "exactTimingSeconds": [0, 5, 15],
+        "exactTimingSeconds": [
+          0,
+          5,
+          15
+        ],
         "scope": "smooth inflated detailed Ridge opening only; the broader Ridge scale, Valley/Alpine macroforms, compact terrain, ecology diversity, water response, reference realism, and physical-device performance remain unpromoted"
       },
       "ridgeDrainageHabitat": {
         "method": "reuse AX's five exact warped drainage-network trunk and branch equations as a normalized-distance selector over already-grounded safe-family Ridge layer-1/layer-2 placements",
         "eligibility": {
           "families": "placement family below 8",
-          "layers": [1, 2],
-          "xRangeMeters": [-268, 268],
-          "yRangeMeters": [-4, 60],
-          "zRangeMeters": [-230, 210],
+          "layers": [
+            1,
+            2
+          ],
+          "xRangeMeters": [
+            -268,
+            268
+          ],
+          "yRangeMeters": [
+            -4,
+            60
+          ],
+          "zRangeMeters": [
+            -230,
+            210
+          ],
           "maximumNormalizedDrainageDistance": 1.1
         },
         "balancedAddedPlacements": 383,
@@ -2538,7 +3019,11 @@
         "highTargetOnlyScaleMultiplier": 1,
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [0, 5, 15],
+        "exactTimingSeconds": [
+          0,
+          5,
+          15
+        ],
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
         "manifestDelta": 0,
@@ -2549,7 +3034,10 @@
       "detailedRidgeValleyWeld": {
         "method": "first-native-cell active-Valley source-surface replacement with all decoded Ridge edge positions and zipper triangulation to the unchanged Valley interior row",
         "boundaryZ": -315,
-        "stripZRange": [-317.5, -315],
+        "stripZRange": [
+          -317.5,
+          -315
+        ],
         "ridgeBoundarySamples": 193,
         "valleyBoundarySamples": 409,
         "valleyInteriorSamples": 409,
@@ -2571,7 +3059,10 @@
         "waterDelta": 0,
         "ecologyDelta": 0,
         "mobileOrConservativeChanged": false,
-        "exactTimingSeconds": [15, 18.8],
+        "exactTimingSeconds": [
+          15,
+          18.8
+        ],
         "scope": "intermittent detailed Ridge-to-Valley background slit only; broader terrain/material realism, mobile topology, ecology, water, reference realism, and physical-device performance remain unpromoted"
       },
       "compactJourneyRidgeValleyConnector": {
@@ -2607,14 +3098,27 @@
         "afterScore": 3,
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
-        "exactTimingSeconds": [49.5, 53.7],
+        "exactTimingSeconds": [
+          49.5,
+          53.7
+        ],
         "scope": "smooth and nearly single-material Alpine landmark repair only; broad terrain, ecology, mobile composition, reference realism, and physical-device performance remain unpromoted"
       },
       "alpineSummitMacroform": {
         "method": "four measured descending source-summit shoulder/buttress fields around the preserved authored crown, one broad upper-face hollow, and branching camera-facing drainage on the retained shared-edge Alpine source surface",
-        "sourcePeak": [607, 333, -1363],
-        "sourceCrownAtLeast300MetersSpan": [84, 77],
-        "sourceCrownAtLeast320MetersSpan": [19, 23],
+        "sourcePeak": [
+          607,
+          333,
+          -1363
+        ],
+        "sourceCrownAtLeast300MetersSpan": [
+          84,
+          77
+        ],
+        "sourceCrownAtLeast320MetersSpan": [
+          19,
+          23
+        ],
         "detailedAdjustedVertices": 60745,
         "detailedSummitMacroformVertices": 10367,
         "detailedSourceTriangles": 52576,
@@ -2639,13 +3143,16 @@
         "geometryObjectDelta": 0,
         "textureDelta": 0,
         "cameraDelta": 0,
-        "exactTimingSeconds": [49.5, 53.7],
+        "exactTimingSeconds": [
+          49.5,
+          53.7
+        ],
         "scope": "smooth isolated Alpine-cone macroform only; whole terrain remains score 2, compact terrain/ecology remain simplified, reference realism remains 1, and physical-device performance is unverified"
       },
       "easternValleyCatchmentMacroform": {
         "method": "four strengthened differently phased branching east-shoulder catchments with eight narrow second-order rills separated by two bounded non-repeating source-surface buttress wavelengths on the existing active Valley terrain",
         "detailedAdjustedVertices": 28810,
-        "detailedMaximumIncisionMeters": 25.134220,
+        "detailedMaximumIncisionMeters": 25.13422,
         "detailedMaximumUpliftMeters": 9.716611,
         "compactUsesSameRetainedWatershedFunction": true,
         "lakeRiverAndWaterfallProtected": true,
@@ -2660,17 +3167,34 @@
         "geometryObjectDelta": 0,
         "textureDelta": 0,
         "cameraDelta": 0,
-        "exactTimingSeconds": [27.5, 41.0, 45.5, 49.5],
+        "exactTimingSeconds": [
+          27.5,
+          41.0,
+          45.5,
+          49.5
+        ],
         "scope": "under-resolved second-order hierarchy inside the retained eastern-Valley catchments at natural 41.0/45.5/49.5-second timing only; whole terrain, Valley scale, central ravine, material transitions, overall ecology, water, mobile composition, reference realism, and physical-device performance remain unpromoted"
       },
       "easternValleyCatchmentHabitat": {
         "method": "reuse the four exact eastern-Valley trunk and branch equations as a normalized-distance selector over already-grounded safe-family Valley layer-1/layer-2 placements",
         "eligibility": {
           "families": "placement family below 8",
-          "layers": [1, 2],
-          "xRangeMeters": [84, 642],
-          "yRangeMeters": [-20, 158],
-          "zRangeMeters": [-918, -516],
+          "layers": [
+            1,
+            2
+          ],
+          "xRangeMeters": [
+            84,
+            642
+          ],
+          "yRangeMeters": [
+            -20,
+            158
+          ],
+          "zRangeMeters": [
+            -918,
+            -516
+          ],
           "maximumNormalizedCatchmentDistance": 1.45
         },
         "balancedAddedPlacements": 190,
@@ -2684,7 +3208,10 @@
         "highTargetOnlyScaleMultiplier": 1,
         "beforeScore": 1,
         "afterScore": 3,
-        "exactTimingSeconds": [41.0, 45.5],
+        "exactTimingSeconds": [
+          41.0,
+          45.5
+        ],
         "newAssetBytes": 0,
         "transferredWorldByteDelta": 0,
         "manifestDelta": 0,
@@ -2693,10 +3220,25 @@
       },
       "mobileLandmarkComposition": {
         "method": "retarget only the compact Summit journey look anchor and compact Contact terminal look anchor while preserving both camera positions and every desktop anchor",
-        "previousLookTarget": [560, 100, -930],
-        "selectedLookTarget": [420, 135, -1020],
-        "exactTimingSeconds": [49.5, 53.7],
-        "naturalDurationFrames": ["09-emergence", "10-summit", "14-contact-summit"],
+        "previousLookTarget": [
+          560,
+          100,
+          -930
+        ],
+        "selectedLookTarget": [
+          420,
+          135,
+          -1020
+        ],
+        "exactTimingSeconds": [
+          49.5,
+          53.7
+        ],
+        "naturalDurationFrames": [
+          "09-emergence",
+          "10-summit",
+          "14-contact-summit"
+        ],
         "beforeScore": 1,
         "afterScore": 3,
         "newAssetBytes": 0,
@@ -2718,10 +3260,26 @@
       },
       "contactTrailheadDepth": {
         "method": "desktop-only Contact start-anchor reframing plus two protected source-surface rills and already-grounded detailed/fern/shrub habitat replacement",
-        "previousDesktopCamera": [350, 48, -600],
-        "previousDesktopLookAt": [315, 42, -660],
-        "selectedDesktopCamera": [390, 120, -520],
-        "selectedDesktopLookAt": [288, 50, -690],
+        "previousDesktopCamera": [
+          350,
+          48,
+          -600
+        ],
+        "previousDesktopLookAt": [
+          315,
+          42,
+          -660
+        ],
+        "selectedDesktopCamera": [
+          390,
+          120,
+          -520
+        ],
+        "selectedDesktopLookAt": [
+          288,
+          50,
+          -690
+        ],
         "desktopSummitEndpointChanged": false,
         "mobileContactAnchorsChanged": false,
         "explicitAscentStatesVerified": 7,
@@ -2739,7 +3297,10 @@
           "balancedLayer2GroundcoverReplacements": 11,
           "highLayer2GroundcoverReplacements": 19,
           "mobileAddedPlacements": 0,
-          "sources": ["Poly Haven fern_02", "Poly Haven shrub_04"]
+          "sources": [
+            "Poly Haven fern_02",
+            "Poly Haven shrub_04"
+          ]
         },
         "beforeScore": 1,
         "afterScore": 3,
@@ -2749,9 +3310,18 @@
       "highContactCanopyHierarchy": {
         "method": "high-desktop-only restoration of already-grounded layer-0/layer-1 Contact anchors through the already-loaded intact Pachira hero families",
         "bounds": {
-          "x": [270, 430],
-          "y": [30, 105],
-          "z": [-710, -605]
+          "x": [
+            270,
+            430
+          ],
+          "y": [
+            30,
+            105
+          ],
+          "z": [
+            -710,
+            -605
+          ]
         },
         "eligibleGroundedAnchors": 22,
         "bfSelectedAnchors": 3,
@@ -2761,7 +3331,12 @@
         "bgSelectedAnchors": 22,
         "bfHighValleyDetailedPlacements": 171,
         "bgHighValleyDetailedPlacements": 190,
-        "heroFamilies": ["pachira_a", "pachira_b", "pachira_c", "pachira_d"],
+        "heroFamilies": [
+          "pachira_a",
+          "pachira_b",
+          "pachira_c",
+          "pachira_d"
+        ],
         "targetOnlyScaleMultiplier": 1.55,
         "balancedAddedPlacements": 0,
         "mobileAddedPlacements": 0,
@@ -2778,12 +3353,21 @@
       },
       "riverLakeConfluence": {
         "method": "shared terrain-incised asymmetric inlet flare with rounded structural edge-overlap handoff",
-        "flareZRange": [-792, -724],
-        "solvedJoinZRange": [-794.5528335571289, -787.8498764038086],
+        "flareZRange": [
+          -792,
+          -724
+        ],
+        "solvedJoinZRange": [
+          -794.5528335571289,
+          -787.8498764038086
+        ],
         "maximumWidthMultiplier": 1.7,
         "bankJoinOffsetMeters": 1.25,
         "centrelineJoinInsetMeters": 0.5,
-        "lakeOpticalTransitionUv": [0.94, 1],
+        "lakeOpticalTransitionUv": [
+          0.94,
+          1
+        ],
         "ecologySelector": "retains Candidate AT base river centreline and half-width",
         "beforeScore": 1,
         "afterScore": 3,
@@ -2795,7 +3379,10 @@
         "primaryVertices": 2275,
         "primaryTriangles": 4352,
         "fanCount": 2,
-        "maximumAddedHalfWidthMeters": [5.35, 3.8],
+        "maximumAddedHalfWidthMeters": [
+          5.35,
+          3.8
+        ],
         "maximumConstrictionMeters": 1.1,
         "centralSpineContinuous": true,
         "connectedGeometry": true,

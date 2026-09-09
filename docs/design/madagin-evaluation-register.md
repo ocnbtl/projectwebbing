@@ -236,3 +236,17 @@ Drainage finishing check: the new bank initially obstructed the existing waterfa
 | Human still/motion equivalence + physical devices | UNVERIFIED | Host browser captures and AI review cannot pass these gates. | Open |
 
 Accepted shared-shore calculation and selected visual attachment; rejected extended substrate collar is preserved. See `lake-shore-release-20260908/review.html` for 22 camera pairs and uninterrupted/held motion; `output/releases/madagin-lake-shore-20260908/publication.json` for actual local/public budgets and provenance. Earlier transfer/readiness misses remain visible, not averaged away. Real NPS ʻOheʻo coastal-mouth photography and DLNR Kalalau stream footage are diagnostic material/contact references, not matched lake pairs. The formal still/motion plan and 45–55% equivalence requirement remain unchanged.
+
+
+## September 8, 2026 — Contained waterfall pool
+
+| Required view / category | Before → selected | Evidence / remaining defect | Severity |
+|---|---|---|---|
+| Waterfall desktop + compact / pool contact | 2 → 3 diagnostic for local contact | Smaller dark pool meets exposed rock; actual submerged bed and dry rim outside the connected outlet. Smooth banks and broad river surface remain. | High |
+| Waterfall / falling curtain | Retained after rejected trial | Removing macro cliff clearance obstructed the curtain. Selected revision restores it; geometry checks now cover the falling body. | Closed regression |
+| Waterfall / motion | 2 retained | Impact disturbances radiate and dissipate in stationary holds; appearance remains procedural, without convincing rock interruption. | High |
+| Opening, Ridge, Valley, Lake, near canopy, Summit / integrated environment | 2 retained | Generic canopy, sparse understory, shadow/material inconsistency and wider drainage geography remain. | High |
+| About, Projects, Blog, brief and fallbacks | Relevant local + public verification | Persistent canvas, readable independent content, return/history, honest copy/download and loading gates. | Required |
+| Whole-world realism / human still and motion | 2 diagnostic / UNVERIFIED | No category average; no self-certification of 45–55% equivalence or physical-device performance. | Open |
+
+Evidence: `plunge-basin-release-20260908/review.html` and `output/releases/madagin-plunge-basin-20260908/publication.json`. Compare with official Wailuku/Rainbow Falls photography and DLNR Kalalau footage at 256.21–259.30 s; these are diagnostic, not matched blind pairs. Rejected obstruction remains visible beside the accepted revision. All transfer/readiness/heap/frame results remain individual gates. No new runtime source asset or delivery claim.
