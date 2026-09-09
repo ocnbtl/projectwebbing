@@ -1,4 +1,30 @@
 {
+  "branchCanopy": {
+    "version": "branch-canopy-1",
+    "source": "https://polyhaven.com/a/island_tree_01",
+    "license": "CC0-1.0",
+    "classification": "Generic CC0 Poly Haven island_tree_01; source assets remain local and unchanged.",
+    "provenance": "public/world/branch-canopy-v1/provenance.json",
+    "builder": "tools/gltf/build-branch-canopy.mjs",
+    "support": "src/components/internal/branch-canopy-support.json",
+    "verification": [
+      "tools/evidence/verify-branch-canopy.mjs",
+      "tools/evidence/verify-branch-support.mjs",
+      "tools/evidence/verify-branch-readiness.mjs"
+    ],
+    "newAssetBytes": 939886,
+    "scope": "Only bank-canopy variant zero; existing layout with measured base embedding, original other zones and variant retained",
+    "decision": "output/releases/madagin-branch-canopy-20260909/decision.json",
+    "publication": "output/releases/madagin-branch-canopy-20260909/publication.json",
+    "limits": [
+      "Whole-world realism remains 2/5 diagnostic; B remains open.",
+      "Fine leaf speckling, generic species architecture, bare surrounding slopes, geology, water and atmospheric detail remain unresolved.",
+      "Adds 939886 asset bytes; existing desktop transfer/readiness failures remain separate from acceptance.",
+      "Sequential host viewport diagnostics are not paired speed, GPU-time, thermal or physical-device qualification.",
+      "Independent human still/motion equivalence is UNVERIFIED.",
+      "Domain, mailbox and delivery remain UNVERIFIED; truthful copy/download stays active."
+    ]
+  },
   "cloudVolume": {
     "version": "cloud-volume-1",
     "runtime": [

@@ -1,0 +1,141 @@
+{
+  "version": "branch-canopy-source-1",
+  "license": "CC0-1.0",
+  "classification": "Existing generic Poly Haven coastal tree, not a measured Hawaiian species.",
+  "policy": "Preserve original source. One in six whole source leaves at 2.05x local expansion; same existing simplification and 14/10/12-bit position/normal/UV policy. Dense connected source branching replaces one near-bank variant only. No lighting-normal trial is included.",
+  "assets": [
+    {
+      "file": "island-tree-01-far.glb",
+      "source": "public/world/assets/polyhaven/island_tree_01/island_tree_01_1k.gltf",
+      "url": "https://polyhaven.com/a/island_tree_01",
+      "inputs": [
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/island_tree_01_1k.gltf",
+          "sha256": "78e905a40670bfabb2760601d4d9a6c17193a50d68e6271c66893eb7bd75906d"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/island_tree_01.bin",
+          "sha256": "1faa817b46e24ed6fc90d3ec72188a0dc5ac75e82c89b3dd3c5fdaecf7cc005c"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_nor_gl_1k.jpg",
+          "sha256": "ca22e428e1b1ebac47b2fc67ec355700c8779d6628d2fc6c3ebae9002988f63e"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_diff_1k.jpg",
+          "sha256": "51bff9a3a6ed7d89ff4c73f01708b7267ed8d7a82b0cb12343741894f708218f"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_arm_1k.jpg",
+          "sha256": "bf972dff0fbc71f146b4c02103fc3596477a49a9eff46b87b13c89b7b90d18ca"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_leaves_nor_gl_1k.jpg",
+          "sha256": "07ba461c0c95da4e49a42981766bdb6191d4c3c4d815796c082266dcc3cecdb8"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_leaves_diff_1k.jpg",
+          "sha256": "f56d762a1507754752abf164cc12acbc1e87ce87fa609ac44b98a1b0037c89d8"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_leaves_arm_1k.jpg",
+          "sha256": "90da3a072dbcb052715b1313b9dbc69a4aa8a09a31a4b3868411a2bb51d72037"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_branches_nor_gl_1k.jpg",
+          "sha256": "2d67393ba76a0f49cf965fa0c99d8c16268e71e87b1203d35539bfdb971a514e"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_branches_diff_1k.jpg",
+          "sha256": "bee5ec22196e9e31ad0c95a5a9b4636571cc0124d5bb27a92f1e307d289cc60d"
+        },
+        {
+          "path": "public/world/assets/polyhaven/island_tree_01/textures/island_tree_01_branches_arm_1k.jpg",
+          "sha256": "9e3f82263247ce4f619692cea4c4f6fe9936ff465a86623481849062642c7d05"
+        }
+      ],
+      "lod": "far",
+      "parts": [
+        {
+          "material": "island_tree_01",
+          "sourceTriangles": 34787,
+          "triangles": 1028,
+          "errorFraction": 0.012,
+          "leafPolicy": null,
+          "unusedSecondUVRemoved": false
+        },
+        {
+          "material": "island_tree_01_leaves",
+          "sourceTriangles": 1060032,
+          "triangles": 25900,
+          "errorFraction": null,
+          "leafPolicy": {
+            "sourceLeaves": 44168,
+            "retainedLeaves": 7362,
+            "farLeafExpansion": 2.05,
+            "maxLeafRelativeError": 0.2515282928943634
+          },
+          "unusedSecondUVRemoved": false
+        },
+        {
+          "material": "island_tree_01_branches",
+          "sourceTriangles": 504584,
+          "triangles": 950,
+          "errorFraction": 0.012,
+          "leafPolicy": null,
+          "unusedSecondUVRemoved": false
+        }
+      ],
+      "bytes": 642736,
+      "sha256": "73f58df091da3bf645de293691e752f41346da2293eb01a7dd226634e4561b25",
+      "textures": [
+        {
+          "path": "textures/4f94df0fade8b7f111fa6a18591ec66d83c6a1068ac7c6b1abef4f3b90998659.webp",
+          "bytes": 161516,
+          "sha256": "4f94df0fade8b7f111fa6a18591ec66d83c6a1068ac7c6b1abef4f3b90998659"
+        },
+        {
+          "path": "textures/a025ddec1f95410e671924ca068b88f4cf24fb3d2fa40251191220fba7cdec96.webp",
+          "bytes": 77444,
+          "sha256": "a025ddec1f95410e671924ca068b88f4cf24fb3d2fa40251191220fba7cdec96"
+        },
+        {
+          "path": "textures/f39540b104724f868eeb494afd8b26eec7fed1c99c9e41c4b6082f8c3042dd83.webp",
+          "bytes": 58190,
+          "sha256": "f39540b104724f868eeb494afd8b26eec7fed1c99c9e41c4b6082f8c3042dd83"
+        },
+        {
+          "path": "../rooted-trees-v1/textures/b0fe23fd69c05fafac28907476b361f475d8038bfb28b6001cee1c2bd9eae7e3.webp",
+          "bytes": 37068,
+          "sha256": "b0fe23fd69c05fafac28907476b361f475d8038bfb28b6001cee1c2bd9eae7e3"
+        },
+        {
+          "path": "../rooted-trees-v1/textures/bd51c007f912d4a128492aec6cb53b65e49596c69aa31475370555fff4b2001d.webp",
+          "bytes": 36156,
+          "sha256": "bd51c007f912d4a128492aec6cb53b65e49596c69aa31475370555fff4b2001d"
+        },
+        {
+          "path": "../rooted-trees-v1/textures/4f570007609601a7dfdc2314c8577945df4f0bbb571f851a083279d6905bb961.webp",
+          "bytes": 43000,
+          "sha256": "4f570007609601a7dfdc2314c8577945df4f0bbb571f851a083279d6905bb961"
+        },
+        {
+          "path": "../rooted-trees-v1/textures/cd2cad501f7bb11950efc9cc4b95c5c52b3b5a0319c1083651b47e830ea763ea.webp",
+          "bytes": 120800,
+          "sha256": "cd2cad501f7bb11950efc9cc4b95c5c52b3b5a0319c1083651b47e830ea763ea"
+        },
+        {
+          "path": "../rooted-trees-v1/textures/60d6fd950b83a68a74765212a685cb7bf98d1c655443bec9c53450b9ee06f5e1.webp",
+          "bytes": 65292,
+          "sha256": "60d6fd950b83a68a74765212a685cb7bf98d1c655443bec9c53450b9ee06f5e1"
+        },
+        {
+          "path": "../rooted-trees-v1/textures/859dbbfec1ef4ce2029509b87b4fe789f502cca151f82214161a6a625d260b1e.webp",
+          "bytes": 33170,
+          "sha256": "859dbbfec1ef4ce2029509b87b4fe789f502cca151f82214161a6a625d260b1e"
+        }
+      ],
+      "triangleAttributesPreservedByReorder": true
+    }
+  ]
+}

@@ -6,10 +6,12 @@ import {Box3, Color, DoubleSide, Float32BufferAttribute, FrontSide, Frustum, Ins
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import {createDistantLeaves} from "./compact-tree-lod";
+import branchSupport from "./branch-canopy-support.json";
 
 // Species labels are deliberately absent: these licensed trees provide generic
 // branching architecture, not a measured reconstruction of Hawaiian ecology.
 export const ROOTED_TREES = {version:"rooted-trees-1",sources:[0,1].flatMap(i=>["near","far"].map(lod=>`/world/${lod==="far"?"leaf-canopy-v1":"rooted-trees-v1"}/tree-${i}-${lod}.glb`))};
+const BANK_BRANCH_SOURCE="/world/branch-canopy-v1/island-tree-01-far.glb";
 type Placement = number[];
 type Tree = {matrix:Matrix4;root:Vector3;color:Color;height:number};
 type Part = {geometry:Mesh["geometry"];material:MeshStandardMaterial;depth:MeshDepthMaterial;update:(time:number)=>void;far:boolean;distant:boolean};
@@ -124,18 +126,27 @@ function TreeBatch({part,trees,shadows,compact,castFarShadows}:{part:Part;trees:
 }
 
 export function RootedTrees({placements,zone,shadows,compact=false,efficient=false,castFarShadows=false,onReady}:{placements:Placement[];zone:string;shadows:boolean;compact?:boolean;efficient?:boolean;castFarShadows?:boolean;onReady?:()=>void}) {
-  const scenes=useLoader(GLTFLoader,compact?ROOTED_TREES.sources.filter(url=>url.includes("far")):ROOTED_TREES.sources,loader=>loader.setMeshoptDecoder(MeshoptDecoder));
+  const scenes=useLoader(GLTFLoader,[...(compact?ROOTED_TREES.sources.filter(url=>url.includes("far")):ROOTED_TREES.sources),BANK_BRANCH_SOURCE],loader=>loader.setMeshoptDecoder(MeshoptDecoder));
   // Keep the same loader key as the rest of this device tier. Smaller desktop
   // crowns reuse the far scenes from that cache instead of downloading a pair again.
-  const parts=useMemo(()=>compact||efficient?(compact?scenes:[scenes[1],scenes[3]]).map(scene=>[...prepareTrees(scene.scene,scene.scene,true),...prepareTrees(scene.scene,scene.scene,true,true)]):[prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)],[compact,efficient,scenes]);
+  const parts=useMemo(()=>{
+    if(compact||efficient){
+      const crowns=compact?scenes.slice(0,2):[scenes[1],scenes[3]];
+      if(zone==="bank-canopy")crowns[0]=scenes[scenes.length-1];
+      return crowns.map(({scene})=>[...prepareTrees(scene,scene,true),...prepareTrees(scene,scene,true,true)]);
+    }
+    return [prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)];
+  },[compact,efficient,scenes,zone]);
   const groups=useMemo(()=>{
     const result:Tree[][]=[[],[]];
-    placements.forEach(p=>{
+    placements.forEach((p,index)=>{
       const signature=Math.abs(Math.round(p[2]*.73+p[4]*.47+p[9]*31));
       const variant=signature%2;
       const scale=Math.max(.55,Math.min(1.45,p[7]));
       const height=(zone.startsWith("coastal")?(p[1]===0?8.2:5.8):(p[1]===0?17.5:p[1]===1?10:5.3))*scale*(zone==="alpine"?.7:1);
-      const object=new Object3D();object.position.set(p[2],p[3]-.025,p[4]);
+      const support:Record<string,number>=branchSupport[compact?"compact":"desktop"];
+      const embed=zone==="bank-canopy"&&variant===0?(support[String(index)]??0):0;
+      const object=new Object3D();object.position.set(p[2],p[3]-.025-embed,p[4]);
       object.rotation.set(0,p[5]+(signature%17)*.19,0);
       const width=.9+(signature%9)*.025;
       object.scale.set(height*width,height,height*(.91+(signature%7)*.025));object.updateMatrix();
@@ -143,11 +154,11 @@ export function RootedTrees({placements,zone,shadows,compact=false,efficient=fal
       result[variant].push({matrix:object.matrix.clone(),root:object.position.clone(),color,height});
     });
     return result;
-  },[placements,zone]);
+  },[compact,placements,zone]);
   useEffect(()=>{
     const element=document.documentElement;
     const previous=JSON.parse(element.dataset.madaginRootedTrees??"{}");
-    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,leafCoverage:"leaf-coverage-1",compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
+    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,leafCoverage:"leaf-coverage-1",branchCanopy:zone==="bank-canopy"?"branch-canopy-1":undefined,compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
     onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
   },[compact,efficient,groups,placements.length,zone,onReady]);
