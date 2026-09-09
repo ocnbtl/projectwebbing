@@ -250,3 +250,17 @@ Accepted shared-shore calculation and selected visual attachment; rejected exten
 | Whole-world realism / human still and motion | 2 diagnostic / UNVERIFIED | No category average; no self-certification of 45–55% equivalence or physical-device performance. | Open |
 
 Evidence: `plunge-basin-release-20260908/review.html` and `output/releases/madagin-plunge-basin-20260908/publication.json`. Compare with official Wailuku/Rainbow Falls photography and DLNR Kalalau footage at 256.21–259.30 s; these are diagnostic, not matched blind pairs. Rejected obstruction remains visible beside the accepted revision. All transfer/readiness/heap/frame results remain individual gates. No new runtime source asset or delivery claim.
+
+
+## September 8, 2026 — Exact terrain construction
+
+| Gate | Before → selected | Meaning and limits |
+|---|---|---|
+| Terrain/water output | Exact | All generated attribute and index bytes, metadata, four water shader sources/uniforms; actual desktop/compact production builders and sources. No density/LOD reduction. |
+| CPU Valley construction median | 9.04→6.43 s desktop; 3.18→2.26 s compact | Five alternating measured pairs after warm-up, GC outside timing. CPU work, not complete readiness. |
+| Paired local browser readiness median | 12.19→7.78 s desktop; 5.31→3.45 s compact | Four fresh-context pairs each, alternating order. Local medians pass unchanged 8 s; OS/GPU caches not reset. Actual public values remain separate. |
+| Required views and stationary/flight motion | Prior ratings retained | 22 matched camera pairs and original recordings. Animation phases differ; no photographic improvement claimed from faster construction. |
+| Whole-world realism | 2→2 diagnostic | Broad smooth outlet, sparse layered vegetation, material/light inconsistency and synthetic water/weather remain high-severity defects. B remains open. |
+| Human still/motion + physical devices | UNVERIFIED | No independent 45–55%/95% CI result, phone/GPU/thermal qualification or verified inquiry delivery. |
+
+Evidence: `terrain-startup-release-20260908/review.html`, `output/releases/madagin-terrain-startup-20260908/construction-benchmark.json`, `browser-startup.json` and final `publication.json`. Retain the prior DLNR photographic/footage comparison and bounded new observation record. Original assets and historical rejected trials stay unchanged. Do not replace individual public transfer/readiness/heap/frame failures with the passing local median or an overall score.

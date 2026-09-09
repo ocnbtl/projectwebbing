@@ -1,4 +1,19 @@
 {
+  "terrainConstruction": {
+    "version": "typed-refinement-1",
+    "runtime": [
+      "src/components/internal/ridge-production-v116.tsx",
+      "src/components/internal/lake-shore.ts"
+    ],
+    "source": "Same decoded source GLBs and authored profiles as f89eaf74c6ba7aea0ba8daf1e3250c04f6247cce",
+    "sourceAssetsChanged": false,
+    "newDownloads": false,
+    "renderedOutput": "Exact attributes/index bytes and metadata across production terrain builders, water meshes and four water materials",
+    "accepted": "Numeric shared-edge keys, exact typed mesh buffers, cached exact per-vertex boundary, lazy envelope boundary evaluation and reuse of computed lake distance",
+    "notPursued": "Untested simplification, density reduction, approximate boundary tables or precomputed downloads; no new rejected visual variant",
+    "evidence": "output/releases/madagin-terrain-startup-20260908/publication.json",
+    "limits": "Host CPU/browser timings are separate from physical devices and visual realism; B remains open"
+  },
   "plungeBasin": {
     "version": "plunge-basin-1",
     "runtime": [

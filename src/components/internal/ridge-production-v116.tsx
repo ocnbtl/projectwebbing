@@ -4,6 +4,7 @@ import { useFrame, useLoader } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
   BackSide,
+  BufferAttribute,
   BufferGeometry,
   Color,
   DoubleSide,
@@ -20,7 +21,7 @@ import {
   ShaderMaterial,
   Vector3,
 } from "three";
-import type { BufferAttribute, InterleavedBufferAttribute } from "three";
+import type { InterleavedBufferAttribute } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -579,8 +580,7 @@ function valleyGeologyAdjustment(x: number, y: number, z: number, normalY: numbe
   const elevationEnvelope = smoothRange(-47, -18, y) * (1 - smoothRange(166, 214, y));
   const slope = 1 - Math.abs(normalY);
   const slopeEnvelope = 0.24 + smoothRange(0.025, 0.58, slope) * 0.76;
-  const lakeDistance = lakeBoundaryDistance(x, z);
-  const lakeProtection = y < LAKE_WATER_LEVEL + 18 ? smoothRange(1.18, 1.58, lakeDistance) : 1;
+  const lakeProtection = y < LAKE_WATER_LEVEL + 18 ? smoothRange(1.18, 1.58, lakeBoundaryDistance(x,z)) : 1;
   const headwallDistance = Math.hypot((x - 170) / 145, (z + 718) / 116);
   const waterfallProtection = smoothRange(0.78, 1.28, headwallDistance);
   const envelope = seamEnvelope * elevationEnvelope * slopeEnvelope * lakeProtection * waterfallProtection;
@@ -622,9 +622,8 @@ function regionalVolcanicLandformEnvelope(x: number, y: number, z: number, norma
   const elevation = smoothRange(-46, -22, y) * (1 - smoothRange(142, 184, y));
   const steepness = 1 - Math.abs(normalY);
   const slopeAuthority = 0.34 + smoothRange(0.035, 0.62, steepness) * 0.66;
-  const lakeDistance = lakeBoundaryDistance(x, z);
   const lakeProtection = y < LAKE_WATER_LEVEL + 30
-    ? smoothRange(1.15, 1.58, lakeDistance)
+    ? smoothRange(1.15, 1.58, lakeBoundaryDistance(x,z))
     : 1;
   const riverProtection = z >= -824 && z <= -315
     ? smoothRange(
@@ -1439,87 +1438,78 @@ function subdivideSelectedTerrainGeometry(
   const sourceUvs = source.getAttribute("uv");
   const sourceIndex = source.getIndex();
   const sourceIndexCount = sourceIndex?.count ?? sourcePositions.count;
-  const positions: number[] = [];
-  const uvs: number[] = [];
-  const indices: number[] = [];
-  const splitEdges = new Set<string>();
-  const midpointCache = new Map<string, number>();
-
+  // An edge is a pair of original vertex IDs. Numeric keys avoid allocating
+  // millions of temporary strings. The bound keeps every packed key exact.
+  const vertexCount = sourcePositions.count;
+  if (!Number.isSafeInteger(vertexCount * vertexCount)) throw new RangeError("Terrain vertex key exceeds exact integer range");
+  const splitEdges = new Map<number, number>();
   const vertexIndex = (offset: number) => sourceIndex ? sourceIndex.getX(offset) : offset;
-  const edgeKey = (left: number, right: number) => `${Math.min(left, right)}:${Math.max(left, right)}`;
-  for (let index = 0; index < sourcePositions.count; index += 1) {
-    positions.push(sourcePositions.getX(index), sourcePositions.getY(index), sourcePositions.getZ(index));
-    if (sourceUvs) uvs.push(sourceUvs.getX(index), sourceUvs.getY(index));
-  }
-
-  let selectedTriangles = 0;
+  const edgeKey = (left: number, right: number) => Math.min(left, right) * vertexCount + Math.max(left, right);
+  let selectedTriangles = 0, maximumSourceIndex = 0;
   for (let offset = 0; offset < sourceIndexCount; offset += 3) {
-    const a = vertexIndex(offset);
-    const b = vertexIndex(offset + 1);
-    const c = vertexIndex(offset + 2);
+    const a = vertexIndex(offset), b = vertexIndex(offset + 1), c = vertexIndex(offset + 2);
+    maximumSourceIndex = Math.max(maximumSourceIndex, a, b, c);
     if (!selectTriangle(sourcePositions, a, b, c)) continue;
-    splitEdges.add(edgeKey(a, b));
-    splitEdges.add(edgeKey(b, c));
-    splitEdges.add(edgeKey(c, a));
+    splitEdges.set(edgeKey(a,b), -1); splitEdges.set(edgeKey(b,c), -1); splitEdges.set(edgeKey(c,a), -1);
     selectedTriangles += 1;
   }
-
+  // Classify each triangle once, then allocate exact output sizes. The masks
+  // preserve conforming neighbors and the existing diagonal/winding choices.
+  const masks = new Uint8Array(sourceIndexCount / 3);
+  let indexCount = sourceIndexCount;
+  for (let offset = 0; offset < sourceIndexCount; offset += 3) {
+    const a = vertexIndex(offset), b = vertexIndex(offset + 1), c = vertexIndex(offset + 2);
+    const ab = Number(splitEdges.has(edgeKey(a,b))), bc = Number(splitEdges.has(edgeKey(b,c))), ca = Number(splitEdges.has(edgeKey(c,a)));
+    masks[offset / 3] = ab | (bc << 1) | (ca << 2);
+    indexCount += (ab + bc + ca) * 3;
+  }
+  const outputVertices = vertexCount + splitEdges.size;
+  const positions = new Float32Array(outputVertices * 3);
+  const uvs = sourceUvs ? new Float32Array(outputVertices * 2) : null;
+  const maximumIndex = splitEdges.size ? outputVertices - 1 : maximumSourceIndex;
+  const indices = maximumIndex >= 65535 ? new Uint32Array(indexCount) : new Uint16Array(indexCount);
+  for (let index = 0; index < vertexCount; index += 1) {
+    positions[index*3] = sourcePositions.getX(index);
+    positions[index*3+1] = sourcePositions.getY(index);
+    positions[index*3+2] = sourcePositions.getZ(index);
+    if (uvs) {uvs[index*2] = sourceUvs.getX(index); uvs[index*2+1] = sourceUvs.getY(index);}
+  }
+  let nextVertex = vertexCount, nextIndex = 0;
   const midpoint = (left: number, right: number) => {
-    const key = edgeKey(left, right);
-    const cached = midpointCache.get(key);
-    if (cached !== undefined) return cached;
-    const index = positions.length / 3;
-    positions.push(
-      (sourcePositions.getX(left) + sourcePositions.getX(right)) * 0.5,
-      (sourcePositions.getY(left) + sourcePositions.getY(right)) * 0.5,
-      (sourcePositions.getZ(left) + sourcePositions.getZ(right)) * 0.5,
-    );
-    if (sourceUvs) {
-      uvs.push(
-        (sourceUvs.getX(left) + sourceUvs.getX(right)) * 0.5,
-        (sourceUvs.getY(left) + sourceUvs.getY(right)) * 0.5,
-      );
+    const key = edgeKey(left, right), cached = splitEdges.get(key)!;
+    if (cached >= 0) return cached;
+    const index = nextVertex++;
+    positions[index*3] = (sourcePositions.getX(left) + sourcePositions.getX(right)) * .5;
+    positions[index*3+1] = (sourcePositions.getY(left) + sourcePositions.getY(right)) * .5;
+    positions[index*3+2] = (sourcePositions.getZ(left) + sourcePositions.getZ(right)) * .5;
+    if (uvs) {
+      uvs[index*2] = (sourceUvs.getX(left) + sourceUvs.getX(right)) * .5;
+      uvs[index*2+1] = (sourceUvs.getY(left) + sourceUvs.getY(right)) * .5;
     }
-    midpointCache.set(key, index);
+    splitEdges.set(key, index);
     return index;
   };
-
+  const triangle = (a: number, b: number, c: number) => {
+    indices[nextIndex++] = a; indices[nextIndex++] = b; indices[nextIndex++] = c;
+  };
   for (let offset = 0; offset < sourceIndexCount; offset += 3) {
-    const a = vertexIndex(offset);
-    const b = vertexIndex(offset + 1);
-    const c = vertexIndex(offset + 2);
-    const splitAb = splitEdges.has(edgeKey(a, b));
-    const splitBc = splitEdges.has(edgeKey(b, c));
-    const splitCa = splitEdges.has(edgeKey(c, a));
-    const splitCount = Number(splitAb) + Number(splitBc) + Number(splitCa);
-    if (splitCount === 0) {
-      indices.push(a, b, c);
-      continue;
-    }
-    const ab = splitAb ? midpoint(a, b) : -1;
-    const bc = splitBc ? midpoint(b, c) : -1;
-    const ca = splitCa ? midpoint(c, a) : -1;
-    if (splitCount === 3) {
-      indices.push(a, ab, ca, ab, b, bc, ca, bc, c, ab, bc, ca);
-    } else if (splitCount === 1 && splitAb) {
-      indices.push(a, ab, c, ab, b, c);
-    } else if (splitCount === 1 && splitBc) {
-      indices.push(a, b, bc, a, bc, c);
-    } else if (splitCount === 1 && splitCa) {
-      indices.push(a, b, ca, ca, b, c);
-    } else if (splitAb && splitBc) {
-      indices.push(ab, b, bc, a, ab, c, ab, bc, c);
-    } else if (splitBc && splitCa) {
-      indices.push(bc, c, ca, a, b, ca, b, bc, ca);
-    } else {
-      indices.push(a, ab, ca, ab, b, c, ab, c, ca);
-    }
+    const a = vertexIndex(offset), b = vertexIndex(offset + 1), c = vertexIndex(offset + 2);
+    const mask = masks[offset / 3];
+    if (!mask) {triangle(a,b,c); continue;}
+    const ab = mask & 1 ? midpoint(a,b) : -1, bc = mask & 2 ? midpoint(b,c) : -1, ca = mask & 4 ? midpoint(c,a) : -1;
+    if (mask === 7) {triangle(a,ab,ca); triangle(ab,b,bc); triangle(ca,bc,c); triangle(ab,bc,ca);}
+    else if (mask === 1) {triangle(a,ab,c); triangle(ab,b,c);}
+    else if (mask === 2) {triangle(a,b,bc); triangle(a,bc,c);}
+    else if (mask === 4) {triangle(a,b,ca); triangle(ca,b,c);}
+    else if (mask === 3) {triangle(ab,b,bc); triangle(a,ab,c); triangle(ab,bc,c);}
+    else if (mask === 6) {triangle(bc,c,ca); triangle(a,b,ca); triangle(b,bc,ca);}
+    else {triangle(a,ab,ca); triangle(ab,b,c); triangle(ab,c,ca);}
   }
 
   const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
-  if (sourceUvs) geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
-  geometry.setIndex(indices);
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  if (uvs) geometry.setAttribute("uv", new BufferAttribute(uvs, 2));
+  geometry.setIndex(new BufferAttribute(indices, 1));
   if(recomputeNormals)geometry.computeVertexNormals();
   geometry.userData[diagnosticKey] = {
     selectedTriangles,
@@ -1566,17 +1556,18 @@ function subdivideRegionalVolcanicTerrainGeometry(source: BufferGeometry) {
 }
 
 function subdivideLakeShorelineTerrainGeometry(source: BufferGeometry) {
-  return subdivideSelectedTerrainGeometry(
-    source,
-    "lakeShorelineSubdivision",
-    (positions, a, b, c) => {
-      const distances = [a, b, c].map((index) => lakeBoundaryDistance(
-        positions.getX(index),
-        positions.getZ(index),
-      ));
-      return Math.min(...distances) <= 1.34 && Math.max(...distances) >= 0.7;
-    },
-  );
+  // Adjacent faces repeatedly visit the same vertices. Cache the exact double
+  // result for this pass; positions stay immutable while selection runs.
+  const positions = source.getAttribute("position");
+  const distances = new Float64Array(positions.count).fill(Number.NaN);
+  const distance = (index: number) => {
+    if (Number.isNaN(distances[index])) distances[index] = lakeBoundaryDistance(positions.getX(index), positions.getZ(index));
+    return distances[index];
+  };
+  return subdivideSelectedTerrainGeometry(source, "lakeShorelineSubdivision", (_positions, a, b, c) => {
+    const da = distance(a), db = distance(b), dc = distance(c);
+    return Math.min(da,db,dc) <= 1.34 && Math.max(da,db,dc) >= .7;
+  });
 }
 
 function subdivideWaterfallHeadwallTerrainGeometry(source: BufferGeometry) {
@@ -2481,7 +2472,7 @@ function createIntegratedWatershedTerrainGeometry(
     const distance = lakeBoundaryDistance(x, z);
     if (distance <= 1 || (distance <= 1.24 && y <= LAKE_WATER_LEVEL + 7.5)) {
       const edgeOffset = distance - 1;
-      const target = lakeBedLevel(x,z);
+      const target = lakeBedLevel(x,z,distance);
       // Every source vertex inside the lake is bounded below its water plane.
       // The former interior fade left occasional high source triangles visible
       // through the transparent surface as rectangular shoreline wedges.
@@ -6905,6 +6896,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     document.documentElement.dataset.madaginRidgeHeadwater=RIDGE_HEADWATER_VERSION;
     document.documentElement.dataset.madaginLakeShore=LAKE_SHORE_VERSION;
     document.documentElement.dataset.madaginPlungeBasin=PLUNGE_BASIN_VERSION;
+    document.documentElement.dataset.madaginTerrainConstruction="typed-refinement-1";
     host.__MADAGIN_WATERFALL_LANDFORM_V116__ = {
       authority: "runtime remesh of active Valley terrain plus connected project-authored water surfaces",
       body: waterfallGeometry.userData.waterfallBody,

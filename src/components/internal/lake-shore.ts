@@ -41,8 +41,7 @@ export function lakeBoundaryDistance(x: number, z: number) {
 }
 
 
-export function lakeBedLevel(x:number,z:number) {
-  const distance=lakeBoundaryDistance(x,z);
+export function lakeBedLevel(x:number,z:number,distance=lakeBoundaryDistance(x,z)) {
   const angle=Math.atan2((z-LAKE_CENTER.z)/LAKE_RADIUS.z,(x-LAKE_CENTER.x)/LAKE_RADIUS.x);
   const breakup=Math.sin(angle*5-.7)*.56+Math.sin(angle*11+1.8)*.24+Math.sin(x*.071-z*.037)*.18;
   const offset=distance-1;
