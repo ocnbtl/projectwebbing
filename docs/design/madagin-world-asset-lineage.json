@@ -1,4 +1,33 @@
 {
+  "channelRocks": {
+    "version": "channel-rocks-1",
+    "runtime": [
+      "src/components/internal/channel-rocks.tsx",
+      "src/components/internal/channel-rock-geometry.ts",
+      "src/components/internal/channel-rock-placements.json"
+    ],
+    "source": "public/world/canopy-v1/moss-rock.glb",
+    "sourceUrl": "https://polyhaven.com/a/rock_moss_set_02",
+    "creator": "Kless Gyzen",
+    "license": "CC0",
+    "sourceSha256": "66d142bd19ea475098ec80ec29f43755a7cec605a77754e47643f15a0e4a2d2a",
+    "originalAssetsChanged": false,
+    "sourceForms": 7,
+    "instances": {
+      "desktop": 38,
+      "compact": 38
+    },
+    "allGroupsTriangles": 312128,
+    "fit": "Shared source normalization; separate offline actual-terrain triangle fits, lower 23 percent of source height embedded at least 0.05m, 0.5m minimum exposure, central 40 percent of outlet reserved. No runtime terrain sampler.",
+    "distribution": "22 outlet stones in four unequal deposits, 16 stones at three river shoulders; authored, not surveyed",
+    "compactAdditionalAssets": "Existing 925192-byte GLB and three existing JPEGs totaling 614060 bytes; actual encoded transfer in publication record",
+    "desktopAdditionalAssets": false,
+    "retained": "Exact terrain/water builders and profiles, camera, sun, native and compact branching ecology, source files",
+    "accepted": "Separated grounded deposits interrupt smooth banks; no continuous pool rim or falling-curtain frame",
+    "notPursued": "Geometry-only derivative considered but unimplemented; no new material pipeline or new purchased asset",
+    "evidence": "output/releases/madagin-channel-rocks-20260908/publication.json",
+    "limits": "Generic rock forms, broad channel and sparse ecology remain; no boulder-aware water simulation or Hawaiian lithology claim"
+  },
   "terrainConstruction": {
     "version": "typed-refinement-1",
     "runtime": [

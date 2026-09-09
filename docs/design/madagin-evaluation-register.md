@@ -264,3 +264,19 @@ Evidence: `plunge-basin-release-20260908/review.html` and `output/releases/madag
 | Human still/motion + physical devices | UNVERIFIED | No independent 45–55%/95% CI result, phone/GPU/thermal qualification or verified inquiry delivery. |
 
 Evidence: `terrain-startup-release-20260908/review.html`, `output/releases/madagin-terrain-startup-20260908/construction-benchmark.json`, `browser-startup.json` and final `publication.json`. Retain the prior DLNR photographic/footage comparison and bounded new observation record. Original assets and historical rejected trials stay unchanged. Do not replace individual public transfer/readiness/heap/frame failures with the passing local median or an overall score.
+
+
+## September 8, 2026 — Grounded channel rock groups
+
+| Required view / category | Before → selected | Named defect, severity and evidence |
+|---|---|---|
+| Waterfall desktop / bank geology | 1 → 2 diagnostic | Separated grounded forms break up smooth outlet/river shoulders. Broad uniform channel and generic source lithology remain high severity. |
+| Waterfall compact / bank geology | 1 → 2 diagnostic, limited visibility | Small deposits visible during approach; adjacent channel is partly outside the narrow held frame. Full flight required; do not claim the still demonstrates the whole reach. |
+| Valley, Lake, near-canopy / contact and continuity | 2 retained, local rock detail improved | No floating base in inspected views; actual terrain fits and central outlet clearance checked separately. Missing riparian layers remain high severity. |
+| Water / stationary and uninterrupted motion | 2 retained | Existing flowing water, plunge disturbance and flight continue; no rock-aware wakes or foam. Do not credit static rock geometry as improved motion realism. |
+| Opening, Ridge held/exit, Summit / integrated environment | 2 retained | Exact retained terrain/water implementation, generic/sparse ecology and material/light inconsistencies remain high severity. |
+| About, Projects, Blog / reading and movement | Retained | One canvas, independent scrolling and outside steering, history/return/focus, direct routes and fallbacks checked locally/live. |
+| Resource readiness / loading | Added rock dependency | Model and map holds at both widths preserve the still and withhold journey controls; stale logs ignored. Actual 8-second readiness budget reported separately. |
+| Whole-world / independent evaluation | 2 diagnostic / UNVERIFIED | No category average or self-certified 45–55% human equivalence. Still and motion, physical devices and delivery remain separate gates. |
+
+Evidence: `channel-rocks-release-20260908/review.html`, actual-source `rock-grounding.json`, unchanged-function `retained-source.json` and final `publication.json`. Twenty-two matched camera pairs preserve sun/FOV/rail; animation phases differ. Original full flights and stationary holds remain distinct from reference footage and formal testing. Official Rainbow Falls photography and the DLNR Kalalau boulder-stream interval explain why layered dense vegetation, uneven exposed rock and local flow interruption are still needed. Actual observed intervals and accept/reject decisions are in the current visual record. All budgets retain their existing thresholds; compact additional downloads and any desktop/readiness failures remain visible.

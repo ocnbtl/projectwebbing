@@ -28,6 +28,7 @@ import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferG
 import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
+import {ChannelRocks} from "./channel-rocks";
 import {RidgeCanopy} from "./ridge-canopy";
 import {RIDGE_HEADWATER_VERSION, RIDGE_HEADWATER_START, RIDGE_HEADWATER_END, ridgeHeadwaterLevel, ridgeHeadwaterHalfWidth, ridgeRiverCenter, valleyRiverLevel} from "./ridge-headwater";
 import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-cliff";
@@ -6759,6 +6760,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   // than mounting the headwater only after the visitor has reached it.
   const waterfallVisible = true;
   const gltf = useLoader(GLTFLoader, `${ROOT}/water-lake-waterfall-v1.16.glb`, configureCompressedGltf);
+  const handleChannelRocksReady = useCallback(() => dispatchStage(2, "channel-rocks-ready", "ridge"), []);
   const activeWaterMaterial = useRef<ShaderMaterial | null>(null);
   const activePoolMaterial = useRef<ShaderMaterial | null>(null);
   const activeRiverMaterial = useRef<ShaderMaterial | null>(null);
@@ -7060,6 +7062,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   ]);
   return (
     <group name="Madagin Candidate CF translucent tarn and broken-runnel waterfall over Candidate CE clustered littoral succession">
+      <Suspense fallback={null}><ChannelRocks compact={mobile || tier === "conservative"} shadows={shadows} onReady={handleChannelRocksReady} /></Suspense>
       {littoralGeologyPlacements.length ? (
         <Suspense fallback={null}>
           <SourceQualityGeologyAnchors

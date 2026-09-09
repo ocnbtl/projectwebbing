@@ -2100,9 +2100,10 @@ export function PublicWorldExperience({ activeView, className, onReady, onUnavai
   useEffect(() => {
     let terrainReady = false;
     let ecologyReady = false;
+    let channelRocksReady = false;
     let frame = 0;
     const markMeaningfulReady = () => {
-      if (meaningfulReadySent.current || frame || !terrainReady || !ecologyReady) return;
+      if (meaningfulReadySent.current || frame || !terrainReady || !ecologyReady || !channelRocksReady) return;
       // Effects report committed meshes. Allow their first render before the
       // poster is removed or the flight starts, even when ecology loads first.
       frame = requestAnimationFrame(() => {
@@ -2120,6 +2121,7 @@ export function PublicWorldExperience({ activeView, className, onReady, onUnavai
       if (!detail || detail.zone !== "ridge" || (detail.at ?? 0) < readinessStartedAt.current) return;
       if (detail.stage === 0 && detail.label?.includes("terrain-ready")) terrainReady = true;
       if (detail.stage === 2 && detail.label === "ridge-ecology-ready") ecologyReady = true;
+      if (detail.stage === 2 && detail.label === "channel-rocks-ready") channelRocksReady = true;
       markMeaningfulReady();
     };
     const handleRidgeStage = (event: Event) => {
