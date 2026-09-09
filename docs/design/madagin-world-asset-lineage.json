@@ -1,4 +1,43 @@
 {
+  "cloudVolume": {
+    "version": "cloud-volume-1",
+    "runtime": [
+      "src/components/internal/cloud-volume.ts",
+      "src/components/internal/ridge-production-v116.tsx"
+    ],
+    "classification": "Authored procedural atmosphere; no measured Hawaiian cloud-density or species claim",
+    "texture": "Deterministic 64 cubed R8 avalanche-hashed field; seven linearly filtered mip levels",
+    "gpuTextureBytes": 299593,
+    "newDownloadedAssetBytes": 0,
+    "steps": {
+      "conservative": 64,
+      "balanced": 80,
+      "high": 96
+    },
+    "layerMeters": [
+      700,
+      1160
+    ],
+    "windMetersPerSecond": [
+      -4.5,
+      0,
+      2.2
+    ],
+    "method": "Stratified world-ray integration, ray-interval mip selection, Beer attenuation, sampled existing sunlight and distance haze",
+    "retained": "All existing models/maps/terrain/trees/water/local weather/sun/camera/inquiry and PCF shadows",
+    "verification": "tools/evidence/verify-cloud-volume.mjs",
+    "motion": "tools/evidence/record-cloud-motion.mjs",
+    "decision": "output/releases/madagin-cloud-volume-20260909/decision.json",
+    "publication": "output/releases/madagin-cloud-volume-20260909/publication.json",
+    "limits": [
+      "Whole-world realism remains 2/5 diagnostic.",
+      "Independent human held-out still and motion equivalence is UNVERIFIED.",
+      "High-tier 96-step branch builds but was not forced in the three observed GPU profiles.",
+      "Ordinary Projects sky is still soft and generic; far-bank fine striation is unresolved.",
+      "Terrain, foliage, water, local mist/weather, shadow mode, sun, navigation, inquiry and all existing assets remain exact.",
+      "Domain, mailbox and inquiry delivery remain UNVERIFIED; copy/download stays active."
+    ]
+  },
   "shadowFilter": {
     "version": "supported-pcf-1",
     "runtime": "src/components/internal/world-lab.tsx",

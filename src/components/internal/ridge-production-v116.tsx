@@ -3,7 +3,6 @@
 import { useFrame, useLoader } from "@react-three/fiber";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
-  BackSide,
   BufferAttribute,
   BufferGeometry,
   Color,
@@ -28,6 +27,7 @@ import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferG
 import type { JourneyCheckpointId } from "@/lib/world-manifest";
 import type { WorldQualityTier } from "./world-ecology";
 import { PhysicalSkyEnvironment } from "./world-atmosphere";
+import {CLOUD_VOLUME_VERSION,createCloudVolumeMaterial} from "./cloud-volume";
 import {ChannelRocks} from "./channel-rocks";
 import {RiparianEcology} from "./riparian-ecology";
 import {inGroundcoverBank} from "./groundcover-bank";
@@ -7101,60 +7101,16 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   );
 }
 
-function SkyDome({ reducedMotion }: { reducedMotion: boolean }) {
-  const activeMaterial = useRef<ShaderMaterial | null>(null);
-  const material = useMemo(() => new ShaderMaterial({
-    depthWrite: false,
-    side: BackSide,
-    toneMapped: true,
-    uniforms: { uTime: { value: 0 }, uSunDirection: { value: V116_SUN_DIRECTION.clone() } },
-    vertexShader: "varying vec3 vDirection; void main(){vDirection=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
-    fragmentShader: `
-      uniform float uTime;
-      uniform vec3 uSunDirection;
-      varying vec3 vDirection;
-      float skyHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-      float skyNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(skyHash(i),skyHash(i+vec2(1,0)),f.x),mix(skyHash(i+vec2(0,1)),skyHash(i+vec2(1)),f.x),f.y);}
-      float skyFbm(vec2 p){float v=0.0,a=0.56;for(int i=0;i<5;i++){v+=skyNoise(p)*a;p=p*2.03+5.17;a*=0.47;}return v;}
-      void main() {
-        vec3 direction = normalize(vDirection);
-        float h = smoothstep(-0.08, 0.82, direction.y);
-        vec3 horizon = vec3(0.15, 0.31, 0.38);
-        vec3 zenith = vec3(0.012, 0.066, 0.17);
-        float sun = pow(max(dot(direction, uSunDirection), 0.0), 180.0);
-        vec3 sky = mix(horizon, zenith, h) + vec3(1.0, 0.5, 0.2) * sun * 0.94;
-        vec2 cloudUv = direction.xz / max(0.28, 0.48 + direction.y * 0.58);
-        vec2 drift = vec2(uTime * 0.0035, -uTime * 0.0017);
-        float cloudMacro = skyFbm(cloudUv * 1.68 + vec2(2.8, -4.3) + drift);
-        float cloudMeso = skyFbm(cloudUv * 3.9 - vec2(7.1, 1.4) - drift * 1.7);
-        float cloudFine = skyFbm(cloudUv * 8.4 + vec2(1.9, 6.2) + drift * 2.3);
-        float cloudBody = cloudMacro * 0.68 + cloudMeso * 0.25 + cloudFine * 0.07;
-        float cloudFloor = smoothstep(-0.1, 0.11, direction.y);
-        float cloud = smoothstep(0.39, 0.57, cloudBody) * cloudFloor;
-        float cloudCore = smoothstep(0.53, 0.69, cloudBody);
-        float sunFacing = max(dot(direction, uSunDirection), 0.0);
-        vec3 cloudShade = mix(vec3(0.255, 0.34, 0.36), vec3(0.84, 0.81, 0.72), cloudCore * 0.72 + sunFacing * 0.22);
-        sky = mix(sky, cloudShade, cloud * (0.73 + cloudCore * 0.18));
-        float distantBank = smoothstep(0.02, 0.2, direction.y) * (1.0 - smoothstep(0.24, 0.48, direction.y));
-        sky = mix(sky, vec3(0.35, 0.49, 0.52), distantBank * smoothstep(0.46, 0.68, cloudMeso) * 0.31);
-        gl_FragColor = vec4(sky, 1.0);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }
-    `,
-  }), []);
-  useFrame(({ clock }) => {
-    const skyTime = activeMaterial.current?.uniforms.uTime;
-    if (skyTime) skyTime.value = reducedMotion ? 0 : clock.elapsedTime;
-  });
-  useEffect(() => {
-    activeMaterial.current = material;
-    return () => {
-      activeMaterial.current = null;
-      material.dispose();
-    };
-  }, [material]);
-  return <mesh material={material} scale={1900}><sphereGeometry args={[1, 36, 20]} /></mesh>;
+function SkyDome({reducedMotion,tier}:{reducedMotion:boolean;tier:WorldQualityTier}) {
+  const activeMaterial=useRef<ShaderMaterial|null>(null);
+  const sky=useMemo(()=>createCloudVolumeMaterial(tier,V116_SUN_DIRECTION),[tier]);
+  useFrame(({clock})=>{const time=activeMaterial.current?.uniforms.uTime;if(time)time.value=reducedMotion?0:clock.elapsedTime;});
+  useEffect(()=>{
+    activeMaterial.current=sky.material;
+    document.documentElement.dataset.madaginCloudVolume=JSON.stringify({version:CLOUD_VOLUME_VERSION,tier,steps:sky.material.defines.CLOUD_STEPS,noiseBytes:299593,cloudBase:700,cloudTop:1160,filteredRayFootprint:true});
+    return ()=>{activeMaterial.current=null;sky.dispose();delete document.documentElement.dataset.madaginCloudVolume;};
+  },[sky,tier]);
+  return <mesh material={sky.material} scale={1900}><sphereGeometry args={[1,36,20]} /></mesh>;
 }
 
 function createCloudMaterial(opacity: number, seed: number) {
@@ -7412,7 +7368,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
     <group name="Madagin v1.16 single physical atmosphere and lighting authority">
       <color attach="background" args={["#294b57"]} />
       <fogExp2 attach="fog" args={["#58767a", tier === "conservative" ? 0.00031 : 0.0003]} />
-      <SkyDome reducedMotion={reducedMotion} />
+      <SkyDome reducedMotion={reducedMotion} tier={tier} />
       <PhysicalSkyEnvironment intensityScale={0.64} sunDirection={V116_SUN_DIRECTION} tier={tier} />
       <hemisphereLight args={["#a9c6cd", "#13231b", 0.56]} />
       <ambientLight color="#72878a" intensity={0.08} />
