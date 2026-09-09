@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import {
   budgetOptions,
   currentSituationOptions,
@@ -41,12 +41,19 @@ function Arrow() {
   );
 }
 
+// Server-rendered choices must not invite clicks before React can retain them.
+const subscribeToHydration = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
+
 function ChoiceList({
+  disabled = false,
   multiple = false,
   onChange,
   options,
   value,
 }: {
+  disabled?: boolean;
   multiple?: boolean;
   onChange: (next: string | string[]) => void;
   options: readonly string[];
@@ -61,6 +68,7 @@ function ChoiceList({
         return (
           <button
             aria-pressed={isSelected}
+            disabled={disabled}
             className={isSelected ? styles.choiceSelected : undefined}
             key={option}
             onClick={() => {
@@ -145,6 +153,7 @@ function contactIsValid(answers: Answers) {
 }
 
 export function ContactJourney() {
+  const interactive = useSyncExternalStore(subscribeToHydration, clientReady, serverReady);
   const [answers, setAnswers] = useState<Answers>(emptyAnswers);
   const [step, setStep] = useState(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -187,8 +196,10 @@ export function ContactJourney() {
           {step === 0 ? (
             <>
               <h1 ref={headingRef} tabIndex={-1}>Where are things now?</h1>
+              <noscript><p className={styles.deliveryNotice}>Enable JavaScript to prepare a brief. You can still <Link href="/projects">explore our work</Link>.</p></noscript>
               <p className={styles.deliveryNotice}>Direct inquiries aren&apos;t open yet. Use these six questions to prepare a project brief you can save. Your answers stay in this page until you leave.</p>
               <ChoiceList
+                disabled={!interactive}
                 onChange={(value) => patchAnswers({ currentSituation: value as string })}
                 options={currentSituationOptions}
                 value={answers.currentSituation}
