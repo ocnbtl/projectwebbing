@@ -3961,5 +3961,36 @@
     "referenceRights": "Go Hawaii Wailua photography and original DLNR footage inspected remotely as references, not world textures",
     "decision": "output/releases/madagin-cascade-shape-20260910/decision.json",
     "publication": "output/releases/madagin-cascade-shape-20260910/publication.json"
+  },
+  "sourceBank": {
+    "version": "source-bank-1",
+    "runtime": [
+      "src/components/internal/channel-rocks.tsx",
+      "src/components/internal/riparian-ecology.tsx",
+      "src/components/internal/source-bank-placements.json"
+    ],
+    "sourceHashes": {
+      "public/world/canopy-v1/moss-rock.glb": "66d142bd19ea475098ec80ec29f43755a7cec605a77754e47643f15a0e4a2d2a",
+      "public/world/canopy-v1/fern.glb": "b1ff4cded168e4ebb321fdc6e208a5582d8c2449f6c031f0ac0871a52f7538be",
+      "public/world/leaf-canopy-v1/tree-0-far.glb": "047bc6d3a72181117c174b58285ab1eb6ac97a06dde6d6cf080b2d648c3d137a",
+      "public/world/leaf-canopy-v1/tree-1-far.glb": "f19c822c285e047db3dbfdc0b579e350eabf1a9a75ae86243f15786205958324"
+    },
+    "source": "Retained licensed generic crown/fern assets and seven scanned moss-rock forms; existing asset lineage and rights retained",
+    "transform": "Offline actual-terrain fitting at unequal groups beside source. Existing instances retained; no new assets or water/terrain changes.",
+    "desktop": {
+      "rocks": 16,
+      "ferns": 73,
+      "trees": 35
+    },
+    "compact": {
+      "rocks": 10,
+      "ferns": 60,
+      "trees": 25
+    },
+    "proof": "output/releases/madagin-source-bank-20260910/bank-grounding.json",
+    "gpuProof": "output/releases/madagin-source-bank-20260910/bank-gpu-public.json",
+    "referenceRights": "Remote Go Hawaii photo and original DLNR footage viewed as references only, not copied into the world",
+    "decision": "output/releases/madagin-source-bank-20260910/decision.json",
+    "publication": "output/releases/madagin-source-bank-20260910/publication.json"
   }
 }

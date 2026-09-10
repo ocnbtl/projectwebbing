@@ -7,6 +7,7 @@ import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import {normalizeChannelRock} from "./channel-rock-geometry";
 import placementData from "./channel-rock-placements.json";
+import sourceBank from "./source-bank-placements.json";
 
 export const CHANNEL_ROCKS_VERSION = "channel-rocks-1";
 export const CHANNEL_ROCKS_SOURCE = "/world/canopy-v1/moss-rock.glb";
@@ -52,9 +53,13 @@ export function ChannelRocks({compact, shadows, onReady}: {compact: boolean; sha
     });
     return result;
   }, [scene]);
-  const batches = useMemo(() => parts.map(part => ({part, placements: placementData[compact ? "compact" : "desktop"].filter(p => p.family === part.family)})), [parts, compact]);
+  const batches = useMemo(() => {
+    const key = compact ? "compact" : "desktop";
+    const placements = [...placementData[key], ...sourceBank[key].rocks];
+    return parts.map(part => ({part, placements: placements.filter(p => p.family === part.family)}));
+  }, [parts, compact]);
   useEffect(() => {
-    document.documentElement.dataset.madaginChannelRocks = JSON.stringify({version: CHANNEL_ROCKS_VERSION, compact, count: batches.reduce((n, b) => n + b.placements.length, 0), source: CHANNEL_ROCKS_SOURCE, placement: "offline-triangle-fit"});
+    document.documentElement.dataset.madaginChannelRocks = JSON.stringify({version: CHANNEL_ROCKS_VERSION, compact, count: batches.reduce((n, b) => n + b.placements.length, 0), sourceBank: sourceBank.version, sourceBankRocks: sourceBank[compact ? "compact" : "desktop"].rocks.length, source: CHANNEL_ROCKS_SOURCE, placement: "offline-triangle-fit"});
     onReady();
     return () => {delete document.documentElement.dataset.madaginChannelRocks;};
   }, [batches, compact, onReady]);

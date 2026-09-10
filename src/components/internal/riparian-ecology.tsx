@@ -11,6 +11,7 @@ import data from "./riparian-placements.json";
 import bank from "./groundcover-bank-placements.json";
 import canopy from "./bank-canopy-placements.json";
 import understory from "./bank-understory-placements.json";
+import sourceBank from "./source-bank-placements.json";
 
 type Plant = {family: string; x: number; y: number; z: number; yaw: number; height: number; tint: number};
 type Part = {family: string; geometry: Mesh["geometry"]; material: MeshStandardMaterial; depth: MeshDepthMaterial; update: (time: number) => void};
@@ -81,17 +82,19 @@ export function RiparianEcology({compact, shadows, onReady}: {compact: boolean; 
   }, [scene]);
   const selected = data[compact ? "compact" : "desktop"];
   const lower = understory[compact ? "compact" : "desktop"];
+  const source = sourceBank[compact ? "compact" : "desktop"];
   const batches = useMemo(() => {
-    const plants = [...selected.ferns, ...(compact ? [] : bank.ferns), ...lower.ferns];
+    const plants = [...selected.ferns, ...(compact ? [] : bank.ferns), ...lower.ferns, ...source.ferns];
     return parts.map(part => ({part, plants: plants.filter(p => p.family === part.family)}));
-  }, [parts, selected, lower, compact]);
+  }, [parts, selected, lower, source, compact]);
   useEffect(() => {
     document.documentElement.dataset.madaginRiparianEcology = JSON.stringify({version: "riparian-ecology-1", compact, ferns: selected.ferns.length, saplings: selected.saplings.length, placement: "offline-dry-bank-triangles"});
     document.documentElement.dataset.madaginGroundcoverBank = JSON.stringify({version: bank.version, count: compact ? 0 : bank.ferns.length, compact});
     document.documentElement.dataset.madaginBankUnderstory = JSON.stringify({version: understory.version, compact, ferns: lower.ferns.length, saplings: lower.saplings.length});
+    document.documentElement.dataset.madaginSourceBank = JSON.stringify({version: sourceBank.version, compact, rocks: source.rocks.length, ferns: source.ferns.length, trees: source.trees.length, placement: "actual-terrain-and-trunk-footprint", assets: "retained"});
     onReady();
-    return () => {delete document.documentElement.dataset.madaginRiparianEcology; delete document.documentElement.dataset.madaginGroundcoverBank; delete document.documentElement.dataset.madaginBankUnderstory;};
-  }, [compact, selected, lower, onReady]);
+    return () => {delete document.documentElement.dataset.madaginRiparianEcology; delete document.documentElement.dataset.madaginGroundcoverBank; delete document.documentElement.dataset.madaginBankUnderstory; delete document.documentElement.dataset.madaginSourceBank;};
+  }, [compact, selected, lower, source, onReady]);
   useEffect(() => () => parts.forEach(p => {p.geometry.dispose(); p.material.dispose(); p.depth.dispose();}), [parts]);
   return <group name="Layered dry riverbank vegetation">
     {batches.map(batch => <FernBatch key={batch.part.family} {...batch} shadows={shadows} />)}
@@ -99,5 +102,6 @@ export function RiparianEcology({compact, shadows, onReady}: {compact: boolean; 
     {/* Small crowns share the accepted efficient branching LOD on both tiers. */}
     <RootedTrees placements={canopy[compact ? "compact" : "desktop"]} zone="bank-canopy" compact={compact} efficient shadows={shadows} castFarShadows={!compact} />
     <RootedTrees placements={lower.saplings} zone="bank-understory" compact={compact} efficient shadows={shadows} castFarShadows={!compact} />
+    <RootedTrees placements={source.trees} zone="source-bank" compact={compact} efficient shadows={shadows} castFarShadows={!compact} />
   </group>;
 }
