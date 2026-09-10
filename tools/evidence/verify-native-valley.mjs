@@ -84,10 +84,11 @@ try {
       return {nativeValley:JSON.parse(document.documentElement.dataset.madaginNativeValley),surface:JSON.parse(document.documentElement.dataset.madaginTerrainSurface),fragment,linked:gl.getProgramParameter(program,gl.LINK_STATUS),draws,submittedIndices,textures,glError:gl.getError(),camera:JSON.parse(document.documentElement.dataset.madaginPublicCamera),canvasCount:document.querySelectorAll('canvas').length};
     });
     await fs.writeFile(path.join(out,'terrain-'+phase+'-'+width+'-observed.json'),JSON.stringify(observed,null,2)+'\n');
-    assert.equal(observed.nativeValley.version,'native-valley-1');
+    assert.equal(observed.nativeValley.version,'native-valley-2');
     assert.equal(observed.nativeValley.compact,width===390);
-    assert.ok(observed.nativeValley.changedVertices>20000&&observed.nativeValley.plants===(width===390?99:204)&&observed.nativeValley.triangleGrounded&&observed.nativeValley.sourceInteriorPreserved);
+    assert.ok(observed.nativeValley.changedVertices>8000&&observed.nativeValley.plants===(width===390?52:130)&&observed.nativeValley.triangleGrounded&&observed.nativeValley.sourceInteriorPreserved);
     assert.equal(observed.nativeValley.collarMeters,55);
+    assert.equal(observed.nativeValley.sharedLakeBoundaryProtected,true);
     assert.equal(observed.camera.progress,.34);
     assert.equal(observed.surface.version,'scanned-cover-2');
     assert.equal(observed.surface.rockTileMeters,80);

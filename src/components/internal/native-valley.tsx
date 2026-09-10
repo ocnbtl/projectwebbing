@@ -1,6 +1,7 @@
 "use client";
 
 import {Suspense, useEffect, useMemo} from "react";
+import {lakeBoundaryDistance} from "./lake-shore";
 import type {BufferGeometry} from "three";
 import field from "./native-valley-field.json";
 import {RootedTrees} from "./rooted-trees";
@@ -10,7 +11,12 @@ const smooth=(x:number)=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t);}
 
 export function nativeValleyWeight(x:number,z:number) {
   return smooth((x-field.x0)/field.collarMeters)*smooth((field.x0+field.width-x)/field.collarMeters)
-    *smooth((z-field.z0)/field.collarMeters)*smooth((field.z0+field.depth-z)/field.collarMeters);
+    *smooth((z-field.z0)/field.collarMeters)*smooth((field.z0+field.depth-z)/field.collarMeters)
+    // Preserve the shared authored lake bed and shoreline, then ease into the cliff.
+    *smooth((lakeBoundaryDistance(x,z)-1.45)/.4)
+    // The coastal shoulder is fitted to x=-310 and its source normals.
+    // Keep the seam and neighboring terrain unchanged before the inland blend.
+    *smooth((x+285)/40);
 }
 
 export function nativeValleyElevation(x:number,z:number) {
@@ -32,7 +38,7 @@ export function applyNativeValley(geometry:BufferGeometry) {
     p.setY(i,next);changed++;maxDelta=Math.max(maxDelta,Math.abs(next-y));
   }
   p.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
-  geometry.userData.nativeValley={...NATIVE_VALLEY,changedVertices:changed,maxDelta,sourceInteriorPreserved:true,authoredBoundaryCollar:true};
+  geometry.userData.nativeValley={...NATIVE_VALLEY,changedVertices:changed,maxDelta,sourceInteriorPreserved:true,authoredBoundaryCollar:true,sharedLakeBoundaryProtected:true,coastalSeamProtected:true};
   return geometry;
 }
 
