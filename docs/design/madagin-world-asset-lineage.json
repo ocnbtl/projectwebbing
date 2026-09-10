@@ -1,4 +1,48 @@
 {
+  "bankUnderstory": {
+    "version": "bank-understory-1",
+    "builder": "tools/evidence/bake-bank-understory.mjs",
+    "supportVerification": "tools/evidence/verify-bank-understory.mjs",
+    "runtimeVerification": "tools/evidence/verify-bank-understory-runtime.mjs",
+    "sourceAssets": [
+      "public/world/canopy-v1/fern.glb",
+      "public/world/leaf-canopy-v1/tree-0-far.glb",
+      "public/world/leaf-canopy-v1/tree-1-far.glb"
+    ],
+    "sourceMutation": false,
+    "newAssetRequests": 0,
+    "placement": [
+      {
+        "compact": false,
+        "ferns": 820,
+        "saplings": 160,
+        "fernTriangles": 1230072,
+        "minFernExposure": 0.65,
+        "maxRootGap": -0.030000951815118526,
+        "maxAdditionalEmbedding": 0.189,
+        "conservativeFlightClearance": 18.008486203741327
+      },
+      {
+        "compact": true,
+        "ferns": 440,
+        "saplings": 80,
+        "fernTriangles": 650568,
+        "minFernExposure": 0.65,
+        "maxRootGap": -0.03007149784884433,
+        "maxAdditionalEmbedding": 0.118,
+        "conservativeFlightClearance": 29.319377902529748
+      }
+    ],
+    "decision": "output/releases/madagin-bank-understory-20260909/decision.json",
+    "publication": "output/releases/madagin-bank-understory-20260909/publication.json",
+    "limits": [
+      "Whole-world diagnostic remains 2/5; B is open. Added lower layers improve one bank patch, not photographic Hawaiian ecology.",
+      "Generic existing CC0 plant forms are not verified native Hawaiian species. Fine foliage noise, broad bare slopes, water and lighting coherence remain unresolved.",
+      "World asset transfer excludes placement data in the JavaScript bundle; script transfer and added geometry are recorded separately.",
+      "Windows viewport measurements are not physical-device, GPU-time, thermal or paired speed evidence.",
+      "Formal independent human still and motion equivalence remain UNVERIFIED. Domain ownership, mailbox and delivery remain UNVERIFIED; copy/download stays active."
+    ]
+  },
   "canopyPayload": {
     "version": "canopy-payload-1",
     "provenance": "public/world/canopy-payload-v1/provenance.json",
