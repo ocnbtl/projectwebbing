@@ -281,11 +281,18 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     // analytic shoreline and its immediate triangle neighbors. That retained
     // AO density is already sufficient for the bounded basin-headwall relief,
     // so compact does not stack another adaptive pass on the same Valley.
-    const valley = createIntegratedWatershedTerrainGeometry(sources.valley, [], [], 2, 0);
-    if (sources.alpine) joinCompactAlpineBoundary(valley, sources.alpine);
+    const valleySource = createIntegratedWatershedTerrainGeometry(sources.valley, [], [], 2, 0);
+    valleySource.setAttribute("uv1", valleySource.getAttribute("uv").clone());
+    // The refined stream adds interior rows near -315. Use the actual outer
+    // Ridge edge; the old nearest-row query joined only a 12 m channel strip.
+    ridge.computeBoundingBox();
     const ridgeMesh = new Mesh(ridge);
+    const ridgeBoundary = extractTerrainSeamSamples(ridgeMesh, ridge.boundingBox!.min.z);
+    const ridgeInterior = extractTerrainSeamSamples(ridgeMesh, ridgeBoundary[0].z + 28);
+    const valley = createExactDetailedRidgeValleyWeldGeometry(valleySource, ridgeBoundary, ridgeInterior, true);
+    if (valley !== valleySource) valleySource.dispose();
+    if (sources.alpine) joinCompactAlpineBoundary(valley, sources.alpine);
     const valleyMesh = new Mesh(valley);
-    const ridgeBoundary = extractTerrainSeamSamples(ridgeMesh);
     const valleyBoundary = extractTerrainSeamSamples(valleyMesh);
     const field: TerrainSeamField = {
       ridge: ridgeBoundary,
@@ -297,7 +304,8 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
         ? extractTerrainSeamSamples(valleyMesh, valleyBoundary[0].z - 28)
         : [],
     };
-    const bridge = createExactBoundaryTerrainSeamBridge(field);
+    const bridge = Math.abs(ridgeBoundary[0].z - valleyBoundary[0].z) > .04
+      ? createExactBoundaryTerrainSeamBridge(field) : null;
     const removedRidgeWallTriangles = ridgeBoundary.length
       ? removeCoplanarBoundaryWall(ridge, "z", ridgeBoundary[0].z)
       : 0;
@@ -307,8 +315,9 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     ridge.computeVertexNormals();
     ridge.computeBoundingBox();
     ridge.computeBoundingSphere();
-    const diagnostics = bridge ? {
-      ...bridge.userData.terminalSeamRemesh,
+    const diagnostics = {
+      ...bridge?.userData.terminalSeamRemesh,
+      ridgeBoundary: {version: "compact-ridge-join-1", ...valley.userData.detailedRidgeValleyWeld},
       lakeShorelineSubdivision: (
         valley.userData.watershedIntegration as { subdivision?: unknown } | undefined
       )?.subdivision ?? null,
@@ -316,7 +325,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
       removedValleyWallTriangles,
       alpineBoundary: valley.userData.compactAlpineBoundary ?? null,
       scope: "normal compact journey Ridge-to-Valley connector",
-    } : null;
+    };
     ridge.name = "Madagin v1.16 compact journey Ridge terrain without terminal wall";
     valley.name = "Madagin v1.16 compact journey integrated Valley terrain without near wall";
     const coastalRidge = extendJourneyCoast(ridge, "conservative", "ridge");
@@ -3285,6 +3294,7 @@ function createExactDetailedRidgeValleyWeldGeometry(
   source: BufferGeometry,
   ridgeBoundary: CoastalBoundarySample[],
   ridgeInterior: CoastalBoundarySample[] = [],
+  preserveHeadwater = false,
 ) {
   if (ridgeBoundary.length < 2) return source;
   const sourceMesh = new Mesh(source);
@@ -3373,9 +3383,22 @@ function createExactDetailedRidgeValleyWeldGeometry(
           }));
     const indices: number[] = [];
     const z = interiorZ + stripSpan * along;
+    if (preserveHeadwater && row > 0 && row < rows) {
+      const center = v116RiverCenter(z), half = ridgeChannelWidth(z) * 2.4;
+      for (let x = center - half; x <= center + half; x += .4) samples.push({x});
+      samples.sort((a, b) => a.x - b.x);
+    }
     samples.forEach(({ x }) => {
       indices.push(positions.length / 3);
-      positions.push(x, heightAt(x, along), z);
+      let height = heightAt(x, along);
+      if (preserveHeadwater && row > 0 && row < rows && z >= RIDGE_HEADWATER_END && z <= RIDGE_HEADWATER_START) {
+        const across = Math.abs(x - v116RiverCenter(z)) / ridgeChannelWidth(z);
+        const bed = ridgeHeadwaterLevel(z) - .5 + Math.pow(Math.min(across, 2.2), 1.7) * .42;
+        // The shared edge stays exact. The tiny strip interior carries the
+        // retained incised bed instead of a Hermite arch through the stream.
+        height += (Math.min(height, bed) - height) * (1 - smoothRange(1.7, 2.2, across));
+      }
+      positions.push(x, height, z);
       uvs.push(
         (x - (bounds?.min.x ?? -730)) / uvWidth,
         (z - (bounds?.min.z ?? -980)) / uvDepth,

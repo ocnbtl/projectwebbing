@@ -3992,5 +3992,84 @@
     "referenceRights": "Remote Go Hawaii photo and original DLNR footage viewed as references only, not copied into the world",
     "decision": "output/releases/madagin-source-bank-20260910/decision.json",
     "publication": "output/releases/madagin-source-bank-20260910/publication.json"
+  },
+  "groundSubstrate": {
+    "version": "ground-substrate-1",
+    "source": "https://polyhaven.com/a/aerial_grass_rock",
+    "license": "CC0",
+    "author": "Rob Tuytel",
+    "tileMeters": 15,
+    "manifest": "public/world/ground-substrate-v1/manifest.json",
+    "files": [
+      {
+        "role": "color",
+        "size": 256,
+        "input": "public/world/assets/polyhaven/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg",
+        "sourceSha256": "57b8041bfe0d0f01430e4dbaad45e7ddddf0a9fc97317f90dbc51f7b0d9e1b5d",
+        "output": "public/world/ground-substrate-v1/color-compact.webp",
+        "bytes": 38494,
+        "sha256": "127d93bf4490fead9f7c72d7254bd9399c9487bff12f31b718b68d66d79bfd6f",
+        "lossless": false,
+        "lossyRmse": 4.304819833114148,
+        "normalMeanAngle": null,
+        "colorspace": "sRGB"
+      },
+      {
+        "role": "normal",
+        "size": 256,
+        "input": "public/world/assets/polyhaven/aerial_grass_rock/aerial_grass_rock_nor_gl_1k.jpg",
+        "sourceSha256": "1aa3e23bff453f152e089b9f83aa36b4901651e019f7e2ca01d5331a9bbbda78",
+        "output": "public/world/ground-substrate-v1/normal.webp",
+        "bytes": 116436,
+        "sha256": "1b170a6e61fffd5b06fd3c5c5130f2159e869e5e1d1335e2861978e15f42fd74",
+        "lossless": true,
+        "lossyRmse": 5.863262165469718,
+        "normalMeanAngle": 3.3034971013994734,
+        "colorspace": "linear"
+      },
+      {
+        "role": "response",
+        "size": 256,
+        "input": "public/world/assets/polyhaven/aerial_grass_rock/aerial_grass_rock_arm_1k.jpg",
+        "sourceSha256": "95d8f5180bafaab3f76c394cee3dca9b4f8ca6531281c00c4a06e4485d0ab956",
+        "output": "public/world/ground-substrate-v1/response.webp",
+        "bytes": 102294,
+        "sha256": "c1a70e9236d307a9747ea0946ad9fcdfa2c8f3f0ec8533f170481e1829ba9764",
+        "lossless": true,
+        "lossyRmse": 4.569529513591737,
+        "normalMeanAngle": null,
+        "colorspace": "linear"
+      },
+      {
+        "role": "color",
+        "size": 1024,
+        "output": "public/world/canopy-v1/rock-color.webp",
+        "bytes": 465898,
+        "sha256": "9dc1f628955ddbe9f1b1e254c7a72db4b45da56da66f6a2d41eb850b2bd1456e",
+        "reused": true,
+        "colorspace": "sRGB"
+      }
+    ],
+    "geometry": false,
+    "referenceRights": "Remote genuine Hawaii references inspected only; no reference images substituted into the world",
+    "decision": "output/releases/madagin-ground-substrate-20260910/decision.json"
+  },
+  "compactRidgeJoin": {
+    "version": "compact-ridge-join-1",
+    "scope": {
+      "stripZ": [
+        -337.75,
+        -335
+      ],
+      "maximumEdgeGap": 1.7763568394002505e-15,
+      "edgeProbes": 1237,
+      "rayPixels": 9,
+      "minimumWaterClearance": 0.2934200158877416,
+      "maximumAwayDifference": 0
+    },
+    "sourceAssetsUnchanged": true,
+    "method": "Actual decoded Ridge boundary and first-cell Valley replacement with retained headwater bed",
+    "proof": "output/releases/madagin-ground-substrate-20260910/foreground-seam-check.json",
+    "publication": "output/releases/madagin-ground-substrate-20260910/publication.json"
   }
 }

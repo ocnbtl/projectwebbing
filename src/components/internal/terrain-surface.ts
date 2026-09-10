@@ -7,12 +7,14 @@ import { FrontSide, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, Textur
 import type { Texture } from "three";
 
 export const TERRAIN_SURFACE = {
-  version: "scanned-cover-2",
+  version: "ground-substrate-1",
   rockTileMeters: 80,
+  groundTileMeters: 15,
+  groundDataResolution: 256,
   coverMethod: "scan-oriented slope and cavity support",
   geometryChanged: false,
-  sources: ["/world/cliff-material-v1/color.webp", "/world/cliff-material-v1/normal.webp", "/world/cliff-material-v1/response.webp", "/world/canopy-v1/forest-color.webp"],
-  compactSources: ["/world/cliff-material-v1/color-compact.webp", "/world/cliff-material-v1/normal-compact.webp", "/world/cliff-material-v1/response-compact.webp", "/world/cliff-material-v1/ground-compact.webp"],
+  sources: ["/world/cliff-material-v1/color.webp", "/world/cliff-material-v1/normal.webp", "/world/cliff-material-v1/response.webp", "/world/canopy-v1/rock-color.webp", "/world/ground-substrate-v1/normal.webp", "/world/ground-substrate-v1/response.webp"],
+  compactSources: ["/world/cliff-material-v1/color-compact.webp", "/world/cliff-material-v1/normal-compact.webp", "/world/cliff-material-v1/response-compact.webp", "/world/ground-substrate-v1/color-compact.webp", "/world/ground-substrate-v1/normal.webp", "/world/ground-substrate-v1/response.webp"],
 } as const;
 
 // One world-space projection controls color, roughness, occlusion and normal
@@ -22,7 +24,7 @@ export function createTerrainSurface(textures: Texture[]) {
   material.name = "Madagin scanned rock and slope cover";
   material.customProgramCacheKey = () => TERRAIN_SURFACE.version + LAKE_SHORE_VERSION + PLUNGE_BASIN_VERSION + CASCADE_VERSION;
   material.onBeforeCompile = shader => {
-    ["uCliffColor", "uCliffNormal", "uCliffResponse", "uGroundColor"].forEach((name, i) => {shader.uniforms[name] = {value: textures[i]};});
+    ["uCliffColor", "uCliffNormal", "uCliffResponse", "uGroundColor", "uGroundNormal", "uGroundResponse"].forEach((name, i) => {shader.uniforms[name] = {value: textures[i]};});
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vGroundWorld; varying vec3 vGroundNormal;")
       .replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvGroundWorld = (modelMatrix * vec4(transformed, 1.0)).xyz; vGroundNormal = inverseTransformDirection(transformedNormal, viewMatrix);");
@@ -32,7 +34,7 @@ export function createTerrainSurface(textures: Texture[]) {
         ${PLUNGE_BASIN_GLSL}
         ${CASCADE_GLSL}
         varying vec3 vGroundWorld; varying vec3 vGroundNormal;
-        uniform sampler2D uCliffColor, uCliffNormal, uCliffResponse, uGroundColor;
+        uniform sampler2D uCliffColor, uCliffNormal, uCliffResponse, uGroundColor, uGroundNormal, uGroundResponse;
         vec3 groundWeights(vec3 n) {
           vec3 w = pow(abs(n), vec3(4.0));
           return w / max(dot(w, vec3(1.0)), 0.0001);
@@ -46,8 +48,8 @@ export function createTerrainSurface(textures: Texture[]) {
         // derivatives transport all three gradients into the SAME view basis.
         // This preserves the macro normal and avoids axis seams and inverted
         // tangent normals on negative-facing or steep terrain.
-        vec2 groundSlope(vec2 plane) {
-          vec3 n = texture2D(uCliffNormal, plane / ${TERRAIN_SURFACE.rockTileMeters.toFixed(1)}).xyz * 2.0 - 1.0;
+        vec2 groundSlope(sampler2D source, vec2 plane, float meters) {
+          vec3 n = texture2D(source, plane / meters).xyz * 2.0 - 1.0;
           vec2 gradient = -n.xy / max(n.z, 0.25);
           return vec2(dot(gradient, dFdx(plane)), dot(gradient, dFdy(plane)));
         }
@@ -57,19 +59,25 @@ export function createTerrainSurface(textures: Texture[]) {
         vec3 terrainWeights = groundWeights(terrainNormal);
         vec3 cliff = groundSample(uCliffColor, vGroundWorld, terrainWeights, ${TERRAIN_SURFACE.rockTileMeters.toFixed(1)});
         vec3 response = groundSample(uCliffResponse, vGroundWorld, terrainWeights, ${TERRAIN_SURFACE.rockTileMeters.toFixed(1)});
-        vec3 ground = groundSample(uGroundColor, vGroundWorld, terrainWeights, 6.0);
+        vec3 ground = groundSample(uGroundColor, vGroundWorld, terrainWeights, ${TERRAIN_SURFACE.groundTileMeters.toFixed(1)});
+        vec3 groundResponse = groundSample(uGroundResponse, vGroundWorld, terrainWeights, ${TERRAIN_SURFACE.groundTileMeters.toFixed(1)});
         // Transport the scan slope once in world space. Both cover and lighting
         // then respond to the same rock faces instead of painting an unbroken
         // green film across every interpolated upward-facing mesh normal.
-        vec2 surfaceSlope = groundSlope(vGroundWorld.zy) * terrainWeights.x
-          + groundSlope(vGroundWorld.xz) * terrainWeights.y
-          + groundSlope(vGroundWorld.xy) * terrainWeights.z;
+        vec2 surfaceSlope = groundSlope(uCliffNormal, vGroundWorld.zy, 80.0) * terrainWeights.x
+          + groundSlope(uCliffNormal, vGroundWorld.xz, 80.0) * terrainWeights.y
+          + groundSlope(uCliffNormal, vGroundWorld.xy, 80.0) * terrainWeights.z;
+        vec2 substrateSlope = groundSlope(uGroundNormal, vGroundWorld.zy, 15.0) * terrainWeights.x
+          + groundSlope(uGroundNormal, vGroundWorld.xz, 15.0) * terrainWeights.y
+          + groundSlope(uGroundNormal, vGroundWorld.xy, 15.0) * terrainWeights.z;
         vec3 surfaceDx = dFdx(vGroundWorld), surfaceDy = dFdy(vGroundWorld);
         vec3 surfaceR1 = cross(surfaceDy, terrainNormal), surfaceR2 = cross(terrainNormal, surfaceDx);
         float surfaceDeterminant = dot(surfaceDx, surfaceR1);
         vec3 surfaceGradient = vec3(0.0);
+        vec3 substrateGradient = vec3(0.0);
         if (abs(surfaceDeterminant) > 1e-8) {
           surfaceGradient = (surfaceSlope.x * surfaceR1 + surfaceSlope.y * surfaceR2) / surfaceDeterminant;
+          substrateGradient = (substrateSlope.x * surfaceR1 + substrateSlope.y * surfaceR2) / surfaceDeterminant;
         }
         vec3 supportNormal = normalize(terrainNormal - surfaceGradient * .55);
         float supportSlope = mix(abs(terrainNormal.y), abs(supportNormal.y), .45);
@@ -95,7 +103,7 @@ export function createTerrainSurface(textures: Texture[]) {
         // Bounded authored reflectance adjustment keeps the generic scan's
         // contrast while placing it beside this world's shaded forest. This
         // is an art-directed material, not measured Hawaiian rock reflectance.
-        vec3 soil = ground * vec3(.26, .52, .23);
+        vec3 soil = ground * vec3(.58, .76, .52);
         vec3 weatheredRock = cliff * vec3(.58, .65, .64);
         // Exposed low banks reveal damp mineral soil instead of grass growing
         // beneath the lake. The scanned detail and common sun remain active.
@@ -104,13 +112,14 @@ export function createTerrainSurface(textures: Texture[]) {
         diffuseColor.rgb = mix(weatheredRock, groundCover, cover * .96) * mix(1.0, .56, surfaceWet);
       `)
       .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
-        roughnessFactor = clamp(mix(response.g, .94, cover) - surfaceWet * .18, .52, .98);
+        roughnessFactor = clamp(mix(response.g, groundResponse.g, cover) - surfaceWet * .18, .52, .98);
       `)
       .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
-        normal = normalize(normal - mat3(viewMatrix) * surfaceGradient * mix(.72, .20, cover));
+        vec3 detailGradient = mix(surfaceGradient * .72, substrateGradient * .48, cover);
+        normal = normalize(normal - mat3(viewMatrix) * detailGradient);
       `)
       .replace("#include <aomap_fragment>", `#include <aomap_fragment>
-        reflectedLight.indirectDiffuse *= mix(.56 + .44 * response.r, 1.0, cover);
+        reflectedLight.indirectDiffuse *= .56 + .44 * mix(response.r, groundResponse.r, cover);
       `);
   };
   return material;
