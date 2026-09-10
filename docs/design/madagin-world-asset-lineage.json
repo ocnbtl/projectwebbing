@@ -3914,5 +3914,16 @@
     "decision": "output/releases/madagin-water-contact-20260910/decision.json",
     "publication": "output/releases/madagin-water-contact-20260910/publication.json",
     "referenceRights": "Go Hawaii Wailua photograph and original DLNR video inspected remotely as reference only; not copied into world assets."
+  },
+  "cascadeBreakup": {
+    "version": "cascade-breakup-1",
+    "retainedGuide": "contact-cascade-1",
+    "runtime": "src/components/internal/falling-water.tsx",
+    "source": "Authored procedural material and spray; no acquired assets",
+    "transform": "Intermediate-scale advected lobes, derivative-filtered bubbles, wider radial impact foam and dispersed spray. No mesh geometry or particle-count change.",
+    "geometryProof": "output/releases/madagin-water-breakup-20260910/water-preservation.json",
+    "referenceRights": "Go Hawaii Wailua photograph and original DLNR video inspected remotely as reference only, not world textures.",
+    "decision": "output/releases/madagin-water-breakup-20260910/decision.json",
+    "publication": "output/releases/madagin-water-breakup-20260910/publication.json"
   }
 }

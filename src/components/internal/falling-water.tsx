@@ -6,7 +6,7 @@ import {BufferGeometry, DoubleSide, Float32BufferAttribute, ShaderMaterial, Vect
 
 import {CASCADE_VERSION, CASCADE_START_Z, cascadeSection, cascadeLevel} from "./cascade-contact";
 type Point = {x:number;y:number;z:number};
-export const FALLING_WATER = {version:"contact-cascade-1",gravity:9.81,entrySpeed:2.4} as const;
+export const FALLING_WATER = {version:"cascade-breakup-1",gravity:9.81,entrySpeed:2.4} as const;
 
 // The route is authored to follow the retained cliff. Gravity supplies travel
 // time along the drop, not a claim of a free-flight or fluid simulation.
@@ -37,7 +37,7 @@ export function createFallingWaterGeometry(top:Point,bottom:Point,lipHalfWidth:n
   geometry.setAttribute("position",new Float32BufferAttribute(positions,3));geometry.setAttribute("uv",new Float32BufferAttribute(uvs,2));
   geometry.setAttribute("travelTime",new Float32BufferAttribute(times,1));geometry.setAttribute("aeration",new Float32BufferAttribute(aeration,1));
   geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
-  geometry.userData.waterfallBody={version:CASCADE_VERSION,top,bottom,lipHalfWidthMeters:lipHalfWidth,rows,columns,travelSeconds:fallingTravelTime(top.y-bottom.y),gravity:FALLING_WATER.gravity,entrySpeed:FALLING_WATER.entrySpeed,contactPathAuthored:true,connectedGeometry:true,centralSpineContinuous:true,terrainGuide:true,topology:"Closed cross sections follow the actual headwall guide; local grade controls aeration. Retained source and pool join; no fluid simulation."};
+  geometry.userData.waterfallBody={version:FALLING_WATER.version,guideVersion:CASCADE_VERSION,top,bottom,lipHalfWidthMeters:lipHalfWidth,rows,columns,travelSeconds:fallingTravelTime(top.y-bottom.y),gravity:FALLING_WATER.gravity,entrySpeed:FALLING_WATER.entrySpeed,contactPathAuthored:true,connectedGeometry:true,centralSpineContinuous:true,terrainGuide:true,topology:"Closed cross sections follow the actual headwall guide; local grade controls aeration. Retained source and pool join; no fluid simulation."};
   return geometry;
 }
 const NOISE=`
@@ -52,18 +52,21 @@ export function createFallingWaterMaterial(sun:Vector3) {
     fragmentShader:`uniform float uTime;uniform vec3 uSun;varying float vAir;varying vec2 vUv;varying float vTravel;varying vec3 vWorld;${NOISE}
     void main(){
       float clock=vTravel-uTime;
-      float broad=noise(vec2(vUv.x*9.,clock*2.2));
-      float strands=noise(vec2(vUv.x*23.+broad*1.5,clock*6.1));
-      float fine=noise(vec2(vUv.x*71.+strands*2.,clock*17.));
-      float core=smoothstep(.22,.64,broad*.58+strands*.42);
-      float edge=mix(.36,1.,smoothstep(0.,.06,vUv.x)*smoothstep(0.,.06,1.-vUv.x));
-      float air=vAir;
-      float torn=smoothstep(.27,.49,broad*.4+strands*.4+fine*.2);
-      float channels=.5+.5*sin(vUv.x*25.+broad*2.);
-      float alpha=edge*mix(.24+core*.3,(.38+core*.51)*mix(.5,torn,air*.7),air)*mix(.65,1.,channels);
+      // Broad, advected lobes carry the water mass. Small bubbles are filtered
+      // at the pixel footprint instead of drawing a persistent comb of lines.
+      float broad=noise(vec2(vUv.x*4.7,clock*4.1));
+      float folded=noise(vec2(vUv.x*7.3+broad*1.8,clock*11.7));
+      vec2 bubbleUv=vec2(vUv.x*19.+folded,clock*31.);
+      float bubble=mix(noise(bubbleUv),.5,smoothstep(.35,1.2,length(fwidth(bubbleUv))));
+      float body=smoothstep(.19,.75,broad*.72+folded*.28);
+      float air=clamp(vAir+vUv.y*.18,0.,1.)*mix(.35,1.,smoothstep(0.,.12,vUv.y));
+      float edgeDistance=min(vUv.x,1.-vUv.x);
+      float edge=smoothstep(0.,.025+(.5-folded)*.025,edgeDistance);
+      float breakup=smoothstep(.28,.64,broad*.65+folded*.35);
+      float alpha=edge*mix(.3+body*.2,.32+body*.32,air)*mix(1.,breakup,.68*air);
       vec3 normal=normalize(cross(dFdx(vWorld),dFdy(vWorld)));
-      float light=.69+.31*abs(dot(normal,uSun));
-      vec3 color=mix(vec3(.16,.27,.27),vec3(.91,.94,.90),clamp(.22+core*.43+air*.40+fine*.10,0.,1.))*light;
+      float light=.82+.18*abs(dot(normal,uSun));
+      vec3 color=mix(vec3(.23,.34,.34),vec3(.87,.92,.89),clamp(.16+air*.52+body*.22+bubble*.1,0.,1.))*light;
       if(alpha<.035)discard;gl_FragColor=vec4(color,alpha);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
@@ -79,11 +82,15 @@ export function createFallingImpactMaterial() {
       // Noise travels outwards in radial coordinates. An angular embedding
       // avoids a seam at +/-pi, and age fades each departing patch.
       vec2 flow=vec2(cos(a)*4.,sin(a)*4.)+vec2(r*7.-uTime*.85,r*5.-uTime*.61);
-      float patches=noise(flow)*.65+noise(flow*2.7)*.35;
-      float core=exp(-r*r*32.);
-      float wake=(1.-smoothstep(.12,1.,r))*smoothstep(.29,.68,patches);
-      float alpha=(core*.7+wake*.57)*(1.-smoothstep(.78,1.,r));
-      gl_FragColor=vec4(vec3(.64,.73,.70),alpha);
+      float patches=noise(flow)*.72+noise(flow*2.7)*.28;
+      float core=exp(-r*r*14.)*(.68+patches*.32);
+      float wake=(1.-smoothstep(.18,.96,r))*smoothstep(.24,.66,patches);
+      // Departing crests lose energy and fragment as they spread into the pool.
+      float phase=r*26.-uTime*2.4+noise(p*4.)*2.4;
+      float crest=smoothstep(.74,.98,sin(phase))*(1.-smoothstep(.25,1.,r));
+      float foam=clamp(core*.8+wake*.56,0.,1.);
+      float alpha=(foam+crest*.12)*(1.-smoothstep(.8,1.,r));
+      gl_FragColor=vec4(mix(vec3(.35,.49,.48),vec3(.81,.87,.83),foam),alpha);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }`});
@@ -98,7 +105,7 @@ export function FallingSpray({origin,compact,reducedMotion}:{origin:Point;compac
     const geometry=new BufferGeometry();geometry.setAttribute("position",new Float32BufferAttribute(positions,3));geometry.setAttribute("seed",new Float32BufferAttribute(seed,4));
     const material=new ShaderMaterial({name:"Madagin short-lived ballistic impact spray",transparent:true,depthWrite:false,uniforms:{uTime:{value:0}},
       vertexShader:`uniform float uTime;attribute vec4 seed;varying float vAlpha;
-      void main(){float mist=step(.68,seed.w);float life=mix(.7+seed.y*.65,2.8+seed.y*2.,mist);float age=fract(uTime/life+seed.x)*life;float angle=seed.z*6.2831853;float speed=mix(2.+seed.w*5.,1.2+seed.z*1.3,mist);vec3 p=position;p.x+=cos(angle)*speed*age+mist*age*.6;p.z+=sin(angle)*speed*age+age*.8;p.y+=mix(.2+(3.3+seed.y*3.)*age-4.905*age*age,.2+age*.65,mist);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(mix(.035+seed.w*.07,1.6+seed.y*2.4,mist)*650./max(1.,-mv.z),.6,28.);vAlpha=smoothstep(0.,.12,age)*(1.-smoothstep(life*.4,life,age))*mix(.52,.065,mist)*step(-.1,p.y);}`,
+      void main(){float mist=step(.6,seed.w);float life=mix(.7+seed.y*.65,2.2+seed.y*1.2,mist);float age=fract(uTime/life+seed.x)*life;float angle=seed.z*6.2831853;float speed=mix(2.+seed.w*5.,1.2+seed.z*1.3,mist);vec3 p=position;p.x+=(seed.y-.5)*7.+cos(angle)*speed*age+mist*age*.6;p.z+=sin(angle)*speed*age+age*.8;p.y+=mix(.2+(3.3+seed.y*3.)*age-4.905*age*age,.2+age*.85,mist);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(mix(.035+seed.w*.07,2.4+seed.y*3.2,mist)*650./max(1.,-mv.z),.6,32.);vAlpha=smoothstep(0.,.12,age)*(1.-smoothstep(life*.35,life,age))*mix(.52,.1,mist)*step(-.1,p.y);}`,
       fragmentShader:`varying float vAlpha;void main(){float r=length(gl_PointCoord-.5)*2.;float a=(1.-smoothstep(.2,1.,r))*vAlpha;if(a<.01)discard;gl_FragColor=vec4(.74,.81,.78,a);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
