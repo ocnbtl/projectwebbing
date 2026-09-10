@@ -688,9 +688,9 @@
     "independentHumanEquivalence": "UNVERIFIED"
   },
   "schemaVersion": 2,
-  "lastReverified": "2026-09-09",
+  "lastReverified": "2026-09-10",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-terrain-cover-20260909/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-valley-relief-20260910/publication.json",
   "cliffSurfaceRelease": {
     "runtime": "src/components/internal/terrain-surface.ts",
     "provenance": "public/world/cliff-material-v1/provenance.json",
@@ -3843,5 +3843,53 @@
       "Balanced and high desktop transfer are too large for an unqualified production claim",
       "BH improves only one eastern-Valley second-order drainage residual; broader high-versus-balanced aerial differentiation remains modest relative to high's retained geometry and transfer cost"
     ]
+  },
+  "nativeValley": {
+    "version": "native-valley-1",
+    "sourceSha256": "1c73d38004fa26eeba80b0a9e1bdd317b097eb007cebe53bcf76f39149e0bcec",
+    "source": "NOAA CUDEM Hawaii 2021",
+    "sourceUrl": "https://chs.coast.noaa.gov/htdata/raster2/elevation/NCEI_ninth_Topobathy_Hawaii_9428/tiles/ncei19_n22x25_w159x75_2021v1.tif",
+    "sourcePixelWindow": [
+      2944,
+      2488,
+      152,
+      91
+    ],
+    "sourceCenter": [
+      -159.657,
+      22.172
+    ],
+    "sceneYawDegrees": 90,
+    "sourceGridMeters": [
+      3.4358024647804157,
+      3.1816972080670625
+    ],
+    "rows": 152,
+    "columns": 91,
+    "x0": -350,
+    "z0": -890,
+    "width": 309.2222218302374,
+    "depth": 480.43627841812645,
+    "verticalTranslation": 0,
+    "collarMeters": 55,
+    "sourceRange": [
+      -2.7903175354003906,
+      218.70217895507812
+    ],
+    "precisionMeters": 0.01,
+    "rights": "NOAA public domain in the United States; CIRES CUDEM DOI 10.25921/ds9v-ky35",
+    "accuracy": "Nominal 1/9 arc-second grid, mixed/interpolated sources; not uniform 3 m survey accuracy",
+    "transform": "Native source grid and metres retained. Geographic window rotated 90 degrees about vertical and translated into an authored scene. Only 55 m boundary collar blends to retained terrain. No residual extraction, relief exaggeration or geographic continuity claim for the whole world.",
+    "fieldBytes": 84428,
+    "fieldSha256": "a36a39cb486e59ab4f399becb18a96656880649cc9f9ac6d422ede9be42286e0",
+    "quantizationMaxErrorMeters": 0.0050048828125,
+    "runtime": "src/components/internal/native-valley.tsx",
+    "field": "src/components/internal/native-valley-field.json",
+    "builder": "tools/terrain/build-native-valley.py",
+    "geometryProof": "output/releases/madagin-valley-relief-20260910/geometry-local.json",
+    "planting": "Actual render triangle sampler; inherited invalidated trees removed; 204 desktop/99 compact generic CC0 tree placements. Not a native-species claim.",
+    "material": "Retained scanned-cover-2 at source 80 m scale",
+    "decision": "output/releases/madagin-valley-relief-20260910/decision.json",
+    "publication": "output/releases/madagin-valley-relief-20260910/publication.json"
   }
 }

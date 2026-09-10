@@ -34,6 +34,7 @@ import {inGroundcoverBank} from "./groundcover-bank";
 import {RidgeCanopy} from "./ridge-canopy";
 import {RIDGE_HEADWATER_VERSION, RIDGE_HEADWATER_START, RIDGE_HEADWATER_END, ridgeHeadwaterLevel, ridgeHeadwaterHalfWidth, ridgeRiverCenter, valleyRiverLevel} from "./ridge-headwater";
 import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-cliff";
+import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./native-valley";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
 import {FALLING_WATER, FallingSpray, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
@@ -166,7 +167,7 @@ function useEcologyManifest(zone: V116Zone) {
     const source = typeof raw === "string" ? raw : new TextDecoder().decode(raw as ArrayBuffer);
     const parsed=JSON.parse(source) as EcologyManifest;
     const manifest={...parsed,instances:parsed.instances.filter(p=>!isPlungeWetPlant(p[2],p[3],p[4]))};
-    return zone === "ridge" ? {...manifest,instances:manifest.instances.filter(p=>nativeCliffWeight(p[2],p[4])===0)} : manifest;
+    return {...manifest,instances:manifest.instances.filter(p=>nativeValleyWeight(p[2],p[4])===0 && (zone!=="ridge" || nativeCliffWeight(p[2],p[4])===0))};
   }, [raw,zone]);
 }
 
@@ -335,6 +336,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
   return (
     <group name="Madagin v1.16 exact-boundary compact journey Ridge-to-Valley terrain">
       <NativeCliffPlants geometry={geometries.ridge} compact shadows={shadows}/>
+      <NativeValleyPlants geometry={geometries.valley} compact shadows={shadows}/>
       {geometries.ridge ? (
         <mesh castShadow={shadows} geometry={geometries.ridge} material={ridgeMaterial} receiveShadow />
       ) : null}
@@ -2724,6 +2726,8 @@ function createIntegratedWatershedTerrainGeometry(
       waterfallTop: WATERFALL_TOP,
     },
   };
+  applyNativeValley(geometry);
+  reconcileCoincidentTerrainNormals(geometry);
   return createRidgeHeadwaterTerrain(geometry);
 }
 
@@ -2957,7 +2961,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     };
   }, [alpineGeometry, coastalBoundary, coastalHeightfield, connectedGeometry, connectedValleyCoastGeometry, material, ridgeGeometry, southernCoastalBoundary, terminalBridgeGeometry, terminalChunkGeometry, watershedGeometry, zone]);
 
-  return (<><NativeCliffPlants geometry={ridgeGeometry ?? connectedGeometry} shadows={shadows}/>{connectedGeometry ? (
+  return (<><NativeCliffPlants geometry={ridgeGeometry ?? connectedGeometry} shadows={shadows}/><NativeValleyPlants geometry={watershedGeometry} shadows={shadows}/>{connectedGeometry ? (
     <>
       <mesh
         castShadow={shadows}
