@@ -4,8 +4,9 @@ import {useFrame} from "@react-three/fiber";
 import {useEffect, useMemo, useRef} from "react";
 import {BufferGeometry, DoubleSide, Float32BufferAttribute, ShaderMaterial, Vector3} from "three";
 
+import {CASCADE_VERSION, CASCADE_START_Z, cascadeSection, cascadeLevel} from "./cascade-contact";
 type Point = {x:number;y:number;z:number};
-export const FALLING_WATER = {version:"gravity-fall-1",gravity:9.81,entrySpeed:2.4} as const;
+export const FALLING_WATER = {version:"contact-cascade-1",gravity:9.81,entrySpeed:2.4} as const;
 
 // The route is authored to follow the retained cliff. Gravity supplies travel
 // time along the drop, not a claim of a free-flight or fluid simulation.
@@ -14,33 +15,31 @@ export function fallingTravelTime(drop:number) {
 }
 
 export function createFallingWaterGeometry(top:Point,bottom:Point,lipHalfWidth:number) {
-  const positions:number[]=[],uvs:number[]=[],times:number[]=[],indices:number[]=[];
-  const rows=144,columns=40;
+  const positions:number[]=[],uvs:number[]=[],times:number[]=[],aeration:number[]=[],indices:number[]=[];
+  const rows=160,columns=40;
   for(let row=0;row<=rows;row++){
-    const p=row/rows,drop=(top.y-bottom.y)*p,flex=Math.sin(Math.PI*p);
-    const x=top.x+(bottom.x-top.x)*Math.pow(p,1.18)+Math.sin(p*7.2)*flex*.42;
-    const z=top.z+(bottom.z-top.z)*Math.pow(p,1.42)+Math.sin(p*6.1)*flex*.3;
-    // Preserve the supplied lip, then contract the coherent core as it speeds
-    // up. The air-entrained lower fringe spreads only a few metres.
-    const halfWidth=lipHalfWidth*(1-.24*Math.sin(Math.PI*p*.8))+p*p*2.3;
+    const p=row/rows,z=CASCADE_START_Z+(bottom.z-CASCADE_START_Z)*p,section=cascadeSection(z);
+    const centerY=cascadeLevel(section.x,z),before=cascadeSection(z-.3),after=cascadeSection(z+.3);
+    const grade=Math.max(0,(cascadeLevel(before.x,z-.3)-cascadeLevel(after.x,z+.3))/.6);
     for(let col=0;col<=columns;col++){
-      const u=col/columns,angle=u*Math.PI*2,a=Math.cos(angle);
-      const edge=(Math.sin(p*19+a*2.4)*.23+Math.sin(p*37-a*4.1)*.13)*flex;
-      const thickness=(.34*(1-p)+.18+p*p*.62);
-      positions.push(x+a*(halfWidth+edge),top.y-drop,z+Math.sin(angle)*thickness+Math.sin(a*8+p*16)*flex*.15);
-      uvs.push((a+1)*.5,p);times.push(fallingTravelTime(drop));
+      const angle=col/columns*Math.PI*2,a=Math.cos(angle),envelope=Math.sin(Math.PI*p);
+      const width=a<0?section.left:section.right;
+      const edge=1+(Math.sin(p*23+a*3.1)*.035+Math.sin(p*47-a*5.4)*.022)*envelope;
+      const x=section.x+a*width*edge;
+      const lobe=(Math.sin(a*9+p*7)*.12+Math.sin(a*17-p*13)*.06)*envelope;
+      const thickness=.14+Math.min(1,grade)*.25;
+      positions.push(x,cascadeLevel(x,z)+Math.sin(angle)*thickness+lobe,z);
+      uvs.push((a+1)*.5,p);times.push(fallingTravelTime(top.y-centerY));aeration.push(Math.min(1,.15+grade*.55));
       if(row<rows&&col<columns){const i=row*(columns+1)+col;indices.push(i,i+columns+1,i+1,i+1,i+columns+1,i+columns+2);}
     }
   }
   const geometry=new BufferGeometry();
-  geometry.setAttribute("position",new Float32BufferAttribute(positions,3));
-  geometry.setAttribute("uv",new Float32BufferAttribute(uvs,2));
-  geometry.setAttribute("travelTime",new Float32BufferAttribute(times,1));
+  geometry.setAttribute("position",new Float32BufferAttribute(positions,3));geometry.setAttribute("uv",new Float32BufferAttribute(uvs,2));
+  geometry.setAttribute("travelTime",new Float32BufferAttribute(times,1));geometry.setAttribute("aeration",new Float32BufferAttribute(aeration,1));
   geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
-  geometry.userData.waterfallBody={version:FALLING_WATER.version,top,bottom,lipHalfWidthMeters:lipHalfWidth,rows,columns,travelSeconds:fallingTravelTime(top.y-bottom.y),gravity:FALLING_WATER.gravity,entrySpeed:FALLING_WATER.entrySpeed,contactPathAuthored:true,connectedGeometry:true,centralSpineContinuous:true,topology:"One lip-aligned closed elliptic water body; accelerating coherent core with a bounded aerated fringe"};
+  geometry.userData.waterfallBody={version:CASCADE_VERSION,top,bottom,lipHalfWidthMeters:lipHalfWidth,rows,columns,travelSeconds:fallingTravelTime(top.y-bottom.y),gravity:FALLING_WATER.gravity,entrySpeed:FALLING_WATER.entrySpeed,contactPathAuthored:true,connectedGeometry:true,centralSpineContinuous:true,terrainGuide:true,topology:"Closed cross sections follow the actual headwall guide; local grade controls aeration. Retained source and pool join; no fluid simulation."};
   return geometry;
 }
-
 const NOISE=`
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
@@ -48,9 +47,9 @@ float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(ha
 
 export function createFallingWaterMaterial(sun:Vector3) {
   return new ShaderMaterial({name:"Madagin gravity-timed falling water",side:DoubleSide,transparent:true,depthWrite:false,uniforms:{uTime:{value:0},uSun:{value:sun.clone()}},
-    vertexShader:`uniform float uTime;attribute float travelTime;varying vec2 vUv;varying float vTravel;varying vec3 vWorld;
-    void main(){vec3 p=position;float envelope=sin(uv.y*3.14159265);p.x+=sin((travelTime-uTime)*5.+uv.x*13.)*.08*envelope;p.z+=sin((travelTime-uTime)*7.+uv.x*21.)*.06*envelope;vUv=uv;vTravel=travelTime;vec4 w=modelMatrix*vec4(p,1.);vWorld=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`,
-    fragmentShader:`uniform float uTime;uniform vec3 uSun;varying vec2 vUv;varying float vTravel;varying vec3 vWorld;${NOISE}
+    vertexShader:`uniform float uTime;attribute float travelTime;attribute float aeration;varying float vAir;varying vec2 vUv;varying float vTravel;varying vec3 vWorld;
+    void main(){vec3 p=position;float envelope=sin(uv.y*3.14159265);p.x+=sin((travelTime-uTime)*5.+uv.x*13.)*.08*envelope;p.z+=sin((travelTime-uTime)*7.+uv.x*21.)*.06*envelope;vUv=uv;vTravel=travelTime;vAir=aeration;vec4 w=modelMatrix*vec4(p,1.);vWorld=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`,
+    fragmentShader:`uniform float uTime;uniform vec3 uSun;varying float vAir;varying vec2 vUv;varying float vTravel;varying vec3 vWorld;${NOISE}
     void main(){
       float clock=vTravel-uTime;
       float broad=noise(vec2(vUv.x*9.,clock*2.2));
@@ -58,12 +57,13 @@ export function createFallingWaterMaterial(sun:Vector3) {
       float fine=noise(vec2(vUv.x*71.+strands*2.,clock*17.));
       float core=smoothstep(.22,.64,broad*.58+strands*.42);
       float edge=mix(.36,1.,smoothstep(0.,.06,vUv.x)*smoothstep(0.,.06,1.-vUv.x));
-      float air=smoothstep(.12,.85,vUv.y);
+      float air=vAir;
       float torn=smoothstep(.27,.49,broad*.4+strands*.4+fine*.2);
-      float alpha=edge*mix(.30+core*.4,(.16+core*.58)*torn,air*.7);
+      float channels=.5+.5*sin(vUv.x*25.+broad*2.);
+      float alpha=edge*mix(.24+core*.3,(.38+core*.51)*mix(.5,torn,air*.7),air)*mix(.65,1.,channels);
       vec3 normal=normalize(cross(dFdx(vWorld),dFdy(vWorld)));
       float light=.69+.31*abs(dot(normal,uSun));
-      vec3 color=mix(vec3(.16,.27,.27),vec3(.72,.79,.76),clamp(.34+core*.4+air*.23+fine*.1,0.,1.))*light;
+      vec3 color=mix(vec3(.16,.27,.27),vec3(.91,.94,.90),clamp(.22+core*.43+air*.40+fine*.10,0.,1.))*light;
       if(alpha<.035)discard;gl_FragColor=vec4(color,alpha);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>

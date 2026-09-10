@@ -1,3 +1,4 @@
+import {CASCADE_VERSION,CASCADE_GLSL} from "./cascade-contact";
 import {PLUNGE_BASIN_VERSION, PLUNGE_BASIN_GLSL} from "./plunge-basin";
 import {LAKE_SHORE_VERSION, LAKE_SHORE_GLSL} from "./lake-shore";
 import { useLoader } from "@react-three/fiber";
@@ -19,7 +20,7 @@ export const TERRAIN_SURFACE = {
 export function createTerrainSurface(textures: Texture[]) {
   const material = new MeshStandardMaterial({color: "white", roughness: 1, metalness: 0, side: FrontSide});
   material.name = "Madagin scanned rock and slope cover";
-  material.customProgramCacheKey = () => TERRAIN_SURFACE.version + LAKE_SHORE_VERSION + PLUNGE_BASIN_VERSION;
+  material.customProgramCacheKey = () => TERRAIN_SURFACE.version + LAKE_SHORE_VERSION + PLUNGE_BASIN_VERSION + CASCADE_VERSION;
   material.onBeforeCompile = shader => {
     ["uCliffColor", "uCliffNormal", "uCliffResponse", "uGroundColor"].forEach((name, i) => {shader.uniforms[name] = {value: textures[i]};});
     shader.vertexShader = shader.vertexShader
@@ -29,6 +30,7 @@ export function createTerrainSurface(textures: Texture[]) {
       .replace("#include <common>", `#include <common>
         ${LAKE_SHORE_GLSL}
         ${PLUNGE_BASIN_GLSL}
+        ${CASCADE_GLSL}
         varying vec3 vGroundWorld; varying vec3 vGroundNormal;
         uniform sampler2D uCliffColor, uCliffNormal, uCliffResponse, uGroundColor;
         vec3 groundWeights(vec3 n) {
@@ -87,8 +89,9 @@ export function createTerrainSurface(textures: Texture[]) {
         vec2 pool=plungeBasin(vGroundWorld.xz);
         float poolMargin=(1.0-smoothstep(1.03,1.28,pool.x))*(1.0-smoothstep(-42.8,-39.5,vGroundWorld.y));
         float poolWet=poolMargin*(1.0-smoothstep(-44.0,-42.5,vGroundWorld.y));
-        cover*=1.0-poolMargin*.98;
-        float surfaceWet = max(max(waterfall * .55, coastWet * .8), max(lakeWet * .34,poolWet*.6));
+        float cascade=cascadeWet(vGroundWorld.xz);
+        cover*=1.0-max(poolMargin,cascade)*.98;
+        float surfaceWet = max(max(waterfall * .55, coastWet * .8), max(max(lakeWet * .34,poolWet*.6),cascade*.82));
         // Bounded authored reflectance adjustment keeps the generic scan's
         // contrast while placing it beside this world's shaded forest. This
         // is an art-directed material, not measured Hawaiian rock reflectance.

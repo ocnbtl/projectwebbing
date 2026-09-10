@@ -3891,5 +3891,28 @@
     "material": "Retained scanned-cover-2 at source 80 m scale",
     "decision": "output/releases/madagin-valley-relief-20260910/decision.json",
     "publication": "output/releases/madagin-valley-relief-20260910/publication.json"
+  },
+  "cascadeContact": {
+    "version": "contact-cascade-1",
+    "source": "Authored guide sampled from actual desktop and compact assembled terrain at 9da720d67dd30dda4c6a38c8c8a1d9c9a6cc2308",
+    "field": "src/components/internal/cascade-field.json",
+    "fieldBytes": 29305,
+    "fieldSha256": "aa2638b23e1af224ed014fe6e4ec7cf270a31246137f4593fe8b99e3d8c6d53f",
+    "builder": "tools/terrain/bake-cascade-guide.mjs",
+    "runtime": [
+      "src/components/internal/cascade-contact.ts",
+      "src/components/internal/falling-water.tsx",
+      "src/components/internal/terrain-surface.ts",
+      "src/components/internal/ridge-production-v116.tsx"
+    ],
+    "transform": "Upper/lower datums retained; monotonic terrain-guided field and bounded final-mesh correction. Shared wet corridor. Not a measured waterfall or fluid solver.",
+    "newExternalAssets": 0,
+    "terrainTopologyChanged": false,
+    "waterTriangles": 12800,
+    "previousWaterTriangles": 11520,
+    "geometryProof": "output/releases/madagin-water-contact-20260910/geometry-local.json",
+    "decision": "output/releases/madagin-water-contact-20260910/decision.json",
+    "publication": "output/releases/madagin-water-contact-20260910/publication.json",
+    "referenceRights": "Go Hawaii Wailua photograph and original DLNR video inspected remotely as reference only; not copied into world assets."
   }
 }

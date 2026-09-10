@@ -37,6 +37,7 @@ import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-c
 import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./native-valley";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
+import {CASCADE_START_Z, applyCascadeBed} from "./cascade-contact";
 import {FALLING_WATER, FallingSpray, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
 import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
 import {PLUNGE_BASIN_VERSION, PLUNGE_POOL_CENTER, PLUNGE_POOL_RADIUS, PLUNGE_POOL_LEVEL, plungeBoundaryScale, plungeDistance, plungeBedLevel, plungeTerrainWeight, isPlungeWetPlant, createPlungeWaterMaterial} from "./plunge-basin";
@@ -188,7 +189,7 @@ function activeChunks(zone: JourneyCheckpointId): V116Zone[] {
 }
 
 function activeTerrainChunks(zone: JourneyCheckpointId): Array<Exclude<V116Zone, "lake">> {
-  if (zone === "ridge") return ["ridge", "valley"];
+  if (zone === "ridge") return ["ridge", "valley", "alpine"];
   // The authored rail continues seeing terrain across both sides of the active
   // watershed after the crest. Streaming ecology by current/next chapter is
   // still useful, but removing either neighboring landform exposes the source
@@ -2728,7 +2729,9 @@ function createIntegratedWatershedTerrainGeometry(
   };
   applyNativeValley(geometry);
   reconcileCoincidentTerrainNormals(geometry);
-  return createRidgeHeadwaterTerrain(geometry);
+  const finalGeometry=createRidgeHeadwaterTerrain(geometry);
+  applyCascadeBed(finalGeometry);
+  return finalGeometry;
 }
 
 function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
@@ -6134,8 +6137,8 @@ function createWaterfallMaterial() { return createFallingWaterMaterial(V116_SUN_
 
 function createCumulativeWaterfallGeometry() {
   return createFallingWaterGeometry(
-    {x:waterfallUpperCenter(WATERFALL_TOP.z),y:waterfallUpperLevel(WATERFALL_TOP.z)+.145,z:WATERFALL_TOP.z},
-    {...WATERFALL_BOTTOM,y:WATERFALL_BOTTOM.y-.35},waterfallUpperHalfWidth(WATERFALL_TOP.z),
+    {x:waterfallUpperCenter(CASCADE_START_Z),y:waterfallUpperLevel(CASCADE_START_Z)+.145,z:CASCADE_START_Z},
+    {...WATERFALL_BOTTOM,y:WATERFALL_BOTTOM.y-.35},waterfallUpperHalfWidth(CASCADE_START_Z),
   );
 }
 
@@ -6163,7 +6166,7 @@ function createWaterfallUpperStreamGeometry(longitudinalSegments: number, across
   const indices: number[] = [];
   for (let row = 0; row <= longitudinalSegments; row += 1) {
     const progress = row / longitudinalSegments;
-    const z = WATERFALL_HEADWATER_START_Z + progress * Math.abs(WATERFALL_HEADWATER_START_Z + 730);
+    const z = WATERFALL_HEADWATER_START_Z + progress * (CASCADE_START_Z - WATERFALL_HEADWATER_START_Z);
     const center = waterfallUpperCenter(z);
     const level = waterfallUpperLevel(z) + 0.075;
     for (let column = 0; column <= acrossSegments; column += 1) {
@@ -6202,7 +6205,7 @@ function createWaterfallUpperStreamGeometry(longitudinalSegments: number, across
   geometry.userData.headwaterChannel = {
     method: "shared irregular banks, graded riffles, and an incised source taper",
     zRange: [WATERFALL_HEADWATER_START_Z, WATERFALL_TOP.z],
-    lipHalfWidth: waterfallUpperHalfWidth(WATERFALL_TOP.z),
+    lipHalfWidth: waterfallUpperHalfWidth(CASCADE_START_Z),
     sourceHalfWidth: waterfallUpperHalfWidth(WATERFALL_HEADWATER_START_Z),
   };
   return addChannelFlow(geometry,acrossSegments);
