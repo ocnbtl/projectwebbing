@@ -3925,5 +3925,20 @@
     "referenceRights": "Go Hawaii Wailua photograph and original DLNR video inspected remotely as reference only, not world textures.",
     "decision": "output/releases/madagin-water-breakup-20260910/decision.json",
     "publication": "output/releases/madagin-water-breakup-20260910/publication.json"
+  },
+  "compactAlpineJoin": {
+    "version": "compact-alpine-join-1",
+    "runtime": "src/components/internal/ridge-production-v116.tsx",
+    "source": "Existing decoded v116 compact Alpine and Valley geometry; no acquired asset",
+    "transform": "Align bounded 12 m Valley strip to actual Alpine edge at -1000; split existing triangles at Alpine profile knots. Shared by journey and summit.",
+    "addedTriangles": {
+      "journey": 114,
+      "summit": 118
+    },
+    "sourceProfileMatchesGeneratedAlpine": true,
+    "geometryProof": "output/releases/madagin-alpine-seam-20260910/geometry-local.json",
+    "referenceRights": "Genuine Go Hawaii photography and original DLNR footage inspected remotely as references, not world textures",
+    "decision": "output/releases/madagin-alpine-seam-20260910/decision.json",
+    "publication": "output/releases/madagin-alpine-seam-20260910/publication.json"
   }
 }

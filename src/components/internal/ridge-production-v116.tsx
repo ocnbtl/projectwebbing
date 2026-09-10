@@ -262,13 +262,15 @@ function firstMeshIn(object: Object3D): Mesh | null {
 function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
   const ridgeGltf = useLoader(GLTFLoader, `${ROOT}/terrain-ridge-v1.16.glb`, configureCompressedGltf);
   const valleyGltf = useLoader(GLTFLoader, `${ROOT}/terrain-valley-v1.16.glb`, configureCompressedGltf);
+  const alpineGltf = useLoader(GLTFLoader, `${ROOT}/terrain-alpine-v1.16.glb`, configureCompressedGltf);
   const ridgeMaterial = useTerrainSurface(true);
   const valleyMaterial = ridgeMaterial;
   const sources = useMemo(() => {
     ridgeGltf.scene.updateMatrixWorld(true);
     valleyGltf.scene.updateMatrixWorld(true);
-    return { ridge: firstMeshIn(ridgeGltf.scene), valley: firstMeshIn(valleyGltf.scene) };
-  }, [ridgeGltf.scene, valleyGltf.scene]);
+    alpineGltf.scene.updateMatrixWorld(true);
+    return { ridge: firstMeshIn(ridgeGltf.scene), valley: firstMeshIn(valleyGltf.scene), alpine: firstMeshIn(alpineGltf.scene) };
+  }, [ridgeGltf.scene, valleyGltf.scene, alpineGltf.scene]);
   const geometries = useMemo(() => {
     if (!sources.ridge || !sources.valley) {
       return { bridge: null, diagnostics: null, ridge: null, valley: null };
@@ -280,6 +282,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     // AO density is already sufficient for the bounded basin-headwall relief,
     // so compact does not stack another adaptive pass on the same Valley.
     const valley = createIntegratedWatershedTerrainGeometry(sources.valley, [], [], 2, 0);
+    if (sources.alpine) joinCompactAlpineBoundary(valley, sources.alpine);
     const ridgeMesh = new Mesh(ridge);
     const valleyMesh = new Mesh(valley);
     const ridgeBoundary = extractTerrainSeamSamples(ridgeMesh);
@@ -311,6 +314,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
       )?.subdivision ?? null,
       removedRidgeWallTriangles,
       removedValleyWallTriangles,
+      alpineBoundary: valley.userData.compactAlpineBoundary ?? null,
       scope: "normal compact journey Ridge-to-Valley connector",
     } : null;
     ridge.name = "Madagin v1.16 compact journey Ridge terrain without terminal wall";
@@ -354,12 +358,14 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
 function MobileTerminalTerrain({ shadows, tier }: { shadows: boolean; tier: WorldQualityTier }) {
   const ridgeGltf = useLoader(GLTFLoader, `${ROOT}/terrain-ridge-v1.16.glb`, configureCompressedGltf);
   const valleyGltf = useLoader(GLTFLoader, `${ROOT}/terrain-valley-v1.16.glb`, configureCompressedGltf);
+  const alpineGltf = useLoader(GLTFLoader, `${ROOT}/terrain-alpine-v1.16.glb`, configureCompressedGltf);
   const material = useTerrainSurface(true);
   const sources = useMemo(() => {
     ridgeGltf.scene.updateMatrixWorld(true);
     valleyGltf.scene.updateMatrixWorld(true);
-    return { ridge: firstMeshIn(ridgeGltf.scene), valley: firstMeshIn(valleyGltf.scene) };
-  }, [ridgeGltf.scene, valleyGltf.scene]);
+    alpineGltf.scene.updateMatrixWorld(true);
+    return { ridge: firstMeshIn(ridgeGltf.scene), valley: firstMeshIn(valleyGltf.scene), alpine: firstMeshIn(alpineGltf.scene) };
+  }, [ridgeGltf.scene, valleyGltf.scene, alpineGltf.scene]);
   const seamField = useMemo<TerrainSeamField>(() => {
     const ridge = sources.ridge ? extractTerrainSeamSamples(sources.ridge) : [];
     const valley = sources.valley ? extractTerrainSeamSamples(sources.valley) : [];
@@ -401,10 +407,12 @@ function MobileTerminalTerrain({ shadows, tier }: { shadows: boolean; tier: Worl
       ? createTerrainSeamBridgeGeometry(connectedSeamField, true)
       : null;
     const valley = createTerminalChunkGeometry(sources.valley, connectedSeamField);
+    if (sources.alpine) joinCompactAlpineBoundary(valley, sources.alpine);
     const seamDiagnostics = bridge ? {
       ...bridge.userData.terminalSeamRemesh,
       coastalWeld: ridge?.userData.coastalWeldDiagnostics ?? null,
       removedValleyTerminalWallTriangles: valley.userData.removedTerminalWallTriangles ?? 0,
+      alpineBoundary: valley.userData.compactAlpineBoundary ?? null,
     } : null;
     const connected = ridge && bridge
       ? createConnectedTerminalTerrainGeometry(ridge, bridge, valley, seamDiagnostics)
@@ -3171,6 +3179,106 @@ function sampleTerrainSeamHeight(samples: CoastalBoundarySample[], x: number) {
     }
   }
   return (x < samples[0].x ? samples[0] : samples[samples.length - 1]).height;
+}
+
+function joinCompactAlpineBoundary(valley: BufferGeometry, alpineSource: Mesh) {
+  // Compact sources meet at -1000, while the detailed export meets at -980.
+  // Read the actual source edge. Alpine relief preserves this edge, so its
+  // cached decoded source suffices without building a second Alpine mesh.
+  const alpine = geometrySurfaceForMerge(alpineSource.geometry, alpineSource.matrixWorld);
+  alpine.computeBoundingBox();
+  const boundaryZ = alpine.boundingBox!.max.z;
+  const reference = extractTerrainSeamSamples(new Mesh(alpine), boundaryZ);
+  alpine.dispose();
+  if (reference.length < 2 || !valley.index) return;
+  const stripWidth = 12;
+  const position = valley.getAttribute("position");
+  const originalCount = position.count;
+  const boundary = new Set<number>();
+  let changedVertices = 0;
+  let maximumHeightChange = 0;
+  for (let i = 0; i < originalCount; i += 1) {
+    const z = position.getZ(i);
+    if (Math.abs(z - boundaryZ) < 0.5) boundary.add(i);
+    if (z < boundaryZ - 0.5 || z >= boundaryZ + stripWidth) continue;
+    const weight = 1 - smoothCoastalStep(Math.max(0, (z - boundaryZ) / stripWidth));
+    const oldY = position.getY(i);
+    const y = oldY + (sampleTerrainSeamHeight(reference, position.getX(i)) - oldY) * weight;
+    position.setY(i, y);
+    if (boundary.has(i)) {
+      position.setY(i, sampleTerrainSeamHeight(reference, position.getX(i)));
+      position.setZ(i, boundaryZ);
+    }
+    const delta = Math.abs(position.getY(i) - oldY);
+    maximumHeightChange = Math.max(maximumHeightChange, delta);
+    if (delta > 0.00001 || z !== position.getZ(i)) changedVertices += 1;
+  }
+  // Matching heights only at Valley vertices leaves cracks wherever the
+  // Alpine profile bends between them. Split the existing boundary triangles
+  // at every reference knot, preserving their winding and interior vertices.
+  const attributes = Object.entries(valley.attributes).map(([name, attribute]) => ({
+    name, attribute, values: Array.from({ length: originalCount * attribute.itemSize }, (_, i) =>
+      attribute.getComponent(Math.floor(i / attribute.itemSize), i % attribute.itemSize)),
+  }));
+  const positions = attributes.find(({ name }) => name === "position")!.values;
+  const splitEdges = new Map<string, number[]>();
+  const split = (a: number, b: number) => {
+    const forward = position.getX(a) < position.getX(b);
+    const left = forward ? a : b, right = forward ? b : a;
+    const key = `${left}:${right}`;
+    let points = splitEdges.get(key);
+    if (!points) {
+      points = [left];
+      const x0 = position.getX(left), x1 = position.getX(right);
+      for (const knot of reference) {
+        if (knot.x <= x0 + 0.0001 || knot.x >= x1 - 0.0001) continue;
+        const t = (knot.x - x0) / (x1 - x0), vertex = positions.length / 3;
+        for (const { attribute, values } of attributes) {
+          for (let c = 0; c < attribute.itemSize; c += 1) {
+            const start = attribute.getComponent(left, c);
+            values.push(start + (attribute.getComponent(right, c) - start) * t);
+          }
+        }
+        positions[vertex * 3] = knot.x;
+        positions[vertex * 3 + 1] = knot.height;
+        positions[vertex * 3 + 2] = boundaryZ;
+        points.push(vertex);
+      }
+      points.push(right);
+      splitEdges.set(key, points);
+    }
+    return forward ? points : [...points].reverse();
+  };
+  const indices: number[] = [];
+  for (let i = 0; i < valley.index.count; i += 3) {
+    const ids = [valley.index.getX(i), valley.index.getX(i + 1), valley.index.getX(i + 2)];
+    const edge = ids.findIndex((id, j) => boundary.has(id) && boundary.has(ids[(j + 1) % 3]));
+    if (edge < 0) { indices.push(...ids); continue; }
+    const points = split(ids[edge], ids[(edge + 1) % 3]), tip = ids[(edge + 2) % 3];
+    for (let j = 0; j < points.length - 1; j += 1) indices.push(points[j], points[j + 1], tip);
+  }
+  const originalNormals = valley.getAttribute("normal");
+  for (const { name, attribute, values } of attributes) {
+    valley.setAttribute(name, new Float32BufferAttribute(values, attribute.itemSize, attribute.normalized));
+  }
+  const oldTriangles = valley.index.count / 3;
+  valley.setIndex(indices);
+  valley.computeVertexNormals();
+  // Keep established shading outside the join; only nearby faces changed.
+  const normals = valley.getAttribute("normal");
+  if (originalNormals) for (let i = 0; i < originalCount; i += 1) {
+    if (position.getZ(i) >= boundaryZ + stripWidth) {
+      normals.setXYZ(i, originalNormals.getX(i), originalNormals.getY(i), originalNormals.getZ(i));
+    }
+  }
+  valley.computeBoundingBox();
+  valley.computeBoundingSphere();
+  valley.userData.compactAlpineBoundary = {
+    version: "compact-alpine-join-1", boundaryZ, stripWidth, changedVertices,
+    maximumHeightChange, addedVertices: positions.length / 3 - originalCount,
+    addedTriangles: indices.length / 3 - oldTriangles,
+    method: "Shared decoded edge with conforming boundary triangle splits; no overlay",
+  };
 }
 
 function createExactDetailedRidgeValleyWeldGeometry(
