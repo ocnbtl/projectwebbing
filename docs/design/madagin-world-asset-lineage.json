@@ -3940,5 +3940,26 @@
     "referenceRights": "Genuine Go Hawaii photography and original DLNR footage inspected remotely as references, not world textures",
     "decision": "output/releases/madagin-alpine-seam-20260910/decision.json",
     "publication": "output/releases/madagin-alpine-seam-20260910/publication.json"
+  },
+  "cascadeShape": {
+    "version": "cascade-shape-1",
+    "sourceVersion": "cascade-source-1",
+    "runtime": [
+      "src/components/internal/falling-water.tsx",
+      "src/components/internal/ridge-production-v116.tsx"
+    ],
+    "source": "Authored water geometry and grade-driven material; no acquired asset",
+    "transform": "Monotonic source riffles, exact shared upper-half lip and bounded unequal intermediate curtain shoulders. Terrain, guide, pool and planting retained.",
+    "sourceTriangles": {
+      "compact": 1680,
+      "medium": 2720,
+      "high": 3680
+    },
+    "curtainTriangles": 12800,
+    "maximumIntermediateShiftMeters": 1.849245235661671,
+    "geometryProof": "output/releases/madagin-cascade-shape-20260910/geometry-local.json",
+    "referenceRights": "Go Hawaii Wailua photography and original DLNR footage inspected remotely as references, not world textures",
+    "decision": "output/releases/madagin-cascade-shape-20260910/decision.json",
+    "publication": "output/releases/madagin-cascade-shape-20260910/publication.json"
   }
 }

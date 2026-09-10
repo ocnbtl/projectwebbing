@@ -6,7 +6,19 @@ import {BufferGeometry, DoubleSide, Float32BufferAttribute, ShaderMaterial, Vect
 
 import {CASCADE_VERSION, CASCADE_START_Z, cascadeSection, cascadeLevel} from "./cascade-contact";
 type Point = {x:number;y:number;z:number};
-export const FALLING_WATER = {version:"cascade-breakup-1",gravity:9.81,entrySpeed:2.4} as const;
+export const FALLING_WATER = {version:"cascade-shape-1",gravity:9.81,entrySpeed:2.4} as const;
+
+function cascadeGrade(z:number) {
+  const before=cascadeSection(z-.3),after=cascadeSection(z+.3);
+  return Math.max(0,(cascadeLevel(before.x,z-.3)-cascadeLevel(after.x,z+.3))/.6);
+}
+
+// Both meshes use these same upper-half cross-section vertices at the lip.
+export function fallingLipPoint(across:number) {
+  const s=cascadeSection(CASCADE_START_Z),x=s.x+across*(across<0?s.left:s.right);
+  const thickness=.14+Math.min(1,cascadeGrade(CASCADE_START_Z))*.25;
+  return {x,y:cascadeLevel(x,CASCADE_START_Z)+Math.sqrt(Math.max(0,1-across*across))*thickness,z:CASCADE_START_Z};
+}
 
 // The route is authored to follow the retained cliff. Gravity supplies travel
 // time along the drop, not a claim of a free-flight or fluid simulation.
@@ -19,12 +31,15 @@ export function createFallingWaterGeometry(top:Point,bottom:Point,lipHalfWidth:n
   const rows=160,columns=40;
   for(let row=0;row<=rows;row++){
     const p=row/rows,z=CASCADE_START_Z+(bottom.z-CASCADE_START_Z)*p,section=cascadeSection(z);
-    const centerY=cascadeLevel(section.x,z),before=cascadeSection(z-.3),after=cascadeSection(z+.3);
-    const grade=Math.max(0,(cascadeLevel(before.x,z-.3)-cascadeLevel(after.x,z+.3))/.6);
+    const centerY=cascadeLevel(section.x,z),grade=cascadeGrade(z);
     for(let col=0;col<=columns;col++){
       const angle=col/columns*Math.PI*2,a=Math.cos(angle),envelope=Math.sin(Math.PI*p);
       const width=a<0?section.left:section.right;
-      const edge=1+(Math.sin(p*23+a*3.1)*.035+Math.sin(p*47-a*5.4)*.022)*envelope;
+      // Broad unequal shoulders and recesses follow the retained wet corridor.
+      // Endpoints stay fixed; the curtain never exceeds the baked field.
+      const shoulder=Math.exp(-(((p-.3)/.14)**2))*.21+Math.exp(-(((p-.78)/.18)**2))*.29;
+      const recess=Math.exp(-(((p-.54)/.09)**2))*.08;
+      const edge=1+(shoulder*(a<0?1:.67)-recess+Math.sin(p*25+a*2.1)*.065+Math.sin(p*51-a*3.4)*.035)*envelope;
       const x=section.x+a*width*edge;
       const lobe=(Math.sin(a*9+p*7)*.12+Math.sin(a*17-p*13)*.06)*envelope;
       const thickness=.14+Math.min(1,grade)*.25;

@@ -38,7 +38,7 @@ import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./nativ
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
 import {CASCADE_START_Z, applyCascadeBed} from "./cascade-contact";
-import {FALLING_WATER, FallingSpray, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
+import {FALLING_WATER, FallingSpray, fallingLipPoint, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
 import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
 import {PLUNGE_BASIN_VERSION, PLUNGE_POOL_CENTER, PLUNGE_POOL_RADIUS, PLUNGE_POOL_LEVEL, plungeBoundaryScale, plungeDistance, plungeBedLevel, plungeTerrainWeight, isPlungeWetPlant, createPlungeWaterMaterial} from "./plunge-basin";
 import {LAKE_SHORE_VERSION, LAKE_CENTER, LAKE_RADIUS, LAKE_WATER_LEVEL, LAKE_SHORE_GLSL, lakeBoundaryScale, lakeBoundaryDistance, lakeBedLevel} from "./lake-shore";
@@ -6060,10 +6060,11 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
   );
 }
 
-function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" = "watershed") {
+function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "cascade-source" | "pool" = "watershed") {
   const lake = kind === "watershed";
   const river = kind === "river";
-  const headwater = kind === "headwater";
+  const cascadeSource = kind === "cascade-source";
+  const headwater = kind === "headwater" || cascadeSource;
   const directional = river || headwater;
   const material = new ShaderMaterial({
     depthTest: true,
@@ -6078,6 +6079,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
       varying vec3 vWorld;
       varying vec2 vWaterUv;
       ${directional ? "attribute vec2 flow; varying vec2 vFlow;" : ""}
+      ${cascadeSource ? "attribute float riffle; varying float vRiffle;" : ""}
       void main() {
         vec3 p = position;
         float lakeDepth = ${lake ? "max(0.0,lakeShore(p.xz).y)" : "0.0"};
@@ -6093,6 +6095,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         vWorld = world.xyz;
         vWaterUv = uv;
         ${directional ? "vFlow = flow;" : ""}
+        ${cascadeSource ? "vRiffle = riffle;" : ""}
         gl_Position = projectionMatrix * viewMatrix * world;
       }
     `,
@@ -6103,6 +6106,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
       varying vec3 vWorld;
       varying vec2 vWaterUv;
       ${directional ? "varying vec2 vFlow;" : ""}
+      ${cascadeSource ? "varying float vRiffle;" : ""}
       float waterHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float waterNoise(vec2 p) {
         vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -6208,6 +6212,15 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "pool" 
         color = mix(color, skyReflection, clamp((fresnel * ${headwater ? "0.2" : river ? "0.34" : lake ? "0.64" : "0.4"} + reflectionBreakup) * reflectionCell, 0.0, ${lake ? "0.7" : "0.58"}));
         color += vec3(0.32, 0.43, 0.42) * (windBand - 0.5) * ${headwater ? "0.022" : river ? "0.035" : lake ? "0.04" : "0.055"};
         color += vec3(0.72, 0.74, 0.65) * glint * ${headwater ? "0.02" : river ? "0.055" : lake ? "0.045" : "0.06"};
+        ${cascadeSource ? `
+        // Aeration belongs to the actual steep riffles. Patch coordinates
+        // travel down the source mesh's metre-based flow field.
+        float rifflePatch = waterNoise(vec2(vFlow.x*.61,vFlow.y*.84-uTime*1.55));
+        float riffleFine = waterNoise(vec2(vFlow.x*1.31,vFlow.y*1.8-uTime*3.1));
+        float riffleFoam = vRiffle * smoothstep(.24,.7,rifflePatch*.72+riffleFine*.28)
+          * smoothstep(0.,.12,min(vWaterUv.x,1.-vWaterUv.x));
+        color = mix(color,vec3(.61,.72,.68),riffleFoam*.76);
+        ` : ""}
         float candidateCfShoreInterference = ${lake ? "(1.0 - basinDepth) * bankSoftening * pow(max(0.0, sin(vWorld.x * 0.11 - vWorld.z * 0.16 + uTime * 0.17)), 12.0)" : "0.0"};
         color += vec3(0.25, 0.34, 0.27) * candidateCfShoreInterference * 0.055;
         // The integrated source terrain remains below the water for shoreline
@@ -6268,27 +6281,43 @@ function addChannelFlow(geometry: BufferGeometry, columns: number) {
   return geometry;
 }
 
+function waterfallSourceSurface(z: number) {
+  const t=saturate((z-WATERFALL_HEADWATER_START_Z)/(CASCADE_START_Z-WATERFALL_HEADWATER_START_Z));
+  // Redistribute the existing drop into three short riffles. The extra fall
+  // sums to zero at both datums, and the centreline remains downhill.
+  const steps=.42*(1-smoothRange(.2,.27,t))+.48*(1-smoothRange(.49,.57,t))+.34*(1-smoothRange(.75,.82,t));
+  const lipLift=fallingLipPoint(0).y-(waterfallUpperLevel(CASCADE_START_Z)+.145);
+  return waterfallUpperLevel(z)+.075+steps-1.24*(1-t)+lipLift*t;
+}
+
 function createWaterfallUpperStreamGeometry(longitudinalSegments: number, acrossSegments: number) {
   const positions: number[] = [];
   const uvs: number[] = [];
+  const riffles: number[] = [];
   const indices: number[] = [];
+  // Twenty samples match the upper half of the fall's forty-sample ring.
+  acrossSegments=Math.max(20,acrossSegments);
   for (let row = 0; row <= longitudinalSegments; row += 1) {
     const progress = row / longitudinalSegments;
     const z = WATERFALL_HEADWATER_START_Z + progress * (CASCADE_START_Z - WATERFALL_HEADWATER_START_Z);
     const center = waterfallUpperCenter(z);
-    const level = waterfallUpperLevel(z) + 0.075;
+    const level = waterfallSourceSurface(z);
+    const grade=Math.max(0,(waterfallSourceSurface(z-.25)-waterfallSourceSurface(z+.25))/.5);
+    const lipBlend=smoothRange(CASCADE_START_Z-6,CASCADE_START_Z,z);
     for (let column = 0; column <= acrossSegments; column += 1) {
       const horizontal = column / acrossSegments;
-      const across = horizontal * 2 - 1;
+      const across = -Math.cos(horizontal*Math.PI);
       const bankWidth = waterfallUpperBankWidth(z, across < 0 ? -1 : 1);
       const crossSection = 1 - across * across;
       const bedRoughness = Math.sin(progress * Math.PI * 18 + across * 4.1) * 0.035
         + Math.sin(progress * Math.PI * 7.4 - across * 6.2) * 0.018;
+      const lip=fallingLipPoint(across);
       positions.push(
-        center + across * bankWidth,
-        level + crossSection * 0.07 + bedRoughness,
-        z + across * across * 0.22 + Math.sin(progress * Math.PI * 11.0 + across * 2.6) * 0.11,
+        (center+across*bankWidth)*(1-lipBlend)+lip.x*lipBlend,
+        (level+crossSection*.07+bedRoughness*across*across*(1-lipBlend))*(1-lipBlend)+lip.y*lipBlend,
+        z+(across*across*.22+Math.sin(progress*Math.PI*11+across*2.6)*.11)*(1-lipBlend),
       );
+      riffles.push(smoothRange(.038,.12,grade)*(1-lipBlend*.7));
       uvs.push(horizontal, progress);
     }
   }
@@ -6305,14 +6334,17 @@ function createWaterfallUpperStreamGeometry(longitudinalSegments: number, across
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
   geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute("riffle",new Float32BufferAttribute(riffles,1));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
   geometry.name = "Madagin v1.16 terrain-following waterfall source channel";
   geometry.userData.headwaterChannel = {
-    method: "shared irregular banks, graded riffles, and an incised source taper",
-    zRange: [WATERFALL_HEADWATER_START_Z, WATERFALL_TOP.z],
+    version: "cascade-source-1",
+    method: "monotonic stepped riffles, grade-bound aeration and exact shared lip",
+    zRange: [WATERFALL_HEADWATER_START_Z, CASCADE_START_Z],
+    acrossSegments,
     lipHalfWidth: waterfallUpperHalfWidth(CASCADE_START_Z),
     sourceHalfWidth: waterfallUpperHalfWidth(WATERFALL_HEADWATER_START_Z),
   };
@@ -6887,12 +6919,14 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   const activePoolMaterial = useRef<ShaderMaterial | null>(null);
   const activeRiverMaterial = useRef<ShaderMaterial | null>(null);
   const activeHeadwaterMaterial = useRef<ShaderMaterial | null>(null);
+  const activeCascadeSourceMaterial = useRef<ShaderMaterial | null>(null);
   const activeWaterfallMaterial = useRef<ShaderMaterial | null>(null);
   const activeImpactMaterial = useRef<ShaderMaterial | null>(null);
   const waterMaterial = useMemo(() => createWaterMaterial(), []);
   const poolMaterial = useMemo(() => createPlungeWaterMaterial(V116_SUN_DIRECTION), []);
   const riverMaterial = useMemo(() => createWaterMaterial("river"), []);
   const headwaterMaterial = useMemo(() => createWaterMaterial("headwater"), []);
+  const cascadeSourceMaterial = useMemo(() => createWaterMaterial("cascade-source"), []);
   const waterfallMaterial = useMemo(() => createWaterfallMaterial(), []);
   const impactMaterial = useMemo(() => createImpactFoamMaterial(), []);
   const waterfallGeometry = useMemo(() => createCumulativeWaterfallGeometry(), []);
@@ -6986,21 +7020,25 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     const poolTime = activePoolMaterial.current?.uniforms.uTime;
     const riverTime = activeRiverMaterial.current?.uniforms.uTime;
     const headwaterTime = activeHeadwaterMaterial.current?.uniforms.uTime;
+    const sourceTime = activeCascadeSourceMaterial.current?.uniforms.uTime;
     const waterfallTime = activeWaterfallMaterial.current?.uniforms.uTime;
     const impactTime = activeImpactMaterial.current?.uniforms.uTime;
     if (waterTime) waterTime.value = time;
     if (poolTime) poolTime.value = time;
     if (riverTime) riverTime.value = time;
     if (headwaterTime) headwaterTime.value = time;
+    if (sourceTime) sourceTime.value = time;
     if (waterfallTime) waterfallTime.value = time;
     if (impactTime) impactTime.value = time;
   });
   useEffect(() => {
     document.documentElement.dataset.madaginFallingWater = JSON.stringify({...FALLING_WATER,...waterfallGeometry.userData.waterfallBody});
+    document.documentElement.dataset.madaginCascadeSource = JSON.stringify(waterfallUpperGeometry.userData.headwaterChannel);
     activeWaterMaterial.current = waterMaterial;
     activePoolMaterial.current = poolMaterial;
     activeRiverMaterial.current = riverMaterial;
     activeHeadwaterMaterial.current = headwaterMaterial;
+    activeCascadeSourceMaterial.current = cascadeSourceMaterial;
     activeWaterfallMaterial.current = waterfallMaterial;
     activeImpactMaterial.current = impactMaterial;
     const host = window as Window & {
@@ -7154,6 +7192,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       riverGeometry.dispose();
       riverMaterial.dispose();
       headwaterMaterial.dispose();
+      cascadeSourceMaterial.dispose();
       waterfallMaterial.dispose();
       waterfallGeometry.dispose();
       waterfallOutflowGeometry.dispose();
@@ -7165,6 +7204,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     cliffMaterial,
     impactMaterial,
     headwaterMaterial,
+    cascadeSourceMaterial,
     lakeBedGeometry,
     lakeBedMaterial,
     lakeGeometry,
@@ -7202,7 +7242,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       <primitive object={scene} />
       {waterfallVisible ? (
         <>
-          <mesh geometry={waterfallUpperGeometry} material={headwaterMaterial} name="Madagin v1.16 terrain-following waterfall source" />
+          <mesh geometry={waterfallUpperGeometry} material={cascadeSourceMaterial} name="Madagin v1.16 terrain-following waterfall source" />
           <mesh geometry={waterfallGeometry} material={waterfallMaterial} name="Madagin lip-aligned accelerating waterfall" renderOrder={8} />
           <mesh geometry={waterfallPlungeGeometry} material={poolMaterial} name="Madagin v1.16 integrated plunge pool" />
           <mesh geometry={waterfallOutflowGeometry} material={riverMaterial} name="Madagin v1.16 connected plunge outflow" />
