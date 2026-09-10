@@ -31,7 +31,7 @@ function CrownBatch({part,placements}:{part:Part;placements:Crown[]}) {
 }
 
 export function RidgeCanopy() {
-  const gltf=useLoader(GLTFLoader,"/world/canopy-v1/vegetation-mid.glb",loader=>loader.setMeshoptDecoder(MeshoptDecoder));
+  const gltf=useLoader(GLTFLoader,"/world/canopy-payload-v1/vegetation-mid.glb",loader=>loader.setMeshoptDecoder(MeshoptDecoder));
   const raw=useLoader(FileLoader,"/world/ridge-canopy-v1/canopy.json") as unknown as string;
   const placements=useMemo(()=>{
     const all=JSON.parse(typeof raw==="string"?raw:new TextDecoder().decode(raw as unknown as ArrayBuffer)) as Crown[];

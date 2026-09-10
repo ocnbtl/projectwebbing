@@ -50,7 +50,7 @@ const ROOT = "/world/v116";
 const SPECIES_URL = `${ROOT}/species-core-v1.16.glb`;
 const V115_HIGH_TERRAIN_URL = "/world/v115/madagin-ridge-to-valley-high-v1.15.glb";
 const SOURCE_QUALITY_GEOLOGY_URL = "/world/canopy-v1/moss-rock.glb";
-const SOURCE_QUALITY_ISLAND_TREE_01_URL = "/world/canopy-v1/island-tree.glb";
+const SOURCE_QUALITY_ISLAND_TREE_01_URL = "/world/canopy-payload-v1/island-tree.glb";
 const COASTAL_HEIGHTFIELD_URL = `${ROOT}/coast-heightfield-bw.json`;
 const WATERSHED_GROUNDCOVER_URLS = {
   fern: "/world/canopy-v1/fern.glb",

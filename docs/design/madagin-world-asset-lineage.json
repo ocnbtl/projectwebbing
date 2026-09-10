@@ -1,4 +1,20 @@
 {
+  "canopyPayload": {
+    "version": "canopy-payload-1",
+    "provenance": "public/world/canopy-payload-v1/provenance.json",
+    "builder": "tools/gltf/build-canopy-payload.mjs",
+    "verification": "tools/evidence/verify-canopy-payload.mjs",
+    "decision": "output/releases/madagin-canopy-payload-20260909/decision.json",
+    "publication": "output/releases/madagin-canopy-payload-20260909/publication.json",
+    "savedRawBytes": 1444026,
+    "limits": [
+      "This closes no visual-realism gap; whole-world diagnostic remains 2/5 and B remains open.",
+      "JPEG normal-map encoding is lossy: per-map p99 angular error 3.16–4.93 degrees; maximum 8.66–43.37 degrees. Same resolution and ICC profile are retained. It is not pixel equivalence.",
+      "Sequential host viewport diagnostics are not paired speed, GPU-time, thermal or physical-device qualification.",
+      "Formal independent human still and motion equivalence remain UNVERIFIED.",
+      "Domain ownership, mailbox and delivery remain UNVERIFIED; copy/download stays active."
+    ]
+  },
   "branchCanopy": {
     "version": "branch-canopy-1",
     "source": "https://polyhaven.com/a/island_tree_01",

@@ -1,0 +1,119 @@
+{
+  "version": "canopy-payload-1",
+  "license": "CC0-1.0",
+  "sources": [
+    "https://polyhaven.com/a/island_tree_01",
+    "https://polyhaven.com/a/pachira_aquatica_01",
+    "https://polyhaven.com/a/tree_small_02"
+  ],
+  "policy": "Preserve every rendered mesh attribute and material setting. Remove only six canopy variants unused by both runtime consumers. Four 1024-square bark normal maps use JPEG quality 95, 4:4:4, retaining existing ICC profiles. This is lossy encoding, not a visual realism improvement.",
+  "textures": [
+    {
+      "source": "textures/2d67393ba76a0f49cf965fa0c99d8c16268e71e87b1203d35539bfdb971a514e.jpeg",
+      "sourceSha256": "2d67393ba76a0f49cf965fa0c99d8c16268e71e87b1203d35539bfdb971a514e",
+      "sourceBytes": 819101,
+      "uri": "textures/b92137955ff97d09127e54265a36a3eb05d3f3150bbc75056844916c6cd897db.jpeg",
+      "sha256": "b92137955ff97d09127e54265a36a3eb05d3f3150bbc75056844916c6cd897db",
+      "bytes": 565437,
+      "width": 1024,
+      "height": 1024,
+      "quality": 95,
+      "chroma": "4:4:4",
+      "iccRetained": false,
+      "psnr": 42.74709046891925,
+      "angularP95": 2.247371615140688,
+      "angularP99": 3.160558444061228,
+      "angularMax": 8.659196601126444
+    },
+    {
+      "source": "textures/ca22e428e1b1ebac47b2fc67ec355700c8779d6628d2fc6c3ebae9002988f63e.jpeg",
+      "sourceSha256": "ca22e428e1b1ebac47b2fc67ec355700c8779d6628d2fc6c3ebae9002988f63e",
+      "sourceBytes": 1207134,
+      "uri": "textures/15ffffb7fb99bb27302cd8eddba28e4ca358688a4de9c436efe295cc6dee0423.jpeg",
+      "sha256": "15ffffb7fb99bb27302cd8eddba28e4ca358688a4de9c436efe295cc6dee0423",
+      "bytes": 889710,
+      "width": 1024,
+      "height": 1024,
+      "quality": 95,
+      "chroma": "4:4:4",
+      "iccRetained": true,
+      "psnr": 39.4986153744884,
+      "angularP95": 3.560778521253187,
+      "angularP99": 4.926631854461307,
+      "angularMax": 43.37335815283394
+    },
+    {
+      "source": "textures/389b0f8cc3e8bf4ee78ea12c367ff3003d69d8e83de8baf908e6f2e123d1e6a8.jpeg",
+      "sourceSha256": "389b0f8cc3e8bf4ee78ea12c367ff3003d69d8e83de8baf908e6f2e123d1e6a8",
+      "sourceBytes": 723624,
+      "uri": "textures/1a3dd860133e03fcca6b95a454e262ef21b7e262b2323ef7b15590c5e52ea745.jpeg",
+      "sha256": "1a3dd860133e03fcca6b95a454e262ef21b7e262b2323ef7b15590c5e52ea745",
+      "bytes": 501218,
+      "width": 1024,
+      "height": 1024,
+      "quality": 95,
+      "chroma": "4:4:4",
+      "iccRetained": false,
+      "psnr": 42.74687185982485,
+      "angularP95": 2.384364789785985,
+      "angularP99": 3.357870222569452,
+      "angularMax": 24.37090838890591
+    },
+    {
+      "source": "textures/9c83be074c950ea1b94c732c0c0291b53b9ba357f932d378bafe3ca3b4418871.jpeg",
+      "sourceSha256": "9c83be074c950ea1b94c732c0c0291b53b9ba357f932d378bafe3ca3b4418871",
+      "sourceBytes": 1228646,
+      "uri": "textures/5351a50f70b6b8291a329ba431ff3ee97ee3391f68d693b2b9d2a1d0ecee17e0.jpeg",
+      "sha256": "5351a50f70b6b8291a329ba431ff3ee97ee3391f68d693b2b9d2a1d0ecee17e0",
+      "bytes": 896634,
+      "width": 1024,
+      "height": 1024,
+      "quality": 95,
+      "chroma": "4:4:4",
+      "iccRetained": false,
+      "psnr": 39.342432395755424,
+      "angularP95": 3.498232479283784,
+      "angularP99": 4.791435548154423,
+      "angularMax": 25.33053222878987
+    }
+  ],
+  "models": [
+    {
+      "file": "island-tree.glb",
+      "sourceSha256": "6ea20c0faf60953f7261eff9e909f18d6bb130b602a9a209979cf2774a19e994",
+      "sourceBytes": 3539036,
+      "sha256": "7091950861cea84633e2901b990419e2a0aca33f114f49ff3ff460865cbf9cb6",
+      "bytes": 3539124,
+      "retainedNodes": [
+        "island_tree_01_bw_branches",
+        "island_tree_01_bw_leaves",
+        "island_tree_01_bw_trunk"
+      ],
+      "removedNodes": []
+    },
+    {
+      "file": "vegetation-mid.glb",
+      "sourceSha256": "4ee1e92eec97017728ad0a30a0dab2665e27c3914ea341bf60850db8795e86d9",
+      "sourceBytes": 788276,
+      "sha256": "8c5968c230b2f5d708bfbb1303a4e82626b48ad46878f83825840c2003931576",
+      "bytes": 469668,
+      "retainedNodes": [
+        "mid_variant_04",
+        "mid_variant_06",
+        "mid_variant_14",
+        "mid_variant_15"
+      ],
+      "removedNodes": [
+        "mid_variant_00",
+        "mid_variant_01",
+        "mid_variant_02",
+        "mid_variant_03",
+        "mid_variant_05",
+        "mid_variant_07"
+      ]
+    }
+  ],
+  "sourceBytes": 8305817,
+  "derivativeBytes": 6861791,
+  "savedBytes": 1444026
+}
