@@ -1,4 +1,17 @@
 {
+  "terrainCover": {
+    "version": "scanned-cover-2",
+    "runtime": "src/components/internal/terrain-surface.ts",
+    "verification": "tools/evidence/verify-terrain-cover.mjs",
+    "source": "https://polyhaven.com/a/aerial_rocks_04",
+    "sourceScaleMeters": 80,
+    "sourceMutation": false,
+    "newAssets": 0,
+    "geometryChanged": false,
+    "method": "Retained scan orientation transported once in world space for local cover support and lighting, plus bounded AO cavity cue. Authored rule, not measured Hawaiian geology or soil depth.",
+    "decision": "output/releases/madagin-terrain-cover-20260909/decision.json",
+    "publication": "output/releases/madagin-terrain-cover-20260909/publication.json"
+  },
   "bankUnderstory": {
     "version": "bank-understory-1",
     "builder": "tools/evidence/bake-bank-understory.mjs",
@@ -675,9 +688,9 @@
     "independentHumanEquivalence": "UNVERIFIED"
   },
   "schemaVersion": 2,
-  "lastReverified": "2026-09-08",
+  "lastReverified": "2026-09-09",
   "currentStateRecord": "docs/design/madagin-current-state.md",
-  "currentPublicationEvidence": "output/releases/madagin-cliff-ecology-20260908/publication.json",
+  "currentPublicationEvidence": "output/releases/madagin-terrain-cover-20260909/publication.json",
   "cliffSurfaceRelease": {
     "runtime": "src/components/internal/terrain-surface.ts",
     "provenance": "public/world/cliff-material-v1/provenance.json",

@@ -6,8 +6,9 @@ import { FrontSide, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, Textur
 import type { Texture } from "three";
 
 export const TERRAIN_SURFACE = {
-  version: "scanned-surface-1",
+  version: "scanned-cover-2",
   rockTileMeters: 80,
+  coverMethod: "scan-oriented slope and cavity support",
   geometryChanged: false,
   sources: ["/world/cliff-material-v1/color.webp", "/world/cliff-material-v1/normal.webp", "/world/cliff-material-v1/response.webp", "/world/canopy-v1/forest-color.webp"],
   compactSources: ["/world/cliff-material-v1/color-compact.webp", "/world/cliff-material-v1/normal-compact.webp", "/world/cliff-material-v1/response-compact.webp", "/world/cliff-material-v1/ground-compact.webp"],
@@ -44,7 +45,7 @@ export function createTerrainSurface(textures: Texture[]) {
         // This preserves the macro normal and avoids axis seams and inverted
         // tangent normals on negative-facing or steep terrain.
         vec2 groundSlope(vec2 plane) {
-          vec3 n = texture2D(uCliffNormal, plane / 80.0).xyz * 2.0 - 1.0;
+          vec3 n = texture2D(uCliffNormal, plane / ${TERRAIN_SURFACE.rockTileMeters.toFixed(1)}).xyz * 2.0 - 1.0;
           vec2 gradient = -n.xy / max(n.z, 0.25);
           return vec2(dot(gradient, dFdx(plane)), dot(gradient, dFdy(plane)));
         }
@@ -52,10 +53,26 @@ export function createTerrainSurface(textures: Texture[]) {
       .replace("#include <map_fragment>", `#include <map_fragment>
         vec3 terrainNormal = normalize(vGroundNormal);
         vec3 terrainWeights = groundWeights(terrainNormal);
-        vec3 cliff = groundSample(uCliffColor, vGroundWorld, terrainWeights, 80.0);
-        vec3 response = groundSample(uCliffResponse, vGroundWorld, terrainWeights, 80.0);
+        vec3 cliff = groundSample(uCliffColor, vGroundWorld, terrainWeights, ${TERRAIN_SURFACE.rockTileMeters.toFixed(1)});
+        vec3 response = groundSample(uCliffResponse, vGroundWorld, terrainWeights, ${TERRAIN_SURFACE.rockTileMeters.toFixed(1)});
         vec3 ground = groundSample(uGroundColor, vGroundWorld, terrainWeights, 6.0);
-        float cover = smoothstep(0.36, 0.82, abs(terrainNormal.y));
+        // Transport the scan slope once in world space. Both cover and lighting
+        // then respond to the same rock faces instead of painting an unbroken
+        // green film across every interpolated upward-facing mesh normal.
+        vec2 surfaceSlope = groundSlope(vGroundWorld.zy) * terrainWeights.x
+          + groundSlope(vGroundWorld.xz) * terrainWeights.y
+          + groundSlope(vGroundWorld.xy) * terrainWeights.z;
+        vec3 surfaceDx = dFdx(vGroundWorld), surfaceDy = dFdy(vGroundWorld);
+        vec3 surfaceR1 = cross(surfaceDy, terrainNormal), surfaceR2 = cross(terrainNormal, surfaceDx);
+        float surfaceDeterminant = dot(surfaceDx, surfaceR1);
+        vec3 surfaceGradient = vec3(0.0);
+        if (abs(surfaceDeterminant) > 1e-8) {
+          surfaceGradient = (surfaceSlope.x * surfaceR1 + surfaceSlope.y * surfaceR2) / surfaceDeterminant;
+        }
+        vec3 supportNormal = normalize(terrainNormal - surfaceGradient * .55);
+        float supportSlope = mix(abs(terrainNormal.y), abs(supportNormal.y), .45);
+        // AO is only a bounded cavity cue, not measured soil depth or ecology.
+        float cover = smoothstep(.45, .88, supportSlope + (.7 - response.r) * .12);
         // Existing water authorities: wet waterfall headwall and sea contact.
         float waterfall = (1.0 - smoothstep(0.6, 1.2, length(vec2((vGroundWorld.x-151.0)/82.0, (vGroundWorld.z+696.0)/62.0))))
           * (1.0 - smoothstep(10.0, 35.0, vGroundWorld.y));
@@ -87,16 +104,7 @@ export function createTerrainSurface(textures: Texture[]) {
         roughnessFactor = clamp(mix(response.g, .94, cover) - surfaceWet * .18, .52, .98);
       `)
       .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
-        vec2 surfaceSlope = groundSlope(vGroundWorld.zy) * terrainWeights.x
-          + groundSlope(vGroundWorld.xz) * terrainWeights.y
-          + groundSlope(vGroundWorld.xy) * terrainWeights.z;
-        vec3 dx = dFdx(-vViewPosition), dy = dFdy(-vViewPosition);
-        vec3 r1 = cross(dy, normal), r2 = cross(normal, dx);
-        float determinant = dot(dx, r1);
-        if (abs(determinant) > 1e-8) {
-          vec3 gradient = (surfaceSlope.x * r1 + surfaceSlope.y * r2) / determinant;
-          normal = normalize(normal - gradient * mix(.72, .20, cover));
-        }
+        normal = normalize(normal - mat3(viewMatrix) * surfaceGradient * mix(.72, .20, cover));
       `)
       .replace("#include <aomap_fragment>", `#include <aomap_fragment>
         reflectedLight.indirectDiffuse *= mix(.56 + .44 * response.r, 1.0, cover);
