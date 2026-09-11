@@ -4071,5 +4071,22 @@
     "method": "Actual decoded Ridge boundary and first-cell Valley replacement with retained headwater bed",
     "proof": "output/releases/madagin-ground-substrate-20260910/foreground-seam-check.json",
     "publication": "output/releases/madagin-ground-substrate-20260910/publication.json"
+  },
+  "branchSprays": {
+    "version": "branch-sprays-1",
+    "source": "public/world/branch-canopy-v1/island-tree-01-far.glb",
+    "provenance": "public/world/branch-canopy-v1/provenance.json",
+    "sourceUrl": "https://polyhaven.com/a/island_tree_01",
+    "license": "CC0-1.0",
+    "sourceUnchanged": true,
+    "newAssetRequests": 0,
+    "runtime": "src/components/internal/branch-sprays.ts",
+    "scope": "First-family bank-canopy foliage only,134 desktop/133 compact trees. Source branches, roots and transforms preserved.",
+    "method": "Deterministic occupied crown cells drive753 paired, folded sprays.4518 blades and18072 triangles. Authored geometry and height-based shade; not measured Hawaiian species or actual optical-depth occlusion.",
+    "rejected": "output/releases/madagin-branch-sprays-20260910/trial-1",
+    "proof": "output/releases/madagin-branch-sprays-20260910/branch-geometry-checks.json",
+    "gpuProof": "output/releases/madagin-branch-sprays-20260910/sprays-gpu-local.json",
+    "decision": "output/releases/madagin-branch-sprays-20260910/decision.json",
+    "publication": "output/releases/madagin-branch-sprays-20260910/publication.json"
   }
 }
