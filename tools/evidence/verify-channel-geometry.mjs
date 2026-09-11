@@ -9,7 +9,7 @@ import {pathToFileURL} from 'node:url';
 import ts from 'typescript';
 import {BufferGeometry,BufferAttribute,Mesh,Matrix4} from 'three';
 const sourceRoot=path.resolve(process.env.MADAGIN_SOURCE_ROOT??'.');
-const out=path.resolve(process.env.MADAGIN_CASCADE_EVIDENCE??'output/releases/madagin-ground-substrate-20260910');
+const out=path.resolve(process.env.MADAGIN_CASCADE_EVIDENCE??'output/releases/madagin-connected-water-20260911/geometry');
 await fs.mkdir(out,{recursive:true});
 const require=createRequire(path.resolve('output/releases/madagin-canopy-20260906/pipeline/package.json'));
 const {NodeIO}=require('@gltf-transform/core'),{ALL_EXTENSIONS}=require('@gltf-transform/extensions'),{MeshoptDecoder}=require('meshoptimizer');await MeshoptDecoder.ready;
@@ -63,31 +63,30 @@ async function sourceMesh(compact,zone) {
 
 
 
-const ridgeSource=await sourceMesh(true,'ridge'),valleySource=await sourceMesh(true,'valley');
-const ridge=runtime.createNativeRidgeSurface(runtime.geometrySurfaceForMerge(ridgeSource.geometry,ridgeSource.matrixWorld));
-const control=runtime.createIntegratedWatershedTerrainGeometry(valleySource,[],[],2,0);control.setAttribute('uv1',control.getAttribute('uv').clone());ridge.computeBoundingBox();const outer=runtime.extractTerrainSeamSamples(new Mesh(ridge),ridge.boundingBox.min.z);const valley=runtime.createExactDetailedRidgeValleyWeldGeometry(control,outer,runtime.extractTerrainSeamSamples(new Mesh(ridge),outer[0].z+28),true);
-const rb=outer,vb=runtime.extractTerrainSeamSamples(new Mesh(valley));
-const seamField={ridge:rb,valley:vb,ridgeInterior:runtime.extractTerrainSeamSamples(new Mesh(ridge),rb[0].z+28),valleyInterior:runtime.extractTerrainSeamSamples(new Mesh(valley),vb[0].z-28)};
-const bridge=Math.abs(rb[0].z-vb[0].z)>.04?runtime.createExactBoundaryTerrainSeamBridge(seamField):null;
-runtime.removeCoplanarBoundaryWall(ridge,'z',rb[0].z);runtime.removeCoplanarBoundaryWall(valley,'z',vb[0].z);
-const coastRidge=runtime.extendJourneyCoast(ridge,'conservative','ridge'),coastValley=runtime.extendJourneyCoast(valley,'conservative','valley');
-const material=new MeshBasicMaterial({side:DoubleSide}),geometries=[['ridge',coastRidge],['valley',coastValley],['bridge',bridge]].filter(([,g])=>g),meshes=geometries.map(([name,g])=>{const m=new Mesh(g,material);m.name=name;m.updateMatrixWorld();return m;});
-const matching=JSON.parse(await fs.readFile('output/playwright/madagin-world-progress/ground-substrate-release-20260910/matched-views.json'));
-const c=matching.cases.find(c=>c.release==='after'&&c.viewport.width===390).views.find(v=>v.id==='ridge-exit').camera;
-const camera=new PerspectiveCamera(c.fov,390/844,.1,5000);camera.position.fromArray(c.position);camera.lookAt(...c.look);camera.updateMatrixWorld();
-const ray=new Raycaster(),rays=[];
-for(const [x,y]of[[268,640],[272,641],[277,641],[310,644],[314,644],[318,644],[385,637],[385,635],[385,640]]){ray.setFromCamera(new Vector2(x/390*2-1,1-y/844*2),camera);rays.push({pixel:[x,y],hits:ray.intersectObjects(meshes).slice(0,3).map(h=>({mesh:h.object.name,point:h.point.toArray(),face:h.faceIndex}))});}
-const report={at:new Date().toISOString(),camera:c,diagnostic:valley.userData,ridgeEdge:{minX:rb[0].x,maxX:rb.at(-1).x,z:rb[0].z,count:rb.length},valleyEdge:{minX:vb[0].x,maxX:vb.at(-1).x,z:vb[0].z,count:vb.length},rays};
-
-const sampleR=sampler(coastRidge),sampleV=sampler(coastValley),gaps=[];for(let x=-309;x<=309;x+=.5)gaps.push(Math.abs(sampleR(x,rb[0].z)-sampleV(x,rb[0].z)));report.maximumRenderedEdgeGap=Math.max(...gaps);report.probes=gaps.length;assert.ok(report.maximumRenderedEdgeGap<.0001);for(const ray of rays)assert.ok(ray.hits.length,'Former gap pixel must hit terrain');report.passed=true;
-const sampleBefore=sampler(control),sampleWater=sampler(runtime.createRidgeHeadwaterGeometry()),water=[];
-for(let z=-337.7;z<=-335;z+=.15)for(const across of [-.6,0,.6]){
- const x=runtime.v116RiverCenter(z)+runtime.ridgeChannelWidth(z)*across;
- const before=sampleBefore(x,z),after=sampleV(x,z),level=sampleWater(x,z);
- water.push({x,z,across,before,after,level,clearance:level-after});
- assert.ok(Number.isFinite(level)&&level-after>.08,'Weld must leave the actual stream surface above its bed');
+const results=[];
+for(const compact of [true,false]) {
+ const source=await sourceMesh(compact,'valley');
+ const valley=runtime.createIntegratedWatershedTerrainGeometry(source,[],[],compact?2:1,compact?0:1);
+ const at=sampler(valley),checks=[];
+ for(const [kind,g,columns] of [['river',runtime.createIntegratedRiverGeometry(compact?74:118,8),8],['outflow',runtime.createWaterfallOutflowGeometry(compact?36:62,8),8]]) {
+  const p=g.getAttribute('position'),depth=g.getAttribute('waterDepth'),rows=p.count/(columns+1),samples=[];
+  assert.equal(depth.count,p.count);assert.ok(Array.from(depth.array).every(d=>d>0));
+  for(let row=1;row<rows-1;row++)for(const col of [2,4,6]) {
+   const i=row*(columns+1)+col,x=p.getX(i),z=p.getZ(i),water=p.getY(i),bed=at(x,z);
+   const clearance=water-bed;samples.push({row,col,x,z,water,bed,clearance,opticalDepth:depth.getX(i),depthError:Math.abs(clearance-depth.getX(i))});
+  }
+  const finite=samples.filter(s=>Number.isFinite(s.bed));
+  assert.equal(finite.length,samples.length,'All sampled water has terrain beneath it');assert.ok(finite.every(s=>s.clearance>.12),'The actual rendered bed stays submerged');
+  assert.ok(finite.every(s=>s.depthError<(kind==='river'?.06:.2)),'Optical depth agrees with actual rendered terrain within the section mesh tolerance');
+  const flow=g.getAttribute('flow');
+  for(let row=1;row<rows;row++){
+    const i=row*(columns+1)+4,previous=i-columns-1;
+    assert.ok(flow.getY(i)>flow.getY(previous),'Metric flow advances downstream');
+    assert.ok(p.getY(i)<=p.getY(previous)+.025,'Water has no upstream step beyond surface ripple tolerance');
+  }
+  checks.push({kind,maximumDepthError:Math.max(...finite.map(s=>s.depthError)),minimum:Math.min(...finite.map(s=>s.clearance)),probes:samples.length,missing:samples.length-finite.length,samples});
+ }
+ results.push({compact,checks});
 }
-const away=[];for(const z of [-338,-340,-400,-750,-990])for(let x=-300;x<=300;x+=25){const delta=Math.abs(sampleBefore(x,z)-sampleV(x,z));if(Number.isFinite(delta))away.push(delta);}
-assert.ok(Math.max(...away)<.00001,'Terrain away from the strip must remain unchanged');
-report.water={probes:water.length,minimumClearance:Math.min(...water.map(p=>p.clearance)),samples:water};report.maximumAwayDifference=Math.max(...away);
-await fs.writeFile(out+'/foreground-seam-check.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:true,edge:report.maximumRenderedEdgeGap,probes:report.probes,rayHits:rays.every(r=>r.hits.length),minimumWaterClearance:report.water.minimumClearance,away:report.maximumAwayDifference,weld:valley.userData.detailedRidgeValleyWeld}));
+await fs.writeFile(out+'/channel-geometry.json',JSON.stringify({at:new Date().toISOString(),passed:true,results},null,2));
+console.log(JSON.stringify(results.map(c=>({compact:c.compact,checks:c.checks.map(({samples,...rest})=>rest)}))));

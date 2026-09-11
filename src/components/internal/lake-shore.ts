@@ -1,3 +1,5 @@
+import {lakeInletCut, LAKE_INLET_GLSL} from "./channel-profile";
+
 // Authored basin, not a surveyed Hawaiian lake. One boundary/bed profile drives
 // terrain, surface optics and wet-ground material. Source assets remain intact.
 export const LAKE_SHORE_VERSION = "lake-depth-2";
@@ -46,12 +48,16 @@ export function lakeBedLevel(x:number,z:number,distance=lakeBoundaryDistance(x,z
   const breakup=Math.sin(angle*5-.7)*.56+Math.sin(angle*11+1.8)*.24+Math.sin(x*.071-z*.037)*.18;
   const offset=distance-1;
   const core=Math.max(0,Math.min(1,(.82-distance)/.64));
-  return offset<=0
+  const bed=offset<=0
     ? LAKE_WATER_LEVEL-.42-Math.pow(Math.min(1,-offset/.18),1.35)*2.15-core*core*(3-2*core)*4.8
     : LAKE_WATER_LEVEL-.42+Math.pow(Math.min(1,offset/.24),1.38)*(3.65+breakup);
+  if(z<=-835||z>=-764)return bed;
+  const inlet=lakeInletCut(x,z);
+  return bed+(Math.min(bed,LAKE_WATER_LEVEL-inlet.depth)-bed)*inlet.weight;
 }
 // GLSL counterpart; the verification runner checks GPU/CPU parity around all coves.
 export const LAKE_SHORE_GLSL = `
+${LAKE_INLET_GLSL}
 float lakeCove(float angle,float center,float width) {
   float delta=atan(sin(angle-center),cos(angle-center));
   return exp(-.5*pow(delta/width,2.0));
@@ -69,5 +75,5 @@ vec2 lakeShore(vec2 p) {
   float core=clamp((.82-d)/.64,0.,1.);
   float depth=offset<=0.0?.42+pow(min(1.0,-offset/.18),1.35)*2.15+core*core*(3.-2.*core)*4.8
     :.42-pow(min(1.0,offset/.24),1.38)*(3.65+breakup);
-  return vec2(d,depth);
+  return vec2(d,inletBedDepth(p.x,p.y,depth));
 }`;

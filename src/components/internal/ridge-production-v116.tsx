@@ -38,6 +38,8 @@ import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./nativ
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
 import {LakeSurface} from "./lake-reflection";
+import {CHANNEL_PROFILE_VERSION, riverCenter, riverHalfWidth, channelBedOffset, outflowHalfWidth, outflowBedOffset} from "./channel-profile";
+import {createChannelWaterMaterial} from "./channel-water";
 import {CASCADE_START_Z, applyCascadeBed} from "./cascade-contact";
 import {FALLING_WATER, FallingSpray, fallingLipPoint, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
 import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
@@ -535,7 +537,7 @@ function waterfallUpperBankWidth(z: number, side: number) {
 function waterfallOutflowCenter(progress: number) {
   const inverse = 1 - progress;
   const start = PLUNGE_POOL_CENTER;
-  const control = { x: 122, z: -736 };
+  const control = { x: 114, z: -720 };
   const end = {
     x: v116RiverCenter(-757) + v116RiverHalfWidth(-757) * .45,
     z: -757,
@@ -6456,8 +6458,7 @@ function createWaterfallOutflowGeometry(longitudinalSegments: number, acrossSegm
     const tangentLength = Math.max(0.0001, Math.hypot(tangentX, tangentZ));
     const normalX = -tangentZ / tangentLength;
     const normalZ = tangentX / tangentLength;
-    const confluenceTaper = 1 - smoothRange(0.72, 1, progress) * 0.86;
-    const halfWidth = (8.8 + Math.sin(progress * 10.4 + 0.5) * 0.75 + progress * 1.9) * confluenceTaper;
+    const halfWidth = outflowHalfWidth(progress);
     const mergeLevel = valleyRiverLevel(-757);
     const level = WATERFALL_BOTTOM.y - 0.38 + (mergeLevel - WATERFALL_BOTTOM.y + 0.38) * smoothCoastalStep(progress);
     for (let column = 0; column <= acrossSegments; column += 1) {
@@ -6494,7 +6495,15 @@ function createWaterfallOutflowGeometry(longitudinalSegments: number, acrossSegm
     method: "plunge outflow merges into the main river before its lake boundary",
     riverCenter: [v116RiverCenter(-757), valleyRiverLevel(-757), -757],
   };
-  return addChannelFlow(geometry,acrossSegments);
+  addChannelFlow(geometry,acrossSegments);
+  const depths=[],p=geometry.getAttribute("position");
+  for(let row=0;row<=longitudinalSegments;row++)for(let col=0;col<=acrossSegments;col++) {
+    const i=row*(acrossSegments+1)+col,t=row/longitudinalSegments;
+    const level=WATERFALL_BOTTOM.y-.38+(valleyRiverLevel(-757)-WATERFALL_BOTTOM.y+.38)*smoothCoastalStep(t);
+    depths.push(Math.max(.02,p.getY(i)-outflowSectionBed(p.getX(i),p.getZ(i),t,col/acrossSegments*2-1,level)));
+  }
+  geometry.setAttribute("waterDepth",new Float32BufferAttribute(depths,1));
+  return geometry;
 }
 
 function WaterfallMist({ reducedMotion, tier }: { reducedMotion: boolean; tier: WorldQualityTier }) {
@@ -6580,21 +6589,12 @@ function WaterfallRockFrame({ shadows, tier }: { shadows: boolean; tier: WorldQu
   );
 }
 
-function v116RiverConfluenceProgress(z: number) {
-  return 1 - smoothRange(-792, -724, z);
-}
-
 function v116RiverBaseCenter(z: number) {
   return ridgeRiverCenter(z);
 }
 
 function v116RiverCenter(z: number) {
-  const confluence = v116RiverConfluenceProgress(z);
-  return v116RiverBaseCenter(z)
-    + confluence * (
-      Math.sin((z + 752) * 0.052) * 2.4
-      + Math.sin((z + 781) * 0.11) * 0.75
-    );
+  return riverCenter(z);
 }
 
 function v116RiverSourceFade(z: number) {
@@ -6609,13 +6609,7 @@ function v116RiverBaseHalfWidth(z: number) {
 }
 
 function v116RiverHalfWidth(z: number) {
-  const confluence = v116RiverConfluenceProgress(z);
-  const baseWidth = v116RiverBaseHalfWidth(z);
-  const inletFlare = 1 + confluence * (
-    0.62
-    + Math.sin((z + 777) * 0.055) * 0.08
-  );
-  return baseWidth * inletFlare;
+  return riverHalfWidth(z);
 }
 
 
@@ -6649,8 +6643,19 @@ function ridgeChannelWidth(z: number) {
   return v116RiverHalfWidth(z)*(1-join)+ridgeHeadwaterHalfWidth(z)*join;
 }
 function ridgeChannelEnvelope(x: number,z: number) {
-  return smoothRange(-777,-754,z)*(1-smoothRange(-118,-108,z))
+  return smoothRange(-835,-818,z)*(1-smoothRange(-118,-108,z))
     *(1-smoothRange(ridgeChannelWidth(z)*2.2,Math.max(14,ridgeChannelWidth(z)*3.5),Math.abs(x-v116RiverCenter(z))));
+}
+function outflowSectionBed(x:number,z:number,progress:number,across:number,level:number) {
+  let bed=level+outflowBedOffset(across,progress);
+  if(plungeDistance(x,z)<=1)bed=Math.min(bed,plungeBedLevel(x,z));
+  const riverAcross=(x-v116RiverCenter(z))/v116RiverHalfWidth(z);
+  if(Math.abs(riverAcross)<1) {
+    let riverBed=valleyRiverLevel(z)+channelBedOffset(riverAcross,z);
+    if(z<-764&&lakeBoundaryDistance(x,z)<1.24)riverBed=Math.min(riverBed,lakeBedLevel(x,z));
+    bed=Math.min(bed,riverBed);
+  }
+  return bed;
 }
 function outflowTerrainSampler() {
   const points=Array.from({length:33},(_,i)=>waterfallOutflowCenter(i/32));
@@ -6663,9 +6668,9 @@ function outflowTerrainSampler() {
       const d=Math.hypot(x-a.x-dx*t,z-a.z-dz*t);
       if(d<distance){distance=d;progress=(i-1+t)/32;}
     }
-    const width=(8.8+Math.sin(progress*10.4+.5)*.75+progress*1.9)*(1-smoothRange(.72,1,progress)*.86);
+    const width=outflowHalfWidth(progress);
     const level=WATERFALL_BOTTOM.y-.38+(valleyRiverLevel(-757)-WATERFALL_BOTTOM.y+.38)*smoothCoastalStep(progress);
-    return distance<width+4?{distance,width,level}:null;
+    return distance<width+4?{distance,width,level,progress}:null;
   };
 }
 function createRidgeHeadwaterTerrain(source: BufferGeometry) {
@@ -6674,7 +6679,7 @@ function createRidgeHeadwaterTerrain(source: BufferGeometry) {
   for(let pass=0;pass<6;pass++) {
     const refined=subdivideSelectedTerrainGeometry(geometry,"ridgeHeadwaterSubdivision",(p,a,b,c)=>{
       const ax=p.getX(a),az=p.getZ(a),bx=p.getX(b),bz=p.getZ(b),cx=p.getX(c),cz=p.getZ(c);
-      if(Math.max(az,bz,cz)<-780||Math.min(az,bz,cz)>-108||Math.max(ax,bx,cx)<-50||Math.min(ax,bx,cx)>240)return false;
+      if(Math.max(az,bz,cz)<-835||Math.min(az,bz,cz)>-108||Math.max(ax,bx,cx)<-50||Math.min(ax,bx,cx)>240)return false;
       const x=(ax+bx+cx)/3,z=(az+bz+cz)/3;
       const edge=Math.max(Math.hypot(ax-bx,az-bz),Math.hypot(bx-cx,bz-cz),Math.hypot(cx-ax,cz-az));
       const across=Math.abs(x-v116RiverCenter(z)),width=ridgeChannelWidth(z),outflow=outflowAt(x,z);
@@ -6690,18 +6695,19 @@ function createRidgeHeadwaterTerrain(source: BufferGeometry) {
     const x=p.getX(i),z=p.getZ(i),weight=ridgeChannelEnvelope(x,z),outflow=outflowAt(x,z);
     const poolWeight=plungeTerrainWeight(x,z);
     if(weight===0&&!outflow&&poolWeight===0)continue;
-    const width=ridgeChannelWidth(z),across=Math.abs(x-v116RiverCenter(z))/width;
+    const width=ridgeChannelWidth(z),across=(x-v116RiverCenter(z))/width;
     const level=z<RIDGE_HEADWATER_END?valleyRiverLevel(z):ridgeHeadwaterLevel(z);
     // A submerged bed and continuous low banks replace the floating source.
-    const bed=level-.5+Math.pow(Math.min(across,2.2),1.7)*.42;
+    const sectionBed=level+channelBedOffset(across,z);
+    const bed=z<-764&&lakeBoundaryDistance(x,z)<1.24?Math.min(sectionBed,lakeBedLevel(x,z)):sectionBed;
     const old=p.getY(i);let next=old+(bed-old)*weight;
     if(poolWeight>0)next+=(plungeBedLevel(x,z)-next)*poolWeight;
     if(outflow) {
       // Cut an inlet through the new bank and into the main channel. The old
       // outflow stopped outside the bank and its fixed bed datum obstructed it.
       const envelope=1-smoothRange(outflow.width*.8,outflow.width+4,outflow.distance);
-      const target=outflow.level-.65+Math.pow(Math.min(outflow.distance/outflow.width,1.5),1.7)*.3;
-      next=Math.min(next,next+(target-next)*envelope);
+      const target=outflowSectionBed(x,z,outflow.progress,outflow.distance/outflow.width,outflow.level);
+      next+=(target-next)*envelope;
     }
     p.setY(i,next);changed++;maxCut=Math.max(maxCut,old-next);maxFill=Math.max(maxFill,next-old);
   }
@@ -6783,7 +6789,17 @@ function createIntegratedRiverGeometry(samples: number, columns: number) {
     },
     zRange: [Math.min(...lakeJoinZ), RIDGE_HEADWATER_END],
   };
-  return addChannelFlow(geometry,columns);
+  addChannelFlow(geometry,columns);
+  const p=geometry.getAttribute("position"),depths=[];
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i),z=p.getZ(i),across=(x-v116RiverCenter(z))/v116RiverHalfWidth(z);
+    const sectionBed=valleyRiverLevel(z)+channelBedOffset(across,z);
+    const bed=z<-764&&lakeBoundaryDistance(x,z)<1.24?Math.min(sectionBed,lakeBedLevel(x,z)):sectionBed;
+    depths.push(Math.max(.02,p.getY(i)-bed));
+  }
+  geometry.setAttribute("waterDepth",new Float32BufferAttribute(depths,1));
+  geometry.userData.riverCorridor.profile=CHANNEL_PROFILE_VERSION;
+  return geometry;
 }
 
 function createIntegratedLakeGeometry(angularSegments: number, radialSegments: number, edgeOverlap: number) {
@@ -6978,8 +6994,8 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   const activeWaterfallMaterial = useRef<ShaderMaterial | null>(null);
   const activeImpactMaterial = useRef<ShaderMaterial | null>(null);
   const waterMaterial = useMemo(() => createWaterMaterial(), []);
-  const poolMaterial = useMemo(() => createPlungeWaterMaterial(V116_SUN_DIRECTION), []);
-  const riverMaterial = useMemo(() => createWaterMaterial("river"), []);
+  const poolMaterial = useMemo(() => createPlungeWaterMaterial(V116_SUN_DIRECTION,waterMaterial), [waterMaterial]);
+  const riverMaterial = useMemo(() => createChannelWaterMaterial(V116_SUN_DIRECTION,waterMaterial), [waterMaterial]);
   const headwaterMaterial = useMemo(() => createWaterMaterial("headwater"), []);
   const cascadeSourceMaterial = useMemo(() => createWaterMaterial("cascade-source"), []);
   const waterfallMaterial = useMemo(() => createWaterfallMaterial(), []);
@@ -7089,6 +7105,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
   useEffect(() => {
     document.documentElement.dataset.madaginFallingWater = JSON.stringify({...FALLING_WATER,...waterfallGeometry.userData.waterfallBody});
     document.documentElement.dataset.madaginCascadeSource = JSON.stringify(waterfallUpperGeometry.userData.headwaterChannel);
+    document.documentElement.dataset.madaginPoolOptics=JSON.stringify({version:CHANNEL_PROFILE_VERSION,reflection:"shared-lake-scene-approximation",planeDifference:PLUNGE_POOL_LEVEL-LAKE_WATER_LEVEL,extraReflectionPasses:0});
     activeWaterMaterial.current = waterMaterial;
     activePoolMaterial.current = poolMaterial;
     activeRiverMaterial.current = riverMaterial;
@@ -7237,6 +7254,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
       delete document.documentElement.dataset.madaginWaterRealismCc;
       delete document.documentElement.dataset.madaginWaterRealismCe;
       delete document.documentElement.dataset.madaginWaterRealismCf;
+      delete document.documentElement.dataset.madaginPoolOptics;
       cliffMaterial.dispose();
       impactMaterial.dispose();
       lakeBedGeometry.dispose();

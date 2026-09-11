@@ -24,15 +24,23 @@ export function LakeSurface({geometry,material,compact}:{geometry:BufferGeometry
   },[resources]);
   return <mesh geometry={geometry} material={material} name="Madagin depth-coupled lake with actual terrain reflections"
     onBeforeRender={function(this:Mesh,renderer,scene,camera,geometry,drawMaterial,group){
-      if(camera.position.y<=LAKE_WATER_LEVEL+.2)return;
+      if(camera.position.y<=LAKE_WATER_LEVEL+.2||scene.userData.madaginWaterReflection)return;
       const visible=this.visible;
       this.visible=false;
+      scene.userData.madaginWaterReflection=true;
+      // A channel reuses the lake texture. Exclude its consumers while writing
+      // that texture, avoiding a WebGL read/write feedback loop and recursion.
+      const hidden:Mesh[]=[];
+      scene.traverseVisible(object=>{
+        if(object instanceof Mesh&&!Array.isArray(object.material)
+          &&(object.material as ShaderMaterial).uniforms?.uLakeReflection){hidden.push(object);object.visible=false;}
+      });
       try {
         resources.reflector.onBeforeRender(renderer,scene,camera,geometry,drawMaterial,group);
         const reflectionMaterial=resources.reflector.material as ShaderMaterial;
         material.uniforms.uLakeReflection.value=resources.reflector.getRenderTarget().texture;
         material.uniforms.uLakeReflectionMatrix.value.copy(reflectionMaterial.uniforms.textureMatrix.value).multiply(resources.inverse);
         material.uniforms.uLakeReflectionReady.value=1;
-      } finally {this.visible=visible;}
+      } finally {for(const object of hidden)object.visible=true;this.visible=visible;scene.userData.madaginWaterReflection=false;}
     }}/>
 }

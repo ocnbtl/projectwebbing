@@ -4129,6 +4129,43 @@
     "proof": "output/releases/madagin-water-light-20260911/lake-depth-checks.json",
     "gpu": "output/releases/madagin-water-light-20260911/reflection-gpu-local.json",
     "decision": "output/releases/madagin-water-light-20260911/decision.json",
-    "publication": "output/releases/madagin-water-light-20260911/publication.json"
+    "publication": "output/releases/madagin-water-light-20260911/publication.json",
+    "currentShoreException": {
+      "version": "connected-water-1",
+      "scope": "Bounded inlet incision z -835..-764 within 1.25 channel half-widths; previous radial shore preservation applies outside this exception",
+      "proof": "output/releases/madagin-connected-water-20260911/lake-depth-checks.json"
+    }
+  },
+  "connectedWater": {
+    "version": "connected-water-1",
+    "runtime": [
+      "src/components/internal/channel-profile.ts",
+      "src/components/internal/channel-water.ts",
+      "src/components/internal/lake-shore.ts",
+      "src/components/internal/lake-reflection.tsx",
+      "src/components/internal/plunge-basin.ts",
+      "src/components/internal/ridge-production-v116.tsx"
+    ],
+    "source": "Authored channel and bounded inlet geometry; retained terrain and installed Three.js reflection implementation",
+    "externalAssetsChanged": false,
+    "newAssetRequests": 0,
+    "method": "Shared river/outflow depth sections; narrower curved outflow; bounded lake inlet z -835..-764 within 1.25 half-widths; depth absorption and metre-based ripple advection. One lake reflection shared by nearby water; pool texture uses a softened approximation across 3.86 m elevation.",
+    "lakeCoreMeters": 7.37,
+    "reflectionResolution": {
+      "desktop": 1024,
+      "compact": 512
+    },
+    "extraReflectionPasses": 0,
+    "notClaimed": [
+      "Surveyed bathymetry",
+      "Fluid simulation",
+      "Exact pool-plane reflection",
+      "Performance equivalence",
+      "Human equivalence"
+    ],
+    "proof": "output/releases/madagin-connected-water-20260911/geometry/channel-geometry.json",
+    "gpu": "output/releases/madagin-connected-water-20260911/water-gpu-local.json",
+    "decision": "output/releases/madagin-connected-water-20260911/decision.json",
+    "publication": "output/releases/madagin-connected-water-20260911/publication.json"
   }
 }

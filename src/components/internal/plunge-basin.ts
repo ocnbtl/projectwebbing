@@ -1,4 +1,5 @@
 import {DoubleSide, ShaderMaterial, Vector3} from "three";
+import {WATER_REFLECTION_GLSL, waterReflectionUniforms} from "./channel-water";
 
 // Authored erosional basin in the assembled world; not surveyed bathymetry.
 // One datum and footprint govern the active terrain, water and plant exclusion.
@@ -41,15 +42,18 @@ vec2 plungeBasin(vec2 p) {
   return vec2(d,d<=1.0?(1.0-pow(d,3.0))*(2.1+scour):-min(3.0,(d-1.0)*10.0));
 }`;
 
-export function createPlungeWaterMaterial(sun:Vector3) {
+export function createPlungeWaterMaterial(sun:Vector3,lake?:ShaderMaterial) {
   return new ShaderMaterial({
     name:"Madagin contained plunge water",transparent:true,depthWrite:true,
-    side:DoubleSide,uniforms:{uTime:{value:0},uSunDirection:{value:sun}},
+    side:DoubleSide,uniforms:{uTime:{value:0},uSunDirection:{value:sun},...(lake?{
+      uLakeReflection:lake.uniforms.uLakeReflection,uLakeReflectionMatrix:lake.uniforms.uLakeReflectionMatrix,uLakeReflectionReady:lake.uniforms.uLakeReflectionReady,
+    }:waterReflectionUniforms())},
     vertexShader:`varying vec3 vWorld;
       void main(){vec4 p=modelMatrix*vec4(position,1.0);vWorld=p.xyz;gl_Position=projectionMatrix*viewMatrix*p;}`,
     fragmentShader:`
       uniform float uTime;uniform vec3 uSunDirection;varying vec3 vWorld;
       ${PLUNGE_BASIN_GLSL}
+      ${WATER_REFLECTION_GLSL}
       void main(){
         vec2 basin=plungeBasin(vWorld.xz);float depth=max(0.0,basin.y);
         if(depth<=.002)discard;
@@ -64,9 +68,14 @@ export function createPlungeWaterMaterial(sun:Vector3) {
         vec3 n=normalize(vec3(slope.x,1.0,slope.y));
         vec3 view=normalize(cameraPosition-vWorld);
         float fresnel=.035+.965*pow(1.0-max(dot(n,view),0.0),4.0);
-        vec3 color=mix(vec3(.047,.071,.05),vec3(.003,.024,.025),1.0-exp(-depth*1.2));
+        vec3 transmission=exp(-vec3(.72,.42,.32)*depth/max(.2,dot(n,view)));
+        vec3 sediment=mix(vec3(.075,.063,.039),vec3(.16,.14,.08),.5+.5*sin(jet.x*.61)*sin(jet.y*.73));
+        vec3 color=sediment*transmission+vec3(.012,.033,.025)*(1.-transmission);
         vec3 reflection=mix(vec3(.025,.066,.049),vec3(.22,.34,.37),smoothstep(-.1,.7,reflect(-view,n).y));
-        color=mix(color,reflection,fresnel*.68);
+        // Reuse the nearby lake scene, softened by impact ripples. The 3.86 m
+        // plane difference makes this an approximation, not a second mirror.
+        reflection=waterEnvironment(vWorld,n,reflection,.65);
+        color=mix(color,reflection,clamp(fresnel+.08*(1.-transmission.g),.025,.86));
         float glint=pow(max(dot(reflect(-uSunDirection,n),view),0.0),100.0);
         color+=vec3(.65,.71,.63)*glint*.14;
         float broken=sin(jet.x*1.3+sin(jet.y*.72-uTime*.8))*sin(jet.y*1.6+uTime*.93);
