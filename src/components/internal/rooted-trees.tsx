@@ -8,6 +8,7 @@ import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import {createDistantLeaves} from "./compact-tree-lod";
 import branchSupport from "./branch-canopy-support.json";
 import {createBranchSprays} from "./branch-sprays";
+import {createCrownLayers} from "./crown-layers";
 
 // Species labels are deliberately absent: these licensed trees provide generic
 // branching architecture, not a measured reconstruction of Hawaiian ecology.
@@ -17,7 +18,7 @@ type Placement = number[];
 type Tree = {matrix:Matrix4;root:Vector3;color:Color;height:number};
 type Part = {geometry:Mesh["geometry"];material:MeshStandardMaterial;depth:MeshDepthMaterial;update:(time:number)=>void;far:boolean;distant:boolean;sprays:boolean};
 
-function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,sprays=false):Part[] {
+function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,sprays=false,layers=false):Part[] {
   near.updateMatrixWorld(true);far.updateMatrixWorld(true);
   const box=new Box3().setFromObject(near),height=box.max.y-box.min.y;
   const root=new Vector3();let count=0;
@@ -40,7 +41,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
       if(materials.length!==1)throw new Error("Rooted tree primitive must have one material");
       const material=(materials[0] as MeshStandardMaterial).clone();
       const leaf=/leaves/.test(material.name),time={value:0};
-      if(sprays&&leaf&&distant){material.dispose();return;}
+      if((sprays||layers)&&leaf&&distant){material.dispose();return;}
       let geometry=child.geometry.clone();
       // glTF quantization uses normalized integer attributes. Transforming them
       // in place clamps world coordinates to [-1,1]; decode before baking.
@@ -53,7 +54,8 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
       geometry.applyMatrix4(child.matrixWorld);
       geometry.translate(-root.x,-root.y,-root.z);geometry.scale(1/height,1/height,1/height);
       if(sprays&&leaf){const original=geometry;geometry=createBranchSprays(original);original.dispose();material.vertexColors=true;}
-      if(distant&&leaf&&!sprays){const original=geometry;geometry=createDistantLeaves(original);original.dispose();}
+      if(layers&&leaf){const original=geometry;geometry=createCrownLayers(original);original.dispose();material.vertexColors=true;}
+      if(distant&&leaf&&!sprays&&!layers){const original=geometry;geometry=createDistantLeaves(original);original.dispose();}
       material.color.set("#ffffff");material.emissive.set("#000000");material.emissiveIntensity=0;
       material.metalness=0;material.roughness=Math.max(.84,material.roughness);
       material.envMapIntensity=.7;material.aoMapIntensity=.65;
@@ -61,7 +63,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
       material.transparent=false;material.depthWrite=true;
       material.onBeforeCompile=shader=>{
         shader.uniforms.uTreeTime=time;
-        shader.vertexShader=`${sprays&&leaf?"#define MADAGIN_BRANCH_SPRAYS\n":""}uniform float uTreeTime; varying float vTreeDistance; varying float vTreeHeight;\n${shader.vertexShader}`
+        shader.vertexShader=`${layers&&leaf?"#define MADAGIN_CROWN_LAYERS\n":sprays&&leaf?"#define MADAGIN_BRANCH_SPRAYS\n":""}uniform float uTreeTime; varying float vTreeDistance; varying float vTreeHeight;\n${shader.vertexShader}`
           .replace("#include <begin_vertex>",`#include <begin_vertex>
             vec3 treeRoot=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;
             float gust=sin(uTreeTime*.66+treeRoot.x*.021+treeRoot.z*.014)
@@ -79,9 +81,9 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
             float threshold=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));
             if(${(compact?distant:lod===1)?"threshold >= transition":"threshold < transition"})discard;
           `);
-        if(sprays&&leaf)shader.fragmentShader=shader.fragmentShader.replace(/float transition=smoothstep[\s\S]*?discard;/,"");
+        if((sprays||layers)&&leaf)shader.fragmentShader=shader.fragmentShader.replace(/float transition=smoothstep[\s\S]*?discard;/,"");
       };
-      material.customProgramCacheKey=()=>`rooted-tree-${lod}-${leaf}-${compact}-${distant}-${sprays}`;
+      material.customProgramCacheKey=()=>`rooted-tree-${lod}-${leaf}-${compact}-${distant}-${sprays}-${layers}`;
       const depth=new MeshDepthMaterial({depthPacking:RGBADepthPacking,map:material.map,alphaTest:material.alphaTest,side:material.side});
       depth.onBeforeCompile=(shader,renderer)=>{
         material.onBeforeCompile(shader,renderer);
@@ -90,7 +92,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
         shader.fragmentShader=shader.fragmentShader.replace(/float transition=smoothstep[\s\S]*?discard;/,"");
       };
       depth.customProgramCacheKey=()=>`rooted-tree-depth-${leaf}`;
-      parts.push({geometry,material,depth,update:value=>{time.value=value;},far:lod===1,distant,sprays:sprays&&leaf});
+      parts.push({geometry,material,depth,update:value=>{time.value=value;},far:lod===1,distant,sprays:(sprays||layers)&&leaf});
     });
     const rootedBounds=new Box3();
     parts.forEach(p=>{p.geometry.computeBoundingBox();rootedBounds.union(p.geometry.boundingBox!);});
@@ -137,7 +139,7 @@ export function RootedTrees({placements,zone,shadows,compact=false,efficient=fal
     if(compact||efficient){
       const crowns=compact?scenes.slice(0,2):[scenes[1],scenes[3]];
       if(zone==="bank-canopy")crowns[0]=scenes[scenes.length-1];
-      return crowns.map(({scene},i)=>[...prepareTrees(scene,scene,true,false,zone==="bank-canopy"&&i===0),...prepareTrees(scene,scene,true,true,zone==="bank-canopy"&&i===0)]);
+      return crowns.map(({scene},i)=>[...prepareTrees(scene,scene,true,false,zone==="bank-canopy"&&i===0,zone==="bank-canopy"&&i===1),...prepareTrees(scene,scene,true,true,zone==="bank-canopy"&&i===0,zone==="bank-canopy"&&i===1)]);
     }
     return [prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)];
   },[compact,efficient,scenes,zone]);
@@ -162,7 +164,7 @@ export function RootedTrees({placements,zone,shadows,compact=false,efficient=fal
   useEffect(()=>{
     const element=document.documentElement;
     const previous=JSON.parse(element.dataset.madaginRootedTrees??"{}");
-    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,leafCoverage:"leaf-coverage-1",branchCanopy:zone==="bank-canopy"?"branch-canopy-1":undefined,branchSprays:zone==="bank-canopy"?"branch-sprays-1":undefined,compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
+    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,leafCoverage:"leaf-coverage-1",branchCanopy:zone==="bank-canopy"?"branch-canopy-1":undefined,branchSprays:zone==="bank-canopy"?"branch-sprays-1":undefined,crownLayers:zone==="bank-canopy"?"crown-layers-1":undefined,compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
     onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
   },[compact,efficient,groups,placements.length,zone,onReady]);

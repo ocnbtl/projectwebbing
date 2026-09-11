@@ -4088,5 +4088,22 @@
     "gpuProof": "output/releases/madagin-branch-sprays-20260910/sprays-gpu-local.json",
     "decision": "output/releases/madagin-branch-sprays-20260910/decision.json",
     "publication": "output/releases/madagin-branch-sprays-20260910/publication.json"
+  },
+  "crownLayers": {
+    "version": "crown-layers-1",
+    "source": "public/world/leaf-canopy-v1/tree-1-far.glb",
+    "sourceSha256": "f19c822c285e047db3dbfdc0b579e350eabf1a9a75ae86243f15786205958324",
+    "sourceUrl": "https://polyhaven.com/a/tree_small_02",
+    "license": "CC0-1.0",
+    "provenance": "public/world/leaf-canopy-v1/provenance.json",
+    "sourceUnchanged": true,
+    "newAssetRequests": 0,
+    "runtime": "src/components/internal/crown-layers.ts",
+    "scope": "Second bank family only126desktop/127compact, all source wood and planted transforms preserved",
+    "method": "531occupied cells;4radial folded blades percell; nearby overlying cell support shades interior foliage.2124blades/8496triangles. Authored generic architecture, not measured ecology or ray-traced AO.",
+    "proof": "output/releases/madagin-crown-layers-20260910/crown-geometry-checks.json",
+    "gpuProof": "output/releases/madagin-crown-layers-20260910/layers-gpu-local.json",
+    "decision": "output/releases/madagin-crown-layers-20260910/decision.json",
+    "publication": "output/releases/madagin-crown-layers-20260910/publication.json"
   }
 }
