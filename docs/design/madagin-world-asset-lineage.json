@@ -4167,5 +4167,34 @@
     "gpu": "output/releases/madagin-connected-water-20260911/water-gpu-local.json",
     "decision": "output/releases/madagin-connected-water-20260911/decision.json",
     "publication": "output/releases/madagin-connected-water-20260911/publication.json"
+  },
+  "forestLightAndContact20260911": {
+    "versions": [
+      "canopy-light-1",
+      "forest-cover-1",
+      "visibility-membership-1"
+    ],
+    "baseline": "68cb600be153c3d9eb51ec64780f04437c38e703",
+    "source": "Existing licensed generic tree geometry; authored crown-normal field and actual planted bounds. No new external source assets.",
+    "geometry": "Positions, indices, UVs, source leaf colors and wood preserved in six actual source-preparation cases.",
+    "method": "Crown-envelope lighting blended with blade normals; height-rejected sheltered litter response from actual crown footprints; unchanged visibility membership avoids repeat GPU instance uploads while wind continues.",
+    "gpuTexture": {
+      "width": 512,
+      "height": 512,
+      "format": "RGBA8",
+      "bytes": 1048576,
+      "extraWorldRequests": 0
+    },
+    "rejected": "Two source-occupied solid crown-infill trials exposed faceted boxes/chips; retained only under ignored output.",
+    "notClaimed": [
+      "Measured scattering or surveyed ecology",
+      "Exact directional shadow or GI",
+      "Connected forest architecture complete",
+      "Performance equivalence or human realism"
+    ],
+    "geometryProof": "output/releases/madagin-forest-structure-20260911/light-geometry.json",
+    "gpuProof": "output/releases/madagin-forest-structure-20260911/forest-local.json",
+    "decision": "output/releases/madagin-forest-structure-20260911/decision.json",
+    "publication": "output/releases/madagin-forest-structure-20260911/publication.json"
   }
 }

@@ -9,6 +9,8 @@ import {createDistantLeaves} from "./compact-tree-lod";
 import branchSupport from "./branch-canopy-support.json";
 import {createBranchSprays} from "./branch-sprays";
 import {createCrownLayers} from "./crown-layers";
+import {shapeCanopyLight, CANOPY_LIGHT_VERSION} from "./canopy-light";
+import {registerForestCover} from "./forest-cover";
 
 // Species labels are deliberately absent: these licensed trees provide generic
 // branching architecture, not a measured reconstruction of Hawaiian ecology.
@@ -56,13 +58,15 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
       if(sprays&&leaf){const original=geometry;geometry=createBranchSprays(original);original.dispose();material.vertexColors=true;}
       if(layers&&leaf){const original=geometry;geometry=createCrownLayers(original);original.dispose();material.vertexColors=true;}
       if(distant&&leaf&&!sprays&&!layers){const original=geometry;geometry=createDistantLeaves(original);original.dispose();}
-      material.color.set("#ffffff");material.emissive.set("#000000");material.emissiveIntensity=0;
+      if(leaf)shapeCanopyLight(geometry);
+      material.color.set(leaf?"#d3d8b1":"#ffffff");material.emissive.set("#000000");material.emissiveIntensity=0;
       material.metalness=0;material.roughness=Math.max(.84,material.roughness);
       material.envMapIntensity=.7;material.aoMapIntensity=.65;
       material.side=leaf?DoubleSide:FrontSide;material.alphaTest=leaf?.12:0;material.alphaToCoverage=leaf;
       material.transparent=false;material.depthWrite=true;
       material.onBeforeCompile=shader=>{
         shader.uniforms.uTreeTime=time;
+        if(leaf)shader.fragmentShader=shader.fragmentShader.replace("#include <normal_fragment_begin>","#include <normal_fragment_begin>\nnormal *= faceDirection; // canopy envelope is independent of blade winding");
         shader.vertexShader=`${layers&&leaf?"#define MADAGIN_CROWN_LAYERS\n":sprays&&leaf?"#define MADAGIN_BRANCH_SPRAYS\n":""}uniform float uTreeTime; varying float vTreeDistance; varying float vTreeHeight;\n${shader.vertexShader}`
           .replace("#include <begin_vertex>",`#include <begin_vertex>
             vec3 treeRoot=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;
@@ -83,7 +87,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
           `);
         if((sprays||layers)&&leaf)shader.fragmentShader=shader.fragmentShader.replace(/float transition=smoothstep[\s\S]*?discard;/,"");
       };
-      material.customProgramCacheKey=()=>`rooted-tree-${lod}-${leaf}-${compact}-${distant}-${sprays}-${layers}`;
+      material.customProgramCacheKey=()=>`rooted-tree-${lod}-${leaf}-${compact}-${distant}-${sprays}-${layers}-${CANOPY_LIGHT_VERSION}`;
       const depth=new MeshDepthMaterial({depthPacking:RGBADepthPacking,map:material.map,alphaTest:material.alphaTest,side:material.side});
       depth.onBeforeCompile=(shader,renderer)=>{
         material.onBeforeCompile(shader,renderer);
@@ -91,7 +95,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
         // viewer-distance LOD mask (cameraPosition here belongs to the light).
         shader.fragmentShader=shader.fragmentShader.replace(/float transition=smoothstep[\s\S]*?discard;/,"");
       };
-      depth.customProgramCacheKey=()=>`rooted-tree-depth-${leaf}`;
+      depth.customProgramCacheKey=()=>`rooted-tree-depth-${leaf}-${CANOPY_LIGHT_VERSION}`;
       parts.push({geometry,material,depth,update:value=>{time.value=value;},far:lod===1,distant,sprays:(sprays||layers)&&leaf});
     });
     const rootedBounds=new Box3();
@@ -103,6 +107,7 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
 
 function TreeBatch({part,trees,shadows,compact,castFarShadows}:{part:Part;trees:Tree[];shadows:boolean;compact:boolean;castFarShadows:boolean}) {
   const ref=useRef<InstancedMesh>(null);
+  const population=useRef<{mesh:InstancedMesh;trees:Tree[];visible:Int32Array}|null>(null);
   const culling=useMemo(()=>{
     if(!compact)return null;
     part.geometry.computeBoundingSphere();
@@ -115,18 +120,21 @@ function TreeBatch({part,trees,shadows,compact,castFarShadows}:{part:Part;trees:
   useFrame(({clock,camera})=>{
     part.update(clock.elapsedTime);
     const mesh=ref.current;if(!mesh)return;
+    if(population.current?.mesh!==mesh||population.current.trees!==trees)population.current={mesh,trees,visible:new Int32Array(trees.length).fill(-1)};
+    const visible=population.current.visible;
     if(culling)culling.frustum.setFromProjectionMatrix(culling.projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
-    let count=0;
+    let count=0,changed=false;
     for(let index=0;index<trees.length;index++){
       const tree=trees[index];
       if(culling&&!culling.frustum.intersectsSphere(culling.bounds[index]))continue;
       const distance=camera.position.distanceTo(tree.root);
       if(compact&&!part.sprays&&(part.distant?distance/tree.height<16:distance/tree.height>24))continue;
       if(!compact&&(part.far?distance<145:distance>205))continue;
-      mesh.setMatrixAt(count,tree.matrix);mesh.setColorAt(count,tree.color);count++;
+      if(visible[count]!==index){visible[count]=index;mesh.setMatrixAt(count,tree.matrix);mesh.setColorAt(count,tree.color);changed=true;}
+      count++;
     }
-    mesh.count=count;mesh.instanceMatrix.needsUpdate=true;
-    if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+    mesh.count=count;
+    if(changed){mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
   });
   return <instancedMesh ref={ref} args={[part.geometry,part.material,trees.length]} customDepthMaterial={part.depth} frustumCulled={false} castShadow={shadows&&(castFarShadows?!part.distant:!part.far)} receiveShadow />;
 }
@@ -162,9 +170,21 @@ export function RootedTrees({placements,zone,shadows,compact=false,efficient=fal
     return result;
   },[compact,placements,zone]);
   useEffect(()=>{
+    const crowns=groups.flatMap((trees,variant)=>{
+      const bounds=new Box3();
+      parts[variant].filter(p=>/leaves/.test(p.material.name)).forEach(p=>{p.geometry.computeBoundingBox();bounds.union(p.geometry.boundingBox!);});
+      if(bounds.isEmpty())return [];
+      return trees.map(tree=>{
+        const world=bounds.clone().applyMatrix4(tree.matrix),size=world.getSize(new Vector3()),center=world.getCenter(new Vector3());
+        return {x:center.x,z:center.z,ground:tree.root.y,radiusX:size.x*.45,radiusZ:size.z*.45};
+      });
+    });
+    return registerForestCover(zone,crowns);
+  },[groups,parts,zone]);
+  useEffect(()=>{
     const element=document.documentElement;
     const previous=JSON.parse(element.dataset.madaginRootedTrees??"{}");
-    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,leafCoverage:"leaf-coverage-1",branchCanopy:zone==="bank-canopy"?"branch-canopy-1":undefined,branchSprays:zone==="bank-canopy"?"branch-sprays-1":undefined,crownLayers:zone==="bank-canopy"?"crown-layers-1":undefined,compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
+    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,canopyLight:CANOPY_LIGHT_VERSION,instanceUpdates:"visibility-membership-1",leafCoverage:"leaf-coverage-1",branchCanopy:zone==="bank-canopy"?"branch-canopy-1":undefined,branchSprays:zone==="bank-canopy"?"branch-sprays-1":undefined,crownLayers:zone==="bank-canopy"?"crown-layers-1":undefined,compact,lod:compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
     onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
   },[compact,efficient,groups,placements.length,zone,onReady]);

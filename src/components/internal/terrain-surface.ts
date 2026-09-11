@@ -5,6 +5,7 @@ import { useLoader } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import { FrontSide, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, TextureLoader } from "three";
 import type { Texture } from "three";
+import {FOREST_COVER, forestCoverTexture} from "./forest-cover";
 
 export const TERRAIN_SURFACE = {
   version: "ground-substrate-1",
@@ -22,8 +23,9 @@ export const TERRAIN_SURFACE = {
 export function createTerrainSurface(textures: Texture[]) {
   const material = new MeshStandardMaterial({color: "white", roughness: 1, metalness: 0, side: FrontSide});
   material.name = "Madagin scanned rock and slope cover";
-  material.customProgramCacheKey = () => TERRAIN_SURFACE.version + LAKE_SHORE_VERSION + PLUNGE_BASIN_VERSION + CASCADE_VERSION;
+  material.customProgramCacheKey = () => TERRAIN_SURFACE.version + LAKE_SHORE_VERSION + PLUNGE_BASIN_VERSION + CASCADE_VERSION + FOREST_COVER.version;
   material.onBeforeCompile = shader => {
+    shader.uniforms.uForestCover={value:forestCoverTexture};
     ["uCliffColor", "uCliffNormal", "uCliffResponse", "uGroundColor", "uGroundNormal", "uGroundResponse"].forEach((name, i) => {shader.uniforms[name] = {value: textures[i]};});
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vGroundWorld; varying vec3 vGroundNormal;")
@@ -35,6 +37,7 @@ export function createTerrainSurface(textures: Texture[]) {
         ${CASCADE_GLSL}
         varying vec3 vGroundWorld; varying vec3 vGroundNormal;
         uniform sampler2D uCliffColor, uCliffNormal, uCliffResponse, uGroundColor, uGroundNormal, uGroundResponse;
+        uniform sampler2D uForestCover;
         vec3 groundWeights(vec3 n) {
           vec3 w = pow(abs(n), vec3(4.0));
           return w / max(dot(w, vec3(1.0)), 0.0001);
@@ -109,6 +112,14 @@ export function createTerrainSurface(textures: Texture[]) {
         // beneath the lake. The scanned detail and common sun remain active.
         vec3 shoreSoil = mix(cliff * vec3(.49,.46,.37), ground * vec3(.33,.34,.21), .32);
         vec3 groundCover = mix(soil, shoreSoil, lakeMargin * (.35 + .5 * response.r));
+        vec2 forestUv=(vGroundWorld.xz-vec2(${FOREST_COVER.minX.toFixed(1)},${FOREST_COVER.minZ.toFixed(1)}))/vec2(${FOREST_COVER.width.toFixed(1)},${FOREST_COVER.depth.toFixed(1)});
+        vec2 forest=texture2D(uForestCover,forestUv).rg;
+        float forestGround=forest.g/max(forest.r,.01)*${FOREST_COVER.heightRange.toFixed(1)}+${FOREST_COVER.heightMin.toFixed(1)};
+        float shelter=smoothstep(.08,.7,forest.r)*(1.-smoothstep(3.,10.,abs(vGroundWorld.y-forestGround)));
+        shelter*=step(0.,forestUv.x)*step(forestUv.x,1.)*step(0.,forestUv.y)*step(forestUv.y,1.);
+        shelter*=1.-max(lakeMargin,max(poolMargin,cascade));
+        // Litter and restrained ambient contact beneath the actual crowns.
+        groundCover=mix(groundCover,ground*vec3(.29,.30,.18),shelter*.82);
         diffuseColor.rgb = mix(weatheredRock, groundCover, cover * .96) * mix(1.0, .56, surfaceWet);
       `)
       .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
@@ -120,6 +131,7 @@ export function createTerrainSurface(textures: Texture[]) {
       `)
       .replace("#include <aomap_fragment>", `#include <aomap_fragment>
         reflectedLight.indirectDiffuse *= .56 + .44 * mix(response.r, groundResponse.r, cover);
+        reflectedLight.indirectDiffuse *= 1.-shelter*.22;
       `);
   };
   return material;
