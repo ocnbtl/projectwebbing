@@ -4105,5 +4105,30 @@
     "gpuProof": "output/releases/madagin-crown-layers-20260910/layers-gpu-local.json",
     "decision": "output/releases/madagin-crown-layers-20260910/decision.json",
     "publication": "output/releases/madagin-crown-layers-20260910/publication.json"
+  },
+  "lakeOptics": {
+    "version": "water-light-1",
+    "depthVersion": "lake-depth-2",
+    "runtime": [
+      "src/components/internal/lake-shore.ts",
+      "src/components/internal/lake-reflection.tsx",
+      "src/components/internal/ridge-production-v116.tsx",
+      "src/components/internal/journey-sun.tsx"
+    ],
+    "source": "Authored existing basin, retained scene geometry, installed Three.js Reflector addon",
+    "newAssetRequests": 0,
+    "externalAssetsChanged": false,
+    "license": "Installed Three.js MIT dependency; no new vendored media",
+    "method": "Shared7.37m central bed; shore unchanged from normalized radius0.82; substrate offset25mm; planar reflected actual scene1024/512 with authored absorption and ripples; shared daylight revised",
+    "notClaimed": [
+      "Surveyed Hawaiian bathymetry",
+      "Fluid simulation",
+      "Scene refraction",
+      "Human equivalence"
+    ],
+    "proof": "output/releases/madagin-water-light-20260911/lake-depth-checks.json",
+    "gpu": "output/releases/madagin-water-light-20260911/reflection-gpu-local.json",
+    "decision": "output/releases/madagin-water-light-20260911/decision.json",
+    "publication": "output/releases/madagin-water-light-20260911/publication.json"
   }
 }

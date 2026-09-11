@@ -37,6 +37,7 @@ import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-c
 import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./native-valley";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
+import {LakeSurface} from "./lake-reflection";
 import {CASCADE_START_Z, applyCascadeBed} from "./cascade-contact";
 import {FALLING_WATER, FallingSpray, fallingLipPoint, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
 import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
@@ -6095,7 +6096,9 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "cascad
     side: DoubleSide,
     toneMapped: true,
     transparent: true,
-    uniforms: { uTime: { value: 0 }, uSunDirection: { value: V116_SUN_DIRECTION } },
+    uniforms: { uTime: { value: 0 }, uSunDirection: { value: V116_SUN_DIRECTION },
+      ...(lake ? {uLakeReflection:{value:null},uLakeReflectionMatrix:{value:new Matrix4()},uLakeReflectionReady:{value:0}} : {}),
+    },
     vertexShader: `
       uniform float uTime;
       ${lake ? LAKE_SHORE_GLSL : ""}
@@ -6126,6 +6129,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "cascad
       uniform float uTime;
       ${lake ? LAKE_SHORE_GLSL : ""}
       uniform vec3 uSunDirection;
+      ${lake ? "uniform sampler2D uLakeReflection; uniform mat4 uLakeReflectionMatrix; uniform float uLakeReflectionReady;" : ""}
       varying vec3 vWorld;
       varying vec2 vWaterUv;
       ${directional ? "varying vec2 vFlow;" : ""}
@@ -6252,7 +6256,34 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "cascad
         // low-amplitude cross-wave variation avoids a false diagonal seam; the
         // final littoral band stays transparent enough to reveal the basin bed.
         float opacity = mix(${headwater ? "0.8, 0.92" : river ? "mix(0.74, 0.69, riverMouth), mix(0.92, 0.9, riverMouth)" : lake ? "1.0, 1.0" : "0.66, 0.88"}, fresnel) * ${lake ? "1.0" : `mix(${headwater ? "0.72" : river ? "mix(0.68, 0.7, riverMouth)" : "0.72"}, 1.0, bankSoftening)`} * ${river ? "mix(1.0, 0.72, riverMouth)" : "1.0"};
-        ${lake ? "opacity = (1.0-exp(-lakeDepth*2.7)) * mix(0.88,1.0,fresnel);" : ""}
+        ${lake ? `
+        // Optical path follows the same bed as the terrain, not a second radial
+        // colour mask. Oblique rays traverse a longer absorbing water column.
+        float pathLength=lakeDepth/max(.22,dot(n,viewDirection));
+        vec3 transmission=exp(-vec3(.48,.24,.17)*pathLength);
+        vec3 sediment=mix(vec3(.085,.074,.044),vec3(.15,.13,.079),waterNoise(vWorld.xz*.24));
+        vec3 column=sediment*transmission+vec3(.013,.034,.032)*(1.-transmission);
+        vec4 reflectedUv=uLakeReflectionMatrix*vec4(vWorld.x,${LAKE_WATER_LEVEL},vWorld.z,1.);
+        vec2 reflectionUv=reflectedUv.xy/reflectedUv.w;
+        // Surface gradients distort the world reflection in world-scale waves.
+        float rippleFade=1.-smoothstep(.5,2.,length(fwidth(vWorld.xz)));
+        vec2 smallRipples=vec2(sin(vWorld.x*.86+vWorld.z*.53-uTime*1.1),cos(vWorld.x*.47-vWorld.z*.94-uTime*.86));
+        reflectionUv+=n.xz*.065+smallRipples*.0018*rippleFade;
+        vec2 reflectedSample=clamp(reflectionUv,vec2(.005),vec2(.995));
+        // Four bounded samples integrate a small rough-water footprint. The
+        // scene content remains spatially registered as the camera advances.
+        vec2 footprint=vec2(.0017,.0011);
+        vec3 reflected=(texture2D(uLakeReflection,reflectedSample+footprint).rgb
+          +texture2D(uLakeReflection,reflectedSample-footprint).rgb
+          +texture2D(uLakeReflection,reflectedSample+vec2(footprint.x,-footprint.y)).rgb
+          +texture2D(uLakeReflection,reflectedSample+vec2(-footprint.x,footprint.y)).rgb)*.25;
+        float reflectance=.025+.975*pow(1.-max(0.,dot(n,viewDirection)),5.);
+        float inFrame=step(.003,reflectionUv.x)*step(.003,reflectionUv.y)*step(reflectionUv.x,.997)*step(reflectionUv.y,.997);
+        vec3 environment=mix(skyReflection,reflected,uLakeReflectionReady*inFrame);
+        color=mix(column,environment,clamp(reflectance+.085*(1.-transmission.g),.025,.88));
+        color+=vec3(.85,.79,.64)*glint*.1;
+        opacity=smoothstep(.005,.24,lakeDepth);
+        ` : ""}
         gl_FragColor = vec4(color, opacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -6817,7 +6848,7 @@ function createIntegratedLakeGeometry(angularSegments: number, radialSegments: n
 
 function createIntegratedLakeBedGeometry(angularSegments: number, radialSegments: number, edgeOverlap: number) {
   const geometry = new BufferGeometry();
-  const positions: number[] = [LAKE_CENTER.x, LAKE_WATER_LEVEL - 8.75, LAKE_CENTER.z];
+  const positions: number[] = [LAKE_CENTER.x, lakeBedLevel(LAKE_CENTER.x,LAKE_CENTER.z)+.025, LAKE_CENTER.z];
   const uvs: number[] = [0.5, 0.5];
   const indices: number[] = [];
   for (let ring = 1; ring <= radialSegments; ring += 1) {
@@ -6825,10 +6856,9 @@ function createIntegratedLakeBedGeometry(angularSegments: number, radialSegments
     for (let segment = 0; segment < angularSegments; segment += 1) {
       const angle = (segment / angularSegments) * Math.PI * 2;
       const edge = lakeBoundaryScale(angle) * (1 + edgeOverlap * Math.pow(radius, 4));
-      const depth = 0.34
-        + Math.pow(1 - radius, 0.72) * 8.35
-        + Math.sin(angle * 3 - 0.6) * 0.24 * (1 - radius)
-        + Math.sin(angle * 7 + radius * 4.2) * 0.1 * Math.pow(1 - radius, 0.6);
+      const bedX=LAKE_CENTER.x+Math.cos(angle)*LAKE_RADIUS.x*edge*radius;
+      const bedZ=LAKE_CENTER.z+Math.sin(angle)*LAKE_RADIUS.z*edge*radius;
+      const depth=LAKE_WATER_LEVEL-lakeBedLevel(bedX,bedZ)-.025;
       positions.push(
         LAKE_CENTER.x + Math.cos(angle) * LAKE_RADIUS.x * edge * radius,
         LAKE_WATER_LEVEL - depth,
@@ -6867,9 +6897,9 @@ function createIntegratedLakeBedGeometry(angularSegments: number, radialSegments
   geometry.name = "Madagin v1.16 continuous irregular lake basin bed";
   geometry.userData.watershedBed = {
     angularSegments,
-    depthRangeMeters: [0.34, 8.75],
+    depthRangeMeters: [0, 7.345],
     edgeOverlap,
-    method: "continuous deepened asymmetric radial basin above the carved source terrain",
+    method: "same lakeBedLevel as carved terrain and optical column, with 25 mm surface offset",
     radialSegments,
     shorelineVertices: angularSegments,
   };
@@ -6894,6 +6924,7 @@ function createLakeBedMaterial() {
       }
     `,
     fragmentShader: `
+      ${LAKE_SHORE_GLSL}
       varying vec2 vLakeUv;
       varying vec3 vWorld;
       varying vec3 vNormal;
@@ -6904,6 +6935,7 @@ function createLakeBedMaterial() {
           mix(bedHash(i + vec2(0.0, 1.0)), bedHash(i + vec2(1.0)), f.x), f.y);
       }
       void main() {
+        if(lakeShore(vWorld.xz).y<=.04)discard;
         vec2 centered = (vLakeUv - 0.5) * 2.0;
         float radius = length(centered);
         float macro = bedNoise(vWorld.xz * 0.037);
@@ -6977,7 +7009,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
     () => createIntegratedLakeBedGeometry(
       mobile ? 320 : tier === "high" ? 384 : 320,
       mobile ? 18 : tier === "high" ? 48 : 40,
-      mobile ? 0.014 : 0.009,
+      0.12,
     ),
     [mobile, tier],
   );
@@ -7259,7 +7291,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
         </Suspense>
       ) : null}
       <mesh geometry={lakeBedGeometry} material={lakeBedMaterial} name="Madagin Candidate CC dark depth-graded irregular lake basin bed" receiveShadow />
-      <mesh geometry={lakeGeometry} material={waterMaterial} name="Madagin Candidate CF translucent anisotropic reflective irregular lake surface" />
+      <LakeSurface geometry={lakeGeometry} material={waterMaterial} compact={mobile || tier === "conservative"} />
       <mesh geometry={ridgeHeadwaterGeometry} material={headwaterMaterial} name="Madagin incised ridge tributary" />
       <mesh geometry={riverGeometry} material={riverMaterial} name="Madagin v1.16 centerline-following irregular river surface" />
       <primitive object={scene} />
@@ -7545,10 +7577,10 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
   return (
     <group name="Madagin v1.16 single physical atmosphere and lighting authority">
       <color attach="background" args={["#294b57"]} />
-      <fogExp2 attach="fog" args={["#58767a", tier === "conservative" ? 0.00031 : 0.0003]} />
+      <fogExp2 attach="fog" args={["#91a6ad", 0.00065]} />
       <SkyDome reducedMotion={reducedMotion} tier={tier} />
-      <PhysicalSkyEnvironment intensityScale={0.64} sunDirection={V116_SUN_DIRECTION} tier={tier} />
-      <hemisphereLight args={["#a9c6cd", "#13231b", 0.56]} />
+      <PhysicalSkyEnvironment intensityScale={0.85} sunDirection={V116_SUN_DIRECTION} tier={tier} />
+      <hemisphereLight args={["#b8cedb", "#293024", 0.68]} />
       <ambientLight color="#72878a" intensity={0.08} />
       <JourneySun direction={V116_SUN_DIRECTION} shadows={shadows} />
       <directionalLight color="#bad2d5" intensity={0.18} position={[190, 150, -220]} />

@@ -1,6 +1,6 @@
 // Authored basin, not a surveyed Hawaiian lake. One boundary/bed profile drives
 // terrain, surface optics and wet-ground material. Source assets remain intact.
-export const LAKE_SHORE_VERSION = "lake-shore-1";
+export const LAKE_SHORE_VERSION = "lake-depth-2";
 export const LAKE_CENTER = {x:-2.04,z:-884.765} as const;
 export const LAKE_RADIUS = {x:132.4,z:94.6} as const;
 export const LAKE_WATER_LEVEL = -47.9439;
@@ -45,8 +45,9 @@ export function lakeBedLevel(x:number,z:number,distance=lakeBoundaryDistance(x,z
   const angle=Math.atan2((z-LAKE_CENTER.z)/LAKE_RADIUS.z,(x-LAKE_CENTER.x)/LAKE_RADIUS.x);
   const breakup=Math.sin(angle*5-.7)*.56+Math.sin(angle*11+1.8)*.24+Math.sin(x*.071-z*.037)*.18;
   const offset=distance-1;
+  const core=Math.max(0,Math.min(1,(.82-distance)/.64));
   return offset<=0
-    ? LAKE_WATER_LEVEL-.42-Math.pow(Math.min(1,-offset/.18),1.35)*2.15
+    ? LAKE_WATER_LEVEL-.42-Math.pow(Math.min(1,-offset/.18),1.35)*2.15-core*core*(3-2*core)*4.8
     : LAKE_WATER_LEVEL-.42+Math.pow(Math.min(1,offset/.24),1.38)*(3.65+breakup);
 }
 // GLSL counterpart; the verification runner checks GPU/CPU parity around all coves.
@@ -65,7 +66,8 @@ vec2 lakeShore(vec2 p) {
   float d=length(coordinate)/edge;
   float offset=d-1.0;
   float breakup=sin(a*5.0-.7)*.56+sin(a*11.0+1.8)*.24+sin(p.x*.071-p.y*.037)*.18;
-  float depth=offset<=0.0?.42+pow(min(1.0,-offset/.18),1.35)*2.15
+  float core=clamp((.82-d)/.64,0.,1.);
+  float depth=offset<=0.0?.42+pow(min(1.0,-offset/.18),1.35)*2.15+core*core*(3.-2.*core)*4.8
     :.42-pow(min(1.0,offset/.24),1.38)*(3.65+breakup);
   return vec2(d,depth);
 }`;
