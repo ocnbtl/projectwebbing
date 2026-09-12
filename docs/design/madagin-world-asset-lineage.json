@@ -4196,5 +4196,35 @@
     "gpuProof": "output/releases/madagin-forest-structure-20260911/forest-local.json",
     "decision": "output/releases/madagin-forest-structure-20260911/decision.json",
     "publication": "output/releases/madagin-forest-structure-20260911/publication.json"
+  },
+  "valleyForestStructure20260912": {
+    "versions": [
+      "valley-hollows-1",
+      "branch-crowns-1"
+    ],
+    "baseline": "d229a3225144ddf9575f5621537217a8c7291924",
+    "source": "Project-authored terrain hollows and two generic branch/leaf models. Existing grounded planting positions retained or selected by crown-size spacing; no external source assets acquired.",
+    "terrain": "Three connected concave hollows bounded to eastern shoulder, maximum 38 m incision. Water and seam vertices protected. No added terrain triangles. Separate desktop/compact triangle samplers keep original root offsets.",
+    "crowns": "13 scaffold branches, 234 shoots, 2106 modeled blades, 20796 triangles per variant. Continuous branch and leaf attachment; height/width/lean variation; near/far crown swapping absent for these six zones.",
+    "zones": [
+      "valley",
+      "lake",
+      "riparian",
+      "bank-canopy",
+      "bank-understory",
+      "source-bank"
+    ],
+    "reference": "Fresh GoHawaii/HTA Wailua still; official DLNR video page verified but fresh playback failed, September 11 motion observations remain dated.",
+    "removedRequest": "/world/branch-canopy-v1/island-tree-01-far.glb",
+    "notClaimed": [
+      "Surveyed terrain or species reconstruction",
+      "Dense humid forest realism complete",
+      "Physical-device or thermal qualification",
+      "Human equivalence"
+    ],
+    "geometryProof": "output/releases/madagin-valley-structure-20260912/structure-geometry.json",
+    "decision": "output/releases/madagin-valley-structure-20260912/decision.json",
+    "publication": "output/releases/madagin-valley-structure-20260912/publication.json",
+    "integration": "Terrain preparation does not notify React subscribers. Each committed terrain publishes its profile sampler from a layout effect, avoiding Suspense reconstruction loops."
   }
 }

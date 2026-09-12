@@ -12,11 +12,13 @@ import bank from "./groundcover-bank-placements.json";
 import canopy from "./bank-canopy-placements.json";
 import understory from "./bank-understory-placements.json";
 import sourceBank from "./source-bank-placements.json";
+import {valleyGroundOffset,useValleyGrounding} from "./valley-hollows";
 
 type Plant = {family: string; x: number; y: number; z: number; yaw: number; height: number; tint: number};
 type Part = {family: string; geometry: Mesh["geometry"]; material: MeshStandardMaterial; depth: MeshDepthMaterial; update: (time: number) => void};
 
-function FernBatch({part, plants, shadows}: {part: Part; plants: Plant[]; shadows: boolean}) {
+function FernBatch({part, plants, shadows,compact}: {part: Part; plants: Plant[]; shadows: boolean;compact:boolean}) {
+  const groundingRevision=useValleyGrounding();
   const ref = useRef<InstancedMesh>(null);
   useFrame(({clock}) => {part.update(clock.elapsedTime);});
   useLayoutEffect(() => {
@@ -24,7 +26,7 @@ function FernBatch({part, plants, shadows}: {part: Part; plants: Plant[]; shadow
     if (!mesh) return;
     const transform = new Object3D(), color = new Color();
     plants.forEach((p, i) => {
-      transform.position.set(p.x, p.y, p.z);
+      transform.position.set(p.x, p.y+valleyGroundOffset(p.x,p.z,compact), p.z);
       transform.rotation.set(0, p.yaw, 0);
       transform.scale.setScalar(p.height);
       transform.updateMatrix();
@@ -36,7 +38,7 @@ function FernBatch({part, plants, shadows}: {part: Part; plants: Plant[]; shadow
     mesh.computeBoundingSphere();
     // Covers the bounded wind displacement at the tallest accepted size.
     if (mesh.boundingSphere) mesh.boundingSphere.radius += .15;
-  }, [plants]);
+  }, [plants,compact,groundingRevision]);
   return <instancedMesh ref={ref} args={[part.geometry, part.material, plants.length]} customDepthMaterial={part.depth} castShadow={shadows} receiveShadow />;
 }
 
@@ -97,7 +99,7 @@ export function RiparianEcology({compact, shadows, onReady}: {compact: boolean; 
   }, [compact, selected, lower, source, onReady]);
   useEffect(() => () => parts.forEach(p => {p.geometry.dispose(); p.material.dispose(); p.depth.dispose();}), [parts]);
   return <group name="Layered dry riverbank vegetation">
-    {batches.map(batch => <FernBatch key={batch.part.family} {...batch} shadows={shadows} />)}
+    {batches.map(batch => <FernBatch key={batch.part.family} {...batch} shadows={shadows} compact={compact} />)}
     <RootedTrees placements={selected.saplings} zone="riparian" compact={compact} shadows={shadows} />
     {/* Small crowns share the accepted efficient branching LOD on both tiers. */}
     <RootedTrees placements={canopy[compact ? "compact" : "desktop"]} zone="bank-canopy" compact={compact} efficient shadows={shadows} castFarShadows={!compact} />

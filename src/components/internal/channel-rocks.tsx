@@ -8,19 +8,21 @@ import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import {normalizeChannelRock} from "./channel-rock-geometry";
 import placementData from "./channel-rock-placements.json";
 import sourceBank from "./source-bank-placements.json";
+import {valleyGroundOffset,useValleyGrounding} from "./valley-hollows";
 
 export const CHANNEL_ROCKS_VERSION = "channel-rocks-1";
 export const CHANNEL_ROCKS_SOURCE = "/world/canopy-v1/moss-rock.glb";
 type Placement = {family: string; x: number; y: number; z: number; yaw: number; size: number; squash: number; tint: number};
 type Part = {family: string; geometry: Mesh["geometry"]; material: MeshStandardMaterial};
 
-function RockBatch({part, placements, shadows}: {part: Part; placements: Placement[]; shadows: boolean}) {
+function RockBatch({part, placements, shadows,compact}: {part: Part; placements: Placement[]; shadows: boolean;compact:boolean}) {
+  const groundingRevision=useValleyGrounding();
   const ref = useRef<InstancedMesh>(null);
   useLayoutEffect(() => {
     if (!ref.current) return;
     const transform = new Object3D(), color = new Color();
     placements.forEach((p, i) => {
-      transform.position.set(p.x, p.y, p.z);
+      transform.position.set(p.x, p.y+valleyGroundOffset(p.x,p.z,compact), p.z);
       transform.rotation.set(0, p.yaw, 0);
       transform.scale.set(p.size, p.size * p.squash, p.size);
       transform.updateMatrix();
@@ -30,7 +32,7 @@ function RockBatch({part, placements, shadows}: {part: Part; placements: Placeme
     ref.current.instanceMatrix.needsUpdate = true;
     if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
     ref.current.computeBoundingSphere();
-  }, [placements]);
+  }, [placements,compact,groundingRevision]);
   return <instancedMesh ref={ref} args={[part.geometry, part.material, placements.length]} castShadow={shadows} receiveShadow />;
 }
 
@@ -64,5 +66,5 @@ export function ChannelRocks({compact, shadows, onReady}: {compact: boolean; sha
     return () => {delete document.documentElement.dataset.madaginChannelRocks;};
   }, [batches, compact, onReady]);
   useEffect(() => () => {parts.forEach(part => {part.geometry.dispose(); part.material.dispose();});}, [parts]);
-  return <group name="Grounded channel rock groups">{batches.map(batch => <RockBatch key={batch.part.family} {...batch} shadows={shadows} />)}</group>;
+  return <group name="Grounded channel rock groups">{batches.map(batch => <RockBatch key={batch.part.family} {...batch} shadows={shadows} compact={compact} />)}</group>;
 }

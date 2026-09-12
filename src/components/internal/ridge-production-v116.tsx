@@ -35,6 +35,7 @@ import {RidgeCanopy} from "./ridge-canopy";
 import {RIDGE_HEADWATER_VERSION, RIDGE_HEADWATER_START, RIDGE_HEADWATER_END, ridgeHeadwaterLevel, ridgeHeadwaterHalfWidth, ridgeRiverCenter, valleyRiverLevel} from "./ridge-headwater";
 import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-cliff";
 import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./native-valley";
+import {applyValleyHollows, valleyGroundOffset, useValleyGrounding, publishValleyGrounding} from "./valley-hollows";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
 import {LakeSurface} from "./lake-reflection";
@@ -284,7 +285,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     // analytic shoreline and its immediate triangle neighbors. That retained
     // AO density is already sufficient for the bounded basin-headwall relief,
     // so compact does not stack another adaptive pass on the same Valley.
-    const valleySource = createIntegratedWatershedTerrainGeometry(sources.valley, [], [], 2, 0);
+    const valleySource = createIntegratedWatershedTerrainGeometry(sources.valley, [], [], 2, 0, [], 0, "compact");
     valleySource.setAttribute("uv1", valleySource.getAttribute("uv").clone());
     // The refined stream adds interior rows near -315. Use the actual outer
     // Ridge edge; the old nearest-row query joined only a 12 m channel strip.
@@ -335,6 +336,9 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     const coastalValley = extendJourneyCoast(valley, "conservative", "valley");
     return { bridge, diagnostics, ridge: coastalRidge, valley: coastalValley };
   }, [sources]);
+  useLayoutEffect(() => {
+    if (geometries.valley) publishValleyGrounding("compact");
+  }, [geometries]);
   useEffect(() => {
     const host = window as Window & { __MADAGIN_COMPACT_JOURNEY_SEAM_V116__?: Record<string, unknown> };
     host.__MADAGIN_COMPACT_JOURNEY_SEAM_V116__ = geometries.diagnostics ?? {};
@@ -2228,6 +2232,7 @@ function createIntegratedWatershedTerrainGeometry(
   waterfallHeadwallSubdivisionPasses = 0,
   ridgeInteriorBoundary: CoastalBoundarySample[] = [],
   regionalVolcanicSubdivisionPasses = 0,
+  groundingProfile?: "desktop" | "compact",
 ) {
   const sourceGeometry = createWeldedTerrainSourceGeometry(source);
   const sourceWeld = sourceGeometry.userData.sourceWeld;
@@ -2748,6 +2753,7 @@ function createIntegratedWatershedTerrainGeometry(
     },
   };
   applyNativeValley(geometry);
+  applyValleyHollows(geometry, groundingProfile);
   reconcileCoincidentTerrainNormals(geometry);
   const finalGeometry=createRidgeHeadwaterTerrain(geometry);
   applyCascadeBed(finalGeometry);
@@ -2832,9 +2838,12 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     gltf.scene.updateMatrixWorld(true);
     const source = gltf.scene.getObjectByName(DETAILED_TERRAIN_OBJECTS.valley);
     return source instanceof Mesh
-      ? extendJourneyCoast(createIntegratedWatershedTerrainGeometry(source, alpineBoundary, ridgeBoundary, 1, 1, ridgeInteriorBoundary, 2), tier, "valley")
+      ? extendJourneyCoast(createIntegratedWatershedTerrainGeometry(source, alpineBoundary, ridgeBoundary, 1, 1, ridgeInteriorBoundary, 2, "desktop"), tier, "valley")
       : null;
   }, [alpineBoundary, connectedCoast, gltf.scene, ridgeBoundary, ridgeInteriorBoundary, tier, zone]);
+  useLayoutEffect(() => {
+    if (watershedGeometry) publishValleyGrounding("desktop");
+  }, [watershedGeometry]);
   const coastalBoundary = useMemo(() => {
     if (!connectedCoast || zone !== "ridge") return [];
     gltf.scene.updateMatrixWorld(true);
@@ -4467,6 +4476,7 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
   placements: PlacementTuple[];
   shadows: boolean;
 }) {
+  const groundingRevision = useValleyGrounding();
   const ref = useRef<InstancedMesh>(null);
   const materials = useMemo(() => variantMaterials(part.material), [part.material]);
   const foliage = useMemo(
@@ -4496,7 +4506,7 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
         : placement[7] * (lobe === 1 ? 0.46 : lobe === 3 ? 0.18 : -0.06);
       dummy.position.set(
         placement[2] + Math.cos(lobeAngle) * lateralOffset,
-        placement[3] + verticalOffset,
+        placement[3] + verticalOffset + valleyGroundOffset(placement[2],placement[4],mobile),
         placement[4] + Math.sin(lobeAngle) * lateralOffset,
       );
       dummy.rotation.set(0, placement[5] + lobe * 0.17, 0);
@@ -4531,7 +4541,7 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.computeBoundingBox();
     mesh.computeBoundingSphere();
-  }, [foliage, instances, mobile, part.family, part.matrixWorld]);
+  }, [foliage, instances, mobile, part.family, part.matrixWorld, groundingRevision]);
   useEffect(() => () => {
     (Array.isArray(materials) ? materials : [materials]).forEach((material) => material.dispose());
   }, [materials]);
@@ -4545,11 +4555,13 @@ function InstancedSpeciesBatch({ mobile = false, part, placements, shadows }: {
   );
 }
 
-function RidgeBasaltField({ placements, shadows, zone }: {
+function RidgeBasaltField({ placements, shadows, zone, compact = false }: {
+  compact?: boolean;
   placements: PlacementTuple[];
   shadows: boolean;
   zone: V116Zone;
 }) {
+  const groundingRevision = useValleyGrounding();
   const gltf = useLoader(GLTFLoader, "/world/canopy-v1/rock.glb", configureCompressedGltf);
   const parts = useMemo(() => {
     gltf.scene.updateMatrixWorld(true);
@@ -4591,7 +4603,7 @@ function RidgeBasaltField({ placements, shadows, zone }: {
         // Landscape outcrops need metre-scale transforms to remain perceptible
         // from the aerial journey cameras.
         const scale = (zone === "ridge" ? 31 : zone === "alpine" ? 48 : 37) + ((index * 17) % 13) * 2.15;
-        dummy.position.set(placement[2], placement[3] - 0.18, placement[4]);
+        dummy.position.set(placement[2], placement[3] - 0.18 + valleyGroundOffset(placement[2],placement[4],compact), placement[4]);
         dummy.rotation.set((index % 5) * 0.07, placement[5], ((index + 2) % 7) * 0.045);
         dummy.scale.set(scale * (0.82 + (index % 3) * 0.13), scale * 0.62, scale);
         dummy.updateMatrix();
@@ -4602,7 +4614,7 @@ function RidgeBasaltField({ placements, shadows, zone }: {
       mesh.computeBoundingBox();
       mesh.computeBoundingSphere();
     });
-  }, [parts, selected, zone]);
+  }, [parts, selected, zone, compact, groundingRevision]);
   useEffect(() => () => parts.forEach((part) => {
     (Array.isArray(part.material) ? part.material : [part.material]).forEach((material) => material.dispose());
   }), [parts]);
@@ -4743,6 +4755,7 @@ function InstancedSourceQualityIslandTree01({ part, placements, shadows, zone }:
   shadows: boolean;
   zone: SourceQualityIslandTreeZone;
 }) {
+  const groundingRevision = useValleyGrounding();
   const ref = useRef<InstancedMesh>(null);
   useFrame(({ clock }) => updateLivingWind(part.material, clock.elapsedTime));
   useLayoutEffect(() => {
@@ -4761,7 +4774,7 @@ function InstancedSourceQualityIslandTree01({ part, placements, shadows, zone }:
       const depth = 0.82 + ((signature * 7) % 11) * 0.035;
       const coastalHeight = coastal ? 0.72 + ((signature * 13) % 7) * 0.035 : 1;
       const coastalSpread = coastal ? 1.08 + ((signature * 17) % 9) * 0.026 : 1;
-      dummy.position.set(placement[2], placement[3] - 0.07, placement[4]);
+      dummy.position.set(placement[2], placement[3] - 0.07 + valleyGroundOffset(placement[2],placement[4]), placement[4]);
       dummy.rotation.set(
         ((signature % 7) - 3) * (coastal ? 0.025 : 0.012),
         placement[5] + (signature % 19) * 0.19,
@@ -4786,7 +4799,7 @@ function InstancedSourceQualityIslandTree01({ part, placements, shadows, zone }:
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.computeBoundingBox();
     mesh.computeBoundingSphere();
-  }, [part.foliage, part.matrixWorld, placements, zone]);
+  }, [part.foliage, part.matrixWorld, placements, zone, groundingRevision]);
   return (
     <instancedMesh
       args={[part.geometry, part.material, placements.length]}
@@ -4923,6 +4936,7 @@ function InstancedSourceQualityGeology({ part, placements, shadows, zone }: {
   shadows: boolean;
   zone: V116Zone;
 }) {
+  const groundingRevision = useValleyGrounding();
   const ref = useRef<InstancedMesh>(null);
   useLayoutEffect(() => {
     const mesh = ref.current;
@@ -4935,7 +4949,7 @@ function InstancedSourceQualityGeology({ part, placements, shadows, zone }: {
       const nearLake = lakeBoundaryDistance(placement[2], placement[4]) < 1.32;
       const baseScale = nearLake ? 2.85 : zone === "alpine" ? 5.25 : zone === "valley" ? 4.4 : 4.15;
       const size = baseScale * (0.72 + (signature % 13) * 0.045);
-      dummy.position.set(placement[2], placement[3] - (nearLake ? 0.68 : 0.62), placement[4]);
+      dummy.position.set(placement[2], placement[3] - (nearLake ? 0.68 : 0.62) + valleyGroundOffset(placement[2],placement[4]), placement[4]);
       dummy.rotation.set(
         ((signature % 9) - 4) * 0.012,
         placement[5] + (signature % 17) * 0.29,
@@ -4961,7 +4975,7 @@ function InstancedSourceQualityGeology({ part, placements, shadows, zone }: {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.computeBoundingBox();
     mesh.computeBoundingSphere();
-  }, [part.matrixWorld, placements, zone]);
+  }, [part.matrixWorld, placements, zone, groundingRevision]);
   return (
     <instancedMesh
       args={[part.geometry, part.material, placements.length]}
@@ -5480,6 +5494,7 @@ function InstancedWatershedGroundcover({ part, placements: originalPlacements, s
   placements: PlacementTuple[];
   shadows: boolean;
 }) {
+  const groundingRevision = useValleyGrounding();
   const placements = useMemo(() => part.sourceKey === "rock" ? originalPlacements
     : originalPlacements.filter(p => !inGroundcoverBank(p[2], p[4])), [originalPlacements, part.sourceKey]);
   const sourceIndices = useMemo(() => new Map(originalPlacements.map((p, i) => [p, i])), [originalPlacements]);
@@ -5503,7 +5518,7 @@ function InstancedWatershedGroundcover({ part, placements: originalPlacements, s
         || isEasternValleyCatchmentHabitatPlacement(placement)
         || isWesternValleyCatchmentHabitatPlacement(placement)
       ) ? 1.42 : 1;
-      dummy.position.set(placement[2], placement[3] - (part.sourceKey === "rock" ? 0.08 : 0.075), placement[4]);
+      dummy.position.set(placement[2], placement[3] - (part.sourceKey === "rock" ? 0.08 : 0.075) + valleyGroundOffset(placement[2],placement[4]), placement[4]);
       dummy.rotation.set(
         part.sourceKey === "rock" ? ((signature % 7) - 3) * 0.035 : ((signature % 5) - 2) * 0.018,
         placement[5] + (signature % 9) * 0.041,
@@ -5528,7 +5543,7 @@ function InstancedWatershedGroundcover({ part, placements: originalPlacements, s
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.computeBoundingBox();
     mesh.computeBoundingSphere();
-  }, [part.matrixWorld, part.sourceKey, placements, sourceIndices]);
+  }, [part.matrixWorld, part.sourceKey, placements, sourceIndices, groundingRevision]);
   return placements.length ? (
     <instancedMesh
       args={[part.geometry, part.material, placements.length]}
@@ -6074,7 +6089,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
         ));
       })}
       {zone === "ridge" || zone === "valley" || zone === "alpine" ? (
-        <RidgeBasaltField placements={visible} shadows={shadows} zone={zone} />
+        <RidgeBasaltField placements={visible} shadows={shadows} zone={zone} compact={mobile} />
       ) : null}
       {diagnosticMode === "grounding" ? visible.filter((_, index) => index % 20 === 0).slice(0, 140).map((placement, index) => (
         <mesh key={`root-${zone}-${index}`} position={[placement[2], placement[3] + 0.08, placement[4]]}>

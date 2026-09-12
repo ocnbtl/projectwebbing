@@ -40,7 +40,7 @@ try{for(const width of [1440,390]){
   };}
  });
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
- await page.goto(origin);await page.waitForFunction(()=>document.documentElement.dataset.madaginMeaningfulWorldReady==='true',null,{timeout:60000});await page.locator('[data-journey-action="pause"]').click();
+ await page.goto(origin);await page.waitForFunction(()=>document.documentElement.dataset.madaginMeaningfulWorldReady==='true',null,{timeout:60000}).catch(async error=>{await fs.writeFile(root+'/forest-failure-'+phase+'-'+width+'.json',JSON.stringify({width,errors,state:await page.evaluate(()=>({body:document.body.innerText,dataset:{...document.documentElement.dataset},webgl:!!document.querySelector('canvas')?.getContext('webgl2')}))},null,2));await page.screenshot({path:root+'/forest-failure-'+phase+'-'+width+'.png'});throw error;});await page.locator('[data-journey-action="pause"]').click();
  const setProgress=async p=>page.evaluate(p=>{const c=document.querySelector('canvas');let f=c[Object.keys(c).find(k=>k.startsWith('__reactFiber'))];for(let i=0;f&&i<35;i++,f=f.return){const v=f.memoizedProps?.progress;if(v?.set){v.set(p);return;}}throw Error('Public rail unavailable');},p);
  const reset=async()=>page.evaluate(()=>Object.assign(window.__FOREST_GPU__,{enabled:true,uploads:0,draws:0,first:null,last:null,forestDraws:0}));
  await setProgress(.58);await page.waitForTimeout(10000);await reset();await page.waitForTimeout(2500);
