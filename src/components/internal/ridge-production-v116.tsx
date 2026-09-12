@@ -38,8 +38,11 @@ import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./nativ
 import {applyValleyHollows, valleyGroundOffset, useValleyGrounding, publishValleyGrounding} from "./valley-hollows";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
+import {ForestStands} from "./forest-stands";
+import {ShoreRubble} from "./shore-rubble";
+import {AERIAL_GLSL,AERIAL_PERSPECTIVE_VERSION,attachAerialPerspective} from "./aerial-perspective";
 import {LakeSurface} from "./lake-reflection";
-import {CHANNEL_PROFILE_VERSION, riverCenter, riverHalfWidth, channelBedOffset, outflowHalfWidth, outflowBedOffset} from "./channel-profile";
+import {CHANNEL_PROFILE_VERSION, riverCenter, riverHalfWidth, channelBedOffset, outflowCenter, outflowHalfWidth, outflowBedOffset} from "./channel-profile";
 import {createChannelWaterMaterial} from "./channel-water";
 import {CASCADE_START_Z, applyCascadeBed} from "./cascade-contact";
 import {FALLING_WATER, FallingSpray, fallingLipPoint, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
@@ -358,6 +361,9 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     <group name="Madagin v1.16 exact-boundary compact journey Ridge-to-Valley terrain">
       <NativeCliffPlants geometry={geometries.ridge} compact shadows={shadows}/>
       <NativeValleyPlants geometry={geometries.valley} compact shadows={shadows}/>
+      <ForestStands geometry={geometries.ridge} compact shadows={shadows} zone="ridge"/>
+      <ForestStands geometry={geometries.valley} compact shadows={shadows} zone="valley"/>
+      <ShoreRubble terrain={geometries.valley} compact shadows={shadows}/>
       {geometries.ridge ? (
         <mesh castShadow={shadows} geometry={geometries.ridge} material={ridgeMaterial} receiveShadow />
       ) : null}
@@ -539,17 +545,7 @@ function waterfallUpperBankWidth(z: number, side: number) {
 }
 
 function waterfallOutflowCenter(progress: number) {
-  const inverse = 1 - progress;
-  const start = PLUNGE_POOL_CENTER;
-  const control = { x: 114, z: -720 };
-  const end = {
-    x: v116RiverCenter(-757) + v116RiverHalfWidth(-757) * .45,
-    z: -757,
-  };
-  return {
-    x: inverse * inverse * start.x + 2 * inverse * progress * control.x + progress * progress * end.x,
-    z: inverse * inverse * start.z + 2 * inverse * progress * control.z + progress * progress * end.z,
-  };
+  return outflowCenter(progress,PLUNGE_POOL_CENTER);
 }
 
 function distanceToWaterfallOutflow(x: number, z: number) {
@@ -2993,7 +2989,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     };
   }, [alpineGeometry, coastalBoundary, coastalHeightfield, connectedGeometry, connectedValleyCoastGeometry, material, ridgeGeometry, southernCoastalBoundary, terminalBridgeGeometry, terminalChunkGeometry, watershedGeometry, zone]);
 
-  return (<><NativeCliffPlants geometry={ridgeGeometry ?? connectedGeometry} shadows={shadows}/><NativeValleyPlants geometry={watershedGeometry} shadows={shadows}/>{connectedGeometry ? (
+  return (<><NativeCliffPlants geometry={ridgeGeometry ?? connectedGeometry} shadows={shadows}/><NativeValleyPlants geometry={watershedGeometry} shadows={shadows}/><ForestStands geometry={ridgeGeometry} shadows={shadows} zone="ridge"/><ForestStands geometry={watershedGeometry} shadows={shadows} zone="valley"/>{watershedGeometry?<ShoreRubble terrain={watershedGeometry} shadows={shadows}/>:null}{connectedGeometry ? (
     <>
       <mesh
         castShadow={shadows}
@@ -6143,6 +6139,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "cascad
       }
     `,
     fragmentShader: `
+      ${AERIAL_GLSL}
       uniform float uTime;
       ${lake ? LAKE_SHORE_GLSL : ""}
       uniform vec3 uSunDirection;
@@ -6301,7 +6298,7 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "cascad
         color+=vec3(.85,.79,.64)*glint*.1;
         opacity=smoothstep(.005,.24,lakeDepth);
         ` : ""}
-        gl_FragColor = vec4(color, opacity);
+        gl_FragColor = vec4(aerialPerspective(color,vWorld), opacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
@@ -7466,6 +7463,13 @@ const TERRAIN_CONTACT_MIST_BANKS = [
 ];
 
 function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier }) {
+  // Newly streamed materials receive the common air response before their
+  // first draw. The weak cache makes subsequent visits a small identity check.
+  useFrame(({scene})=>scene.traverse(object=>{
+    if(!(object instanceof Mesh))return;
+    for(const material of Array.isArray(object.material)?object.material:[object.material])
+      if(material instanceof MeshStandardMaterial)attachAerialPerspective(material);
+  }),-20);
   const cloudGroup = useRef<Group>(null);
   const mistGroup = useRef<Group>(null);
   const clouds = useMemo(() => CLOUD_BANKS.slice(0, tier === "conservative" ? 1 : tier === "balanced" ? 5 : 6), [tier]);
@@ -7601,6 +7605,7 @@ function V116Atmosphere({ reducedMotion, shadows, tier }: { reducedMotion: boole
       singleStretchedCloudShells: false,
     };
     document.documentElement.dataset.madaginOrographicWeatherCe = JSON.stringify(host.__MADAGIN_OROGRAPHIC_WEATHER_CE__);
+    document.documentElement.dataset.madaginAerialPerspective=AERIAL_PERSPECTIVE_VERSION;
     if (mistBanks.length) dispatchStage(3, "terrain-contact-mist-ready", "valley");
     return () => {
       materials.forEach((material) => material.dispose());
@@ -7690,6 +7695,7 @@ function createOceanMaterial(meshSpacing: number) {
       }
     `,
     fragmentShader: `
+      ${AERIAL_GLSL}
       uniform float uTime;
       ${OCEAN_WAVE_FIELD}
       uniform vec3 uSunDirection;
@@ -7765,10 +7771,7 @@ function createOceanMaterial(meshSpacing: number) {
         float sharpGlint = pow(max(dot(reflected, sunDirection), 0.0), 460.0);
         float glintTrack = 0.58 + oceanNoise(vec2(vWorldPosition.z * 0.026, vWorldPosition.x * 0.009 - uTime * 0.01)) * 0.42;
         color += vec3(1.0, 0.68, 0.43) * (broadGlint * 0.075 + sharpGlint * 0.29) * glintTrack;
-        float fogFactor = 1.0 - exp(-0.0000002 * distanceToCamera * distanceToCamera);
-        float horizonHaze = smoothstep(780.0, 2500.0, distanceToCamera);
-        color = mix(color, vec3(0.195, 0.33, 0.365), clamp(fogFactor + horizonHaze * 0.14, 0.0, 0.4));
-        gl_FragColor = vec4(color, 1.0);
+        gl_FragColor = vec4(aerialPerspective(color,vWorldPosition),1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }

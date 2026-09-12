@@ -1,6 +1,6 @@
 import {BufferGeometry,Color,Float32BufferAttribute,Group,Mesh,MeshStandardMaterial,Vector3} from "three";
 
-export const BRANCH_CROWNS_VERSION="branch-crowns-1";
+export const BRANCH_CROWNS_VERSION="branch-crowns-2";
 type Surface={positions:number[];uvs:number[];colors:number[];indices:number[]};
 const surface=():Surface=>({positions:[],uvs:[],colors:[],indices:[]});
 const up=new Vector3(0,1,0);
@@ -8,14 +8,14 @@ const up=new Vector3(0,1,0);
 // Two authored generic broadleaf forms. A continuous branching graph carries
 // the leaves: scaffold -> lateral -> shoot -> paired blades. It is not an
 // opaque volume fitted inside the old point cloud, nor a species claim.
-export function createBranchCrown(variant:number) {
+export function createBranchCrown(variant:number,stand=false) {
   let seed=53183+variant*149;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
   const wood=surface(),leaves=surface();let shoots=0,blades=0;
   const vertex=(s:Surface,p:Vector3,u:number,v:number,c:Color)=>{
     const i=s.positions.length/3;s.positions.push(p.x,p.y,p.z);s.uvs.push(u,v);s.colors.push(c.r,c.g,c.b);return i;
   };
   const branch=(points:Vector3[],radius:number)=>{
-    const base=wood.positions.length/3,sides=6;
+    const base=wood.positions.length/3,sides=4;
     for(let j=0;j<points.length;j++){
       const t=j/(points.length-1),direction=points[Math.min(j+1,points.length-1)].clone().sub(points[Math.max(0,j-1)]).normalize();
       const a=new Vector3().crossVectors(Math.abs(direction.y)>.96?new Vector3(1,0,0):up,direction).normalize(),b=new Vector3().crossVectors(direction,a);
@@ -31,44 +31,46 @@ export function createBranchCrown(variant:number) {
     const d=new Vector3(Math.cos(angle),tilt,Math.sin(angle)).normalize(),side=new Vector3(-d.z,0,d.x).normalize();
     const color=new Color().setRGB(.12*shade,.195*shade,.055*shade),base=leaves.positions.length/3;
     // Curved midrib with pointed base/tip and a cupped elliptical blade.
-    const outline=[[0,0],[.28,-.24],[.67,-.29],[1,0],[.67,.29],[.28,.24]];
+    const outline=[[0,0],[.52,-.28],[1,0],[.52,.28]];
     vertex(leaves,root.clone().addScaledVector(d,length*.52).addScaledVector(up,length*.065),.5,.52,color.clone().multiplyScalar(1.06));
     for(const [t,w]of outline){
       const p=root.clone().addScaledVector(d,length*t).addScaledVector(side,length*w).addScaledVector(up,Math.sin(t*Math.PI)*length*.02);
       vertex(leaves,p,w/.58+.5,t,color.clone().multiplyScalar(.91+.09*t));
     }
-    for(let i=0;i<6;i++)leaves.indices.push(base,base+1+i,base+1+(i+1)%6);
+    for(let i=0;i<4;i++)leaves.indices.push(base,base+1+i,base+1+(i+1)%4);
     blades++;
   };
   const shoot=(start:Vector3,end:Vector3,angle:number,shade:number)=>{
     shoots++;const mid=start.clone().lerp(end,.52).add(new Vector3(0,.012,0));
     branch([start,mid,end],.0017);
-    for(let pair=0;pair<4;pair++){
-      const t=.14+pair*.22,point=t<.52?start.clone().lerp(mid,t/.52):mid.clone().lerp(end,(t-.52)/.48),size=(.032+random()*.014)*(1-t*.23);
+    for(let pair=0;pair<(stand?3:4);pair++){
+      const t=.12+pair*(stand?.3:.23),point=t<.52?start.clone().lerp(mid,t/.52):mid.clone().lerp(end,(t-.52)/.48),size=(stand?.054+random()*.023:.043+random()*.018)*(1-t*.2);
       for(const sign of [-1,1])leaf(point,angle+sign*(.83+random()*.22),size,-.1+random()*.6,shade*(.86+random()*.2));
     }
-    leaf(end,angle,.031+random()*.008,.24,shade);
+    leaf(end,angle,stand?.056:.043,.24,shade);
   };
   const trunk=[new Vector3(0,0,0),new Vector3(.006,.13,-.008),new Vector3(-.016,.3,.012),new Vector3(.012,.46,.004),new Vector3(-.015,.61,.025)];
   branch(trunk,.025);
-  for(let i=0;i<13;i++){
+  // Unequal lower, middle and emergent scaffolds occupy a deep crown. The
+  // previous single shallow umbrella exposed nearly every trunk in a stand.
+  for(let i=0;i<15;i++){
     const angle=i*2.399963+variant*.7+(random()-.5)*.23;
-    const ring=i/12,spread=(variant===0?.35:.31)*( .8+random()*.35);
-    const start=trunk[Math.min(4,2+Math.floor(i/5))].clone();
-    const crownHeight=variant===0?.66+random()*.14:.61+random()*.25;
-    const end=new Vector3(Math.cos(angle)*spread,crownHeight,Math.sin(angle)*spread*(variant===0?.84:1.05));
+    const tier=Math.floor(i/5),ring=i/14,spread=[.36,.37,.3][tier]*(.75+random()*.5)*(variant===2?.86:1);
+    const start=trunk[2+Math.min(2,tier)].clone();
+    const crownHeight=[.52,.7,.8][tier]+random()*.17+.055*Math.sin(angle*2+variant);
+    const end=new Vector3(Math.cos(angle)*spread+(tier===2?.065*Math.cos(variant+1):0),crownHeight,Math.sin(angle)*spread*(variant%2===0?.86:1.09));
     const elbow=start.clone().lerp(end,.5).add(new Vector3(0,.055,0));
     branch([start,start.clone().lerp(elbow,.55),elbow,elbow.clone().lerp(end,.55),end],.0145*(1-ring*.35));
-    for(let j=0;j<6;j++){
-      const t=.32+j*.125,anchor=elbow.clone().lerp(end,Math.max(0,(t-.5)*2));
+    for(let j=0;j<(stand?4:6);j++){
+      const t=.25+j*(stand?.23:.145),anchor=elbow.clone().lerp(end,Math.max(0,(t-.5)*2));
       if(t<.5)anchor.copy(start).lerp(elbow,t*2);
       const side=j%2?1:-1,a=angle+side*(.55+random()*.6),extent=.085+random()*.08;
       const tip=anchor.clone().add(new Vector3(Math.cos(a)*extent,.025+random()*.055,Math.sin(a)*extent));
-      const shade=.59+.35*ring;
+      const shade=.55+.34*ring;
       const bend=anchor.clone().lerp(tip,.54).addScaledVector(up,.014);
       branch([anchor,bend,tip],.0036);
-      for(let k=0;k<3;k++){
-        const along=.3+k*.3,base=along<.54?anchor.clone().lerp(bend,along/.54):bend.clone().lerp(tip,(along-.54)/.46),sway=a+(k%2?1:-1)*(.52+random()*.35);
+      for(let k=0;k<(stand?2:3);k++){
+        const along=.28+k*(stand?.62:.31),base=along<.54?anchor.clone().lerp(bend,along/.54):bend.clone().lerp(tip,(along-.54)/.46),sway=a+(k%2?1:-1)*(.52+random()*.35);
         const target=base.clone().add(new Vector3(Math.cos(sway)*(.055+random()*.04),.009+random()*.018,Math.sin(sway)*(.055+random()*.04)));
         shoot(base,target,sway,shade);
       }

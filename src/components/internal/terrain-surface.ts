@@ -8,11 +8,11 @@ import type { Texture } from "three";
 import {FOREST_COVER, forestCoverTexture} from "./forest-cover";
 
 export const TERRAIN_SURFACE = {
-  version: "ground-substrate-1",
+  version: "ground-substrate-2",
   rockTileMeters: 80,
   groundTileMeters: 15,
   groundDataResolution: 256,
-  coverMethod: "scan-oriented slope and cavity support",
+  coverMethod: "slope-supported grove shelter and mineral exposure",
   geometryChanged: false,
   sources: ["/world/cliff-material-v1/color.webp", "/world/cliff-material-v1/normal.webp", "/world/cliff-material-v1/response.webp", "/world/canopy-v1/rock-color.webp", "/world/ground-substrate-v1/normal.webp", "/world/ground-substrate-v1/response.webp"],
   compactSources: ["/world/cliff-material-v1/color-compact.webp", "/world/cliff-material-v1/normal-compact.webp", "/world/cliff-material-v1/response-compact.webp", "/world/ground-substrate-v1/color-compact.webp", "/world/ground-substrate-v1/normal.webp", "/world/ground-substrate-v1/response.webp"],
@@ -29,7 +29,13 @@ export function createTerrainSurface(textures: Texture[]) {
     ["uCliffColor", "uCliffNormal", "uCliffResponse", "uGroundColor", "uGroundNormal", "uGroundResponse"].forEach((name, i) => {shader.uniforms[name] = {value: textures[i]};});
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vGroundWorld; varying vec3 vGroundNormal;")
-      .replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvGroundWorld = (modelMatrix * vec4(transformed, 1.0)).xyz; vGroundNormal = inverseTransformDirection(transformedNormal, viewMatrix);");
+      .replace("#include <worldpos_vertex>", `#include <worldpos_vertex>
+        vec4 groundPosition=vec4(transformed,1.);
+        #ifdef USE_INSTANCING
+        groundPosition=instanceMatrix*groundPosition;
+        #endif
+        vGroundWorld=(modelMatrix*groundPosition).xyz;
+        vGroundNormal=inverseTransformDirection(transformedNormal,viewMatrix);`);
     shader.fragmentShader = shader.fragmentShader
       .replace("#include <common>", `#include <common>
         ${LAKE_SHORE_GLSL}
@@ -38,6 +44,8 @@ export function createTerrainSurface(textures: Texture[]) {
         varying vec3 vGroundWorld; varying vec3 vGroundNormal;
         uniform sampler2D uCliffColor, uCliffNormal, uCliffResponse, uGroundColor, uGroundNormal, uGroundResponse;
         uniform sampler2D uForestCover;
+        float habitatHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+        float habitatNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(habitatHash(i),habitatHash(i+vec2(1,0)),f.x),mix(habitatHash(i+vec2(0,1)),habitatHash(i+1.),f.x),f.y);}
         vec3 groundWeights(vec3 n) {
           vec3 w = pow(abs(n), vec3(4.0));
           return w / max(dot(w, vec3(1.0)), 0.0001);
@@ -86,6 +94,10 @@ export function createTerrainSurface(textures: Texture[]) {
         float supportSlope = mix(abs(terrainNormal.y), abs(supportNormal.y), .45);
         // AO is only a bounded cavity cue, not measured soil depth or ecology.
         float cover = smoothstep(.45, .88, supportSlope + (.7 - response.r) * .12);
+        // Tens-of-metres patches modulate the soil support already supplied by
+        // the actual slope. Detail no longer tiles at equal contrast everywhere.
+        float habitat=habitatNoise(vGroundWorld.xz*.012)*.68+habitatNoise(vGroundWorld.xz*.037+vec2(17.,4.))*.32;
+        cover*=mix(.48,1.,smoothstep(.2,.72,habitat));
         // Existing water authorities: wet waterfall headwall and sea contact.
         float waterfall = (1.0 - smoothstep(0.6, 1.2, length(vec2((vGroundWorld.x-151.0)/82.0, (vGroundWorld.z+696.0)/62.0))))
           * (1.0 - smoothstep(10.0, 35.0, vGroundWorld.y));
@@ -106,12 +118,14 @@ export function createTerrainSurface(textures: Texture[]) {
         // Bounded authored reflectance adjustment keeps the generic scan's
         // contrast while placing it beside this world's shaded forest. This
         // is an art-directed material, not measured Hawaiian rock reflectance.
-        vec3 soil = ground * vec3(.58, .76, .52);
-        vec3 weatheredRock = cliff * vec3(.58, .65, .64);
+        vec3 soil = ground * mix(vec3(.32,.49,.24),vec3(.39,.66,.30),habitat);
+        float oxidation=habitatNoise(vec2(vGroundWorld.x*.008+vGroundWorld.y*.012,vGroundWorld.z*.009));
+        vec3 weatheredRock = cliff * mix(vec3(.39,.48,.47),vec3(.58,.48,.36),smoothstep(.35,.79,oxidation));
         // Exposed low banks reveal damp mineral soil instead of grass growing
         // beneath the lake. The scanned detail and common sun remain active.
-        vec3 shoreSoil = mix(cliff * vec3(.49,.46,.37), ground * vec3(.33,.34,.21), .32);
-        vec3 groundCover = mix(soil, shoreSoil, lakeMargin * (.35 + .5 * response.r));
+        float shoreGrain=habitatNoise(vGroundWorld.xz*.73)*.65+habitatNoise(vGroundWorld.xz*2.1)*.35;
+        vec3 shoreSoil = mix(cliff * vec3(.37,.36,.29), ground * vec3(.31,.30,.21),shoreGrain*.55);
+        vec3 groundCover = mix(soil, shoreSoil, lakeMargin);
         vec2 forestUv=(vGroundWorld.xz-vec2(${FOREST_COVER.minX.toFixed(1)},${FOREST_COVER.minZ.toFixed(1)}))/vec2(${FOREST_COVER.width.toFixed(1)},${FOREST_COVER.depth.toFixed(1)});
         vec2 forest=texture2D(uForestCover,forestUv).rg;
         float forestGround=forest.g/max(forest.r,.01)*${FOREST_COVER.heightRange.toFixed(1)}+${FOREST_COVER.heightMin.toFixed(1)};
@@ -120,13 +134,14 @@ export function createTerrainSurface(textures: Texture[]) {
         shelter*=1.-max(lakeMargin,max(poolMargin,cascade));
         // Litter and restrained ambient contact beneath the actual crowns.
         groundCover=mix(groundCover,ground*vec3(.29,.30,.18),shelter*.82);
-        diffuseColor.rgb = mix(weatheredRock, groundCover, cover * .96) * mix(1.0, .56, surfaceWet);
+        diffuseColor.rgb = mix(weatheredRock, groundCover, max(cover * .96,lakeMargin)) * mix(1.0, .56, surfaceWet);
       `)
       .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
         roughnessFactor = clamp(mix(response.g, groundResponse.g, cover) - surfaceWet * .18, .52, .98);
       `)
       .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
-        vec3 detailGradient = mix(surfaceGradient * .72, substrateGradient * .48, cover);
+        float detailFootprint=length(fwidth(vGroundWorld.xz));
+        vec3 detailGradient = mix(surfaceGradient * .62, substrateGradient * .38, cover)*(1.-smoothstep(1.,4.,detailFootprint)*.55);
         normal = normalize(normal - mat3(viewMatrix) * detailGradient);
       `)
       .replace("#include <aomap_fragment>", `#include <aomap_fragment>

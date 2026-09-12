@@ -1,5 +1,6 @@
 import {DoubleSide, ShaderMaterial, Vector3} from "three";
 import {WATER_REFLECTION_GLSL, waterReflectionUniforms} from "./channel-water";
+import {AERIAL_GLSL} from "./aerial-perspective";
 
 // Authored erosional basin in the assembled world; not surveyed bathymetry.
 // One datum and footprint govern the active terrain, water and plant exclusion.
@@ -54,6 +55,7 @@ export function createPlungeWaterMaterial(sun:Vector3,lake?:ShaderMaterial) {
       uniform float uTime;uniform vec3 uSunDirection;varying vec3 vWorld;
       ${PLUNGE_BASIN_GLSL}
       ${WATER_REFLECTION_GLSL}
+      ${AERIAL_GLSL}
       void main(){
         vec2 basin=plungeBasin(vWorld.xz);float depth=max(0.0,basin.y);
         if(depth<=.002)discard;
@@ -81,7 +83,7 @@ export function createPlungeWaterMaterial(sun:Vector3,lake?:ShaderMaterial) {
         float broken=sin(jet.x*1.3+sin(jet.y*.72-uTime*.8))*sin(jet.y*1.6+uTime*.93);
         float foam=pow(max(0.0,pulse),8.0)*smoothstep(.1,.8,broken)*exp(-r/7.0);
         color=mix(color,vec3(.48,.56,.5),foam*.3);
-        gl_FragColor=vec4(color,(1.0-exp(-depth*3.0))*mix(.94,1.0,fresnel));
+        gl_FragColor=vec4(aerialPerspective(color,vWorld),(1.0-exp(-depth*3.0))*mix(.94,1.0,fresnel));
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,

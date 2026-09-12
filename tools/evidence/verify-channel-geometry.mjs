@@ -14,7 +14,8 @@ await fs.mkdir(out,{recursive:true});
 const require=createRequire(path.resolve('output/releases/madagin-canopy-20260906/pipeline/package.json'));
 const {NodeIO}=require('@gltf-transform/core'),{ALL_EXTENSIONS}=require('@gltf-transform/extensions'),{MeshoptDecoder}=require('meshoptimizer');await MeshoptDecoder.ready;
 const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.decoder':MeshoptDecoder});
-const compile=async(name,source)=>{const p=path.join(out,name+'.mjs');await fs.writeFile(p,ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText);return import(pathToFileURL(p).href);};
+const compile=async(name,source)=>{const p=path.join(out,name+'.mjs');await fs.writeFile(p,ts.transpileModule(source.replaceAll('./aerial-perspective','./fixture-aerial.mjs'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText);return import(pathToFileURL(p).href);};
+await compile('fixture-aerial',await fs.readFile(sourceRoot+'/src/components/internal/aerial-perspective.ts','utf8'));
 await compile('fixture-valley-hollows',await fs.readFile(sourceRoot+'/src/components/internal/valley-hollows.ts','utf8'));
 await compile('fixture-headwater',await fs.readFile(sourceRoot+'/src/components/internal/ridge-headwater.ts','utf8'));
 await compile('fixture-channel-profile',(await fs.readFile(sourceRoot+'/src/components/internal/channel-profile.ts','utf8')).replace('"./ridge-headwater"','"./fixture-headwater.mjs"'));
@@ -37,6 +38,7 @@ const parsed=ts.createSourceFile('fixture.tsx',source,ts.ScriptTarget.Latest,tru
 const fixture=parsed.statements.map(n=>{
  if(!ts.isImportDeclaration(n)||!(n.moduleSpecifier.text.startsWith('.')||n.moduleSpecifier.text.startsWith('@')))return n.getText();
  if(n.importClause?.isTypeOnly)return '';
+ if(n.moduleSpecifier.text==='./aerial-perspective')return n.getText().replace('./aerial-perspective','./fixture-aerial.mjs');
  if(n.moduleSpecifier.text==='./valley-hollows')return n.getText().replace('./valley-hollows','./fixture-valley-hollows.mjs');
  if(n.moduleSpecifier.text==='./channel-profile')return n.getText().replace('./channel-profile','./fixture-channel-profile.mjs');
  if(n.moduleSpecifier.text==='./channel-water')return n.getText().replace('./channel-water','./fixture-channel-water.mjs');

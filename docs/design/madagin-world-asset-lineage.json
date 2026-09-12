@@ -4226,5 +4226,26 @@
     "decision": "output/releases/madagin-valley-structure-20260912/decision.json",
     "publication": "output/releases/madagin-valley-structure-20260912/publication.json",
     "integration": "Terrain preparation does not notify React subscribers. Each committed terrain publishes its profile sampler from a layout effect, avoiding Suspense reconstruction loops."
+  },
+  "forestDepth20260912": {
+    "versions": [
+      "forest-stands-1",
+      "branch-crowns-2",
+      "ground-substrate-2",
+      "shore-rubble-1",
+      "aerial-perspective-1"
+    ],
+    "sources": "Authored generic crown, stand and rubble geometry. Existing tracked terrain and CC0 surface maps reused; no external asset acquired.",
+    "replaced": "Remaining runtime tree GLBs and distance LOD packages are no longer requested. Licensed source files retained on disk; model forms are now authored rather than attributed to those scans.",
+    "groundAuthority": "Uppermost final rendered terrain triangles; no new terrain shell; shared actual water boundaries",
+    "visual": "Connected forest masses and crown layers across ridge/valley; clearer mineral/soil hierarchy and bounded distance response. Shore rubble is only a modest gain.",
+    "notClaimed": [
+      "Hawaiian species reconstruction",
+      "Photographic forest or water realism",
+      "Physical-device or human qualification"
+    ],
+    "geometry": "output/releases/madagin-forest-depth-20260912/forest-stand-geometry.json",
+    "decision": "output/releases/madagin-forest-depth-20260912/decision.json",
+    "publication": "output/releases/madagin-forest-depth-20260912/publication.json"
   }
 }

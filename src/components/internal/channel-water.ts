@@ -1,5 +1,6 @@
 import {DoubleSide, Matrix4, ShaderMaterial, Vector3} from "three";
 import {LAKE_SHORE_GLSL} from "./lake-shore";
+import {AERIAL_GLSL} from "./aerial-perspective";
 
 export const WATER_REFLECTION_GLSL = `
 uniform sampler2D uLakeReflection;
@@ -35,6 +36,7 @@ export function createChannelWaterMaterial(sun:Vector3,lake:ShaderMaterial) {
       varying vec3 vWorld;varying vec2 vFlow;varying float vDepth;
       ${WATER_REFLECTION_GLSL}
       ${LAKE_SHORE_GLSL}
+      ${AERIAL_GLSL}
       float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
       float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}
       void main(){
@@ -71,7 +73,7 @@ export function createChannelWaterMaterial(sun:Vector3,lake:ShaderMaterial) {
         float shallow=smoothstep(.12,.4,depth)*(1.-smoothstep(.6,1.1,depth));
         float broken=smoothstep(.6,.84,flowPatch)*pow(max(0.,crest),10.)*shallow*detail;
         color=mix(color,vec3(.38,.44,.36),broken*.28);
-        gl_FragColor=vec4(color,smoothstep(.01,.16,depth));
+        gl_FragColor=vec4(aerialPerspective(color,vWorld),smoothstep(.01,.16,depth));
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,

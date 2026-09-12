@@ -1,4 +1,5 @@
 "use client";
+import {AERIAL_GLSL} from "./aerial-perspective";
 
 import {useFrame} from "@react-three/fiber";
 import {useEffect, useMemo, useRef} from "react";
@@ -64,7 +65,7 @@ export function createFallingWaterMaterial(sun:Vector3) {
   return new ShaderMaterial({name:"Madagin gravity-timed falling water",side:DoubleSide,transparent:true,depthWrite:false,uniforms:{uTime:{value:0},uSun:{value:sun.clone()}},
     vertexShader:`uniform float uTime;attribute float travelTime;attribute float aeration;varying float vAir;varying vec2 vUv;varying float vTravel;varying vec3 vWorld;
     void main(){vec3 p=position;float envelope=sin(uv.y*3.14159265);p.x+=sin((travelTime-uTime)*5.+uv.x*13.)*.08*envelope;p.z+=sin((travelTime-uTime)*7.+uv.x*21.)*.06*envelope;vUv=uv;vTravel=travelTime;vAir=aeration;vec4 w=modelMatrix*vec4(p,1.);vWorld=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`,
-    fragmentShader:`uniform float uTime;uniform vec3 uSun;varying float vAir;varying vec2 vUv;varying float vTravel;varying vec3 vWorld;${NOISE}
+    fragmentShader:`uniform float uTime;uniform vec3 uSun;varying float vAir;varying vec2 vUv;varying float vTravel;varying vec3 vWorld;${NOISE}${AERIAL_GLSL}
     void main(){
       float clock=vTravel-uTime;
       // Broad, advected lobes carry the water mass. Small bubbles are filtered
@@ -82,7 +83,7 @@ export function createFallingWaterMaterial(sun:Vector3) {
       vec3 normal=normalize(cross(dFdx(vWorld),dFdy(vWorld)));
       float light=.82+.18*abs(dot(normal,uSun));
       vec3 color=mix(vec3(.23,.34,.34),vec3(.87,.92,.89),clamp(.16+air*.52+body*.22+bubble*.1,0.,1.))*light;
-      if(alpha<.035)discard;gl_FragColor=vec4(color,alpha);
+      if(alpha<.035)discard;gl_FragColor=vec4(aerialPerspective(color,vWorld),alpha);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }`});
@@ -90,8 +91,8 @@ export function createFallingWaterMaterial(sun:Vector3) {
 
 export function createFallingImpactMaterial() {
   return new ShaderMaterial({name:"Madagin advecting impact foam",side:DoubleSide,transparent:true,depthWrite:false,uniforms:{uTime:{value:0}},
-    vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader:`uniform float uTime;varying vec2 vUv;${NOISE}
+    vertexShader:`varying vec3 vWorld;varying vec2 vUv;void main(){vUv=uv;vWorld=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+    fragmentShader:`uniform float uTime;varying vec3 vWorld;varying vec2 vUv;${NOISE}${AERIAL_GLSL}
     void main(){
       vec2 p=(vUv-.5)*2.;float r=length(p),a=atan(p.y,p.x);
       // Noise travels outwards in radial coordinates. An angular embedding
@@ -105,7 +106,7 @@ export function createFallingImpactMaterial() {
       float crest=smoothstep(.74,.98,sin(phase))*(1.-smoothstep(.25,1.,r));
       float foam=clamp(core*.8+wake*.56,0.,1.);
       float alpha=(foam+crest*.12)*(1.-smoothstep(.8,1.,r));
-      gl_FragColor=vec4(mix(vec3(.35,.49,.48),vec3(.81,.87,.83),foam),alpha);
+      gl_FragColor=vec4(aerialPerspective(mix(vec3(.35,.49,.48),vec3(.81,.87,.83),foam),vWorld),alpha);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }`});

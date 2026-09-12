@@ -69,6 +69,13 @@ export function outflowHalfWidth(progress:number) {
   return (6.4+Math.sin(progress*10.4+.5)*1.5+Math.sin(progress*19.7)*.65+progress*2.2)*taper;
 }
 
+export function outflowCenter(progress:number,start:{x:number;z:number}) {
+  const inverse=1-progress,control={x:114,z:-720};
+  const end={x:riverCenter(-757)+riverHalfWidth(-757)*.45,z:-757};
+  return {x:inverse*inverse*start.x+2*inverse*progress*control.x+progress*progress*end.x,
+    z:inverse*inverse*start.z+2*inverse*progress*control.z+progress*progress*end.z};
+}
+
 export function outflowBedOffset(across:number,progress:number) {
   const edge=Math.min(Math.abs(across),1.5);
   const depth=.95+.38*Math.sin(progress*Math.PI)**2;

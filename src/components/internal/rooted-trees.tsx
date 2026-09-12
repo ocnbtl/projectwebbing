@@ -1,10 +1,8 @@
 "use client";
 
-import {useFrame, useLoader} from "@react-three/fiber";
+import {useFrame} from "@react-three/fiber";
 import {useEffect, useMemo, useRef} from "react";
 import {Box3, Color, DoubleSide, Float32BufferAttribute, FrontSide, Frustum, InstancedMesh, Matrix4, Mesh, MeshDepthMaterial, MeshStandardMaterial, Object3D, RGBADepthPacking, Sphere, Vector3} from "three";
-import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {MeshoptDecoder} from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import {createDistantLeaves} from "./compact-tree-lod";
 import {createBranchSprays} from "./branch-sprays";
 import {createCrownLayers} from "./crown-layers";
@@ -15,7 +13,7 @@ import {BRANCH_CROWNS_VERSION,createBranchCrown,selectBranchGrovePlacements} fro
 
 // Species labels are deliberately absent: these licensed trees provide generic
 // branching architecture, not a measured reconstruction of Hawaiian ecology.
-export const ROOTED_TREES = {version:"rooted-trees-1",sources:[0,1].flatMap(i=>["near","far"].map(lod=>`/world/${lod==="far"?"leaf-canopy-v1":"rooted-trees-v1"}/tree-${i}-${lod}.glb`))};
+export const ROOTED_TREES = {version:"rooted-trees-2",sources:[] as string[]};
 type Placement = number[];
 type Tree = {matrix:Matrix4;root:Vector3;color:Color;height:number};
 type Part = {geometry:Mesh["geometry"];material:MeshStandardMaterial;depth:MeshDepthMaterial;update:(time:number)=>void;far:boolean;distant:boolean;sprays:boolean};
@@ -105,6 +103,20 @@ function prepareTrees(near:Object3D,far:Object3D,compact=false,distant=false,spr
   });
 }
 
+// A bounded cache of eight authored models. Zones own their instance buffers;
+// immutable geometry and the common wind material belong to the living world.
+// Rebuilding these same models for every stand increased startup and heap.
+const crownModels=new Map<boolean,Part[][]>();
+function preparedCrowns(stand:boolean) {
+  const cached=crownModels.get(stand);if(cached)return cached;
+  const parts=[0,1,2,3].map(variant=>{
+    const source=createBranchCrown(variant,stand),prepared=prepareTrees(source,source,true,false,false,false,true);
+    source.traverse(child=>{if(child instanceof Mesh){child.geometry.dispose();(child.material as MeshStandardMaterial).dispose();}});
+    return prepared;
+  });
+  crownModels.set(stand,parts);return parts;
+}
+
 function TreeBatch({part,trees,shadows,compact,castFarShadows}:{part:Part;trees:Tree[];shadows:boolean;compact:boolean;castFarShadows:boolean}) {
   const ref=useRef<InstancedMesh>(null);
   const population=useRef<{mesh:InstancedMesh;trees:Tree[];visible:Int32Array}|null>(null);
@@ -139,35 +151,24 @@ function TreeBatch({part,trees,shadows,compact,castFarShadows}:{part:Part;trees:
   return <instancedMesh ref={ref} args={[part.geometry,part.material,trees.length]} customDepthMaterial={part.depth} frustumCulled={false} castShadow={shadows&&(castFarShadows?!part.distant:!part.far)} receiveShadow />;
 }
 
-export function RootedTrees({placements,zone,shadows,compact=false,efficient=false,castFarShadows=false,onReady}:{placements:Placement[];zone:string;shadows:boolean;compact?:boolean;efficient?:boolean;castFarShadows?:boolean;onReady?:()=>void}) {
+export function RootedTrees({placements,zone,shadows,compact=false,efficient=false,castFarShadows=false,onReady,grounded=false}:{placements:Placement[];zone:string;shadows:boolean;compact?:boolean;efficient?:boolean;castFarShadows?:boolean;onReady?:()=>void;grounded?:boolean}) {
   const groundingRevision=useValleyGrounding();
   const grovePlacements=useMemo(()=>["valley","lake","riparian"].includes(zone)?selectBranchGrovePlacements(placements):placements,[placements,zone]);
-  const authoredCrown=["bank-canopy","bank-understory","source-bank","valley","riparian","lake"].includes(zone);
-  const scenes=useLoader(GLTFLoader,compact?ROOTED_TREES.sources.filter(url=>url.includes("far")):ROOTED_TREES.sources,loader=>loader.setMeshoptDecoder(MeshoptDecoder));
-  // Keep the same loader key as the rest of this device tier. Smaller desktop
-  // crowns reuse the far scenes from that cache instead of downloading a pair again.
-  const parts=useMemo(()=>{
-    if(authoredCrown)return [0,1].map(variant=>{
-      const source=createBranchCrown(variant),prepared=prepareTrees(source,source,true,false,false,false,true);
-      source.traverse(child=>{if(child instanceof Mesh){child.geometry.dispose();(child.material as MeshStandardMaterial).dispose();}});
-      return prepared;
-    });
-    if(compact||efficient){
-      const crowns=compact?scenes.slice(0,2):[scenes[1],scenes[3]];
-      return crowns.map(({scene})=>[...prepareTrees(scene,scene,true,false),...prepareTrees(scene,scene,true,true)]);
-    }
-    return [prepareTrees(scenes[0].scene,scenes[1].scene),prepareTrees(scenes[2].scene,scenes[3].scene)];
-  },[compact,efficient,scenes,authoredCrown]);
+  const authoredCrown=true;
+  const stand=zone.startsWith("forest-")||["ridge","native-cliff","native-valley","alpine"].includes(zone)||zone.startsWith("coastal");
+  // Modeled crowns share one architecture across the flight. Legacy licensed
+  // assets remain recoverable on disk but no longer add transfer or LOD noise.
+  const parts=useMemo(()=>preparedCrowns(stand),[stand]);
   const groups=useMemo(()=>{
     // Terrain publishes after lazy geometry creation; refresh every root when its triangle sampler changes.
     void groundingRevision;
-    const result:Tree[][]=[[],[]];
+    const result:Tree[][]=[[],[],[],[]];
     grovePlacements.forEach(p=>{
       const signature=Math.abs(Math.round(p[2]*.73+p[4]*.47+p[9]*31));
-      const variant=signature%2;
+      const variant=signature%4;
       const scale=Math.max(.55,Math.min(1.45,p[7]))*(authoredCrown?.70+(signature%23)*.023:1);
       const height=(zone.startsWith("coastal")?(p[1]===0?8.2:5.8):(p[1]===0?17.5:p[1]===1?10:5.3))*scale*(zone==="alpine"?.7:1);
-      const object=new Object3D();object.position.set(p[2],p[3]-.025+valleyGroundOffset(p[2],p[4],compact),p[4]);
+      const object=new Object3D();object.position.set(p[2],p[3]-.025+(grounded?0:valleyGroundOffset(p[2],p[4],compact)),p[4]);
       object.rotation.set(authoredCrown?((signature%11)-5)*.009:0,p[5]+(signature%17)*.19,authoredCrown?((signature%13)-6)*.008:0);
       const width=authoredCrown?1.04+(signature%17)*.023:.9+(signature%9)*.025;
       object.scale.set(height*width,height,height*(authoredCrown?.95+(signature%13)*.025:.91+(signature%7)*.025));object.updateMatrix();
@@ -175,7 +176,7 @@ export function RootedTrees({placements,zone,shadows,compact=false,efficient=fal
       result[variant].push({matrix:object.matrix.clone(),root:object.position.clone(),color,height});
     });
     return result;
-  },[authoredCrown,compact,grovePlacements,zone,groundingRevision]);
+  },[authoredCrown,compact,grovePlacements,zone,groundingRevision,grounded]);
   useEffect(()=>{
     const crowns=groups.flatMap((trees,variant)=>{
       const bounds=new Box3();
@@ -195,6 +196,5 @@ export function RootedTrees({placements,zone,shadows,compact=false,efficient=fal
     onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
   },[authoredCrown,compact,efficient,groups,grovePlacements.length,placements.length,zone,onReady]);
-  useEffect(()=>()=>parts.flat().forEach(p=>{p.geometry.dispose();p.material.dispose();p.depth.dispose();}),[parts]);
   return <group name={`Rooted trees ${zone}`}>{parts.flatMap((variant,i)=>variant.map((part,j)=><TreeBatch key={`${i}-${j}`} part={part} trees={groups[i]} shadows={shadows} compact={compact||efficient||authoredCrown} castFarShadows={castFarShadows}/>))}</group>;
 }

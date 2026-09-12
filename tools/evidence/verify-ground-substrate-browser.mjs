@@ -99,7 +99,7 @@ try {
     assert.equal(observed.nativeValley.collarMeters,55);
     assert.equal(observed.nativeValley.sharedLakeBoundaryProtected,true);
     assert.equal(observed.camera.progress,.34);
-    assert.equal(observed.surface.version,'ground-substrate-1');
+    assert.equal(observed.surface.version,'ground-substrate-2');
     assert.equal(observed.surface.rockTileMeters,80);
     assert.equal(observed.surface.geometryChanged,false);
     if(width===390){
