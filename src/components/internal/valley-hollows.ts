@@ -1,7 +1,7 @@
 import type {BufferGeometry} from "three";
 import {useSyncExternalStore} from "react";
 
-export const VALLEY_HOLLOWS_VERSION="valley-hollows-2";
+export const VALLEY_HOLLOWS_VERSION="valley-hollows-3";
 const smooth=(x:number)=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t);};
 type Profile="desktop"|"compact";
 const samplers=new Map<Profile,(x:number,z:number)=>number>();
@@ -53,7 +53,19 @@ function registerGrounding(geometry:BufferGeometry,offsets:Float32Array,profile:
 // converge into two broad hollows, leaving connected retaining spurs between
 // them. This changes the active surface, not its texture or a cover mesh.
 export function valleyHollowOffset(x:number,z:number) {
-  if(x<=290||x>=770||z<=-930||z>=-365)return 0;
+  // Camera-ray checks locate the exposed near shoulders west of the old
+  // blanket protection window. Keep the entire water corridor x<=216 intact,
+  // then incise only the dry faces beyond it. Heights and roots share this field.
+  const frontWeight=smooth((x-216)/22)*smooth((336-x)/32)
+    *smooth((z+970)/35)*smooth((-550-z)/40);
+  const f=Math.max(0,Math.min(1,(x-216)/120));
+  const frontHollow=(axis:number,width:number,depth:number)=>{
+    const q=Math.abs(z-axis)/width;return q<1?depth*(1-q*q)**2:0;
+  };
+  const front=-frontWeight*Math.max(frontHollow(-938+18*f,29,23),
+    frontHollow(-816-21*f,38,31),frontHollow(-703-19*f,32,28),
+    frontHollow(-617-42*f,29+13*f,34));
+  if(x<=290||x>=770||z<=-930||z>=-365)return front;
   const boundary=smooth((x-290)/75)*smooth((770-x)/90)
     *smooth((z+930)/65)*smooth((-365-z)/65);
   // The whole waterfall/source bank and its plunge-pool collar stay outside
@@ -69,7 +81,18 @@ export function valleyHollowOffset(x:number,z:number) {
   const branch=main-110*smooth((t-.26)/.65);
   // Broad concave profiles express landform scale; no periodic ridge noise.
   const incision=Math.max(hollow(main,45+27*t,64),hollow(branch,27+20*t,48),hollow(second,36+26*t,57));
-  return -incision*boundary*wetProtection;
+  // Broad amphitheater heads replace the remaining smooth shoulder slabs.
+  // A recessed interior and shorter outer falloff give these catchments a
+  // headwall and talus transition instead of another shallow Gaussian groove.
+  const basinHead=(cx:number,cz:number,rx:number,rz:number,depth:number)=>{
+    const q=Math.hypot((x-cx)/rx,(z-cz)/rz);
+    return depth*(1-smooth((q-.2)/.8));
+  };
+  const northHead=basinHead(520,-535,128,96,91);
+  const southHead=basinHead(623,-767,106,83,104);
+  // The heads feed the retained westward hollows; the maximum keeps their
+  // meeting beds continuous and avoids stacking depth at intersecting cuts.
+  return Math.min(front,-Math.max(incision,northHead,southHead)*boundary*wetProtection);
 }
 
 export function applyValleyHollows(geometry:BufferGeometry,profile?:Profile) {

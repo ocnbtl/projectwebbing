@@ -21,7 +21,7 @@ for(const compact of [false,true]){
  const current=runtime.createIntegratedWatershedTerrainGeometry(...args),base=control.createIntegratedWatershedTerrainGeometry(...args),p=current.getAttribute('position'),b=base.getAttribute('position');
  publishValleyGrounding(compact?'compact':'desktop');
  assert.deepEqual(current.index.array,base.index.array);let changed=0,protectedVertices=0,maxIncision=0;
- for(let i=0;i<p.count;i++){
+ for(let i=0;i<(current.userData.alpineFlank?.sourceVertices??p.count);i++){
   assert.equal(p.getX(i),b.getX(i));assert.equal(p.getZ(i),b.getZ(i));const delta=p.getY(i)-b.getY(i);assert.ok(Number.isFinite(delta)&&delta<=.00002);
   const dry=valleyHollowOffset(p.getX(i),p.getZ(i));if(dry===0){assert.equal(delta,0);protectedVertices++;}else if(delta<-.001){changed++;maxIncision=Math.max(maxIncision,-delta);}
  }
@@ -32,7 +32,7 @@ for(const compact of [false,true]){
   const data=JSON.parse(await fs.readFile(`src/components/internal/${file}.json`)),group=data[key];
   for(const p of Array.isArray(group)?group:[...(group.saplings??group.trees??[]),...(group.ferns??[]),...(group.rocks??[])])placements.push(Array.isArray(p)?{x:p[2],z:p[4],kind:file}:{...p,kind:file});
  }
- const errors=placements.filter(p=>p.x>275&&p.x<785&&p.z> -945&&p.z< -350).map(p=>({x:p.x,z:p.z,kind:p.kind,error:sample(p.x,p.z)-before(p.x,p.z)-valleyGroundOffset(p.x,p.z,compact)}));
+ const errors=placements.filter(p=>p.x>202&&p.x<785&&p.z> -980&&p.z< -350).map(p=>({x:p.x,z:p.z,kind:p.kind,terrainDelta:sample(p.x,p.z)-before(p.x,p.z),error:sample(p.x,p.z)-before(p.x,p.z)-valleyGroundOffset(p.x,p.z,compact)}));
  assert.ok(errors.every(p=>Number.isFinite(p.error)));
  const maximumGroundingDeltaError=Math.max(0,...errors.map(p=>Math.abs(p.error)));
  assert.ok(maximumGroundingDeltaError<.001, `Grounding delta ${maximumGroundingDeltaError}`);

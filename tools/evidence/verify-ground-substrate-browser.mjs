@@ -106,9 +106,9 @@ try {
       const journey=await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginCompactJourneySeamV116).alpineBoundary);
       assert.equal(journey.version,'compact-alpine-join-1');assert.equal(journey.boundaryZ,-1000);assert.equal(journey.stripWidth,12);assert.equal(journey.addedTriangles,114);
       await page.evaluate(()=>{const canvas=document.querySelector('canvas');let f=canvas[Object.keys(canvas).find(k=>k.startsWith('__reactFiber'))];for(let i=0;f&&i<35;i++,f=f.return){const p=f.memoizedProps?.progress;if(p?.set){p.set(.98);return;}}throw new Error('Rail unavailable');});
-      await page.waitForFunction(()=>!!document.documentElement.dataset.madaginCompactTerminalWeldV116,null,{timeout:30000});
-      const summit=await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginCompactTerminalWeldV116).alpineBoundary);
-      assert.equal(summit.version,'compact-alpine-join-1');assert.equal(summit.boundaryZ,-1000);assert.equal(summit.addedTriangles,118);
+      await page.waitForFunction(()=>JSON.parse(document.documentElement.dataset.madaginPublicCamera).progress===.98,null,{timeout:30000});
+      const summit=await page.evaluate(()=>JSON.parse(document.documentElement.dataset.madaginCompactJourneySeamV116).alpineBoundary);
+      assert.deepEqual(summit,journey,'Retain the same connected terrain through Summit');
       const alpineRequests=await page.evaluate(()=>performance.getEntriesByType('resource').filter(r=>new URL(r.name).pathname==='/world/v116/terrain-alpine-v1.16.glb').length);
       assert.equal(alpineRequests,1,'Reuse the existing decoded Alpine source');
       observed.compactAlpineBoundary={journey,summit,alpineRequests};

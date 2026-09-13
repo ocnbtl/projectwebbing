@@ -4340,5 +4340,32 @@
     "geometry": "output/releases/madagin-crown-architecture-20260913/crown-geometry.json",
     "decision": "output/releases/madagin-crown-architecture-20260913/decision.json",
     "publication": "output/releases/madagin-crown-architecture-20260913/publication.json"
+  },
+  "coastRelief20260913": {
+    "baseline": "c2def4b7283eaf3dac3e10a63e8919e057b45281",
+    "versions": [
+      "coastal-drainage-1",
+      "valley-hollows-3",
+      "alpine-flank-1"
+    ],
+    "sources": "Existing desktop v1.15 and compact v1.16 terrain; authored shared coastal drainage, eastern hollows and attached Alpine flank. Existing branch-crown assets only; no new external asset or texture.",
+    "groundAuthority": "Actual terrain triangles; obsolete western Valley ecology replaced by grounded coast woodland, eastern ecology follows registered terrain offsets.",
+    "reference": {
+      "url": "https://www.gohawaii.com/islands/kauai/regions/north-shore/napali-coast",
+      "image": "https://www.gohawaii.com/sites/default/files/styles/image_gallery_bg_xl/public/hero-unit-images/Kauai%20Napali%20Coast.jpg.webp?itok=ztjrFIuU",
+      "fresh": "Official HTA page verified and original photograph opened this run. Unequal drainage heads, deep dividing spurs and widening seaward valleys informed the terrain decisions.",
+      "character": "Humid Kauai-inspired authored landscape. Existing light direction/weather retained. Not a surveyed geographic or botanical reconstruction.",
+      "footage": "Earlier NPS Hawaii forest-footage observations are dated context; no fresh reference-video playback this run."
+    },
+    "cost": "Original no-added-triangles intent was exceeded by the necessary Alpine connection: 3,304 desktop / 2,530 compact triangles. Coast reshapes existing Valley indices and retains the existing Ridge shoulder grid. No new external asset or texture. Fixed transfer/heap/frame/startup budgets unchanged.",
+    "geometry": "output/releases/madagin-coast-relief-20260913/coastal-geometry.json",
+    "decision": "output/releases/madagin-coast-relief-20260913/decision.json",
+    "publication": "output/releases/madagin-coast-relief-20260913/publication.json",
+    "notClaimed": [
+      "Completed landscape realism",
+      "Surveyed or botanical fidelity",
+      "Human equivalence",
+      "Physical-device/thermal qualification"
+    ]
   }
 }

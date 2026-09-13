@@ -37,6 +37,7 @@ import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-c
 import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./native-valley";
 import {applyValleyHollows, valleyGroundOffset, useValleyGrounding, publishValleyGrounding} from "./valley-hollows";
 import {applyUplandLandform,publishUplandGrounding,useUplandGrounding,uplandGroundHeight,uplandWeight} from "./upland-landform";
+import {COASTAL_LANDFORM_VERSION, coastalShoulderHeight, coastalGroundSampler, coastalRootHeight} from "./coastal-landform";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
 import {ForestStands} from "./forest-stands";
@@ -298,9 +299,12 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
     const ridgeMesh = new Mesh(ridge);
     const ridgeBoundary = extractTerrainSeamSamples(ridgeMesh, ridge.boundingBox!.min.z);
     const ridgeInterior = extractTerrainSeamSamples(ridgeMesh, ridgeBoundary[0].z + 28);
-    const valley = createExactDetailedRidgeValleyWeldGeometry(valleySource, ridgeBoundary, ridgeInterior, true);
+    let valley = createExactDetailedRidgeValleyWeldGeometry(valleySource, ridgeBoundary, ridgeInterior, true);
     if (valley !== valleySource) valleySource.dispose();
-    if (sources.alpine) joinCompactAlpineBoundary(valley, sources.alpine);
+    if (sources.alpine) {
+      joinCompactAlpineBoundary(valley, sources.alpine);
+      valley = extendValleyAlpineFlank(valley, extractTerrainSeamSamples(sources.alpine, -1000));
+    }
     const valleyMesh = new Mesh(valley);
     const valleyBoundary = extractTerrainSeamSamples(valleyMesh);
     const field: TerrainSeamField = {
@@ -366,6 +370,8 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
       <ForestStands geometry={geometries.ridge} compact shadows={shadows} zone="ridge"/>
       <ForestStands geometry={geometries.valley} compact shadows={shadows} zone="valley"/>
       <ShoreRubble terrain={geometries.valley} compact shadows={shadows}/>
+      <JourneyCoastalWoodland geometry={geometries.ridge} compact shadows={shadows} zone="coastal-north"/>
+      <JourneyCoastalWoodland geometry={geometries.valley} compact shadows={shadows} zone="coastal-south"/>
       {geometries.ridge ? (
         <mesh castShadow={shadows} geometry={geometries.ridge} material={ridgeMaterial} receiveShadow />
       ) : null}
@@ -379,7 +385,7 @@ function CompactJourneyTerrain({ shadows }: { shadows: boolean }) {
   );
 }
 
-function MobileTerminalTerrain({ shadows, tier }: { shadows: boolean; tier: WorldQualityTier }) {
+export function MobileTerminalTerrain({ shadows, tier }: { shadows: boolean; tier: WorldQualityTier }) {
   const ridgeGltf = useLoader(GLTFLoader, `${ROOT}/terrain-ridge-v1.16.glb`, configureCompressedGltf);
   const valleyGltf = useLoader(GLTFLoader, `${ROOT}/terrain-valley-v1.16.glb`, configureCompressedGltf);
   const alpineGltf = useLoader(GLTFLoader, `${ROOT}/terrain-alpine-v1.16.glb`, configureCompressedGltf);
@@ -2758,7 +2764,48 @@ function createIntegratedWatershedTerrainGeometry(
   reconcileCoincidentTerrainNormals(geometry);
   const finalGeometry=createRidgeHeadwaterTerrain(geometry);
   applyCascadeBed(finalGeometry);
-  return finalGeometry;
+  return alpineBoundary.length ? extendValleyAlpineFlank(finalGeometry, alpineBoundary) : finalGeometry;
+}
+
+function extendValleyAlpineFlank(terrain: BufferGeometry, alpine: CoastalBoundarySample[]) {
+  terrain.computeBoundingBox();
+  const innerX = terrain.boundingBox!.max.x, boundaryZ = alpine[0].z;
+  const outerX = alpine[alpine.length - 1]?.x ?? innerX;
+  if (outerX <= innerX + 1) return terrain;
+  const side = extractCoastalBoundarySamples(new Mesh(terrain), innerX);
+  const endZ = boundaryZ + 150;
+  const rows = [...new Set([boundaryZ, endZ, ...side.filter(p => p.z > boundaryZ && p.z < endZ).map(p => p.z)])].sort((a,b) => a-b);
+  const columns = [...new Set([0, 1, ...alpine.filter(p => p.x > innerX && p.x < outerX).map(p => (p.x-innerX)/(outerX-innerX))])].sort((a,b) => a-b);
+  const positions:number[]=[],uv:number[]=[],indices:number[]=[];
+  // Fill the exposed eastern triangle between differently sized source chunks.
+  // Both shared edges use the existing top-surface vertices. The outer flank
+  // tapers into the Valley instead of leaving the Alpine front open to sky.
+  rows.forEach((z,row) => {
+    const along = 1 - (z-boundaryZ)/150;
+    const width = (outerX-innerX)*along;
+    const innerY = sampleCoastalBoundary(side,z)!.height;
+    columns.forEach((t,column) => {
+      const x = innerX + width*t;
+      const alpineY = sampleTerrainSeamHeight(alpine,innerX+(outerX-innerX)*t);
+      const y = innerY + (alpineY-sampleTerrainSeamHeight(alpine,innerX))*along;
+      positions.push(x,y,z);uv.push(x/100,z/100);
+      if(row && column){const a=(row-1)*columns.length+column-1,b=a+1,c=row*columns.length+column-1,d=c+1;indices.push(a,c,b,b,c,d);}
+    });
+  });
+  const flank = new BufferGeometry();
+  flank.setAttribute("position",new Float32BufferAttribute(positions,3));
+  flank.setAttribute("uv",new Float32BufferAttribute(uv,2));
+  flank.setAttribute("uv1",flank.getAttribute("uv").clone());
+  flank.setIndex(indices);flank.computeVertexNormals();
+  for(const [name,attribute] of Object.entries(terrain.attributes)) {
+    if(!flank.hasAttribute(name))flank.setAttribute(name,new Float32BufferAttribute(new Float32Array(positions.length/3*attribute.itemSize),attribute.itemSize));
+  }
+  for(const name of Object.keys(flank.attributes))if(!terrain.hasAttribute(name))flank.deleteAttribute(name);
+  const joined=mergeGeometries([terrain,flank]);
+  if(!joined){flank.dispose();return terrain;}
+  joined.userData={...terrain.userData,alpineFlank:{version:"alpine-flank-1",innerX,outerX,boundaryZ,sourceVertices:terrain.getAttribute("position").count,addedTriangles:indices.length/3}};
+  reconcileCoincidentTerrainNormals(joined);joined.computeBoundingBox();joined.computeBoundingSphere();
+  terrain.dispose();flank.dispose();return joined;
 }
 
 function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
@@ -2995,7 +3042,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     };
   }, [alpineGeometry, coastalBoundary, coastalHeightfield, connectedGeometry, connectedValleyCoastGeometry, material, ridgeGeometry, southernCoastalBoundary, terminalBridgeGeometry, terminalChunkGeometry, watershedGeometry, zone]);
 
-  return (<><NativeCliffPlants geometry={ridgeGeometry ?? connectedGeometry} shadows={shadows}/><NativeValleyPlants geometry={watershedGeometry} shadows={shadows}/><ForestStands geometry={ridgeGeometry} shadows={shadows} zone="ridge"/><ForestStands geometry={watershedGeometry} shadows={shadows} zone="valley"/>{watershedGeometry?<ShoreRubble terrain={watershedGeometry} shadows={shadows}/>:null}{connectedGeometry ? (
+  return (<><JourneyCoastalWoodland geometry={ridgeGeometry} shadows={shadows} zone="coastal-north"/><JourneyCoastalWoodland geometry={watershedGeometry} shadows={shadows} zone="coastal-south"/><NativeCliffPlants geometry={ridgeGeometry ?? connectedGeometry} shadows={shadows}/><NativeValleyPlants geometry={watershedGeometry} shadows={shadows}/><ForestStands geometry={ridgeGeometry} shadows={shadows} zone="ridge"/><ForestStands geometry={watershedGeometry} shadows={shadows} zone="valley"/>{watershedGeometry?<ShoreRubble terrain={watershedGeometry} shadows={shadows}/>:null}{connectedGeometry ? (
     <>
       <mesh
         castShadow={shadows}
@@ -3067,16 +3114,6 @@ const COASTAL_RIDGE_INNER_PROFILE: Array<[z: number, height: number]> = [
   [285, -9.88],
 ];
 
-const COASTAL_VALLEY_NEAR_PROFILE: Array<[x: number, height: number]> = [
-  [-730, 0.23],
-  [-650, 0.23],
-  [-570, 0.23],
-  [-490, 0.23],
-  [-410, 0.23],
-  [-350, 0.22],
-  [-310, 0.23],
-];
-
 function smoothCoastalStep(value: number) {
   const clamped = Math.min(1, Math.max(0, value));
   return clamped * clamped * (3 - 2 * clamped);
@@ -3109,27 +3146,32 @@ function extractCoastalBoundarySamples(source: Mesh, targetX: number) {
   source.updateMatrixWorld(true);
   const positions = source.geometry.getAttribute("position");
   const normals = source.geometry.getAttribute("normal");
-  const points: Array<{ point: Vector3; normal: Vector3 }> = [];
-  let boundaryX = Number.NaN;
-  let boundaryDistance = Number.POSITIVE_INFINITY;
-  for (let index = 0; index < positions.count; index += 1) {
-    const point = new Vector3().fromBufferAttribute(positions, index).applyMatrix4(source.matrixWorld);
-    const distance = Math.abs(point.x - targetX);
-    if (distance < boundaryDistance) {
-      boundaryDistance = distance;
-      boundaryX = point.x;
+  const indices=source.geometry.index,at=(i:number)=>indices?indices.getX(i):i;
+  const matrix=source.matrixWorld.elements;
+  const worldX=(j:number)=>matrix[0]*positions.getX(j)+matrix[4]*positions.getY(j)+matrix[8]*positions.getZ(j)+matrix[12];
+  const samples=new Map<number,CoastalBoundarySample>();
+  const record=(point:Vector3,normal:Vector3)=>{
+    const key=Math.round(point.z*10000),old=samples.get(key);
+    if(!old||point.y>old.height)samples.set(key,{height:point.y,normal,x:targetX,z:point.z});
+  };
+  // The Valley spans x=-730..730. Its x=-310 section usually crosses faces,
+  // not vertices; a nearest-vertex query picked only the northern weld rows.
+  for(let i=0;i<(indices?.count??positions.count);i+=3){
+    const ids=[at(i),at(i+1),at(i+2)];
+    const xs=ids.map(worldX);
+    if(Math.min(...xs)>targetX+.0001||Math.max(...xs)<targetX-.0001)continue;
+    const p=ids.map(j=>new Vector3().fromBufferAttribute(positions,j).applyMatrix4(source.matrixWorld));
+    const n=ids.map(j=>normals?new Vector3().fromBufferAttribute(normals,j).transformDirection(source.matrixWorld):new Vector3(0,1,0));
+    for(let j=0;j<3;j++){
+      const k=(j+1)%3;
+      if(Math.abs(p[j].x-targetX)<.0001)record(p[j],n[j]);
+      if((p[j].x-targetX)*(p[k].x-targetX)<0){
+        const t=(targetX-p[j].x)/(p[k].x-p[j].x);
+        record(p[j].clone().lerp(p[k],t),n[j].clone().lerp(n[k],t).normalize());
+      }
     }
-    points.push({
-      point,
-      normal: normals
-        ? new Vector3().fromBufferAttribute(normals, index).transformDirection(source.matrixWorld)
-        : new Vector3(0, 1, 0),
-    });
   }
-  return points
-    .filter(({ point }) => Math.abs(point.x - boundaryX) < 0.02)
-    .map(({ point, normal }) => ({ height: point.y, normal, x: point.x, z: point.z }))
-    .sort((left, right) => left.z - right.z);
+  return [...samples.values()].sort((left,right)=>left.z-right.z);
 }
 
 function sampleCoastalBoundary(samples: CoastalBoundarySample[], z: number) {
@@ -3866,22 +3908,12 @@ function createCoastalShoulderGeometry(
   heightfield?: CoastalHeightfieldSource,
   span: "ridge" | "valley" = "ridge",
 ) {
-  const heightfieldReady = !mobile
-    && heightfield?.candidate === "BW"
-    && heightfield.dimensions.rows > 1
-    && heightfield.dimensions.columns > 1
-    && heightfield.samples.length === heightfield.dimensions.rows * heightfield.dimensions.columns;
-  const activeHeightfield = heightfieldReady ? heightfield : null;
   // Desktop uses the exact 179-row sampling of RIDGE_V115_HIGH so the shared
   // edge can be vertex-welded instead of merely placed at the same coordinates.
   const rows = boundarySamples.length > 1
-    ? boundarySamples.length - 1
-    : activeHeightfield
-    ? activeHeightfield.dimensions.rows - 1
+    ? Math.min(boundarySamples.length - 1, span === "valley" ? (mobile ? 90 : 178) : Infinity)
     : mobile ? 58 : 178;
-  const columns = activeHeightfield
-    ? activeHeightfield.dimensions.columns - 1
-    : mobile ? 24 : tier === "high" ? 60 : tier === "balanced" ? 48 : 32;
+  const columns = mobile ? 24 : tier === "high" ? 60 : tier === "balanced" ? 48 : 32;
   const positions: number[] = [];
   const uvs: number[] = [];
   const indices: number[] = [];
@@ -3891,7 +3923,8 @@ function createCoastalShoulderGeometry(
   for (let row = 0; row <= rows; row += 1) {
     const along = row / rows;
     const decodedBoundary = boundarySamples.length === rows + 1 ? boundarySamples[row] : null;
-    const z = decodedBoundary?.z ?? -315 + 600 * along;
+    const z = decodedBoundary?.z ?? (boundarySamples[0]?.z ?? -315)
+      + ((boundarySamples.at(-1)?.z ?? 285)-(boundarySamples[0]?.z ?? -315))*along;
     // Extend the same terrain surface to the shared analytic water boundary.
     // A small landward overlap keeps moving breaker vertices from exposing the
     // background without creating a detached shoreline collar.
@@ -3902,45 +3935,15 @@ function createCoastalShoulderGeometry(
     const ridgeCrossSlope = exactBoundary
       ? Math.min(1.2, Math.max(-1.2, -exactBoundary.normal.x / Math.max(0.08, exactBoundary.normal.y)))
       : Math.min(1.2, Math.max(-1.2, (ridgeInnerHeight - ridgeHeight) / 3.2291666667));
-    const coastalHeight = -15.7
-      + Math.sin(z * 0.029 + 0.4) * 2.7
-      + Math.sin(z * 0.083 - 0.9) * 1.15;
-    const outerHeight = coastalHeight;
 
     for (let column = 0; column <= columns; column += 1) {
       const across = column / columns;
       const spatialAcross = 1 - Math.pow(1 - across, 1.7);
       const x = outerX + (innerX - outerX) * spatialAcross;
-      const shoulderAcross = Math.min(1, Math.max(0, (x - outerX) / Math.max(0.001, -310 - outerX)));
       // Hold a low, irregular marine terrace before the terrain rises into the
       // inherited ridge. This avoids replacing the old open edge with one giant
       // mathematically smooth ramp.
-      const ridgeBlend = smoothCoastalStep((shoulderAcross - 0.18) / 0.82);
-      const broadHeight = outerHeight * (1 - ridgeBlend) + ridgeHeight * ridgeBlend;
-      const seamDistance = -310 - x;
-      const seamBlend = smoothCoastalStep((13 - seamDistance) / 13);
-      const slopeMatchedHeight = ridgeHeight + ridgeCrossSlope * (x + 310);
-      const formedHeight = broadHeight * (1 - seamBlend) + slopeMatchedHeight * seamBlend;
-      const inheritedNearHeight = sampleCoastalProfile(COASTAL_VALLEY_NEAR_PROFILE, x);
-      const startBlend = smoothCoastalStep(along / 0.095);
-      const reliefEnvelope = Math.sin(shoulderAcross * Math.PI) * Math.sin(along * Math.PI);
-      const headlands = (
-        Math.sin(z * 0.031 + 0.7)
-        + Math.sin(z * 0.067 - 1.1) * 0.42
-      ) * reliefEnvelope * (2.8 + ridgeBlend * 7.2);
-      const drainage = -Math.pow(Math.max(0, Math.sin(z * 0.045 - across * 3.2 + 1.4)), 6)
-        * reliefEnvelope * (2.1 + ridgeBlend * 5.4);
-      const fracture = (
-        Math.sin(x * 0.051 + z * 0.034)
-        + Math.sin(x * 0.019 - z * 0.079) * 0.48
-        + Math.sin(x * 0.103 + z * 0.013) * 0.22
-      ) * reliefEnvelope * (2.7 + ridgeBlend * 4.9);
-      const sourceRelief = activeHeightfield
-        ? activeHeightfield.samples[row * (columns + 1) + column]
-        : (headlands + drainage + fracture) * (span === "valley" ? 0.82 : 1);
-      const coastalFloor = -18.5 * (1 - smoothCoastalStep(across / 0.08))
-        + -16.35 * smoothCoastalStep(across / 0.08);
-      const authoredHeight = Math.max(coastalFloor, formedHeight + sourceRelief);
+      const authoredHeight = coastalShoulderHeight(x,z,outerX,ridgeHeight,ridgeCrossSlope,mobile?-335:-315);
       const overlap = x >= -310 ? sampleCoastalOverlap(overlapProfiles, x, z) : null;
       const overlayLift = overlap
         ? 0.05 * (1 - smoothCoastalStep((x + 310) / Math.max(0.001, innerX + 310)))
@@ -3949,7 +3952,7 @@ function createCoastalShoulderGeometry(
         ? decodedBoundary.height
         : overlap
         ? overlap.height + overlayLift
-        : inheritedNearHeight * (1 - startBlend) + authoredHeight * startBlend;
+        : authoredHeight;
       positions.push(x, y, z);
       // Continue the authored ridge UV field across its western boundary so the
       // PBR source surface cannot jump at the join (ridge west edge is u = 0).
@@ -3973,7 +3976,8 @@ function createCoastalShoulderGeometry(
   const normals = geometry.getAttribute("normal");
   for (let row = 0; row <= rows; row += 1) {
     const decodedBoundary = boundarySamples.length === rows + 1 ? boundarySamples[row] : null;
-    const z = decodedBoundary?.z ?? -315 + 600 * (row / rows);
+    const z = decodedBoundary?.z ?? (boundarySamples[0]?.z ?? -315)
+      + ((boundarySamples.at(-1)?.z ?? 285)-(boundarySamples[0]?.z ?? -315))*(row/rows);
     const exactBoundary = decodedBoundary ?? sampleCoastalBoundary(innerProfile, z);
     const ridgeCrossSlope = Math.min(1.2, Math.max(-1.2, (
       sampleCoastalProfile(COASTAL_RIDGE_INNER_PROFILE, z)
@@ -3990,12 +3994,13 @@ function createCoastalShoulderGeometry(
   normals.needsUpdate = true;
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
-  geometry.userData.coastalHeightfieldSource = activeHeightfield ? {
-    dimensions: activeHeightfield.dimensions,
-    method: activeHeightfield.method,
-    source: COASTAL_HEIGHTFIELD_URL,
-    triangles: rows * columns * 2,
-  } : null;
+  geometry.userData.coastalHeightfieldSource = null;
+  geometry.userData.coastalLandform = {
+    version: COASTAL_LANDFORM_VERSION,
+    method: "continuous world-space tributaries and dividing spurs",
+    replacedHeightfield: heightfield?.candidate ?? null,
+    sourceBoundaryAndShoreRetained: true,
+  };
   geometry.userData.coastalSpan = {
     boundarySamples: boundarySamples.length,
     coastlineAuthority: "shared four-octave analytic western coastline",
@@ -4059,7 +4064,8 @@ function createCoastalPlacements(geometry: BufferGeometry, mobile: boolean, tier
       const cellZ = Math.max(1.2, Math.abs(positions.getZ(nextRow * (columns + 1) + column) - z));
       const jitterX = (seededUnit(seed + 11) - 0.5) * cellX * 1.46;
       const jitterZ = (seededUnit(seed + 29) - 0.5) * cellZ * 1.54;
-      const jitterY = (-normals.getX(index) * jitterX - normals.getZ(index) * jitterZ) / normalY;
+      const rootHeight = coastalRootHeight(positions, columns, row, column, x + jitterX, z + jitterZ);
+      if (rootHeight === null || rootHeight < -9.5) continue;
       const stature = seededUnit(seed + 43);
       const layer = stature > 0.76 ? 1 : 0;
       const family = Math.floor(seededUnit(seed + 61) * COASTAL_FAMILIES.length);
@@ -4068,7 +4074,7 @@ function createCoastalPlacements(geometry: BufferGeometry, mobile: boolean, tier
         family,
         layer,
         x + jitterX,
-        y + jitterY + 0.035,
+        rootHeight + 0.035,
         z + jitterZ,
         (seed % 628) * 0.01,
         scale * (0.88 + (seed % 5) * 0.04),
@@ -4152,6 +4158,13 @@ function CoastalEcology({ placements, shadows, compact=false, zone = "coastal-no
       ) : null}
     </group>
   );
+}
+
+function JourneyCoastalWoodland({geometry, compact=false, shadows, zone}: {
+  geometry: BufferGeometry | null; compact?: boolean; shadows: boolean; zone: string;
+}) {
+  const placements = geometry?.userData.coastalPlacements as PlacementTuple[] | undefined;
+  return placements?.length ? <RootedTrees placements={placements} compact={compact} shadows={shadows} zone={zone} grounded/> : null;
 }
 
 function geometrySurfaceForMerge(source: BufferGeometry, matrix?: Matrix4) {
@@ -4273,10 +4286,35 @@ function extendJourneyCoast(terrain: BufferGeometry, tier: WorldQualityTier, spa
   const boundary = extractCoastalBoundarySamples(new Mesh(terrain), -310);
   if (boundary.length < 2) return terrain;
   const shoulder = createCoastalShoulderGeometry(tier === "conservative", tier, boundary, [], heightfield, span);
+  const placements = createCoastalPlacements(shoulder, tier === "conservative", tier)
+    .slice(0, tier === "conservative" ? (span === "ridge" ? 60 : 36) : (span === "ridge" ? 120 : 90));
+  if(span === "valley") {
+    // This source already reaches west of the shore. Reshape its own surface;
+    // adding another shoulder here creates an overlapping, incomplete strip.
+    const p=terrain.getAttribute("position");let changed=0;
+    for(let i=0;i<p.count;i++){
+      const x=p.getX(i),z=p.getZ(i);if(x>=-310)continue;
+      const section=sampleCoastalBoundary(boundary,z);if(!section)continue;
+      const slope=Math.min(1.2,Math.max(-1.2,-section.normal.x/Math.max(.08,section.normal.y)));
+      const height=coastalShoulderHeight(x,z,coastlineAuthorityX(z)+2.6,section.height,slope,tier==="conservative"?-335:-315);
+      const fade=smoothCoastalStep((z+980)/60);
+      p.setY(i,p.getY(i)+(height-p.getY(i))*fade);changed++;
+    }
+    p.needsUpdate=true;terrain.computeVertexNormals();terrain.computeBoundingBox();terrain.computeBoundingSphere();
+    const ground=coastalGroundSampler(terrain);
+    const grounded=placements.flatMap(p=>{
+      const y=ground(p[2],p[4]);if(y===null||y< -9.5)return [];
+      const q=[...p] as PlacementTuple;q[3]=y+.035;return [q];
+    });
+    terrain.userData.coastalLandform={...shoulder.userData.coastalLandform,changed,addedTriangles:0,method:"reshape existing western valley surface; no overlapping shoulder"};
+    terrain.userData.coastalPlacements=grounded;
+    shoulder.dispose();return terrain;
+  }
   const joined = createConnectedCoastalTerrainGeometry(terrain, shoulder, boundary[0].x, span);
   shoulder.dispose();
   if (!joined) return terrain;
-  joined.userData = { ...terrain.userData, journeyCoast: joined.userData.coastalExtension };
+  joined.userData = { ...terrain.userData, journeyCoast: joined.userData.coastalExtension,
+    coastalLandform: shoulder.userData.coastalLandform, coastalPlacements: placements };
   terrain.dispose();
   return joined;
 }
@@ -5823,6 +5861,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
   const uplandRevision=useUplandGrounding();
   const manifest=useMemo(()=>{
     void uplandRevision;
+    if(zone==="valley")return {...sourceManifest,instances:sourceManifest.instances.filter(p=>p[2]>=-310)};
     if(zone!=="alpine")return sourceManifest;
     return {...sourceManifest,instances:sourceManifest.instances.filter(p=>{
       // Replace isolated canopy inside the supported upland stand footprint;
@@ -8084,21 +8123,17 @@ export function RidgeProductionV116({ diagnosticMode, mobile, reducedMotion, sha
         <Suspense fallback={null} key={`terrain-${chunk}`}>
           {!mobile && tier !== "conservative" ? (
             <DetailedTerrainChunk
-              connectedCoast={zone === "summit" && (chunk === "ridge" || chunk === "valley")}
+              connectedCoast={false}
               shadows={shadows}
               tier={tier}
               zone={chunk}
             />
           ) : (
-            zone === "summit" && chunk === "ridge" ? (
-              <MobileTerminalTerrain shadows={shadows} tier={tier} />
-            ) : zone === "summit" && chunk === "valley" ? null : (
               chunk === "ridge" ? (
                 <CompactJourneyTerrain shadows={shadows} />
               ) : chunk === "valley" ? null : (
                 <TerrainChunk shadows={shadows} zone={chunk} />
               )
-            )
           )}
         </Suspense>
       ))}

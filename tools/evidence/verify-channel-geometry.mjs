@@ -18,6 +18,7 @@ const compile=async(name,source)=>{const p=path.join(out,name+'.mjs');await fs.w
 await compile('fixture-aerial',await fs.readFile(sourceRoot+'/src/components/internal/aerial-perspective.ts','utf8'));
 await compile('fixture-valley-hollows',await fs.readFile(sourceRoot+'/src/components/internal/valley-hollows.ts','utf8'));
 await compile('fixture-upland-landform',await fs.readFile(sourceRoot+'/src/components/internal/upland-landform.ts','utf8'));
+await compile('fixture-coastal-landform',await fs.readFile(sourceRoot+'/src/components/internal/coastal-landform.ts','utf8'));
 await compile('fixture-headwater',await fs.readFile(sourceRoot+'/src/components/internal/ridge-headwater.ts','utf8'));
 await compile('fixture-channel-profile',(await fs.readFile(sourceRoot+'/src/components/internal/channel-profile.ts','utf8')).replace('"./ridge-headwater"','"./fixture-headwater.mjs"'));
 await compile('fixture-lake-shore',(await fs.readFile(sourceRoot+'/src/components/internal/lake-shore.ts','utf8')).replace('"./channel-profile"','"./fixture-channel-profile.mjs"'));
@@ -42,6 +43,7 @@ const fixture=parsed.statements.map(n=>{
  if(n.moduleSpecifier.text==='./aerial-perspective')return n.getText().replace('./aerial-perspective','./fixture-aerial.mjs');
  if(n.moduleSpecifier.text==='./valley-hollows')return n.getText().replace('./valley-hollows','./fixture-valley-hollows.mjs');
  if(n.moduleSpecifier.text==='./upland-landform')return n.getText().replace('./upland-landform','./fixture-upland-landform.mjs');
+ if(n.moduleSpecifier.text==='./coastal-landform')return n.getText().replace('./coastal-landform','./fixture-coastal-landform.mjs');
  if(n.moduleSpecifier.text==='./channel-profile')return n.getText().replace('./channel-profile','./fixture-channel-profile.mjs');
  if(n.moduleSpecifier.text==='./channel-water')return n.getText().replace('./channel-water','./fixture-channel-water.mjs');
  if(n.moduleSpecifier.text==='./cascade-contact')return n.getText().replace('./cascade-contact','./fixture-cascade.mjs');
@@ -52,7 +54,7 @@ const fixture=parsed.statements.map(n=>{
  if(n.moduleSpecifier.text==='./native-valley')return "import {applyNativeValley,nativeValleyWeight,NativeValleyPlants} from './fixture-native-valley.mjs';";
  if(n.moduleSpecifier.text==='./native-cliff')return `import {applyNativeCliff,nativeCliffWeight,NativeCliffPlants} from './fixture-native.mjs';`;
  return [...(n.importClause?.namedBindings?.elements??[])].filter(e=>!e.isTypeOnly).map(e=>`const ${e.name.text}={};`).join('\n');
-}).join('\n')+'\nexport {createExactDetailedRidgeValleyWeldGeometry,joinCompactAlpineBoundary,createTerminalChunkGeometry,createAlpineGeologyTerrainGeometry,sampleTerrainSeamHeight,extendJourneyCoast,removeCoplanarBoundaryWall,createNativeRidgeSurface,createRidgeErosionTerrainGeometry,geometrySurfaceForMerge,v116RiverCenter,ridgeChannelWidth,createRidgeHeadwaterGeometry,createIntegratedRiverGeometry,outflowTerrainSampler,createWaterfallOutflowGeometry,createIntegratedWatershedTerrainGeometry,createExactBoundaryTerrainSeamBridge,extractTerrainSeamSamples,createIntegratedLakeGeometry,createWaterMaterial,createWaterfallPlungeGeometry,createCumulativeWaterfallGeometry,waterfallOutflowCenter,v116RiverHalfWidth,waterfallUpperLevel,waterfallUpperCenter,waterfallUpperHalfWidth,waterfallUpperBankWidth,createWaterfallUpperStreamGeometry,activeTerrainChunks};';
+}).join('\n')+'\nexport {extendValleyAlpineFlank,createExactDetailedRidgeValleyWeldGeometry,joinCompactAlpineBoundary,createTerminalChunkGeometry,createAlpineGeologyTerrainGeometry,sampleTerrainSeamHeight,extendJourneyCoast,removeCoplanarBoundaryWall,createNativeRidgeSurface,createRidgeErosionTerrainGeometry,geometrySurfaceForMerge,v116RiverCenter,ridgeChannelWidth,createRidgeHeadwaterGeometry,createIntegratedRiverGeometry,outflowTerrainSampler,createWaterfallOutflowGeometry,createIntegratedWatershedTerrainGeometry,createExactBoundaryTerrainSeamBridge,extractTerrainSeamSamples,createIntegratedLakeGeometry,createWaterMaterial,createWaterfallPlungeGeometry,createCumulativeWaterfallGeometry,waterfallOutflowCenter,v116RiverHalfWidth,waterfallUpperLevel,waterfallUpperCenter,waterfallUpperHalfWidth,waterfallUpperBankWidth,createWaterfallUpperStreamGeometry,activeTerrainChunks};';
 const runtime=await compile('fixture-runtime',fixture);
 function sampler(g){
  const p=g.getAttribute('position'),index=g.index,bins=new Map(),cell=12,at=i=>index?index.getX(i):i;
