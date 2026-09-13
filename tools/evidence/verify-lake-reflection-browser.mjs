@@ -26,7 +26,7 @@ try{for(const width of [1440,390]){
  await page.evaluate(()=>{const c=document.querySelector('canvas');let f=c[Object.keys(c).find(k=>k.startsWith('__reactFiber'))];for(let i=0;f&&i<35;i++,f=f.return){const v=f.memoizedProps?.progress;if(v?.set){v.set(.5);return;}}throw Error('No public rail');});
  await page.waitForTimeout(4000);await page.evaluate(()=>{window.__LAKE_GPU__.enabled=true;});await page.waitForTimeout(800);
  const actual=await page.evaluate(()=>{window.__LAKE_GPU__.enabled=false;return {...window.__LAKE_GPU__,optics:JSON.parse(document.documentElement.dataset.madaginLakeOptics),canvas:document.querySelectorAll('canvas').length};});
- assert.equal(actual.canvas,1);assert.equal(actual.optics.version,'water-light-1');assert.ok(actual.last>actual.first+.1);assert.equal(actual.samples.length,1);
+ assert.equal(actual.canvas,1);assert.equal(actual.optics.version,'water-light-2');assert.ok(actual.last>actual.first+.1);assert.equal(actual.samples.length,1);
  const sample=actual.samples[0];assert.ok(sample.linked);assert.equal(sample.ready,1);assert.deepEqual(sample.size,width===390?[512,512]:[1024,1024]);assert.ok(sample.reflectedSceneDraws>10);assert.ok(sample.matrix.every(Number.isFinite));assert.deepEqual(errors,[]);
  cases.push({width,...actual,errors});await context.close();
 }}finally{await browser.close();await fs.writeFile(root+'/reflection-gpu-'+phase+'.json',JSON.stringify({at:new Date().toISOString(),origin,passed:cases.length===2,cases},null,2));}

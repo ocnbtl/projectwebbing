@@ -5,6 +5,7 @@ const {NodeIO}=require('@gltf-transform/core'),{ALL_EXTENSIONS}=require('@gltf-t
 const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.decoder':MeshoptDecoder});
 const {sampler,sourceMesh,setIO}=await import(pathToFileURL(path.resolve(out+'/mesh-helpers.mjs')));setIO(io);
 const runtime=await import(pathToFileURL(path.resolve(out+'/fixture-runtime.mjs')));
+const {createNativeValleyPlants}=await import(pathToFileURL(path.resolve(out+'/fixture-native-valley.mjs')));
 for(const name of ['forest-stands','shore-rubble']){
  let source=await fs.readFile(`src/components/internal/${name}.tsx`,'utf8');
  for(const [a,b]of [['lake-shore','fixture-lake-shore'],['channel-profile','fixture-channel-profile'],['ridge-headwater','fixture-headwater'],['cascade-contact','fixture-cascade'],['plunge-basin','fixture-plunge']])source=source.replaceAll(`"./${a}"`,`"./${b}.mjs"`);
@@ -29,7 +30,18 @@ for(const compact of [false,true]){
   for(const rock of rubble){maximumRubbleGroundError=Math.max(maximumRubbleGroundError,Math.abs(ground(rock.x,rock.z)-rock.ground));assert.ok(rock.y<rock.ground);assert.ok(waters.every(w=>w(rock.x,rock.z)<=rock.ground),'Rubble root stays on dry rendered bank');}
   console.log(JSON.stringify({compact,zone,trees:placements.length,maximumRootError,rubble:rubble.length,maximumRubbleGroundError}));
   if(zone==='valley')assert.ok(rubble.length>10,'Rubble must exist on the rendered collar');assert.ok(maximumRubbleGroundError<.001);
-  report.cases.push({compact,zone,trees:placements.length,maximumRootError,wetRoots,rubble:rubble.length,maximumRubbleGroundError,generationMs});g.dispose();
+  let nativePlants=null;
+  if(zone==='valley'){
+   const natives=createNativeValleyPlants(g,compact);let maximumFootprintError=0,wet=0;
+   for(const p of natives){
+    const footprint=Array.from({length:9},(_,i)=>ground(p[2]+(i?Math.cos(i*Math.PI/4)*.32:0),p[4]+(i?Math.sin(i*Math.PI/4)*.32:0)));
+    maximumFootprintError=Math.max(maximumFootprintError,Math.abs(Math.min(...footprint)-(p[3]+.06)));
+    if(waters.some(w=>w(p[2],p[4])>p[3]-.1))wet++;
+   }
+   assert.ok(natives.length>40);assert.ok(maximumFootprintError<.001);assert.equal(wet,0);
+   nativePlants={count:natives.length,maximumFootprintError,wetRoots:wet};
+  }
+  report.cases.push({compact,zone,trees:placements.length,maximumRootError,wetRoots,rubble:rubble.length,maximumRubbleGroundError,nativePlants,generationMs});g.dispose();
  }
 }
 report.passed=true;await fs.writeFile(root+'/forest-stand-geometry.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));

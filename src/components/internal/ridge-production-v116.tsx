@@ -6181,8 +6181,18 @@ function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "cascad
           1.0,
           (stochasticWave - stochasticWaveZ) * 0.72
         ));
+        ${lake ? `
+        // Advect an irregular wind field instead of crossing periodic waves.
+        // Pixel-footprint filtering suppresses unresolved short ripples.
+        vec2 windP=vWorld.xz*vec2(.18,.38)+vec2(.17,-.29)*uTime;
+        float fine=1.-smoothstep(.6,2.4,length(fwidth(vWorld.xz)));
+        vec2 windSlope=vec2(waterNoise(windP+vec2(.12,0.))-waterNoise(windP-vec2(.12,0.)),
+          waterNoise(windP+vec2(0.,.12))-waterNoise(windP-vec2(0.,.12)))*.38;
+        windSlope+=vec2(waterNoise(windP*2.37+vec2(.14,4.7))-waterNoise(windP*2.37+vec2(-.14,4.7)),
+          waterNoise(windP*2.37+vec2(4.7,.14))-waterNoise(windP*2.37+vec2(4.7,-.14)))*.13*fine;
+        ` : ""}
         n = ${lake
-    ? "normalize(mix(vec3(0.0, 1.0, 0.0), normalize(mix(rippleNormal, stochasticRippleNormal, 0.7)), 0.5))"
+        ? "normalize(vec3(windSlope.x,1.,windSlope.y))"
     : `normalize(mix(n, rippleNormal, ${directional ? "0.105" : "0.078"}))`};
         vec3 viewDirection = normalize(cameraPosition - vWorld);
         float fresnel = pow(
@@ -7331,7 +7341,7 @@ function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: 
           <mesh geometry={waterfallGeometry} material={waterfallMaterial} name="Madagin lip-aligned accelerating waterfall" renderOrder={8} />
           <mesh geometry={waterfallPlungeGeometry} material={poolMaterial} name="Madagin v1.16 integrated plunge pool" />
           <mesh geometry={waterfallOutflowGeometry} material={riverMaterial} name="Madagin v1.16 connected plunge outflow" />
-          <mesh material={impactMaterial} position={[WATERFALL_BOTTOM.x, WATERFALL_BOTTOM.y - 0.31, WATERFALL_BOTTOM.z]} renderOrder={9} rotation={[-Math.PI / 2, 0, 0]} scale={[16, 13, 1]}>
+          <mesh material={impactMaterial} position={[WATERFALL_BOTTOM.x, WATERFALL_BOTTOM.y - 0.31, WATERFALL_BOTTOM.z]} renderOrder={9} rotation={[-Math.PI / 2, 0, 0]} scale={[21, 17, 1]}>
             <circleGeometry args={[1, 64]} />
           </mesh>
           <WaterfallMist reducedMotion={reducedMotion} tier={tier} />

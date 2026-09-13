@@ -4247,5 +4247,32 @@
     "geometry": "output/releases/madagin-forest-depth-20260912/forest-stand-geometry.json",
     "decision": "output/releases/madagin-forest-depth-20260912/decision.json",
     "publication": "output/releases/madagin-forest-depth-20260912/publication.json"
+  },
+  "waterLandform20260913": {
+    "baseline": "666e4a1c739a55f4d1cc1fd1e9fee2a60e4a59d5",
+    "versions": [
+      "lake-bank-3",
+      "plunge-bank-2",
+      "water-light-2",
+      "shore-rubble-2",
+      "cascade-volume-2"
+    ],
+    "sources": "Project-authored shared basin profiles, procedural stones, reflection normals and waterfall body/impact. Existing terrain, textures, guide field and licensed source assets retained; no external asset acquired.",
+    "groundAuthority": "Same lake/pool functions govern actual terrain, water depth and wet-ground response. Rock roots use uppermost dry rendered triangles.",
+    "water": "One existing actual-scene reflection at 1024/512 resolution; irregular advected slope field. Waterfall retains 12800 triangles and exact source/pool rings, with bounded interior section volume and expanded impact.",
+    "reference": "Fresh official HTA Wailua Falls aerial photo; uneven columns, broad impact and broken banks inform authored contact and scale. No geographic reconstruction.",
+    "rejected": [
+      "Crossed periodic reflection normals: checker pattern",
+      "Unbounded waterfall shoulder: 8.304 m displacement; bounded final to 4.5 m"
+    ],
+    "notClaimed": [
+      "Fluid simulation or measured bathymetry",
+      "Completed water realism",
+      "Hawaiian species reconstruction",
+      "Human or physical-device qualification"
+    ],
+    "geometry": "output/releases/madagin-water-landform-20260913/cascade-volume-geometry.json",
+    "decision": "output/releases/madagin-water-landform-20260913/decision.json",
+    "publication": "output/releases/madagin-water-landform-20260913/publication.json"
   }
 }

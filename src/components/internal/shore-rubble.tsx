@@ -5,7 +5,7 @@ import {BufferGeometry,IcosahedronGeometry,InstancedMesh,Object3D} from "three";
 import {lakeBoundaryDistance,LAKE_WATER_LEVEL} from "./lake-shore";
 import {useTerrainSurface} from "./terrain-surface";
 
-export const SHORE_RUBBLE_VERSION="shore-rubble-1";
+export const SHORE_RUBBLE_VERSION="shore-rubble-2";
 const hash=(x:number,z:number,s=0)=>{const n=Math.sin(x*127.1+z*311.7+s*61.3)*43758.5453;return n-Math.floor(n);};
 
 // A narrow dry littoral collar: independently rooted stones, with gaps between
@@ -27,9 +27,9 @@ export function createShoreRubble(terrain:BufferGeometry,compact:boolean) {
       if(u<0||v<0||u+v>1)continue;
       const ground=u*p.getY(a)+v*p.getY(b)+(1-u-v)*p.getY(c);
       const key=`${ix},${iz}`;if((top.get(key)??-Infinity)>=ground)continue;top.set(key,ground);rocks.delete(key);
-      if(ground<LAKE_WATER_LEVEL+.05||ground>LAKE_WATER_LEVEL+3.2)continue;
+      if(ground<LAKE_WATER_LEVEL+.05||ground>LAKE_WATER_LEVEL+6.4)continue;
       const group=.5+.5*Math.sin(x*.081+Math.sin(z*.073));if(hash(ix,iz,4)>group*.8)continue;
-      const size=.42+hash(ix,iz,5)**2*2.15,squash=.48+hash(ix,iz,6)*.28;
+      const size=.65+hash(ix,iz,5)**2*3.4,squash=.48+hash(ix,iz,6)*.28;
       rocks.set(key,{x,z,ground,y:ground-size*squash*.35,size,squash,yaw:hash(ix,iz,7)*Math.PI*2});
     }
   }
@@ -49,6 +49,6 @@ export function ShoreRubble({terrain,compact=false,shadows}:{terrain:BufferGeome
     rocks.forEach((rock,i)=>{object.position.set(rock.x,rock.y,rock.z);object.rotation.set(.12,rock.yaw,-.1);object.scale.set(rock.size,rock.size*rock.squash,rock.size*.84);object.updateMatrix();ref.current!.setMatrixAt(i,object.matrix);});
     ref.current.instanceMatrix.needsUpdate=true;ref.current.computeBoundingSphere();
   },[rocks]);
-  useEffect(()=>{document.documentElement.dataset.madaginShoreRubble=JSON.stringify({version:SHORE_RUBBLE_VERSION,compact,count:rocks.length,rootAuthority:"rendered-littoral-triangles",basinUnchanged:true});return()=>{geometry.dispose();delete document.documentElement.dataset.madaginShoreRubble;};},[compact,geometry,rocks.length]);
+  useEffect(()=>{document.documentElement.dataset.madaginShoreRubble=JSON.stringify({version:SHORE_RUBBLE_VERSION,compact,count:rocks.length,rootAuthority:"rendered-littoral-triangles",basinAuthority:"lake-bank-3"});return()=>{geometry.dispose();delete document.documentElement.dataset.madaginShoreRubble;};},[compact,geometry,rocks.length]);
   return rocks.length?<instancedMesh ref={ref} args={[geometry,material,rocks.length]} castShadow={shadows} receiveShadow name="Grounded shoreline rubble groups"/>:null;
 }

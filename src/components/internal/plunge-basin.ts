@@ -4,12 +4,13 @@ import {AERIAL_GLSL} from "./aerial-perspective";
 
 // Authored erosional basin in the assembled world; not surveyed bathymetry.
 // One datum and footprint govern the active terrain, water and plant exclusion.
-export const PLUNGE_BASIN_VERSION = "plunge-basin-1";
+export const PLUNGE_BASIN_VERSION = "plunge-bank-2";
 export const PLUNGE_POOL_CENTER = {x:151,z:-696} as const;
 export const PLUNGE_POOL_RADIUS = {x:28,z:21} as const;
 export const PLUNGE_POOL_LEVEL = -44.08;
 export function plungeBoundaryScale(angle:number) {
-  return 1 + Math.sin(angle*3+.6)*.085 + Math.sin(angle*5-.9)*.045;
+  return 1 + Math.sin(angle*3+.6)*.085 + Math.sin(angle*5-.9)*.045
+    + Math.sin(angle*9+.2)*.034 + Math.sin(angle*15-1.1)*.014;
 }
 export function plungeDistance(x:number,z:number) {
   const nx=(x-151)/28,nz=(z+696)/21;
@@ -20,9 +21,10 @@ export function plungeBedLevel(x:number,z:number) {
   // Deep scour beneath the falling jet, a gentler depositional near shelf,
   // and a short irregular rock bank. The outlet is incised separately.
   const scour=Math.exp(-((x-154)**2+(z+704)**2)/180)*1.6;
+  const a=Math.atan2((z+696)/21,(x-151)/28);
   return PLUNGE_POOL_LEVEL + (d<=1
     ? -(1-Math.pow(d,3))*(2.1+scour)
-    : Math.min(3,(d-1)*10));
+    : Math.min(5,(d-1)*(16+Math.sin(a*4+.8)*5)));
 }
 export function plungeTerrainWeight(x:number,z:number) {
   if(Math.abs(x-151)>46||Math.abs(z+696)>35)return 0;
@@ -37,10 +39,10 @@ export const PLUNGE_BASIN_GLSL = `
 vec2 plungeBasin(vec2 p) {
   vec2 q=(p-vec2(151.0,-696.0))/vec2(28.0,21.0);
   float a=atan(q.y,q.x);
-  float d=length(q)/(1.0+sin(a*3.0+.6)*.085+sin(a*5.0-.9)*.045);
+  float d=length(q)/(1.0+sin(a*3.0+.6)*.085+sin(a*5.0-.9)*.045+sin(a*9.+.2)*.034+sin(a*15.-1.1)*.014);
   vec2 jet=p-vec2(154.0,-704.0);
   float scour=exp(-dot(jet,jet)/180.0)*1.6;
-  return vec2(d,d<=1.0?(1.0-pow(d,3.0))*(2.1+scour):-min(3.0,(d-1.0)*10.0));
+  return vec2(d,d<=1.0?(1.0-pow(d,3.0))*(2.1+scour):-min(5.0,(d-1.0)*(16.+sin(a*4.+.8)*5.)));
 }`;
 
 export function createPlungeWaterMaterial(sun:Vector3,lake?:ShaderMaterial) {

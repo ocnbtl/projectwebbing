@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
 const out=path.resolve(process.env.MADAGIN_LAKE_EVIDENCE??'output/releases/madagin-water-light-20260911');
@@ -11,7 +10,6 @@ await compile('lake-depth-headwater',await fs.readFile('src/components/internal/
 const profile=await compile('lake-depth-profile',(await fs.readFile('src/components/internal/channel-profile.ts','utf8')).replace('"./ridge-headwater"','"./lake-depth-headwater.mjs"'));
 const source=(await fs.readFile('src/components/internal/lake-shore.ts','utf8')).replace('"./channel-profile"','"./lake-depth-profile.mjs"');
 const lake=await compile('lake-depth-current',source);
-const old=await compile('lake-depth-baseline',execFileSync('git',['show','2869bb41a993ae141446bee5796b76013946b6e4:src/components/internal/lake-shore.ts'],{encoding:'utf8'}));
 // Run the authored GLSL counterpart as scalar JS over world coordinates. This
 // catches CPU/GPU formula drift separately from the geometric mesh checks.
 let glsl=lake.LAKE_SHORE_GLSL.replace(/vec2 lakeShore\(vec2 p\)/,'function gpuLakeShore(p)').replace(/float lakeCove\(float angle,float center,float width\)/,'function lakeCove(angle,center,width)');
@@ -33,12 +31,12 @@ for(let a=0;a<360;a+=2){let previous=-Infinity;for(let step=0;step<=140;step++){
  maximumParityError=Math.max(maximumParityError,Math.abs(gpu.gpuLakeShore({x,y:z})[1]-depth));
  const inlet=z>-835&&z<-764&&profile.lakeInletCut(x,z).weight>0;
  if(d<=1&&!inlet)assert.ok(bed>=previous-1e-8,'Submerged basin rises continuously toward each shore outside the inlet');previous=bed;
- if(d>=.82&&!inlet)assert.ok(Math.abs(bed-old.lakeBedLevel(x,z))<1e-8,'Shore and dry-bank authority retained outside the bounded inlet');
- if(inlet)assert.ok(bed<=old.lakeBedLevel(x,z)+1e-8,'Inlet remains an incision');
- if(d<1)assert.ok(depth>=.42-1e-8,'Entire basin remains submerged');
+ if(d>=1.06&&!inlet)assert.ok(bed>lake.LAKE_WATER_LEVEL+1.9,'Physical bank stands above the water outside the inlet');
+ if(d<1)assert.ok(depth>=.035-1e-8,'Entire basin remains submerged');
+ if(Math.abs(d-1)<1e-8&&!inlet)assert.ok(Math.abs(depth-.035)<1e-8,'Shore water meets its shallow physical bank');
  probes++;
 }}
-assert.ok(maximumParityError<1e-10);assert.ok(Math.abs(lake.LAKE_WATER_LEVEL-lake.lakeBedLevel(lake.LAKE_CENTER.x,lake.LAKE_CENTER.z)-7.37)<1e-8);
+assert.ok(maximumParityError<1e-10);assert.ok(Math.abs(lake.LAKE_WATER_LEVEL-lake.lakeBedLevel(lake.LAKE_CENTER.x,lake.LAKE_CENTER.z)-7.535)<1e-8);
 const meshes=[];
 for(const [segments,rings] of [[320,18],[320,40],[384,48]]){
  const g=mesh.createIntegratedLakeBedGeometry(segments,rings,.12),p=g.getAttribute('position');let maxError=0;
@@ -46,5 +44,5 @@ for(const [segments,rings] of [[320,18],[320,40],[384,48]]){
  assert.ok(maxError<.0001);assert.ok(Array.from(p.array).every(Number.isFinite));
  meshes.push({segments,rings,vertices:p.count,maximumBedError:maxError});g.dispose();
 }
-const result={at:new Date().toISOString(),passed:true,probes,maximumParityError,centerDepth:7.37,unchangedShoreFromNormalizedRadius:.82,shoreException:'Shared inlet incision only: z -835 to -764, within 1.25 channel half-widths',meshes,limits:'Authored basin, not surveyed geography. Checks concern shared depth and mesh construction; actual assembled terrain and visual reflections require browser review.'};
+const result={at:new Date().toISOString(),passed:true,probes,maximumParityError,centerDepth:7.535,shoreAuthority:lake.LAKE_SHORE_VERSION,shoreException:'Shared inlet incision: z -835 to -764, within 1.25 channel half-widths',meshes,limits:'Authored basin, not surveyed geography. Checks concern shared depth and mesh construction; actual assembled terrain and visual reflections require browser review.'};
 await fs.writeFile(path.join(out,'lake-depth-checks.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
