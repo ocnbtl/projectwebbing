@@ -4297,5 +4297,26 @@
     "roots": "output/releases/madagin-upland-structure-20260913/forest-stand-geometry.json",
     "decision": "output/releases/madagin-upland-structure-20260913/decision.json",
     "publication": "output/releases/madagin-upland-structure-20260913/publication.json"
+  },
+  "canopyMass20260913": {
+    "baseline": "d56e8d0e8bf8b371b2568cd3481da1a070ae43bd",
+    "versions": [
+      "branch-crowns-3",
+      "canopy-light-2",
+      "crown-shelter-1"
+    ],
+    "sources": "Existing authored branch graph, revised connected cupped leaf geometry and deeper crown layers. No new external asset or texture.",
+    "lighting": "Bounded ambient shade from actual overhead projected leaf triangle area on a 32x32x24 grid. Yaw invariant; renderer directional lighting/shadows remain active. Authored approximation, not measured scattering.",
+    "groundAuthority": "Unchanged normalized crown roots and existing terrain triangle placement; leaf bases remain attached to wood.",
+    "reference": "Fresh GoHawaii/HTA Wailua Falls photograph: connected overlapping crown mass, irregular edges and dark interiors. Not a geographic/species survey.",
+    "notClaimed": [
+      "Completed forest realism",
+      "Measured optical or botanical fidelity",
+      "Human equivalence",
+      "Physical-device or thermal qualification"
+    ],
+    "geometry": "output/releases/madagin-canopy-mass-20260913/crown-geometry.json",
+    "decision": "output/releases/madagin-canopy-mass-20260913/decision.json",
+    "publication": "output/releases/madagin-canopy-mass-20260913/publication.json"
   }
 }

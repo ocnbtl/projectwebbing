@@ -6,7 +6,7 @@ import {Box3, Color, DoubleSide, Float32BufferAttribute, FrontSide, Frustum, Ins
 import {createDistantLeaves} from "./compact-tree-lod";
 import {createBranchSprays} from "./branch-sprays";
 import {createCrownLayers} from "./crown-layers";
-import {shapeCanopyLight, CANOPY_LIGHT_VERSION} from "./canopy-light";
+import {shapeCanopyLight, bakeCrownShelter, CANOPY_LIGHT_VERSION,CROWN_SHELTER_VERSION} from "./canopy-light";
 import {registerForestCover} from "./forest-cover";
 import {valleyGroundOffset,useValleyGrounding} from "./valley-hollows";
 import {BRANCH_CROWNS_VERSION,createBranchCrown,selectBranchGrovePlacements} from "./branch-crowns";
@@ -110,7 +110,8 @@ const crownModels=new Map<boolean,Part[][]>();
 function preparedCrowns(stand:boolean) {
   const cached=crownModels.get(stand);if(cached)return cached;
   const parts=[0,1,2,3].map(variant=>{
-    const source=createBranchCrown(variant,stand),prepared=prepareTrees(source,source,true,false,false,false,true);
+    const source=createBranchCrown(variant,stand);bakeCrownShelter(source);
+    const prepared=prepareTrees(source,source,true,false,false,false,true);
     source.traverse(child=>{if(child instanceof Mesh){child.geometry.dispose();(child.material as MeshStandardMaterial).dispose();}});
     return prepared;
   });
@@ -192,7 +193,7 @@ export function RootedTrees({placements,zone,shadows,compact=false,efficient=fal
   useEffect(()=>{
     const element=document.documentElement;
     const previous=JSON.parse(element.dataset.madaginRootedTrees??"{}");
-    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,canopyLight:CANOPY_LIGHT_VERSION,instanceUpdates:"visibility-membership-1",leafCoverage:authoredCrown?"modeled-blades":"leaf-coverage-1",branchCrowns:authoredCrown?BRANCH_CROWNS_VERSION:undefined,compact,lod:authoredCrown?"branch-crown-continuous-1":compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:grovePlacements.length,sourcePlacementCount:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
+    element.dataset.madaginRootedTrees=JSON.stringify({...previous,[zone]:{version:ROOTED_TREES.version,canopyLight:CANOPY_LIGHT_VERSION,crownShelter:CROWN_SHELTER_VERSION,instanceUpdates:"visibility-membership-1",leafCoverage:authoredCrown?"modeled-blades":"leaf-coverage-1",branchCrowns:authoredCrown?BRANCH_CROWNS_VERSION:undefined,compact,lod:authoredCrown?"branch-crown-continuous-1":compact||efficient?"compact-crown-lod-1":"desktop-rooted-1",count:grovePlacements.length,sourcePlacementCount:placements.length,minHeight:Math.min(...groups.flat().map(t=>t.height)),maxHeight:Math.max(...groups.flat().map(t=>t.height)),sharedRootAndTransform:true}});
     onReady?.();
     return ()=>{const current=JSON.parse(element.dataset.madaginRootedTrees??"{}");delete current[zone];element.dataset.madaginRootedTrees=JSON.stringify(current);};
   },[authoredCrown,compact,efficient,groups,grovePlacements.length,placements.length,zone,onReady]);

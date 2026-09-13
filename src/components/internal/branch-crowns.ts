@@ -1,6 +1,6 @@
 import {BufferGeometry,Color,Float32BufferAttribute,Group,Mesh,MeshStandardMaterial,Vector3} from "three";
 
-export const BRANCH_CROWNS_VERSION="branch-crowns-2";
+export const BRANCH_CROWNS_VERSION="branch-crowns-3";
 type Surface={positions:number[];uvs:number[];colors:number[];indices:number[]};
 const surface=():Surface=>({positions:[],uvs:[],colors:[],indices:[]});
 const up=new Vector3(0,1,0);
@@ -30,24 +30,25 @@ export function createBranchCrown(variant:number,stand=false) {
   const leaf=(root:Vector3,angle:number,length:number,tilt:number,shade:number)=>{
     const d=new Vector3(Math.cos(angle),tilt,Math.sin(angle)).normalize(),side=new Vector3(-d.z,0,d.x).normalize();
     const color=new Color().setRGB(.12*shade,.195*shade,.055*shade),base=leaves.positions.length/3;
-    // Curved midrib with pointed base/tip and a cupped elliptical blade.
-    const outline=[[0,0],[.52,-.28],[1,0],[.52,.28]];
-    vertex(leaves,root.clone().addScaledVector(d,length*.52).addScaledVector(up,length*.065),.5,.52,color.clone().multiplyScalar(1.06));
+    // Rounded shoulders and a drooping tip replace the flat diamond outline.
+    // The base remains exactly attached to its twig; the center cups upward.
+    const outline=[[0,0],[.28,-.31],[.68,-.36],[1,0],[.68,.36],[.28,.31]];
+    vertex(leaves,root.clone().addScaledVector(d,length*.48).addScaledVector(up,length*.095),.5,.48,color.clone().multiplyScalar(1.04));
     for(const [t,w]of outline){
-      const p=root.clone().addScaledVector(d,length*t).addScaledVector(side,length*w).addScaledVector(up,Math.sin(t*Math.PI)*length*.02);
-      vertex(leaves,p,w/.58+.5,t,color.clone().multiplyScalar(.91+.09*t));
+      const p=root.clone().addScaledVector(d,length*t).addScaledVector(side,length*w).addScaledVector(up,(Math.sin(t*Math.PI)*.045-t*t*.07)*length);
+      vertex(leaves,p,w/.74+.5,t,color.clone().multiplyScalar(.92+.08*t));
     }
-    for(let i=0;i<4;i++)leaves.indices.push(base,base+1+i,base+1+(i+1)%4);
+    for(let i=0;i<6;i++)leaves.indices.push(base,base+1+i,base+1+(i+1)%6);
     blades++;
   };
   const shoot=(start:Vector3,end:Vector3,angle:number,shade:number)=>{
     shoots++;const mid=start.clone().lerp(end,.52).add(new Vector3(0,.012,0));
     branch([start,mid,end],.0017);
     for(let pair=0;pair<(stand?3:4);pair++){
-      const t=.12+pair*(stand?.3:.23),point=t<.52?start.clone().lerp(mid,t/.52):mid.clone().lerp(end,(t-.52)/.48),size=(stand?.054+random()*.023:.043+random()*.018)*(1-t*.2);
-      for(const sign of [-1,1])leaf(point,angle+sign*(.83+random()*.22),size,-.1+random()*.6,shade*(.86+random()*.2));
+      const t=.12+pair*(stand?.3:.23),point=t<.52?start.clone().lerp(mid,t/.52):mid.clone().lerp(end,(t-.52)/.48),size=(stand?.074+random()*.026:.058+random()*.021)*(1-t*.2);
+      for(const sign of [-1,1])leaf(point,angle+sign*(.76+random()*.46),size,-.45+random()*.95,shade*(.86+random()*.2));
     }
-    leaf(end,angle,stand?.056:.043,.24,shade);
+    leaf(end,angle,stand?.077:.060,-.12+random()*.5,shade);
   };
   const trunk=[new Vector3(0,0,0),new Vector3(.006,.13,-.008),new Vector3(-.016,.3,.012),new Vector3(.012,.46,.004),new Vector3(-.015,.61,.025)];
   branch(trunk,.025);
@@ -57,7 +58,7 @@ export function createBranchCrown(variant:number,stand=false) {
     const angle=i*2.399963+variant*.7+(random()-.5)*.23;
     const tier=Math.floor(i/5),ring=i/14,spread=[.36,.37,.3][tier]*(.75+random()*.5)*(variant===2?.86:1);
     const start=trunk[2+Math.min(2,tier)].clone();
-    const crownHeight=[.52,.7,.8][tier]+random()*.17+.055*Math.sin(angle*2+variant);
+    const crownHeight=[.44,.68,.82][tier]+random()*.17+.055*Math.sin(angle*2+variant);
     const end=new Vector3(Math.cos(angle)*spread+(tier===2?.065*Math.cos(variant+1):0),crownHeight,Math.sin(angle)*spread*(variant%2===0?.86:1.09));
     const elbow=start.clone().lerp(end,.5).add(new Vector3(0,.055,0));
     branch([start,start.clone().lerp(elbow,.55),elbow,elbow.clone().lerp(end,.55),end],.0145*(1-ring*.35));
@@ -71,13 +72,13 @@ export function createBranchCrown(variant:number,stand=false) {
       branch([anchor,bend,tip],.0036);
       for(let k=0;k<(stand?2:3);k++){
         const along=.28+k*(stand?.62:.31),base=along<.54?anchor.clone().lerp(bend,along/.54):bend.clone().lerp(tip,(along-.54)/.46),sway=a+(k%2?1:-1)*(.52+random()*.35);
-        const target=base.clone().add(new Vector3(Math.cos(sway)*(.055+random()*.04),.009+random()*.018,Math.sin(sway)*(.055+random()*.04)));
+        const target=base.clone().add(new Vector3(Math.cos(sway)*(.055+random()*.04),-.025+random()*.085,Math.sin(sway)*(.055+random()*.04)));
         shoot(base,target,sway,shade);
       }
     }
   }
   const geometry=(s:Surface)=>{
-    const g=new BufferGeometry();g.setAttribute('position',new Float32BufferAttribute(s.positions,3));g.setAttribute('uv',new Float32BufferAttribute(s.uvs,2));g.setAttribute('color',new Float32BufferAttribute(s.colors,3));g.setIndex(s.indices);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.branchCrowns={version:BRANCH_CROWNS_VERSION,variant,shoots,blades};return g;
+    const g=new BufferGeometry();g.setAttribute('position',new Float32BufferAttribute(s.positions,3));g.setAttribute('uv',new Float32BufferAttribute(s.uvs,2));g.setAttribute('color',new Float32BufferAttribute(s.colors,3));g.setIndex(s.indices);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.branchCrowns={version:BRANCH_CROWNS_VERSION,variant,shoots,blades,leafStride:7,leafRootIndex:1};return g;
   };
   const group=new Group();
   for(const [name,s]of [['wood',wood],['leaves',leaves]] as const){const material=new MeshStandardMaterial({vertexColors:true,roughness:.88});material.name=`authored-${name}`;group.add(new Mesh(geometry(s),material));}
