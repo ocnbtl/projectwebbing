@@ -4392,5 +4392,35 @@
       "Physical-device/thermal qualification",
       "Verified domain/mail delivery"
     ]
+  },
+  "cascadeStructure20260913": {
+    "versions": [
+      "cascade-streams-1",
+      "cascade-impact-1"
+    ],
+    "baseline": "0d06435130985ad31c5368e9b4ebacd1dc6657cb",
+    "runtime": [
+      "src/components/internal/falling-water.tsx",
+      "src/components/internal/plunge-basin.ts"
+    ],
+    "method": "Three unequal tube surfaces with physical gaps and cross-section normals; gravity-timed authored guide; stream endpoint foam and spray; irregular pool response",
+    "geometry": {
+      "beforeVertices": 6601,
+      "vertices": 10676,
+      "beforeTriangles": 12800,
+      "triangles": 20160,
+      "addedTriangles": 7360,
+      "exactLipRing": true,
+      "sharedImpactDatum": true
+    },
+    "newWorldAssets": 0,
+    "newTextures": 0,
+    "reference": "https://www.gohawaii.com/islands/kauai/regions/lihue/wailua-falls",
+    "licenseBoundary": "View-only reference; no image vendored",
+    "rejected": "Opaque first trial looked like rigid white cables and remains local-only",
+    "qualification": "Partial visual gain; mechanical bend, translucent mass, broader world realism and eight-second desktop startup remain open. No fluid simulation, terrain-clearance, human equivalence, physical-device or thermal qualification.",
+    "geometryProof": "output/releases/madagin-cascade-structure-20260913/geometry.json",
+    "decision": "output/releases/madagin-cascade-structure-20260913/decision.json",
+    "publication": "output/releases/madagin-cascade-structure-20260913/publication.json"
   }
 }

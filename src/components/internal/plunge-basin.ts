@@ -65,9 +65,10 @@ export function createPlungeWaterMaterial(sun:Vector3,lake?:ShaderMaterial) {
         vec2 direction=jet/max(r,.01);
         // Radial disturbances travel away from the impact, fading into the
         // slower cross ripples. The shore stays fixed, with no expanding disc.
-        float pulse=cos(r*2.1-uTime*3.2+sin(jet.x*.41)*.35);
+        float pulse=cos(r*1.7-uTime*2.4+sin(jet.x*.43+jet.y*.21)*1.6)
+          *(.56+.44*sin(jet.x*.51-jet.y*.37+uTime*.19));
         float impact=exp(-r/13.0)*smoothstep(.15,1.0,depth);
-        vec2 slope=direction*pulse*.065*impact
+        vec2 slope=direction*pulse*.036*impact
           +vec2(cos(vWorld.x*.83+vWorld.z*.29-uTime*.46),sin(vWorld.z*.91-vWorld.x*.37+uTime*.39))*.012;
         vec3 n=normalize(vec3(slope.x,1.0,slope.y));
         vec3 view=normalize(cameraPosition-vWorld);
@@ -83,8 +84,10 @@ export function createPlungeWaterMaterial(sun:Vector3,lake?:ShaderMaterial) {
         float glint=pow(max(dot(reflect(-uSunDirection,n),view),0.0),100.0);
         color+=vec3(.65,.71,.63)*glint*.14;
         float broken=sin(jet.x*1.3+sin(jet.y*.72-uTime*.8))*sin(jet.y*1.6+uTime*.93);
-        float foam=pow(max(0.0,pulse),8.0)*smoothstep(.1,.8,broken)*exp(-r/7.0);
-        color=mix(color,vec3(.48,.56,.5),foam*.3);
+        // The falling-stream layer owns aerated foam. This faint dispersed
+        // residue avoids drawing a second set of concentric white rings.
+        float foam=smoothstep(.55,.92,broken)*exp(-r/5.0);
+        color=mix(color,vec3(.48,.56,.5),foam*.07);
         gl_FragColor=vec4(aerialPerspective(color,vWorld),(1.0-exp(-depth*3.0))*mix(.94,1.0,fresnel));
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
