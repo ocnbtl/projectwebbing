@@ -4443,5 +4443,31 @@
     "decision": "output/releases/madagin-basin-catchments-20260913/decision.json",
     "publication": "output/releases/madagin-basin-catchments-20260913/publication.json",
     "qualification": "Partial integrated basin/forest gain. Broad planar/angular lake response, generic close foliage, mechanical waterfall and broader realism remain open. Initial desktop held heap exceeded 384 MiB; repeat below target does not erase it. Desktop startup over budget; no human/device/thermal/delivery qualification."
+  },
+  "lakeDepthResponse20260913": {
+    "baseline": "aacbfc63bae2dffdec04dc4feb2fef53ae32c872",
+    "versions": [
+      "lake-optics-4",
+      "lake-bank-4",
+      "lake-bed-light-1"
+    ],
+    "runtime": [
+      "src/components/internal/lake-optics.ts",
+      "src/components/internal/lake-reflection.tsx",
+      "src/components/internal/lake-shore.ts",
+      "src/components/internal/lake-bed.ts",
+      "src/components/internal/ridge-production-v116.tsx"
+    ],
+    "method": "Direction-projected planar reflections, filtered sheltered waves, three cove-local sediment fans in shared CPU/GLSL bed, transmitted surface over actual scene-lit bed.",
+    "newExternalAssets": 0,
+    "newTextures": 0,
+    "newTerrainTriangles": 0,
+    "reference": "https://www.gohawaii.com/islands/kauai/regions/lihue/wailua-falls",
+    "referenceUse": "Original HTA photograph viewed for water/bank relationships only; no image vendored. DLNR Kalalau freshly attributed, playback unavailable.",
+    "rejected": "Regular long-wave trial; bright continuous synthetic shelf; independently lit old bed revised.",
+    "geometry": "output/releases/madagin-lake-depth-response-20260913/geometry.json",
+    "decision": "output/releases/madagin-lake-depth-response-20260913/decision.json",
+    "publication": "output/releases/madagin-lake-depth-response-20260913/publication.json",
+    "qualification": "Partial optical/shore gain, not convincing integrated-water completion. Scalar extinction and planar direction lookup are approximations. Distant forms, material transition, desktop startup and independent qualification remain open."
   }
 }

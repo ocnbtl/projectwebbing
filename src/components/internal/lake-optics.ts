@@ -1,8 +1,8 @@
 import {DoubleSide, Matrix4, ShaderMaterial, Vector3} from "three";
 import {AERIAL_GLSL} from "./aerial-perspective";
-import {LAKE_SHORE_GLSL, LAKE_WATER_LEVEL} from "./lake-shore";
+import {LAKE_SHORE_GLSL} from "./lake-shore";
 
-export const LAKE_OPTICS_VERSION = "lake-optics-3";
+export const LAKE_OPTICS_VERSION = "lake-optics-4";
 
 // An authored sheltered-water spectrum in world metres. Individual travelling
 // modes use gravity dispersion; this is not a fluid or wind simulation.
@@ -11,15 +11,16 @@ vec2 lakeWindSlope(vec2 p,float depth) {
   vec2 slope=vec2(0.);
   for(int i=0;i<9;i++) {
     float index=float(i);
-    float angle=-.48+sin(index*2.399+1.7)*.94;
+    float angle=-.48+sin(index*2.399+1.7)*1.4;
     vec2 direction=vec2(cos(angle),sin(angle));
-    float k=.39*pow(1.68,index);
+    float k=.9+pow(index*.43,1.35);
     float phase=dot(p,direction)*k-sqrt(9.81*k)*uTime+index*2.13;
     float pixel=fwidth(phase);
     float resolved=exp(-.42*pixel*pixel);
-    slope+=direction*cos(phase)*.034*pow(.87,index)*resolved;
+    slope+=direction*cos(phase)*.012*mix(.8,1.,sin(index*1.91)*.5+.5)*resolved;
   }
-  return slope*mix(.22,1.,smoothstep(.08,1.8,depth));
+  float exposure=.78+.22*sin(p.x*.026+p.y*.013)*sin(p.y*.039-p.x*.016);
+  return slope*exposure*mix(.22,1.,smoothstep(.08,1.8,depth));
 }
 `;
 
@@ -39,7 +40,6 @@ export function createLakeWaterMaterial(sun:Vector3) {
     fragmentShader:`uniform float uTime;uniform vec3 uSunDirection;
     uniform sampler2D uLakeReflection;uniform mat4 uLakeReflectionMatrix;uniform float uLakeReflectionReady;
     varying vec3 vWorld;${LAKE_SHORE_GLSL}${AERIAL_GLSL}${LAKE_WIND}
-    float bedNoise(vec2 p){return sin(p.x*.57+sin(p.y*.41))*sin(p.y*.63-p.x*.17)*.5+.5;}
     void main(){
       float depth=max(0.,lakeShore(vWorld.xz).y);if(depth<=.002)discard;
       vec2 slope=lakeWindSlope(vWorld.xz,depth);
@@ -47,15 +47,20 @@ export function createLakeWaterMaterial(sun:Vector3) {
       vec3 viewDirection=normalize(cameraPosition-vWorld);
       float cosine=max(.02,dot(n,viewDirection));
       float reflectance=.0204+.9796*pow(1.-cosine,5.);
-      float pathLength=depth/max(.28,cosine);
-      vec3 transmission=exp(-vec3(.42,.29,.20)*pathLength);
-      vec3 sediment=mix(vec3(.079,.071,.044),vec3(.121,.107,.065),bedNoise(vWorld.xz));
-      vec3 column=sediment*transmission+vec3(.011,.028,.027)*(1.-transmission);
-      // Warp the reflected world point in metres before projection. Screen-UV
-      // offsets changed wave scale with view distance and dragged bank edges.
-      vec3 reflectedPoint=vec3(vWorld.x,${LAKE_WATER_LEVEL},vWorld.z);
-      reflectedPoint.xz-=slope*18.*smoothstep(.08,1.2,depth);
-      vec4 projected=uLakeReflectionMatrix*vec4(reflectedPoint,1.);
+      // Refract the viewing ray into the water (n=1.333). Grazing air views
+      // don't take an arbitrarily long path through a shallow submerged shelf.
+      float waterCosine=sqrt(1.-(1.-cosine*cosine)/(1.333*1.333));
+      float pathLength=depth/waterCosine;
+      // Composite over the actual shaded basin bed and submerged rocks, which
+      // already contain the terrain's normals and sediment variation. A single
+      // extinction coefficient is an approximation, not spectral refraction.
+      float transmission=exp(-.46*pathLength);
+      vec3 column=vec3(.014,.031,.026)*(1.-transmission);
+      // Project the reflected direction, not a small displacement of the water
+      // point. With a flat normal this is the ray from the mirrored camera to
+      // the surface; a wave changes its angle at every viewing distance.
+      vec3 ray=reflect(-viewDirection,n);
+      vec4 projected=uLakeReflectionMatrix*vec4(ray,0.);
       vec2 reflectionUv=projected.xy/projected.w;
       // Unresolved wave slopes integrate neighbouring reflection directions.
       // This footprint belongs only to water, not to the visible landscape.
@@ -65,15 +70,16 @@ export function createLakeWaterMaterial(sun:Vector3) {
         +texture2D(uLakeReflection,sampleUv-pixel).rgb
         +texture2D(uLakeReflection,sampleUv+vec2(pixel.x,-pixel.y)).rgb
         +texture2D(uLakeReflection,sampleUv+vec2(-pixel.x,pixel.y)).rgb)*.25;
-      vec3 ray=reflect(-viewDirection,n);
       vec3 sky=mix(vec3(.22,.34,.38),vec3(.046,.14,.23),smoothstep(-.05,.85,ray.y));
       float edge=min(min(reflectionUv.x,reflectionUv.y),min(1.-reflectionUv.x,1.-reflectionUv.y));
       float valid=smoothstep(.002,.016,edge)*step(.001,projected.w)*uLakeReflectionReady;
       vec3 environment=mix(sky,reflected,valid);
-      vec3 color=mix(column,environment,clamp(reflectance,.0204,.94));
+      float fresnel=clamp(reflectance,.0204,.94);
+      float opacity=1.-(1.-fresnel)*transmission;
+      vec3 color=(column*(1.-fresnel)+environment*fresnel)/max(.001,opacity);
       float glint=pow(max(0.,dot(reflect(-uSunDirection,n),viewDirection)),180.);
       color+=vec3(.83,.77,.64)*glint*.075;
-      gl_FragColor=vec4(aerialPerspective(color,vWorld),smoothstep(.005,.24,depth));
+      gl_FragColor=vec4(aerialPerspective(color,vWorld),opacity*smoothstep(.005,.12,depth));
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }`});

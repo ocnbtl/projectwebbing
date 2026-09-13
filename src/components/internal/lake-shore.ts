@@ -2,7 +2,7 @@ import {lakeInletCut, LAKE_INLET_GLSL} from "./channel-profile";
 
 // Authored basin, not a surveyed Hawaiian lake. One boundary/bed profile drives
 // terrain, surface optics and wet-ground material. Source assets remain intact.
-export const LAKE_SHORE_VERSION = "lake-bank-3";
+export const LAKE_SHORE_VERSION = "lake-bank-4";
 export const LAKE_CENTER = {x:-2.04,z:-884.765} as const;
 export const LAKE_RADIUS = {x:132.4,z:94.6} as const;
 export const LAKE_WATER_LEVEL = -47.9439;
@@ -52,13 +52,16 @@ export function lakeBedLevel(x:number,z:number,distance=lakeBoundaryDistance(x,z
   const angle=Math.atan2((z-LAKE_CENTER.z)/LAKE_RADIUS.z,(x-LAKE_CENTER.x)/LAKE_RADIUS.x);
   const breakup=Math.sin(angle*5-.7)*.56+Math.sin(angle*11+1.8)*.24+Math.sin(x*.071-z*.037)*.18;
   const offset=distance-1;
-  const core=Math.max(0,Math.min(1,(.82-distance)/.64));
-  const shelf = .09 + .075*(.5+.5*Math.sin(angle*3+.8));
+  const core=Math.max(0,Math.min(1,(.76-distance)/.62));
+  // Sediment fans broaden the submerged margin beneath sheltered coves. The
+  // same profile is used by terrain and water, with the dry bank untouched.
+  const shelf = .055 + lakeBoundaryFeature(angle,-2.38,.30)*.24
+    + lakeBoundaryFeature(angle,-1.46,.24)*.17 + lakeBoundaryFeature(angle,2.92,.30)*.19;
   const rock = .5+.5*Math.sin(angle*4-.6);
   const bank = Math.min(1,Math.max(0,offset)/.055);
   const upperBank = Math.min(1,Math.max(0,offset-.055)/.185);
   const bed=offset<=0
-    ? LAKE_WATER_LEVEL-.035-Math.pow(Math.min(1,-offset/shelf),.88)*(2.7+rock*1.2)-core*core*(3-2*core)*(4.8-rock*1.2)
+    ? LAKE_WATER_LEVEL-.035-Math.pow(Math.min(1,-offset/shelf),1.4)*(1.35+rock*1.35)-core*core*(3-2*core)*(6.15-rock*1.35)
     : LAKE_WATER_LEVEL-.035+bank*bank*(3-2*bank)*(2.1+rock*3.3)
       +upperBank*(2.8+breakup);
   if(z<=-835||z>=-764)return bed;
@@ -83,11 +86,11 @@ vec2 lakeShore(vec2 p) {
   float d=length(coordinate)/edge;
   float offset=d-1.0;
   float breakup=sin(a*5.0-.7)*.56+sin(a*11.0+1.8)*.24+sin(p.x*.071-p.y*.037)*.18;
-  float core=clamp((.82-d)/.64,0.,1.);
-  float shelf=.09+.075*(.5+.5*sin(a*3.+.8));
+  float core=clamp((.76-d)/.62,0.,1.);
+  float shelf=.055+lakeCove(a,-2.38,.30)*.24+lakeCove(a,-1.46,.24)*.17+lakeCove(a,2.92,.30)*.19;
   float rock=.5+.5*sin(a*4.-.6);
   float bank=clamp(offset/.055,0.,1.),upperBank=clamp((offset-.055)/.185,0.,1.);
-  float depth=offset<=0.0?.035+pow(min(1.0,-offset/shelf),.88)*(2.7+rock*1.2)+core*core*(3.-2.*core)*(4.8-rock*1.2)
+  float depth=offset<=0.0?.035+pow(min(1.0,-offset/shelf),1.4)*(1.35+rock*1.35)+core*core*(3.-2.*core)*(6.15-rock*1.35)
     :.035-bank*bank*(3.-2.*bank)*(2.1+rock*3.3)-upperBank*(2.8+breakup);
   return vec2(d,inletBedDepth(p.x,p.y,depth));
 }`;

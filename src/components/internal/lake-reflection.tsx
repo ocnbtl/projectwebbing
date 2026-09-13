@@ -20,7 +20,7 @@ export function LakeSurface({geometry,material,compact}:{geometry:BufferGeometry
     return {plane,reflector,inverse,size};
   },[compact]);
   useEffect(()=>{
-    document.documentElement.dataset.madaginLakeOptics=JSON.stringify({version:LAKE_OPTICS_VERSION,reflection:"actual-scene-planar",resolution:resources.size,plane:LAKE_WATER_LEVEL,depth:"shared-terrain-bed",surface:"filtered-nine-mode-sheltered-wind",registration:"world-metre-projection",authoredBasin:true});
+    document.documentElement.dataset.madaginLakeOptics=JSON.stringify({version:LAKE_OPTICS_VERSION,reflection:"actual-scene-planar",resolution:resources.size,plane:LAKE_WATER_LEVEL,depth:"shared-terrain-bed",surface:"filtered-nine-mode-sheltered-wind",registration:"reflected-direction-projection",authoredBasin:true});
     return ()=>{resources.reflector.dispose();resources.plane.dispose();delete document.documentElement.dataset.madaginLakeOptics;};
   },[resources]);
   return <mesh geometry={geometry} material={material} name="Madagin depth-coupled lake with actual terrain reflections"

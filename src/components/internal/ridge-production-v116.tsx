@@ -45,6 +45,7 @@ import {ShoreRubble} from "./shore-rubble";
 import {AERIAL_GLSL,AERIAL_PERSPECTIVE_VERSION,attachAerialPerspective} from "./aerial-perspective";
 import {LakeSurface} from "./lake-reflection";
 import {createLakeWaterMaterial} from "./lake-optics";
+import {createLakeBedMaterial} from "./lake-bed";
 import {CHANNEL_PROFILE_VERSION, riverCenter, riverHalfWidth, channelBedOffset, outflowCenter, outflowHalfWidth, outflowBedOffset} from "./channel-profile";
 import {createChannelWaterMaterial} from "./channel-water";
 import {CASCADE_START_Z, applyCascadeBed} from "./cascade-contact";
@@ -7005,61 +7006,6 @@ function createIntegratedLakeBedGeometry(angularSegments: number, radialSegments
   return geometry;
 }
 
-function createLakeBedMaterial() {
-  const material = new ShaderMaterial({
-    depthWrite: true,
-    side: DoubleSide,
-    toneMapped: true,
-    vertexShader: `
-      varying vec2 vLakeUv;
-      varying vec3 vWorld;
-      varying vec3 vNormal;
-      void main() {
-        vLakeUv = uv;
-        vec4 world = modelMatrix * vec4(position, 1.0);
-        vWorld = world.xyz;
-        vNormal = normalize(mat3(modelMatrix) * normal);
-        gl_Position = projectionMatrix * viewMatrix * world;
-      }
-    `,
-    fragmentShader: `
-      ${LAKE_SHORE_GLSL}
-      varying vec2 vLakeUv;
-      varying vec3 vWorld;
-      varying vec3 vNormal;
-      float bedHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      float bedNoise(vec2 p) {
-        vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(bedHash(i), bedHash(i + vec2(1.0, 0.0)), f.x),
-          mix(bedHash(i + vec2(0.0, 1.0)), bedHash(i + vec2(1.0)), f.x), f.y);
-      }
-      void main() {
-        if(lakeShore(vWorld.xz).y<=.04)discard;
-        vec2 centered = (vLakeUv - 0.5) * 2.0;
-        float radius = length(centered);
-        float macro = bedNoise(vWorld.xz * 0.037);
-        float grain = bedNoise(vWorld.xz * 0.19 + vec2(13.2, -8.4));
-        float pebble = bedNoise(vWorld.xz * 0.71 - vec2(4.7, 11.3));
-        float littoral = smoothstep(0.58, 0.96, radius);
-        float shore = smoothstep(0.82, 0.985, radius);
-        float organic = smoothstep(0.54, 0.83, radius) * (1.0 - smoothstep(0.88, 0.99, radius));
-        vec3 basalt = mix(vec3(0.045, 0.063, 0.055), vec3(0.105, 0.12, 0.083), macro);
-        vec3 sediment = mix(vec3(0.075, 0.09, 0.062), vec3(0.14, 0.132, 0.082), grain);
-        vec3 wetStone = mix(vec3(0.052, 0.068, 0.062), vec3(0.15, 0.142, 0.105), pebble);
-        vec3 color = mix(basalt, sediment, littoral * 0.73);
-        color = mix(color, wetStone, shore * (0.32 + pebble * 0.28));
-        color = mix(color, vec3(0.08, 0.115, 0.07), organic * (0.17 + macro * 0.18));
-        float light = 0.49 + max(dot(normalize(vNormal), normalize(vec3(${V116_SUN_DIRECTION.x}, ${V116_SUN_DIRECTION.y}, ${V116_SUN_DIRECTION.z}))), 0.0) * 0.41;
-        color *= light * (0.87 + grain * 0.16);
-        gl_FragColor = vec4(color, 1.0);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }
-    `,
-  });
-  material.name = "Madagin Candidate BY dark depth-graded volcanic tarn substrate";
-  return material;
-}
 
 function WaterNetwork({ mobile, reducedMotion, shadows, tier, zone }: { mobile: boolean; reducedMotion: boolean; shadows: boolean; tier: WorldQualityTier; zone: JourneyCheckpointId }) {
   // The complete hydrological chain stays resident from the first Ridge frame;
