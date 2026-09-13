@@ -44,11 +44,12 @@ import {ForestStands} from "./forest-stands";
 import {ShoreRubble} from "./shore-rubble";
 import {AERIAL_GLSL,AERIAL_PERSPECTIVE_VERSION,attachAerialPerspective} from "./aerial-perspective";
 import {LakeSurface} from "./lake-reflection";
+import {createLakeWaterMaterial} from "./lake-optics";
 import {CHANNEL_PROFILE_VERSION, riverCenter, riverHalfWidth, channelBedOffset, outflowCenter, outflowHalfWidth, outflowBedOffset} from "./channel-profile";
 import {createChannelWaterMaterial} from "./channel-water";
 import {CASCADE_START_Z, applyCascadeBed} from "./cascade-contact";
 import {FALLING_WATER, FallingSpray, fallingLipPoint, createFallingWaterGeometry, createFallingWaterMaterial, createFallingImpactMaterial} from "./falling-water";
-import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL } from "./ocean-wave-field";
+import { OCEAN_WAVE_FIELD, OCEAN_WIND_NORMAL, OCEAN_WAVE_VERSION } from "./ocean-wave-field";
 import {PLUNGE_BASIN_VERSION, PLUNGE_POOL_CENTER, PLUNGE_POOL_RADIUS, PLUNGE_POOL_LEVEL, plungeBoundaryScale, plungeDistance, plungeBedLevel, plungeTerrainWeight, isPlungeWetPlant, createPlungeWaterMaterial} from "./plunge-basin";
 import {LAKE_SHORE_VERSION, LAKE_CENTER, LAKE_RADIUS, LAKE_WATER_LEVEL, LAKE_SHORE_GLSL, lakeBoundaryScale, lakeBoundaryDistance, lakeBedLevel} from "./lake-shore";
 import { TERRAIN_SURFACE, useTerrainSurface } from "./terrain-surface";
@@ -6158,6 +6159,7 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
 
 function createWaterMaterial(kind: "watershed" | "river" | "headwater" | "cascade-source" | "pool" = "watershed") {
   const lake = kind === "watershed";
+  if (lake) return createLakeWaterMaterial(V116_SUN_DIRECTION);
   const river = kind === "river";
   const cascadeSource = kind === "cascade-source";
   const headwater = kind === "headwater" || cascadeSource;
@@ -7782,6 +7784,28 @@ function createOceanMaterial(meshSpacing: number) {
           mix(oceanHash(i + vec2(0.0, 1.0)), oceanHash(i + vec2(1.0)), f.x), f.y);
       }
       ${OCEAN_WIND_NORMAL}
+      float breakingPackets(vec2 p,float offshore) {
+        // Finite, overlapping shoreward events replace globally continuous
+        // white stripes. Each stretch of coast has its own onset and lifetime.
+        float cell=floor(p.y/72.0),foam=0.0;
+        for(int i=-1;i<=1;i++) {
+          float id=cell+float(i);
+          float seed=oceanHash(vec2(id,19.7));
+          float life=12.0+seed*3.0;
+          float cycle=uWaveTime/life+seed*7.0;
+          float event=floor(cycle),age=fract(cycle)*life;
+          float variation=oceanHash(vec2(id,event));
+          float center=(id+.5)*72.0+(variation-.5)*24.0;
+          float along=(p.y-center)/(19.0+variation*13.0);
+          float crestDistance=62.0-age*5.3+along*4.0+sin(along*2.3+seed*6.0)*2.2;
+          float behind=offshore-crestDistance;
+          float front=exp(-pow(behind/1.8,2.0));
+          float wake=smoothstep(0.0,2.0,behind)*exp(-max(0.0,behind)/8.0)*.34;
+          float alive=smoothstep(0.0,1.7,age)*(1.0-smoothstep(life-2.7,life,age));
+          foam+=(front+wake)*exp(-along*along*1.5)*alive;
+        }
+        return foam*smoothstep(0.0,4.0,offshore)*(1.0-smoothstep(55.0,78.0,offshore));
+      }
       void main() {
         if (vOceanDistance < -1.5) discard;
         vec3 normal = normalize(vWorldNormal);
@@ -7819,21 +7843,12 @@ function createOceanMaterial(meshSpacing: number) {
         color += vec3(0.075, 0.105, 0.11) * smoothstep(0.035, 0.12, vWaveSlope) * detailFade * 0.12;
         float crest = smoothstep(0.05, 0.13, vWaveSlope) * smoothstep(0.3, 1.25, vWaveHeight);
         color = mix(color, vec3(0.43, 0.63, 0.66), crest * smoothstep(0.54, 0.87, surfaceVariation) * 0.29);
-        float phase = surfPhase(vWorldPosition.xz, vOceanDistance);
-        float surf = surfEnvelope(vOceanDistance);
-        // A narrow breaking front followed by a broader, fading foam wake.
-        // Phase is continuous in time: no wrapped band can jump offshore.
-        float front = pow(max(0.0, sin(phase)), 8.0);
-        float wake = pow(max(0.0, sin(phase - 0.7)), 2.0);
         vec2 advected = vWorldPosition.xz - vec2(uWaveTime * 1.3, uWaveTime * 0.12);
         float foamNoise = oceanNoise(advected * 0.13);
         float foamVeins = oceanNoise(advected * vec2(0.21, 0.082));
         float brokenFoam = smoothstep(0.28, 0.74, foamNoise * 0.58 + foamVeins * 0.54);
-        float alongshoreBreakup = 0.48 + oceanNoise(vec2(vWorldPosition.z * 0.026, uWaveTime * 0.026)) * 0.52;
-        float wash = exp(-pow((vOceanDistance - 4.2) / 4.5, 2.0))
-          * (0.5 + sin(phase - 1.0) * 0.5);
-        float shoreFoam = ((front * 0.85 + wake * 0.27) * surf + wash * 0.32)
-          * brokenFoam * alongshoreBreakup * smoothstep(0.0, 2.2, vOceanDistance);
+        float shoreFoam = breakingPackets(vWorldPosition.xz,vOceanDistance)
+          * (.22+brokenFoam*.78);
         color = mix(color, vec3(0.63, 0.73, 0.69), clamp(shoreFoam * 1.16, 0.0, 0.88));
         vec3 sunDirection = normalize(uSunDirection);
         float broadGlint = pow(max(dot(reflected, sunDirection), 0.0), 118.0);
@@ -7910,9 +7925,10 @@ function Ocean({ mobile, reducedMotion, tier }: { mobile: boolean; reducedMotion
     };
     host.__MADAGIN_OCEAN_REALISM_CD__ = coastToHorizonEvidence;
     document.documentElement.dataset.madaginOceanWaveField = JSON.stringify({
-      version: "dispersive-surf-1", swellComponents: 6, windNormalComponents: 7,
+      version: OCEAN_WAVE_VERSION, swellComponents: 6, windNormalComponents: 7,
       dispersion: "omega=sqrt(9.81*k); world metres and seconds",
-      surf: "continuous shoreward fronts and decaying foam; authored envelope",
+      surf: "finite staggered shoreward breaking packets with peeling fronts and short decaying wakes; authored events",
+      groups: "carrier envelopes at half phase velocity with analytic normal gradients",
       meshSpacing: 6000 / segments, spatialFiltering: "mesh spacing and fragment derivatives",
       limitations: "No bathymetric solver, wave overturning, spray or scene reflection",
     });

@@ -4367,5 +4367,30 @@
       "Human equivalence",
       "Physical-device/thermal qualification"
     ]
+  },
+  "waterResponse20260913": {
+    "baseline": "75b553ae148ce14c43567fcfc11dc5d5c85ac9c6",
+    "versions": [
+      "lake-optics-3",
+      "ocean-groups-2"
+    ],
+    "sources": "Project-authored sheltered wind spectrum, registered rough reflection, shared depth optical column, grouped swell and finite breaking events. Existing scene reflection and terrain/water assets; no new external texture or geometry.",
+    "reference": {
+      "photo": "https://www.gohawaii.com/islands/kauai/regions/lihue/wailua-falls",
+      "observation": "Fresh original HTA photograph: quieter brown/green water gradients bounded by dark banks, unequal dense white columns with dark internal separation.",
+      "footage": "https://vimeo.com/1006821259",
+      "qualification": "DLNR Kalalau footage source verified; fresh playback unavailable. Earlier motion observations only as dated context. Authored humid Kauai-inspired world; existing light/weather retained."
+    },
+    "rejected": "Two cascade aeration/outer-skin trials became uniform white ribbons; original 75b553a waterfall restored exactly. Trials remain in local evidence.",
+    "cost": "Same external assets and terrain/water topology. Different shader workload measured against unchanged targets; no fluid simulation.",
+    "geometry": "output/releases/madagin-water-response-20260913/geometry-preservation.json",
+    "decision": "output/releases/madagin-water-response-20260913/decision.json",
+    "publication": "output/releases/madagin-water-response-20260913/publication.json",
+    "notClaimed": [
+      "Completed water realism",
+      "Human equivalence",
+      "Physical-device/thermal qualification",
+      "Verified domain/mail delivery"
+    ]
   }
 }

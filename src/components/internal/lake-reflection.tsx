@@ -4,6 +4,7 @@ import {useEffect, useMemo} from "react";
 import {BufferGeometry, Matrix4, Mesh, PlaneGeometry, ShaderMaterial} from "three";
 import {Reflector} from "three/examples/jsm/objects/Reflector.js";
 import {LAKE_WATER_LEVEL} from "./lake-shore";
+import {LAKE_OPTICS_VERSION} from "./lake-optics";
 
 // One low-resolution reflected scene, clipped at the actual lake plane. The
 // reflected terrain and plants are the same objects visitors fly through.
@@ -19,7 +20,7 @@ export function LakeSurface({geometry,material,compact}:{geometry:BufferGeometry
     return {plane,reflector,inverse,size};
   },[compact]);
   useEffect(()=>{
-    document.documentElement.dataset.madaginLakeOptics=JSON.stringify({version:"water-light-2",reflection:"actual-scene-planar",resolution:resources.size,plane:LAKE_WATER_LEVEL,depth:"shared-terrain-bed",surface:"crossed-metre-scale-wave-slopes",authoredBasin:true});
+    document.documentElement.dataset.madaginLakeOptics=JSON.stringify({version:LAKE_OPTICS_VERSION,reflection:"actual-scene-planar",resolution:resources.size,plane:LAKE_WATER_LEVEL,depth:"shared-terrain-bed",surface:"filtered-nine-mode-sheltered-wind",registration:"world-metre-projection",authoredBasin:true});
     return ()=>{resources.reflector.dispose();resources.plane.dispose();delete document.documentElement.dataset.madaginLakeOptics;};
   },[resources]);
   return <mesh geometry={geometry} material={material} name="Madagin depth-coupled lake with actual terrain reflections"

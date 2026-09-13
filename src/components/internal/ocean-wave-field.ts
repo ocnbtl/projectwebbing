@@ -1,5 +1,6 @@
 // World X/Z and seconds. Linear deep-water dispersion guides the offshore
 // field; the authored surf envelope is not a bathymetric fluid simulation.
+export const OCEAN_WAVE_VERSION = "ocean-groups-2";
 export const OCEAN_WAVE_FIELD = `
   uniform float uWaveTime;
   uniform float uMeshSpacing;
@@ -10,10 +11,19 @@ export const OCEAN_WAVE_FIELD = `
   }
   vec3 swell(vec2 p, vec2 k, float amplitude, float offset) {
     float magnitude = length(k);
-    float phase = dot(p, k) - sqrt(9.81 * magnitude) * uWaveTime + offset;
+    float frequency = sqrt(9.81 * magnitude);
+    float phase = dot(p, k) - frequency * uWaveTime + offset;
+    // The envelope travels at half the carrier's phase velocity. Its analytic
+    // gradient participates in the normal, so a group cannot become a tint band.
+    vec2 groupK = k * .23;
+    vec2 crossK = vec2(-k.y,k.x) * .31;
+    float groupPhase=dot(p,groupK)-frequency*.115*uWaveTime+offset*2.3;
+    float crossPhase=dot(p,crossK)+offset*3.7;
+    float envelope=.62+.23*sin(groupPhase)+.15*sin(crossPhase);
+    vec2 envelopeSlope=groupK*cos(groupPhase)*.23+crossK*cos(crossPhase)*.15;
     // Displacement must resolve on the selected mesh, including compact LOD.
     float resolved = 1.0 - smoothstep(2.0, 3.0, magnitude * uMeshSpacing);
-    return vec3(sin(phase), k * cos(phase)) * amplitude * resolved;
+    return vec3(sin(phase)*envelope, k*cos(phase)*envelope+sin(phase)*envelopeSlope) * amplitude * resolved;
   }
   vec3 oceanSwell(vec2 p) {
     return swell(p, vec2(0.067, -0.0209), 0.62, 0.8)
@@ -26,7 +36,8 @@ export const OCEAN_WAVE_FIELD = `
   float surfPhase(vec2 p, float distance) {
     // Increasing phase carries crests toward smaller offshore distance.
     return distance * 0.22 + uWaveTime * 0.72
-      + sin(p.y * 0.021) * 0.6 + sin(p.y * 0.053) * 0.24;
+      + sin(p.y * 0.017 + distance*.012) * 1.8
+      + sin(p.y * 0.043 - distance*.021) * .8;
   }
   float surfEnvelope(float distance) {
     return smoothstep(1.0, 12.0, distance)
@@ -41,7 +52,7 @@ export const OCEAN_WIND_NORMAL = `
     vec2 slope = vec2(0.0);
     for (int i = 0; i < 7; i++) {
       float index = float(i);
-      float angle = -0.35 + sin(index * 2.399) * 0.64;
+      float angle = -0.35 + sin(index * 2.399) * 1.05;
       vec2 direction = vec2(cos(angle), sin(angle));
       float k = 0.18 * pow(1.63, index);
       float phase = dot(p, direction) * k - sqrt(9.81 * k) * uWaveTime + index * 1.71;
