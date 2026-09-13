@@ -36,6 +36,7 @@ import {RIDGE_HEADWATER_VERSION, RIDGE_HEADWATER_START, RIDGE_HEADWATER_END, rid
 import {applyNativeCliff, nativeCliffWeight, NativeCliffPlants} from "./native-cliff";
 import {applyNativeValley, nativeValleyWeight, NativeValleyPlants} from "./native-valley";
 import {applyValleyHollows, valleyGroundOffset, useValleyGrounding, publishValleyGrounding} from "./valley-hollows";
+import {applyUplandLandform,publishUplandGrounding,useUplandGrounding,uplandGroundHeight,uplandWeight} from "./upland-landform";
 import {ROOTED_TREES, RootedTrees} from "./rooted-trees";
 import {JourneySun} from "./journey-sun";
 import {ForestStands} from "./forest-stands";
@@ -216,6 +217,7 @@ function TerrainChunk({ shadows, zone }: { shadows: boolean; zone: Exclude<V116Z
     const source = firstMeshIn(gltf.scene);
     return source ? createAlpineGeologyTerrainGeometry(source, "compact") : null;
   }, [gltf.scene, zone]);
+  useLayoutEffect(()=>{if(alpineGeometry)publishUplandGrounding(true);},[alpineGeometry]);
   const watershedGeometry = useMemo(() => {
     if (zone !== "valley") return null;
     gltf.scene.updateMatrixWorld(true);
@@ -254,7 +256,7 @@ function TerrainChunk({ shadows, zone }: { shadows: boolean; zone: Exclude<V116Z
   }, [alpineGeometry, material, watershedGeometry, zone]);
 
   return alpineGeometry ? (
-    <mesh geometry={alpineGeometry} material={material} name="Madagin v1.16 compact fractured Alpine terrain" receiveShadow />
+    <><mesh geometry={alpineGeometry} material={material} name="Madagin v1.16 compact fractured Alpine terrain" receiveShadow /><ForestStands geometry={alpineGeometry} compact shadows={shadows} zone="alpine"/></>
   ) : scene ? <primitive object={scene} /> : null;
 }
 
@@ -2043,6 +2045,9 @@ function createAlpineGeologyTerrainGeometry(source: Mesh, detail: "compact" | "d
     valleyBoundaryProtected: true,
     worldBoundsProtected: true,
   };
+  applyUplandLandform(geometry,detail==="compact");
+  reconcileCoincidentTerrainNormals(geometry);
+  geometry.userData.alpineGeology.uplandLandform=geometry.userData.uplandLandform;
   return geometry;
 }
 
@@ -2783,6 +2788,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
     const source = gltf.scene.getObjectByName(DETAILED_TERRAIN_OBJECTS.alpine);
     return source instanceof Mesh ? createAlpineGeologyTerrainGeometry(source, "detailed") : null;
   }, [connectedCoast, gltf.scene, zone]);
+  useLayoutEffect(()=>{if(alpineGeometry)publishUplandGrounding(false);},[alpineGeometry]);
   const seamField = useMemo<TerrainSeamField>(() => {
     if (!connectedCoast) return { ridge: [], valley: [] };
     gltf.scene.updateMatrixWorld(true);
@@ -3024,7 +3030,7 @@ function DetailedTerrainChunk({ connectedCoast = false, shadows, tier, zone }: {
   ) : ridgeGeometry ? (
     <mesh castShadow={shadows} geometry={ridgeGeometry} material={material} name="Madagin v1.16 detailed erosion-cut Ridge terrain" receiveShadow />
   ) : alpineGeometry ? (
-    <mesh geometry={alpineGeometry} material={material} name="Madagin v1.16 detailed fractured Alpine terrain" receiveShadow />
+    <><mesh geometry={alpineGeometry} material={material} name="Madagin v1.16 detailed fractured Alpine terrain" receiveShadow /><ForestStands geometry={alpineGeometry} shadows={shadows} zone="alpine"/></>
   ) : watershedGeometry ? (
     <mesh geometry={watershedGeometry} material={material} name="Madagin v1.16 integrated irregular watershed terrain" receiveShadow />
   ) : <primitive object={object} />}</>);
@@ -5813,7 +5819,21 @@ function EcologyChunk({ diagnosticMode, mobile, shadows, tier, zone }: {
   tier: WorldQualityTier;
   zone: V116Zone;
 }) {
-  const manifest = useEcologyManifest(zone);
+  const sourceManifest = useEcologyManifest(zone);
+  const uplandRevision=useUplandGrounding();
+  const manifest=useMemo(()=>{
+    void uplandRevision;
+    if(zone!=="alpine")return sourceManifest;
+    return {...sourceManifest,instances:sourceManifest.instances.filter(p=>{
+      // Replace isolated canopy inside the supported upland stand footprint;
+      // retain palms, ferns, deadwood and the surrounding established ecology.
+      return !(uplandWeight(p[2],p[4])>0&&[0,1,2,6,7,9].includes(p[0])&&p[1]<=1&&uplandGroundHeight(p[2],p[4],mobile||tier==="conservative")!==null);
+    }).map(p=>{
+      const ground=uplandGroundHeight(p[2],p[4],mobile||tier==="conservative");
+      if(ground===null)return p;
+      const next=[...p] as PlacementTuple;next[3]=ground-.12;return next;
+    })};
+  },[sourceManifest,zone,mobile,tier,uplandRevision]);
   const gltf = useLoader(GLTFLoader, SPECIES_URL, configureCompressedGltf);
   const parts = useMemo(() => prepareSpecies(gltf.scene), [gltf.scene]);
   const allDetailedPlacements = useMemo(

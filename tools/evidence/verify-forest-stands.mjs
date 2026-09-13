@@ -20,7 +20,8 @@ for(const compact of [false,true]){
  let valley=runtime.createIntegratedWatershedTerrainGeometry(vs,compact?[]:runtime.extractTerrainSeamSamples(as,-980),compact?[]:runtime.extractTerrainSeamSamples(rs,-315),compact?2:1,compact?0:1,compact?[]:runtime.extractTerrainSeamSamples(rs,-287),compact?0:2,compact?'compact':'desktop');
  if(compact){valley.setAttribute("uv1",valley.getAttribute("uv").clone());ridge.computeBoundingBox();const rm=new Mesh(ridge),edge=runtime.extractTerrainSeamSamples(rm,ridge.boundingBox.min.z),interior=runtime.extractTerrainSeamSamples(rm,edge[0].z+28);valley=runtime.createExactDetailedRidgeValleyWeldGeometry(valley,edge,interior,true);runtime.joinCompactAlpineBoundary(valley,as);}
  const waters=[runtime.createIntegratedLakeGeometry(128,32,0),runtime.createIntegratedRiverGeometry(compact?74:118,8),runtime.createWaterfallOutflowGeometry(compact?36:62,8),runtime.createWaterfallPlungeGeometry(64,12)].map(sampler);
- for(const [zone,g]of [['ridge',ridge],['valley',valley]]){
+ const alpine=runtime.createAlpineGeologyTerrainGeometry(as,compact?'compact':'detailed');
+ for(const [zone,g]of [['ridge',ridge],['valley',valley],['alpine',alpine]]){
   const ground=sampler(g),original=g.getAttribute('position').array.slice(),start=performance.now(),{placements}=createForestStandPlacements(g,compact,zone),generationMs=performance.now()-start;
   assert.ok(placements.length>50,zone+' must contain substantial stands');assert.deepEqual(g.getAttribute('position').array,original,'Planting never modifies the ground');
   let maximumRootError=0,wetRoots=0;

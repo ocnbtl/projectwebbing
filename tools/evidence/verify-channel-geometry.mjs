@@ -17,6 +17,7 @@ const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'
 const compile=async(name,source)=>{const p=path.join(out,name+'.mjs');await fs.writeFile(p,ts.transpileModule(source.replaceAll('./aerial-perspective','./fixture-aerial.mjs'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText);return import(pathToFileURL(p).href);};
 await compile('fixture-aerial',await fs.readFile(sourceRoot+'/src/components/internal/aerial-perspective.ts','utf8'));
 await compile('fixture-valley-hollows',await fs.readFile(sourceRoot+'/src/components/internal/valley-hollows.ts','utf8'));
+await compile('fixture-upland-landform',await fs.readFile(sourceRoot+'/src/components/internal/upland-landform.ts','utf8'));
 await compile('fixture-headwater',await fs.readFile(sourceRoot+'/src/components/internal/ridge-headwater.ts','utf8'));
 await compile('fixture-channel-profile',(await fs.readFile(sourceRoot+'/src/components/internal/channel-profile.ts','utf8')).replace('"./ridge-headwater"','"./fixture-headwater.mjs"'));
 await compile('fixture-lake-shore',(await fs.readFile(sourceRoot+'/src/components/internal/lake-shore.ts','utf8')).replace('"./channel-profile"','"./fixture-channel-profile.mjs"'));
@@ -40,6 +41,7 @@ const fixture=parsed.statements.map(n=>{
  if(n.importClause?.isTypeOnly)return '';
  if(n.moduleSpecifier.text==='./aerial-perspective')return n.getText().replace('./aerial-perspective','./fixture-aerial.mjs');
  if(n.moduleSpecifier.text==='./valley-hollows')return n.getText().replace('./valley-hollows','./fixture-valley-hollows.mjs');
+ if(n.moduleSpecifier.text==='./upland-landform')return n.getText().replace('./upland-landform','./fixture-upland-landform.mjs');
  if(n.moduleSpecifier.text==='./channel-profile')return n.getText().replace('./channel-profile','./fixture-channel-profile.mjs');
  if(n.moduleSpecifier.text==='./channel-water')return n.getText().replace('./channel-water','./fixture-channel-water.mjs');
  if(n.moduleSpecifier.text==='./cascade-contact')return n.getText().replace('./cascade-contact','./fixture-cascade.mjs');

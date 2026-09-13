@@ -4274,5 +4274,28 @@
     "geometry": "output/releases/madagin-water-landform-20260913/cascade-volume-geometry.json",
     "decision": "output/releases/madagin-water-landform-20260913/decision.json",
     "publication": "output/releases/madagin-water-landform-20260913/publication.json"
+  },
+  "uplandStructure20260913": {
+    "baseline": "c1d8b87ac0ea46b0b28c95e05cc8579112c46252",
+    "versions": [
+      "upland-catchments-1",
+      "valley-hollows-2",
+      "forest-stands-2"
+    ],
+    "sources": "Existing tracked terrain with authored dry drainage displacement; shared authored branch crowns and retained ecology. No new external asset or texture.",
+    "groundAuthority": "Uppermost actual final terrain triangles, separately for desktop and compact. Same topology and protected wet/chunk boundaries.",
+    "planting": "Terrain slope, altitude, irregular grove field, age variation and 24 m neighboring relief reject convex crests. Compact chooses a deterministic subset, sampled on its own terrain.",
+    "reference": "Fresh official GoHawaii/HTA Napali photograph: unequal ribs, recessed drainage, vegetation/rock separation. Authored humid composition, not surveyed geography.",
+    "superseded": "Slope-only upper stands cluttered summit ledges; neighboring relief rejection retains the exposed crest.",
+    "notClaimed": [
+      "Completed forest realism",
+      "Surveyed terrain or Hawaiian species distribution",
+      "Human equivalence",
+      "Physical-device or thermal qualification"
+    ],
+    "geometry": "output/releases/madagin-upland-structure-20260913/upland-geometry.json",
+    "roots": "output/releases/madagin-upland-structure-20260913/forest-stand-geometry.json",
+    "decision": "output/releases/madagin-upland-structure-20260913/decision.json",
+    "publication": "output/releases/madagin-upland-structure-20260913/publication.json"
   }
 }

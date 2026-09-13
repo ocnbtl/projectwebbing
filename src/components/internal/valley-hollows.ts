@@ -1,7 +1,7 @@
 import type {BufferGeometry} from "three";
 import {useSyncExternalStore} from "react";
 
-export const VALLEY_HOLLOWS_VERSION="valley-hollows-1";
+export const VALLEY_HOLLOWS_VERSION="valley-hollows-2";
 const smooth=(x:number)=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t);};
 type Profile="desktop"|"compact";
 const samplers=new Map<Profile,(x:number,z:number)=>number>();
@@ -68,7 +68,7 @@ export function valleyHollowOffset(x:number,z:number) {
   const second=-760-47*t-24*t*t;
   const branch=main-110*smooth((t-.26)/.65);
   // Broad concave profiles express landform scale; no periodic ridge noise.
-  const incision=Math.max(hollow(main,49+24*t,38),hollow(branch,31+16*t,29),hollow(second,42+19*t,32));
+  const incision=Math.max(hollow(main,45+27*t,64),hollow(branch,27+20*t,48),hollow(second,36+26*t,57));
   return -incision*boundary*wetProtection;
 }
 
