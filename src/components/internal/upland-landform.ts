@@ -1,14 +1,32 @@
 import {useSyncExternalStore} from "react";
 import type {BufferGeometry} from "three";
 
-export const UPLAND_LANDFORM_VERSION="upland-catchments-1";
+export const UPLAND_LANDFORM_VERSION="upland-catchments-2";
 const smooth=(x:number)=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t);};
-export const uplandWeight=(x:number,z:number)=>smooth((x-300)/70)*smooth((900-x)/90)*smooth((z+1610)/90)*smooth((-1008-z)/72);
+const easternWeight=(x:number,z:number)=>smooth((x-300)/70)*smooth((900-x)/90)*smooth((z+1610)/90)*smooth((-1008-z)/72);
+export const basinCatchmentWeight=(x:number,z:number)=>smooth((x+235)/55)*smooth((300-x)/65)*smooth((z+1460)/65)*smooth((-1012-z)/42);
+export const uplandWeight=(x:number,z:number)=>Math.max(easternWeight(x,z),basinCatchmentWeight(x,z));
+
+// Three unequal drainage families join toward the lake. Their tributaries
+// converge down the slope; retained ground between them makes the ridges.
+// This is an authored basin, not a reconstruction of the reference location.
+export function basinCatchmentOffset(x:number,z:number) {
+  const weight=basinCatchmentWeight(x,z);if(!weight)return 0;
+  const t=Math.max(0,Math.min(1,(z+1395)/350));
+  const hollow=(axis:number,width:number,depth:number)=>{
+    const q=Math.abs(x-axis)/width;return q<1?depth*(1-q*q)**2:0;
+  };
+  const west=-140+82*t-24*t*t,middle=-8+28*t,east=182-94*t+22*t*t;
+  const tributary=55*(1-smooth((t-.15)/.7));
+  const cut=Math.max(hollow(west,14+15*t,31),hollow(west-tributary,10+10*t,20),
+    hollow(middle,18+19*t,43),hollow(middle+tributary,11+12*t,25),hollow(east,16+20*t,36));
+  return -cut*weight;
+}
 
 // Unequal drainage heads converge downslope, retaining long shoulders between
 // them. The scale comes from Nāpali landform references, not surveyed geometry.
 export function uplandOffset(x:number,z:number) {
-  const weight=uplandWeight(x,z);if(!weight)return 0;
+  const weight=easternWeight(x,z);if(!weight)return 0;
   const t=Math.max(0,Math.min(1,(z+1520)/470));
   const trough=(axis:number,width:number,depth:number)=>{
     const q=Math.abs(x-axis)/width;return q<1?depth*(1-q*q)**2:0;
@@ -35,7 +53,12 @@ export function applyUplandLandform(geometry:BufferGeometry,compact:boolean) {
   const p=geometry.getAttribute("position"),index=geometry.index,at=(i:number)=>index?index.getX(i):i;
   let changed=0,maxIncision=0;
   for(let i=0;i<p.count;i++){
-    const delta=uplandOffset(p.getX(i),p.getZ(i));if(!delta)continue;
+    // Fade the new drainage into the low basin without cutting dry ground
+    // through the lake datum. Eastern accepted catchments retain their field.
+    const delta=uplandOffset(p.getX(i),p.getZ(i))
+      +Math.max(-Math.max(0,p.getY(i)+44)*.8,
+        basinCatchmentOffset(p.getX(i),p.getZ(i))*smooth((p.getY(i)+44)/45));
+    if(!delta)continue;
     p.setY(i,p.getY(i)+delta);changed++;maxIncision=Math.max(maxIncision,-delta);
   }
   p.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
@@ -58,6 +81,6 @@ export function applyUplandLandform(geometry:BufferGeometry,compact:boolean) {
     }
     return Number.isFinite(height)?height:null;
   });
-  geometry.userData.uplandLandform={version:UPLAND_LANDFORM_VERSION,compact,changed,maxIncision,addedTriangles:0,grounding:"uppermost-final-triangle",boundaryProtected:true};
+  geometry.userData.uplandLandform={version:UPLAND_LANDFORM_VERSION,compact,changed,maxIncision,addedTriangles:0,grounding:"uppermost-final-triangle",boundaryProtected:true,basinCatchments:"three-converging-families"};
   return geometry;
 }

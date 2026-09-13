@@ -4422,5 +4422,26 @@
     "geometryProof": "output/releases/madagin-cascade-structure-20260913/geometry.json",
     "decision": "output/releases/madagin-cascade-structure-20260913/decision.json",
     "publication": "output/releases/madagin-cascade-structure-20260913/publication.json"
+  },
+  "basinCatchments20260913": {
+    "baseline": "b55512db77ea165b5ac1caa790f0b77fc864cf3d",
+    "versions": [
+      "upland-catchments-2",
+      "forest-stands-3"
+    ],
+    "method": "Three converging drainage families reshape the existing rear Alpine basin. Retained woodland follows uppermost deformed triangles; a bounded supplemental lattice infills dry lake banks in existing forest instances.",
+    "runtime": [
+      "src/components/internal/upland-landform.ts",
+      "src/components/internal/forest-stands.tsx"
+    ],
+    "newTerrainTriangles": 0,
+    "newExternalAssets": 0,
+    "newTextures": 0,
+    "reference": "https://www.gohawaii.com/islands/kauai/regions/north-shore/napali-coast",
+    "referenceUse": "Original HTA photograph freshly viewed for drainage shape and lower woodland only. No dry palette transfer and no reference image vendored; humid authored landscape, not surveyed reconstruction.",
+    "geometry": "output/releases/madagin-basin-catchments-20260913/geometry.json",
+    "decision": "output/releases/madagin-basin-catchments-20260913/decision.json",
+    "publication": "output/releases/madagin-basin-catchments-20260913/publication.json",
+    "qualification": "Partial integrated basin/forest gain. Broad planar/angular lake response, generic close foliage, mechanical waterfall and broader realism remain open. Initial desktop held heap exceeded 384 MiB; repeat below target does not erase it. Desktop startup over budget; no human/device/thermal/delivery qualification."
   }
 }
