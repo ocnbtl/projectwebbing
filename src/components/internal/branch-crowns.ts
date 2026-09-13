@@ -1,16 +1,17 @@
 import {BufferGeometry,Color,Float32BufferAttribute,Group,Mesh,MeshStandardMaterial,Vector3} from "three";
 
-export const BRANCH_CROWNS_VERSION="branch-crowns-3";
+export const BRANCH_CROWNS_VERSION="branch-crowns-4";
 type Surface={positions:number[];uvs:number[];colors:number[];indices:number[]};
 const surface=():Surface=>({positions:[],uvs:[],colors:[],indices:[]});
 const up=new Vector3(0,1,0);
 
-// Two authored generic broadleaf forms. A continuous branching graph carries
-// the leaves: scaffold -> lateral -> shoot -> paired blades. It is not an
-// opaque volume fitted inside the old point cloud, nor a species claim.
+// Unequal ascending leaders fork into terminal foliage clusters. Every blade
+// remains attached to the wood graph; these are authored broadleaf forms, not
+// a reconstruction of a named Hawaiian species.
 export function createBranchCrown(variant:number,stand=false) {
   let seed=53183+variant*149;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-  const wood=surface(),leaves=surface();let shoots=0,blades=0;
+  const wood=surface(),leaves=surface(),clusterNormals:number[]=[];let shoots=0,blades=0;
+  let clusterCenter=new Vector3();
   const vertex=(s:Surface,p:Vector3,u:number,v:number,c:Color)=>{
     const i=s.positions.length/3;s.positions.push(p.x,p.y,p.z);s.uvs.push(u,v);s.colors.push(c.r,c.g,c.b);return i;
   };
@@ -39,46 +40,57 @@ export function createBranchCrown(variant:number,stand=false) {
       vertex(leaves,p,w/.74+.5,t,color.clone().multiplyScalar(.92+.08*t));
     }
     for(let i=0;i<6;i++)leaves.indices.push(base,base+1+i,base+1+(i+1)%6);
+    const outward=root.clone().sub(clusterCenter).addScaledVector(up,.035).normalize();
+    for(let i=0;i<7;i++)clusterNormals.push(outward.x,outward.y,outward.z);
     blades++;
   };
   const shoot=(start:Vector3,end:Vector3,angle:number,shade:number)=>{
     shoots++;const mid=start.clone().lerp(end,.52).add(new Vector3(0,.012,0));
     branch([start,mid,end],.0017);
-    for(let pair=0;pair<(stand?3:4);pair++){
-      const t=.12+pair*(stand?.3:.23),point=t<.52?start.clone().lerp(mid,t/.52):mid.clone().lerp(end,(t-.52)/.48),size=(stand?.074+random()*.026:.058+random()*.021)*(1-t*.2);
-      for(const sign of [-1,1])leaf(point,angle+sign*(.76+random()*.46),size,-.45+random()*.95,shade*(.86+random()*.2));
+    for(let blade=0;blade<(stand?6:8);blade++){
+      const t=.08+blade*(stand?.15:.115),point=t<.52?start.clone().lerp(mid,t/.52):mid.clone().lerp(end,(t-.52)/.48),size=(stand?.058+random()*.022:.046+random()*.015)*(1-t*.2);
+      const sign=blade%2?1:-1;
+      leaf(point,angle+sign*(.7+random()*.65),size,-.65+random()*1.4,shade*(.86+random()*.2));
     }
-    leaf(end,angle,stand?.077:.060,-.12+random()*.5,shade);
+    leaf(end,angle,stand?.061:.048,-.25+random()*.6,shade);
   };
   const trunk=[new Vector3(0,0,0),new Vector3(.006,.13,-.008),new Vector3(-.016,.3,.012),new Vector3(.012,.46,.004),new Vector3(-.015,.61,.025)];
   branch(trunk,.025);
-  // Unequal lower, middle and emergent scaffolds occupy a deep crown. The
-  // previous single shallow umbrella exposed nearly every trunk in a stand.
-  for(let i=0;i<15;i++){
-    const angle=i*2.399963+variant*.7+(random()-.5)*.23;
-    const tier=Math.floor(i/5),ring=i/14,spread=[.36,.37,.3][tier]*(.75+random()*.5)*(variant===2?.86:1);
-    const start=trunk[2+Math.min(2,tier)].clone();
-    const crownHeight=[.44,.68,.82][tier]+random()*.17+.055*Math.sin(angle*2+variant);
-    const end=new Vector3(Math.cos(angle)*spread+(tier===2?.065*Math.cos(variant+1):0),crownHeight,Math.sin(angle)*spread*(variant%2===0?.86:1.09));
-    const elbow=start.clone().lerp(end,.5).add(new Vector3(0,.055,0));
-    branch([start,start.clone().lerp(elbow,.55),elbow,elbow.clone().lerp(end,.55),end],.0145*(1-ring*.35));
-    for(let j=0;j<(stand?4:6);j++){
-      const t=.25+j*(stand?.23:.145),anchor=elbow.clone().lerp(end,Math.max(0,(t-.5)*2));
-      if(t<.5)anchor.copy(start).lerp(elbow,t*2);
-      const side=j%2?1:-1,a=angle+side*(.55+random()*.6),extent=.085+random()*.08;
-      const tip=anchor.clone().add(new Vector3(Math.cos(a)*extent,.025+random()*.055,Math.sin(a)*extent));
-      const shade=.55+.34*ring;
-      const bend=anchor.clone().lerp(tip,.54).addScaledVector(up,.014);
-      branch([anchor,bend,tip],.0036);
-      for(let k=0;k<(stand?2:3);k++){
-        const along=.28+k*(stand?.62:.31),base=along<.54?anchor.clone().lerp(bend,along/.54):bend.clone().lerp(tip,(along-.54)/.46),sway=a+(k%2?1:-1)*(.52+random()*.35);
-        const target=base.clone().add(new Vector3(Math.cos(sway)*(.055+random()*.04),-.025+random()*.085,Math.sin(sway)*(.055+random()*.04)));
-        shoot(base,target,sway,shade);
+  const onPath=(a:Vector3,b:Vector3,c:Vector3,t:number)=>t<.5?a.clone().lerp(b,t*2):b.clone().lerp(c,(t-.5)*2);
+  for(let i=0;i<8;i++){
+    const angle=i*2.399963+variant*.7+(random()-.5)*.8;
+    const t=.15+random()*.8,start=trunk[2].clone().lerp(trunk[3],t);
+    const spread=(.235+random()*.13)*(variant===2?.86:1);
+    const end=new Vector3(Math.cos(angle)*spread,.43+i/7*.34+random()*.12,Math.sin(angle)*spread*(variant%2===0?.86:1.09));
+    const elbow=start.clone().lerp(end,.45).addScaledVector(up,.06);
+    branch([start,elbow,end],.014*(1-i/7*.3));
+    // Unequal forks occupy separate lobes, with open seams between some lobes.
+    // Foliage is carried near the ends rather than tiled along a flat tier.
+    for(let fork=0;fork<3;fork++){
+      const anchor=onPath(start,elbow,end,.44+fork*.26);
+      const a=angle+(fork-1)*(.7+random()*.6),extent=.095+random()*.07;
+      const tip=anchor.clone().add(new Vector3(Math.cos(a)*extent,-.04+random()*.13,Math.sin(a)*extent));
+      const bend=anchor.clone().lerp(tip,.5).addScaledVector(up,.025);
+      branch([anchor,bend,tip],.005);
+      clusterCenter=tip.clone().addScaledVector(up,.025);
+      const shade=.66+tip.y*.2;
+      for(let twig=0;twig<(stand?4:6);twig++){
+        const base=onPath(anchor,bend,tip,.6+random()*.4),azimuth=a+twig*2.399963+random()*.7;
+        const radius=.06+random()*.055;
+        const target=tip.clone().add(new Vector3(Math.cos(azimuth)*radius,-.07+random()*.15,Math.sin(azimuth)*radius));
+        const middle=base.clone().lerp(target,.5).addScaledVector(up,.016);
+        branch([base,middle,target],.0024);
+        for(let shootIndex=0;shootIndex<(stand?2:3);shootIndex++){
+          const root=onPath(base,middle,target,.35+shootIndex*(stand?.6:.3));
+          const direction=azimuth+(shootIndex-1)*(.7+random()*.5);
+          const shootEnd=root.clone().add(new Vector3(Math.cos(direction)*(.042+random()*.03),-.03+random()*.075,Math.sin(direction)*(.042+random()*.03)));
+          shoot(root,shootEnd,direction,shade);
+        }
       }
     }
   }
   const geometry=(s:Surface)=>{
-    const g=new BufferGeometry();g.setAttribute('position',new Float32BufferAttribute(s.positions,3));g.setAttribute('uv',new Float32BufferAttribute(s.uvs,2));g.setAttribute('color',new Float32BufferAttribute(s.colors,3));g.setIndex(s.indices);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.branchCrowns={version:BRANCH_CROWNS_VERSION,variant,shoots,blades,leafStride:7,leafRootIndex:1};return g;
+    const g=new BufferGeometry();g.setAttribute('position',new Float32BufferAttribute(s.positions,3));g.setAttribute('uv',new Float32BufferAttribute(s.uvs,2));g.setAttribute('color',new Float32BufferAttribute(s.colors,3));if(s===leaves)g.setAttribute('clusterNormal',new Float32BufferAttribute(clusterNormals,3));g.setIndex(s.indices);g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();g.userData.branchCrowns={version:BRANCH_CROWNS_VERSION,variant,shoots,blades,clusters:24,leafStride:7,leafRootIndex:1};return g;
   };
   const group=new Group();
   for(const [name,s]of [['wood',wood],['leaves',leaves]] as const){const material=new MeshStandardMaterial({vertexColors:true,roughness:.88});material.name=`authored-${name}`;group.add(new Mesh(geometry(s),material));}

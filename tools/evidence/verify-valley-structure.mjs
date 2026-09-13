@@ -48,7 +48,7 @@ for(const variant of [0,1,2,3])for(const stand of [false,true]){
  const centers=[];for(let i=0;i<wood.count;i+=4){const c=new Vector3();for(let j=0;j<4;j++)c.add(new Vector3().fromBufferAttribute(wood,i+j));centers.push(c.multiplyScalar(1/4));}
  let maximumLeafAttachmentError=0;for(let i=1;i<leaves.count;i+=7){const p=new Vector3().fromBufferAttribute(leaves,i);let nearest=Infinity;for(let j=1;j<centers.length;j++){const a=centers[j-1],d=centers[j].clone().sub(a),t=Math.max(0,Math.min(1,p.clone().sub(a).dot(d)/Math.max(1e-12,d.lengthSq())));nearest=Math.min(nearest,p.distanceTo(a.clone().addScaledVector(d,t)));}maximumLeafAttachmentError=Math.max(maximumLeafAttachmentError,nearest);}
  assert.ok(maximumLeafAttachmentError<.00001,'Leaf bases must meet the branch centerline');
- assert.ok(triangles<24000);report.crowns.push({variant,stand,size:box.getSize(new Vector3()).toArray(),triangles,maximumLeafAttachmentError,source:'authored continuous branch and blade geometry'});
+ assert.ok(triangles<34000);report.crowns.push({variant,stand,size:box.getSize(new Vector3()).toArray(),triangles,maximumLeafAttachmentError,source:'authored continuous branch and blade geometry'});
 }
 const input=JSON.parse(await fs.readFile('public/world/v116/ecology-valley-v1.16.json')).instances;
 const original=JSON.stringify(input),selected=selectBranchGrovePlacements(input),reverse=selectBranchGrovePlacements([...input].reverse());

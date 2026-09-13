@@ -1,6 +1,6 @@
 import {BufferGeometry, Mesh, Object3D, Vector3} from "three";
 
-export const CANOPY_LIGHT_VERSION="canopy-light-2";
+export const CANOPY_LIGHT_VERSION="canopy-light-3";
 export const CROWN_SHELTER_VERSION="crown-shelter-1";
 
 // A bounded ambient shelter bake from the actual modeled leaf area above each
@@ -54,21 +54,25 @@ export function bakeCrownShelter(tree:Object3D){
   }
 }
 
-// Leaves remain the source geometry. A crown-scale normal field gives the
-// collection a shared light-facing side while retaining local blade curvature.
+// The source branch graph supplies each terminal cluster's outward direction.
+// Its lobes share light locally, while blade curvature and a weak whole-crown
+// field retain fine response and a coherent light-facing side at a distance.
 // This is an authored foliage-lighting approximation, not measured scattering.
 export function shapeCanopyLight(geometry:BufferGeometry){
   geometry.computeBoundingBox();
   const bounds=geometry.boundingBox!,center=bounds.getCenter(new Vector3()),size=bounds.getSize(new Vector3());
-  const positions=geometry.getAttribute("position"),normals=geometry.getAttribute("normal"),envelope=new Vector3(),blade=new Vector3();
+  const positions=geometry.getAttribute("position"),normals=geometry.getAttribute("normal"),clusters=geometry.getAttribute("clusterNormal"),envelope=new Vector3(),blade=new Vector3(),cluster=new Vector3();
   for(let i=0;i<positions.count;i++){
     envelope.set((positions.getX(i)-center.x)/Math.max(size.x*.5,.01),(positions.getY(i)-center.y)/Math.max(size.y*.5,.01)*.65+.3,(positions.getZ(i)-center.z)/Math.max(size.z*.5,.01));
     if(envelope.lengthSq()<1e-6)envelope.set(0,1,0);else envelope.normalize();
-    blade.fromBufferAttribute(normals,i);if(blade.dot(envelope)<0)blade.negate();
-    blade.multiplyScalar(.42).addScaledVector(envelope,.58).normalize();
+    if(clusters)cluster.fromBufferAttribute(clusters,i);else cluster.copy(envelope);
+    blade.fromBufferAttribute(normals,i);if(blade.dot(cluster)<0)blade.negate();
+    blade.multiplyScalar(.42).addScaledVector(cluster,.4).addScaledVector(envelope,.18).normalize();
     normals.setXYZ(i,blade.x,blade.y,blade.z);
   }
   normals.needsUpdate=true;
-  geometry.userData.canopyLight={version:CANOPY_LIGHT_VERSION,geometryChanged:false,leafNormalWeight:.42};
+  geometry.userData.canopyLight={version:CANOPY_LIGHT_VERSION,geometryChanged:false,leafNormalWeight:.42,clusterNormalWeight:clusters?.4:0,crownNormalWeight:clusters?.18:.58};
+  // Construction data is baked once into normals; it does not need a GPU buffer.
+  geometry.deleteAttribute("clusterNormal");
   return geometry;
 }

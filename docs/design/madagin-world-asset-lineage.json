@@ -4318,5 +4318,27 @@
     "geometry": "output/releases/madagin-canopy-mass-20260913/crown-geometry.json",
     "decision": "output/releases/madagin-canopy-mass-20260913/decision.json",
     "publication": "output/releases/madagin-canopy-mass-20260913/publication.json"
+  },
+  "crownArchitecture20260913": {
+    "baseline": "93cf044824a3bf74ac2761f88ed8c51d4cfb5cb0",
+    "versions": [
+      "branch-crowns-4",
+      "canopy-light-3",
+      "crown-shelter-1"
+    ],
+    "sources": "Authored unequal ascending leaders, terminal forks and smaller alternating cupped blades; no new external asset or texture.",
+    "lighting": "Per-terminal-cluster outward directions combined with actual blade normals and weak whole-crown field. Existing actual overhead projected-leaf shelter retained. Approximation, not measured scattering.",
+    "groundAuthority": "Unchanged source-root normalization and existing terrain triangle grounding. Every blade attaches to the wood graph.",
+    "reference": "Official HTA Wailua Falls photograph freshly inspected for uneven connected crown groups and irregular foliage edges. Earlier NPS forest motion review is dated context.",
+    "cost": "33,088 close / 13,216 stand triangles; about 58–59% model increase. Fixed host budgets unchanged.",
+    "notClaimed": [
+      "Completed forest realism",
+      "Measured botanical or optical fidelity",
+      "Human equivalence",
+      "Physical-device or thermal qualification"
+    ],
+    "geometry": "output/releases/madagin-crown-architecture-20260913/crown-geometry.json",
+    "decision": "output/releases/madagin-crown-architecture-20260913/decision.json",
+    "publication": "output/releases/madagin-crown-architecture-20260913/publication.json"
   }
 }
