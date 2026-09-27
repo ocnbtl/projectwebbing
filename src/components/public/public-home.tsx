@@ -1,431 +1,220 @@
 "use client";
 
-import type { MotionValue } from "motion/react";
-import { motion, useMotionValue, useTransform } from "motion/react";
+/* THESIS: Madagin's craft is visible in a single material wordmark and actual work.
+   OWN-WORLD: cool white, charcoal, rounded milk glass, spare navigation, large type.
+   STORY: recognize a web studio, inspect two real projects, prepare a useful brief.
+   FIRST VIEWPORT: masthead, full-width sculpture, small offer, fold-crossing descriptor.
+   FORM: user-pinned liquid specimen; composition A with C's cursor reveal. */
+
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
-import { MadaginMark, PublicFooter, PublicHeader } from "@/components/public/public-chrome";
-import { PublicWorldLoader } from "@/components/public/public-world-loader";
-import { WorldReadingPanel } from "./world-reading-panel";
-import { readWorldLocation, worldLocationHash, type ReadingDestination, type ReadingLocation } from "@/lib/world-reading-location";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
+import { PublicFooter, PublicHeader } from "./public-chrome";
 import type { ContentItem } from "@/lib/content-types";
-import { method, promise, standards } from "@/lib/brand";
-import type { WorldViewId } from "@/lib/world-manifest";
+import type { LiquidRenderer } from "./liquid-renderer";
 import styles from "./public-home.module.css";
 
-const letters = [..."MADAGIN"];
-const valueWindows = [
-  [0.3, 0.43],
-  [0.45, 0.58],
-  [0.6, 0.73],
-  [0.75, 0.9],
-] as const;
+type Connection = EventTarget & { saveData?: boolean };
+function subscribeMotion(callback: () => void) {
+  const query = matchMedia("(prefers-reduced-motion: reduce)");
+  const connection = (navigator as Navigator & { connection?: Connection }).connection;
+  query.addEventListener("change", callback);
+  connection?.addEventListener("change", callback);
+  return () => { query.removeEventListener("change", callback); connection?.removeEventListener("change", callback); };
+}
+function motionAvailable() {
+  return !matchMedia("(prefers-reduced-motion: reduce)").matches && !(navigator as Navigator & { connection?: Connection }).connection?.saveData;
+}
+const serverMotion = () => false;
 
-const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
-const guidedJourneyDurationMs = 36_000;
-const oceanHoldDurationMs = 5_000;
-const skyHoldDurationMs = 5_000;
-
-type JourneyPlaybackState = "waiting" | "playing" | "paused" | "complete";
-
-type PublicJourneyTelemetry = {
-  elapsedMs: number;
-  progress: number;
-  state: JourneyPlaybackState;
-  view: WorldViewId;
-};
-
-function subscribeToReducedMotion(onChange: () => void) {
-  const mediaQuery = window.matchMedia(reducedMotionQuery);
-  mediaQuery.addEventListener("change", onChange);
-  return () => mediaQuery.removeEventListener("change", onChange);
+function useVisibleTicker(ref: RefObject<HTMLElement | null>, count: number, duration: number, playing: boolean) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (!playing || !ref.current || count < 2) return;
+    let visible = false;
+    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
+    observer.observe(ref.current);
+    const timer = window.setInterval(() => {
+      if (visible && !document.hidden) setIndex(current => (current + 1) % count);
+    }, duration);
+    return () => { observer.disconnect(); window.clearInterval(timer); };
+  }, [ref, count, duration, playing]);
+  return index;
 }
 
-function getReducedMotionPreference() {
-  return window.matchMedia(reducedMotionQuery).matches;
+function LiquidWordmark({ enabled, paused, onHover }: { enabled: boolean; paused: boolean; onHover: (index: number | null) => void }) {
+  const host = useRef<HTMLDivElement>(null);
+  const controller = useRef<LiquidRenderer | null>(null);
+  const pausedRef = useRef(paused);
+  useEffect(() => { pausedRef.current = paused; controller.current?.setPaused(paused); }, [paused]);
+  useEffect(() => {
+    if (!enabled || !host.current || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2)) return;
+    const container = host.current;
+    const abort = new AbortController();
+    let disposed = false;
+    let renderer: LiquidRenderer | null = null;
+    import("./liquid-renderer").then(module => module.createLiquidRenderer(container, onHover, abort.signal)).then(created => {
+      if (disposed) { created.dispose(); return; }
+      renderer = created; controller.current = created; created.setPaused(pausedRef.current);
+    }).catch(() => { container.dataset.ready = "false"; });
+    const contextLost = (event: Event) => { event.preventDefault(); renderer?.setPaused(true); container.dataset.ready = "false"; onHover(null); };
+    container.addEventListener("webglcontextlost", contextLost, true);
+    return () => {
+      disposed = true; abort.abort(); renderer?.dispose(); controller.current = null;
+      container.removeEventListener("webglcontextlost", contextLost, true);
+    };
+  }, [enabled, onHover]);
+  return <a className={styles.wordmarkLink} href="#work" aria-label="Madagin. Explore selected work">
+    <div ref={host} className={styles.letterStage} data-liquid-stage="">
+      <span className={styles.staticWordmark} aria-hidden="true">MADAGIN</span>
+    </div>
+  </a>;
 }
 
-function getServerReducedMotionPreference() {
-  return false;
+function PortfolioCursor({ projects, letter, enabled, root }: { projects: ContentItem[]; letter: number | null; enabled: boolean; root: RefObject<HTMLDivElement | null> }) {
+  const cursor = useRef<HTMLDivElement>(null);
+  const lastPoint = useRef({ x: 0, y: 0 });
+  const [cut, setCut] = useState(0);
+  const preview = letter !== null && projects.length > 0;
+  useEffect(() => {
+    if (!cursor.current) return;
+    // Raycasting can open a preview after the mouse has stopped moving.
+    const { x, y } = lastPoint.current;
+    const px = preview ? Math.max(148, Math.min(innerWidth - 148, x)) : x;
+    const py = preview ? Math.max(105.5, Math.min(innerHeight - 105.5, y)) : y;
+    cursor.current.style.transform = `translate3d(${px}px,${py}px,0) translate(-50%,-50%)`;
+  }, [preview]);
+  useEffect(() => {
+    if (!preview || !enabled) return;
+    const timer = window.setInterval(() => { if (!document.hidden) setCut(value => value + 1); }, 1800);
+    return () => window.clearInterval(timer);
+  }, [preview, enabled]);
+  useEffect(() => {
+    const pointerQuery = matchMedia("(hover: hover) and (pointer: fine)");
+    if (!enabled || !pointerQuery.matches || !root.current) return;
+    const element = cursor.current;
+    const surface = root.current;
+    if (!element) return;
+    const move = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      lastPoint.current = { x: event.clientX, y: event.clientY };
+      const target = event.target as HTMLElement;
+      const input = target.closest("input,textarea,select,[contenteditable=true]");
+      element.dataset.visible = input ? "false" : "true";
+      element.dataset.link = target.closest("a,button") ? "true" : "false";
+      // The enlarged window stays in the viewport; the small pointer stays exact.
+      const width = element.dataset.preview === "true" ? 280 : 24;
+      const height = element.dataset.preview === "true" ? 195 : 24;
+      const x = width > 24 ? Math.max(width / 2 + 8, Math.min(innerWidth - width / 2 - 8, event.clientX)) : event.clientX;
+      const y = height > 24 ? Math.max(height / 2 + 8, Math.min(innerHeight - height / 2 - 8, event.clientY)) : event.clientY;
+      element.style.transform = `translate3d(${x}px,${y}px,0) translate(-50%,-50%)`;
+      surface.dataset.customCursor = input ? "false" : "true";
+    };
+    const hide = () => { element.dataset.visible = "false"; surface.dataset.customCursor = "false"; };
+    const keyboard = (event: KeyboardEvent) => { if (event.key === "Tab" || event.key === "Escape") hide(); };
+    surface.addEventListener("pointermove", move);
+    surface.addEventListener("pointerleave", hide);
+    window.addEventListener("blur", hide);
+    window.addEventListener("keydown", keyboard);
+    return () => { surface.removeEventListener("pointermove", move); surface.removeEventListener("pointerleave", hide); window.removeEventListener("blur", hide); window.removeEventListener("keydown", keyboard); hide(); };
+  }, [enabled, root]);
+  const project = projects[cut % Math.max(projects.length, 1)];
+  return <div ref={cursor} className={styles.cursor} data-preview={preview && enabled} aria-hidden="true">
+    {project?.coverImageUrl ? <div className={styles.cursorMedia}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={project.coverImageUrl} alt="" width={280} height={165} loading="lazy" />
+      <span>{project.title}<span>↗</span></span>
+    </div> : null}
+  </div>;
 }
 
-function useHydrationSafeReducedMotion() {
-  return useSyncExternalStore(
-    subscribeToReducedMotion,
-    getReducedMotionPreference,
-    getServerReducedMotionPreference,
-  );
-}
+const descriptors = ["the excellent", "the superb", "the iconic"];
+const verbs = ["express", "reveal", "shape"];
+const nouns = ["ideas", "character", "ambition"];
 
-function DraggedLetter({ letter, index, progress, motionOff }: {
-  letter: string;
-  index: number;
-  progress: MotionValue<number>;
-  motionOff: boolean;
-}) {
-  const delay = index * 0.01;
-  const scaleY = useTransform(progress, [0, 0.12 + delay, 0.2 + delay, 0.28 + delay], [1, 1, 2.5 - index * 0.03, 1]);
-  const y = useTransform(progress, [0, 0.12 + delay, 0.2 + delay, 0.28 + delay], ["0vh", "0vh", "10vh", "-3vh"]);
-  return <motion.span aria-hidden="true" className={styles.letter} style={motionOff ? undefined : { scaleY, y }}>{letter}</motion.span>;
-}
-
-function ValueScene({ name, question, index, progress, motionOff }: {
-  name: string;
-  question: string;
-  index: number;
-  progress: MotionValue<number>;
-  motionOff: boolean;
-}) {
-  const [start, end] = valueWindows[index];
-  const opacity = useTransform(progress, [start - 0.02, start, end - 0.03, end], [0, 1, 1, 0]);
-  const y = useTransform(progress, [start - 0.04, start, end], [28, 0, -18]);
-  return (
-    <motion.article className={`${styles.valueScene} ${index % 2 ? styles.valueRight : styles.valueLeft}`} style={motionOff ? undefined : { opacity, y }}>
-      <span className={styles.valueNumber}>0{index + 1}</span>
-      <h2>{name}</h2>
-      <p>{question}</p>
-    </motion.article>
-  );
-}
-
-function LandformIcon({ index }: { index: number }) {
-  const paths = [
-    "M0 48V35L12 25L23 31L38 8L53 27L63 20L80 38V48Z",
-    "M0 48V31H18V20H34V6H49V25H64V16H80V48Z",
-    "M0 48V36L18 36L28 23L42 23L52 9L64 9L80 26V48Z",
-    "M0 48V39L17 32L35 34L48 15L62 27L80 22V48Z",
-  ];
-  return <svg className={styles.landformIcon} viewBox="0 0 80 48" aria-hidden="true"><path d={paths[index]} /></svg>;
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
-}
-
-function ContentPreview({ item, route }: { item: ContentItem; route: "projects" | "blog" }) {
-  return (
-    <article className={styles.contentPreview}>
-      {item.coverImageUrl ? (
-        // Publishing accepts committed /media paths and public HTTPS images.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.coverImageUrl} alt="" loading="lazy" />
-      ) : <div className={styles.contentLandform} aria-hidden="true" />}
-      <div>
-        <span>{item.details || formatDate(item.publishedOn)}</span>
-        <h3>{item.title}</h3>
-        <p>{item.summary}</p>
-        <Link href={`/${route}/${item.slug}`}>Read {route === "projects" ? "the story" : "the note"}</Link>
-      </div>
-    </article>
-  );
+function Capabilities({ playing }: { playing: boolean }) {
+  const section = useRef<HTMLElement>(null);
+  const verb = useVisibleTicker(section, verbs.length, 3400, playing);
+  const noun = useVisibleTicker(section, nouns.length, 4900, playing);
+  return <section ref={section} className={styles.capabilities} aria-labelledby="capability-title" data-playing={playing}>
+    <div className={styles.glassSurface} aria-hidden="true">
+      <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+        <defs><filter id="liquid-light" x="-20%" y="-20%" width="140%" height="140%" colorInterpolationFilters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency=".006 .011" numOctaves="2" seed="8" result="height" />
+          <feGaussianBlur in="height" stdDeviation="3" result="softHeight" />
+          <feSpecularLighting in="softHeight" surfaceScale="26" specularConstant="1.7" specularExponent="22" lightingColor="#ffffff" result="light"><feDistantLight azimuth="-35" elevation="48" /></feSpecularLighting>
+          <feComposite in="light" in2="light" operator="arithmetic" k1="0" k2="1" k3="0" k4="0" />
+        </filter></defs>
+        <rect x="-100" y="-100" width="1640" height="1100" filter="url(#liquid-light)" />
+      </svg>
+    </div>
+    <div className={styles.capabilityIntro}><p>Built around your business.</p><p>Strategy, design, development.<br />One considered whole.</p></div>
+    <h2 id="capability-title">
+      <span>Websites that</span>
+      <span className={styles.srOnly}>express ideas, reveal character, and shape ambition.</span>
+      <span className={styles.wordColumns} aria-hidden="true">
+        <span className={styles.wordColumn}><span key={verb}>{verbs[verb]}</span><span className={styles.columnArrow}>⌄</span></span>
+        <span className={styles.wordColumn}><span key={noun}>{nouns[noun]}</span><span className={styles.columnArrow}>⌄</span></span>
+      </span>
+    </h2>
+    <div className={styles.capabilityBottom}><p>Make the complicated clear. Give the work a point of view. Make the next step feel natural.</p><Link href="/about">How we work <span aria-hidden="true">↗</span></Link></div>
+  </section>;
 }
 
 export function PublicHome({ projects, posts }: { projects: ContentItem[]; posts: ContentItem[] }) {
-  const journeyRef = useRef<HTMLElement>(null);
-  const motionToggleUsed = useRef(false);
-  const elapsedJourneyMs = useRef(0);
-  const activeViewRef = useRef<WorldViewId>("journey");
-  const pointerStart = useRef<{ id: number; x: number; y: number } | null>(null);
-  const prefersReducedMotion = useHydrationSafeReducedMotion();
-  const [useLessMotion, setUseLessMotion] = useState(false);
-  const [worldReady, setWorldReady] = useState(false);
-  const [activeView, setActiveView] = useState<WorldViewId>("journey");
-  const [readingLocation, setReadingLocation] = useState<ReadingLocation | null>(null);
-  const reading = readingLocation?.destination ?? null;
-  const readingRef = useRef<ReadingLocation | null>(null);
-  const readingScrollPositions = useRef(new Map<string, number>());
-  const returnFocus = useRef<HTMLElement | null>(null);
-  const [playbackState, setPlaybackState] = useState<JourneyPlaybackState>("waiting");
-  const motionOff = Boolean(prefersReducedMotion || useLessMotion);
-  const worldProgress = useMotionValue(0);
-  const wordFilter = useTransform(worldProgress, [0, 0.08, 0.2, 1], ["opacity(1)", "opacity(1)", "opacity(0)", "opacity(0)"]);
-  const shadeFilter = useTransform(worldProgress, [0, 0.05, 0.28, 0.92, 1], ["opacity(0.2)", "opacity(0.2)", "opacity(0.04)", "opacity(0.22)", "opacity(0.22)"]);
-
-  const publishJourneyTelemetry = useCallback((progress: number, state: JourneyPlaybackState, view: WorldViewId) => {
-    const detail: PublicJourneyTelemetry = {
-      elapsedMs: Math.round(elapsedJourneyMs.current),
-      progress: Math.round(progress * 10_000) / 10_000,
-      state,
-      view,
-    };
-    const host = window as Window & { __MADAGIN_PUBLIC_JOURNEY__?: PublicJourneyTelemetry };
-    host.__MADAGIN_PUBLIC_JOURNEY__ = detail;
-    document.documentElement.dataset.madaginJourneyProgress = detail.progress.toFixed(4);
-    document.documentElement.dataset.madaginJourneyState = state;
-    document.documentElement.dataset.madaginJourneyView = view;
-  }, []);
-
-  const selectView = useCallback((view: WorldViewId) => {
-    activeViewRef.current = view;
-    setActiveView(view);
-  }, []);
-
-  const pauseJourney = useCallback(() => {
-    setPlaybackState((current) => current === "complete" ? current : "paused");
-  }, []);
-
-  const navigateReading = useCallback((next: ReadingLocation | null, updateHistory = true) => {
-    if (next && !readingRef.current) returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    readingRef.current = next;
-    setReadingLocation(next);
-    pauseJourney();
-    selectView(next?.destination ?? "journey");
-    if (updateHistory) {
-      const hash = worldLocationHash(next);
-      if (window.location.hash !== hash) window.history.pushState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
-    }
-    if (!next) returnFocus.current?.focus({ preventScroll: true });
-  }, [pauseJourney, selectView]);
-
-  useEffect(() => {
-    const readLocation = () => navigateReading(readWorldLocation(window.location.hash), false);
-    window.addEventListener("popstate", readLocation);
-    window.addEventListener("hashchange", readLocation);
-    // Hydration starts with ordinary semantic content; then restore a shared
-    // immersive link without asking Next to replace the mounted world.
-    if (readWorldLocation(window.location.hash)) queueMicrotask(readLocation);
-    return () => {
-      window.removeEventListener("popstate", readLocation);
-      window.removeEventListener("hashchange", readLocation);
-    };
-  }, [navigateReading]);
-
-  const replayJourney = useCallback(() => {
-    navigateReading(null);
-    elapsedJourneyMs.current = 0;
-    worldProgress.set(0);
-    selectView("journey");
-    setPlaybackState(worldReady ? "playing" : "waiting");
-  }, [navigateReading, selectView, worldProgress, worldReady]);
-
-  const resumeJourney = useCallback(() => {
-    navigateReading(null);
-    if (playbackState === "complete") {
-      replayJourney();
-      return;
-    }
-    selectView("journey");
-    setPlaybackState(worldReady ? "playing" : "waiting");
-  }, [navigateReading, playbackState, replayJourney, selectView, worldReady]);
-
-  const openGuidedView = useCallback((view: ReadingDestination) => {
-    navigateReading({ destination: view });
-  }, [navigateReading]);
-
-  const returnToJourney = useCallback(() => {
-    // Hold the exact saved rail position while the camera turns back. Resume is explicit.
-    navigateReading(null);
-  }, [navigateReading]);
-
-  const handleWorldReady = useCallback(() => {
-    setWorldReady(true);
-    setPlaybackState((current) => current === "waiting" ? "playing" : current);
-  }, []);
-
-  const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!event.isPrimary || event.button !== 0) return;
-    if ((event.target as HTMLElement).closest("a, button, [data-world-content]")) return;
-    pointerStart.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }, []);
-
-  const handlePointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
-    const start = pointerStart.current;
-    pointerStart.current = null;
-    if (!start || start.id !== event.pointerId || (event.target as HTMLElement).closest("a, button, [data-world-content]")) return;
-    const deltaX = event.clientX - start.x;
-    const deltaY = event.clientY - start.y;
-    if (Math.abs(deltaX) < 48 && Math.abs(deltaY) < 48) return;
-    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < 0) openGuidedView("about");
-    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) openGuidedView("blog");
-    if (Math.abs(deltaY) >= Math.abs(deltaX) && deltaY < 0) openGuidedView("projects");
-  }, [openGuidedView]);
-
-  useEffect(() => {
-    publishJourneyTelemetry(worldProgress.get(), playbackState, activeView);
-  }, [activeView, playbackState, publishJourneyTelemetry, worldProgress]);
-
-  useEffect(() => {
-    if (motionOff || playbackState !== "playing" || !worldReady) {
-      publishJourneyTelemetry(worldProgress.get(), playbackState, activeViewRef.current);
-      return;
-    }
-
-    let frame = 0;
-    let previousAt = performance.now();
-    let telemetryAt = previousAt;
-    const resetFrameClock = () => { previousAt = performance.now(); };
-    document.addEventListener("visibilitychange", resetFrameClock);
-    const totalDurationMs = guidedJourneyDurationMs + oceanHoldDurationMs + skyHoldDurationMs;
-    const tick = (now: number) => {
-      const delta = document.hidden ? 0 : Math.max(0, now - previousAt);
-      previousAt = now;
-      elapsedJourneyMs.current = Math.min(totalDurationMs, elapsedJourneyMs.current + delta);
-      const elapsed = elapsedJourneyMs.current;
-      if (elapsed < guidedJourneyDurationMs) {
-        if (activeViewRef.current !== "journey") selectView("journey");
-        worldProgress.set(elapsed / guidedJourneyDurationMs);
-      } else if (elapsed < guidedJourneyDurationMs + oceanHoldDurationMs) {
-        worldProgress.set(1);
-        if (activeViewRef.current !== "about") selectView("about");
-      } else if (elapsed < totalDurationMs) {
-        worldProgress.set(1);
-        if (activeViewRef.current !== "projects") selectView("projects");
-      } else {
-        worldProgress.set(1);
-        selectView("journey");
-        setPlaybackState("complete");
-        publishJourneyTelemetry(1, "complete", "journey");
-        return;
-      }
-      if (now - telemetryAt >= 200) {
-        telemetryAt = now;
-        publishJourneyTelemetry(worldProgress.get(), "playing", activeViewRef.current);
-      }
-      frame = window.requestAnimationFrame(tick);
-    };
-    frame = window.requestAnimationFrame(tick);
-    return () => {
-      document.removeEventListener("visibilitychange", resetFrameClock);
-      window.cancelAnimationFrame(frame);
-    };
-  }, [motionOff, playbackState, publishJourneyTelemetry, selectView, worldProgress, worldReady]);
-
-  useEffect(() => {
-    if (!motionToggleUsed.current) return;
-    const root = document.documentElement;
-    const previousBehavior = root.style.scrollBehavior;
-    root.style.scrollBehavior = "auto";
-    journeyRef.current?.scrollIntoView({ block: "start" });
-    root.style.scrollBehavior = previousBehavior;
-  }, [useLessMotion]);
-
-  return (
-    <>
-      <a className="skip-link" href="#site-content">Skip the mountain journey</a>
-      <main>
-        <section ref={journeyRef} className={`${styles.journey} ${motionOff ? styles.motionOff : ""}`} aria-labelledby="madagin-title">
-          <div
-            className={`${styles.stage} ${reading && !motionOff ? styles.reading : ""}`}
-            data-public-journey-state={playbackState}
-            onPointerDown={handlePointerDown}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={() => { pointerStart.current = null; }}
-            onKeyDown={event => { if (event.key === "Escape" && reading) returnToJourney(); }}
-          >
-            <PublicHeader tone="dark" onDestination={worldReady && !motionOff ? openGuidedView : undefined} activeDestination={reading ?? undefined} />
-            <div className={styles.worldPlate}>
-              <PublicWorldLoader activeView={activeView} motionOff={motionOff} onReady={handleWorldReady} progress={worldProgress} />
-            </div>
-            <motion.div className={styles.stageShade} style={motionOff ? undefined : { filter: shadeFilter }} />
-            {worldReady && !motionOff ? <div className={styles.worldInput} tabIndex={0} role="group"
-              aria-label="Explore the world: left arrow for About, up arrow for Projects, right arrow for Blog. Space pauses or resumes the journey."
-              onKeyDown={event => {
-                const view = { ArrowLeft: "about", ArrowUp: "projects", ArrowRight: "blog" }[event.key] as ReadingDestination | undefined;
-                if (view) { event.preventDefault(); openGuidedView(view); }
-                if (event.key === " ") { event.preventDefault(); if (playbackState === "playing") pauseJourney(); else resumeJourney(); }
-              }} /> : null}
-            <h1 id="madagin-title" className={styles.srTitle}>Madagin</h1>
-            <p className={styles.heroPromise}><span className={styles.studioLabel}>Founder-led web studio.</span>{promise}</p>
-            <motion.div className={styles.wordmark} role="img" aria-label="Madagin" style={motionOff ? undefined : { filter: wordFilter }}>
-              {letters.map((letter, index) => <DraggedLetter index={index} key={`${letter}-${index}`} letter={letter} motionOff={motionOff} progress={worldProgress} />)}
-            </motion.div>
-            <div className={styles.valueStack} aria-label="The standards Madagin works toward">
-              {standards.map((standard, index) => <ValueScene index={index} key={standard.name} motionOff={motionOff} name={standard.name} progress={worldProgress} question={standard.question} />)}
-            </div>
-            {reading && !motionOff && worldReady ? <WorldReadingPanel destination={reading} slug={readingLocation?.slug} projects={projects} posts={posts} onReturn={returnToJourney}
-              onSelect={slug => navigateReading({ destination: reading, ...(slug ? { slug } : {}) })} scrollPositions={readingScrollPositions} /> : null}
-            {reading && (motionOff || !worldReady) ? <p className={styles.readingFallback}><Link href={`/${reading}${readingLocation?.slug ? `/${readingLocation.slug}` : ""}`}>Open {readingLocation?.slug ? "this story" : reading} →</Link></p> : null}
-            {!motionOff && worldReady ? (
-              <div className={styles.journeyControls} aria-label="Mountain journey controls">
-                <div className={styles.viewControls}>
-                  <button aria-pressed={reading === "about"} data-journey-action="ocean" onClick={() => openGuidedView("about")} type="button">← About</button>
-                  <button aria-pressed={reading === "projects"} data-journey-action="sky" onClick={() => openGuidedView("projects")} type="button">↑ Projects</button>
-                  <button aria-pressed={reading === "blog"} data-journey-action="blog" onClick={() => openGuidedView("blog")} type="button">Blog →</button>
-                  {activeView !== "journey" ? <button data-journey-action="continue" onClick={returnToJourney} type="button">Return</button> : null}
-                </div>
-                <div className={styles.playbackControls}>
-                  <button
-                    data-journey-action={playbackState === "playing" ? "pause" : "play"}
-                    onClick={playbackState === "playing" ? pauseJourney : resumeJourney}
-                    type="button"
-                  >
-                    {playbackState === "playing" ? "Pause" : playbackState === "complete" ? "Play again" : "Resume"}
-                  </button>
-                  <button data-journey-action="replay" onClick={replayJourney} type="button">Replay</button>
-                  <a href="#site-content">Skip</a>
-                </div>
-                <div className={styles.journeyProgress} aria-hidden="true"><motion.span style={{ scaleX: worldProgress }} /></div>
-                <p className={styles.gestureHint}>{reading ? "Scroll the panel to read · Return keeps your place" : "Drag left to About · up to Projects · right to Blog"}</p>
-              </div>
-            ) : null}
-            <button
-              aria-pressed={useLessMotion}
-              className={styles.motionControl}
-              onClick={() => {
-                motionToggleUsed.current = true;
-                navigateReading(null);
-                setUseLessMotion((current) => !current);
-              }}
-              type="button"
-            >
-              {useLessMotion ? "Use full motion" : "Use less motion"}
-            </button>
-            <div className={styles.scrollCue} aria-hidden="true"><span /> The journey begins automatically</div>
-            <p className={styles.srTitle} aria-live="polite">
-              {playbackState === "playing" ? "The guided mountain journey is playing." : playbackState === "complete" ? "The guided mountain journey is complete." : "The guided mountain journey is paused."}
-            </p>
-          </div>
-        </section>
-
-        <div id="site-content" className={styles.editorial}>
-          <section className={styles.promiseSection} aria-labelledby="promise-title">
-            <h2 id="promise-title">{promise}</h2>
-            <p>Strategy, design, and development for businesses ready to show up differently.</p>
-          </section>
-
-          <section className={styles.projectsSection} aria-labelledby="projects-title">
-            <div className={styles.sectionHeading}><h2 id="projects-title">Selected projects</h2><Link href="/projects">All projects</Link></div>
-            {projects.length ? (
-              <div className={styles.contentList}>{projects.slice(0, 2).map((project) => <ContentPreview item={project} key={project.id} route="projects" />)}</div>
-            ) : (
-              <div className={styles.emptyWork}>
-                <div aria-hidden="true" className={styles.emptyTerrain} />
-                <div><h3>Sites people remember.</h3><p>The first project stories are being prepared. Nothing made up in the meantime.</p></div>
-              </div>
-            )}
-          </section>
-
-          <section className={styles.methodSection} aria-labelledby="method-title">
-            <div className={styles.sectionHeading}><h2 id="method-title">Method</h2><span>01—04</span></div>
-            <div className={styles.methodSequence}>
-              {method.map((step, index) => (
-                <article key={step.name}>
-                  <div className={styles.methodTopline}><span>0{index + 1}</span><LandformIcon index={index} /></div>
-                  <h3>{step.name}</h3><p>{step.description}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          {posts.length > 0 ? <section className={styles.journalSection} aria-labelledby="journal-title">
-            <div className={styles.sectionHeading}><h2 id="journal-title">From the desk</h2><Link href="/blog">The blog</Link></div>
-            <div className={styles.journalList}>{posts.slice(0, 3).map((post) => <article key={post.id}><span>{formatDate(post.publishedOn)}</span><h3><Link href={`/blog/${post.slug}`}>{post.title}</Link></h3><p>{post.summary}</p></article>)}</div>
-          </section> : null}
-
-          <section className={styles.nameSection} aria-labelledby="name-title">
-            <div className={styles.nameMark}><MadaginMark compact /></div>
-            <h2 id="name-title">Madagin comes from <em>made again.</em></h2>
-            <p>We rethink and rebuild how your business shows up online—so the site catches up to the work.</p>
-          </section>
-
-          <section className={styles.closing} id="contact" aria-labelledby="closing-title">
-            <h2 id="closing-title">Let&apos;s talk.</h2>
-            <div><p>If the business has moved forward and the site hasn&apos;t, that&apos;s a good place to start.</p><Link href="/contact">Start a conversation</Link></div>
-          </section>
+  const root = useRef<HTMLDivElement>(null);
+  const hero = useRef<HTMLElement>(null);
+  const motion = useSyncExternalStore(subscribeMotion, motionAvailable, serverMotion);
+  const [paused, setPaused] = useState(false);
+  const [letter, setLetter] = useState<number | null>(null);
+  const onHover = useCallback((value: number | null) => setLetter(value), []);
+  const playing = motion && !paused;
+  const descriptor = useVisibleTicker(hero, descriptors.length, 4200, playing);
+  return <div ref={root} className={styles.site} data-playing={playing}>
+    <a className="skip-link" href="#site-content">Skip to content</a>
+    <PublicHeader tone="light" />
+    <main id="site-content">
+      <section ref={hero} className={styles.hero} aria-labelledby="studio-name">
+        <h1 id="studio-name" className={styles.srOnly}>Madagin. A founder-led web studio.</h1>
+        <div className={styles.heroTopline}><span>Independent web design & development</span><span>Considered from the first idea.</span></div>
+        <LiquidWordmark enabled={motion} paused={paused} onHover={onHover} />
+        <div className={styles.heroUnder}><p>A website that catches up<br />to your business.</p><a href="#work">Explore the work <span aria-hidden="true">↓</span></a>
+          <button className={styles.motionControl} type="button" disabled={!motion} onClick={() => setPaused(value => !value)} aria-pressed={paused || !motion} aria-label={!motion ? "Animation unavailable in still view" : paused ? "Play animation" : "Pause animation"}>
+            <span aria-hidden="true">{paused || !motion ? "▷" : "Ⅱ"}</span><span>{motion ? paused ? "Play motion" : "Pause motion" : "Still view"}</span>
+          </button>
         </div>
-      </main>
-      <PublicFooter />
-    </>
-  );
+        <div className={styles.descriptor} aria-hidden="true"><span key={descriptor} className={styles[`descriptor${descriptor}`]}>{descriptors[descriptor]}</span></div>
+        <p className={styles.srOnly}>Thoughtful websites, made to be remembered.</p>
+      </section>
+      <section className={styles.work} id="work" aria-labelledby="work-title">
+        <div className={styles.workIntro}><h2 id="work-title">Good work.<br />A better way to show it.</h2><div><p>For the creative practice with more to say. The specialist whose work needs to be seen. Websites shaped around the people behind them.</p><Link href="/projects">Selected work <span aria-hidden="true">↗</span></Link></div></div>
+        <div className={styles.projectGrid}>
+          {projects.slice(0, 2).map((project, index) => <article className={styles.project} key={project.id} style={{ "--project-offset": index } as CSSProperties}>
+            <Link className={styles.projectImage} href={`/projects/${project.slug}`} aria-label={`View ${project.title}`}>
+              {project.coverImageUrl ? <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={project.coverImageUrl} alt={`${project.title} website`} width={1440} height={900} loading="lazy" />
+              </> : <span className={styles.projectPlaceholder}>{project.title}</span>}
+              <span className={styles.projectOpen} aria-hidden="true">↗</span>
+            </Link>
+            <div className={styles.projectCaption}><h3><Link href={`/projects/${project.slug}`}>{project.title}</Link></h3><p>{project.details}</p></div>
+            <p className={styles.projectSummary}>{project.summary}</p>
+          </article>)}
+        </div>
+      </section>
+      <Capabilities playing={playing} />
+      <section className={styles.studio} aria-labelledby="studio-title">
+        <div className={styles.studioTitle}><span>The studio</span><h2 id="studio-title">One conversation.<br />All the way through.</h2></div>
+        <div className={styles.studioCopy}><p>Madagin brings strategy, design, and development together. The decisions stay connected, from what your website needs to say to how it feels in someone’s hand.</p><p>We begin with the business you have now. Then build a website that belongs to it.</p><Link href="/about">Meet Madagin <span aria-hidden="true">↗</span></Link></div>
+        <div className={styles.method}>
+          <div><h3>Find the point.</h3><p>The audience, the offer, and what the current site leaves unsaid.</p></div>
+          <div><h3>Give it form.</h3><p>Words, type, images, and interactions with a clear purpose.</p></div>
+          <div><h3>Make it work.</h3><p>A responsive build, considered details, and a clear path to launch.</p></div>
+        </div>
+      </section>
+      {posts[0] ? <section className={styles.note} aria-label="From the studio"><span>From the studio</span><Link href={`/blog/${posts[0].slug}`}><h2>{posts[0].title}</h2><span aria-hidden="true">↗</span></Link><p>{posts[0].summary}</p></section> : null}
+      <section className={styles.closing} aria-labelledby="closing-title"><span>Made again. Made for you.</span><h2 id="closing-title">What’s next<br />for your website?</h2><div><p>Start with what has changed.<br />Put your first thoughts into a project brief.</p><Link href="/contact">Start your brief <span aria-hidden="true">↗</span></Link></div></section>
+    </main>
+    <PublicFooter />
+    <PortfolioCursor projects={projects} letter={letter} enabled={playing} root={root} />
+  </div>;
 }

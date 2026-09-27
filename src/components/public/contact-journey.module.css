@@ -702,3 +702,31 @@
   overflow-wrap: anywhere;
   text-overflow: clip;
 }
+/* The brief uses the same quiet, readable material palette as the public pages. */
+.journey { background: #f8f9f8; color: #202523; }
+.background { display: none; }
+.chrome > a { color: #202523; }
+.progressText,.questionNote,.longAnswer > span,.contactFields label > span,.longAnswer small,.contactFields em,.sendArea > p,.sendArea > small { color: #626966; }
+.questionPanel h1,.reviewPanel h1,.choices button span,.longAnswer textarea,.contactFields input,.reviewRow > span,.sendButton span { font-family: var(--font-manrope),Arial,sans-serif; letter-spacing: -.035em; line-height: 1.13; }
+.questionPanel h1 { max-width: 16ch; font-size: clamp(38px,5.5vw,76px); }
+.choices { border-color: #c4cec7; }
+.choices button { color: #202523; border-color: #c4cec7; }
+.choices button span { font-size: clamp(19px,2.2vw,29px); }
+.choices button:hover,.choices button:focus-visible,.choices .choiceSelected { color: #285b48; }
+.longAnswer textarea,.contactFields input { background: transparent; color: #202523; border-color: #8d9d91; font-size: 23px; }
+.longAnswer textarea::placeholder,.contactFields input::placeholder { color: #68756b; }
+.longAnswer textarea:focus-visible,.contactFields input:focus-visible { outline: 2px solid #285b48; outline-offset: 5px; }
+.review,.reviewRow { border-color: #c4cec7; }
+.reviewRow p { color: #45554a; }
+.sendButton { min-height: 78px; box-shadow: none; border: 0; background: #285b48; border-radius: 8px; color: #fff; }
+.sendButton span { font-size: clamp(25px,3vw,39px); }
+.sendButton:not(:disabled):hover { background: #1c4234; }
+.sendButton:active { box-shadow: none; transform: translateY(1px); }
+.stepControls { padding: 8px 12px; background: #f8f9f8f2; border-radius: 8px; }
+.stepControls button { color: #202523; }
+.stepControls button:disabled { color: #838d85; }
+.contourProgress { height: 2px; background: #d9dfdc; }
+.contourProgress svg { display: none; }
+.contourProgress::after { content: ""; display: block; width: calc(var(--journey-progress) * 100%); height: 100%; background: #285b48; transition: width 400ms ease; }
+.deliveryNotice { color: #626966; }
+@media(max-width:760px) { .questionPanel { padding-top: 155px; } .questionPanel h1,.reviewPanel h1 { font-size: clamp(36px,9vw,55px); line-height: 1.12; margin-bottom: 28px; } .choices button span { font-size: 21px; } .sendArea { gap: 20px; } }

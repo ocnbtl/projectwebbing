@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { ContactJourney } from "@/components/public/contact-journey";
 
 export const metadata: Metadata = {
-  title: "Let’s Talk",
-  description: "Tell Madagin where things are now and what needs to change.",
+  title: "Project brief",
+  description: "Six questions to clarify your next website. Prepare and save your project brief on your device.",
 };
 
 export const runtime = "nodejs";

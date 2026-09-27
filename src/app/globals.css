@@ -1,10 +1,13 @@
 :root {
-  --plumskin: #0846ff;
-  --mineral-shadowblue: #032e48;
-  --sunlit-quartz: #c1d7f0;
-  --milk-white: #fcfcfc;
-  --black: #000000;
-  --pearl-gardenia: #ffc5f6;
+  --font-instrument-sans: var(--font-manrope);
+  --font-instrument-serif: var(--font-bodoni);
+  --font-plaster: var(--font-bricolage);
+  --plumskin: #285b48;
+  --mineral-shadowblue: #202523;
+  --sunlit-quartz: #e2e8e3;
+  --milk-white: #f8f9f8;
+  --black: #202523;
+  --pearl-gardenia: #d9e8de;
   --ink-secondary: rgba(0, 0, 0, 0.68);
   --ink-tertiary: rgba(0, 0, 0, 0.46);
   --rule-dark: rgba(0, 0, 0, 0.14);
@@ -24,7 +27,7 @@
 }
 
 html {
-  background: var(--black);
+  background: var(--milk-white);
   scroll-behavior: smooth;
 }
 
@@ -48,6 +51,8 @@ input,
 select {
   font: inherit;
 }
+
+textarea { font: inherit; }
 
 button,
 a {

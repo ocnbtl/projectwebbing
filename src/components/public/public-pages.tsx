@@ -44,7 +44,7 @@ export function ContentIndex({
     <PublicFrame>
       <header className={styles.indexHero}>
         <span>Madagin / {projects ? "Projects" : "Blog"}</span>
-        <h1>{projects ? "Sites people remember." : "A look behind the work."}</h1>
+        <h1>{projects ? "Work with a point of view." : "From the studio."}</h1>
         <p>
           {projects
             ? "Selected website work, the decisions behind it, and what changed."
@@ -108,7 +108,7 @@ export async function ContentDetail({ item }: { item: ContentItem }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img className={styles.detailImage} alt={presentation ? `${item.title} website, desktop opening.` : ""} src={item.coverImageUrl} />
         ) : (
-          <div className={styles.detailTerrain} aria-hidden="true" />
+          null
         )}
         <div className={styles.detailBody}>
           <span>{projects ? "Project story" : "Madagin note"}</span>
@@ -157,7 +157,7 @@ export function AboutPage() {
     <PublicFrame>
       <header className={styles.aboutHero}>
         <span>Madagin / About</span>
-        <h1>A fresh perspective for what comes next.</h1>
+        <h1>A studio built around the whole picture.</h1>
         <p>{promise}</p>
       </header>
 
@@ -193,10 +193,10 @@ export function AboutPage() {
       </section>
 
       <section className={styles.contact} id="contact" aria-labelledby="contact-title">
-        <h2 id="contact-title">Let&apos;s talk.</h2>
+        <h2 id="contact-title">What needs to change?</h2>
         <div>
           <p>If the business has moved forward and the website hasn&apos;t, tell me what changed.</p>
-          <Link href="/contact">Start a conversation</Link>
+          <Link href="/contact">Start your brief</Link>
         </div>
       </section>
     </PublicFrame>

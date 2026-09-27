@@ -1,25 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans, Instrument_Serif, Plaster } from "next/font/google";
+import { Manrope, Bodoni_Moda, Bricolage_Grotesque } from "next/font/google";
 import { SiteAnalytics } from "@/components/site-analytics";
 import "./globals.css";
 
-const instrumentSans = Instrument_Sans({
-  variable: "--font-instrument-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
   display: "swap",
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
+const bodoni = Bodoni_Moda({
+  variable: "--font-bodoni",
   subsets: ["latin"],
   weight: "400",
+  style: ["normal", "italic"],
   display: "swap",
 });
 
-const plaster = Plaster({
-  variable: "--font-plaster",
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["500", "800"],
   display: "swap",
 });
 
@@ -46,14 +47,14 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#000000",
+  themeColor: "#f8f9f8",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
-      className={`${instrumentSans.variable} ${instrumentSerif.variable} ${plaster.variable}`}
+      className={`${manrope.variable} ${bodoni.variable} ${bricolage.variable}`}
       data-scroll-behavior="smooth"
     >
       <body>
