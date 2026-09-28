@@ -558,3 +558,10 @@
 .contact h2 { font-size: clamp(43px,7vw,96px); max-width: 12ch; }
 .contact a { background: transparent; border: 0; border-bottom: 1px solid #b4c1b8; justify-content: start; font-weight: 500; width: fit-content; }
 @media(max-width:800px) { .indexHero,.aboutHero,.detailHero { padding-top: 170px; min-height: 0; } .indexHero h1,.aboutHero h1 { font-size: clamp(40px,10vw,70px); } .indexItem,.detailHero,.detailBody { grid-template-columns: 1fr; } .indexVisual,.indexVisual img { min-height: 0; } .detailHero h1,.projectStory .detailHero h1 { font-size: clamp(40px,11vw,68px); line-height: 1.06; } .projectStory .detailHero > .liveWebsite { grid-column: 1; } .detailHero > p { grid-column: 1; } .aboutStatement { padding-block: 65px; } .aboutStatement p { font-size: 30px; } .aboutMethod { padding-block: 65px; } .contact { padding-block: 70px; } }
+
+/* All public reading routes share the authored water surface. */
+.publicFrame { position: relative; z-index: 1; color: #f3f7fb; --black: #f3f7fb; --ink-secondary: #c5d6e4; --plumskin: #d9edff; }
+.publicFrame .indexHero,.publicFrame .aboutHero,.publicFrame .detailHero,.publicFrame .proofSection,.publicFrame .mobileProof,.publicFrame .projectClosing,.publicFrame .aboutStatement,.publicFrame .aboutStandards,.publicFrame .contact { background: transparent; color: inherit; }
+.publicFrame .indexHero > span,.publicFrame .aboutHero > span,.publicFrame .indexCopy > span,.publicFrame .detailHero > span,.publicFrame .detailBody > span,.publicFrame .proofCopy > span,.publicFrame .aboutLabel h2,.publicFrame .nextProject > span:first-child,.publicFrame .indexHero p,.publicFrame .aboutHero p,.publicFrame .detailHero > p { color: #c5d6e4; }
+.publicFrame .indexItem,.publicFrame .aboutMethod article,.publicFrame .aboutStandards article,.publicFrame .projectClosing .nextProject { border-color: #d5e7f448; }
+.publicFrame .proofSection,.publicFrame .aboutStatement,.publicFrame .projectClosing { background: #0b223530; }

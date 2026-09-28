@@ -20,7 +20,7 @@ Next.js public pages, published projects and articles, and authenticated interna
 
 ## Brand Commitments
 
-The public name is Madagin. The September 27, 2026 brief explicitly replaces the landscape experience with minimal typography, milky liquid-glass lettering, sequential letter arrivals, portfolio cursor reveals, curated changing descriptors, and independently changing capability words. Navigation and content remain usable without the effects.
+The public name is Madagin. The user's exact blue Balsa water background persists across the public site. Tall, optically spaced glass letters emerge from water with illuminated edges and local color ripples. Six complete phrases tell the story from ideas to connection, each supported by an interaction. No black fade, rotating superlatives, or project-preview cursor. Work and About comprise primary navigation; “Bring an idea” opens a focused inquiry preparation flow. Presence combines a labeled 10–40 participant simulation with real anonymous Cloudflare cursor connections. Above 40 real connections the main count becomes live and simulation stops. Counts represent connections, not verified unique humans. Navigation and content remain usable without effects.
 
 ## Evidence on Hand
 

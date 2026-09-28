@@ -52,6 +52,10 @@ select {
   font: inherit;
 }
 
+body:has([data-public-water]) { background: #0f2334; }
+body:has([data-public-water]) :focus-visible { outline-color: #d7eaff; }
+body:has([data-public-water]) ::selection { background: #d7e8f5; color: #0f2334; }
+
 textarea { font: inherit; }
 
 button,

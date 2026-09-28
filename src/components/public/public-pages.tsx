@@ -21,12 +21,12 @@ function routeFor(kind: ContentKind) {
 
 function PublicFrame({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className={styles.publicFrame}>
       <a className="skip-link" href="#page-content">Skip to content</a>
-      <PublicHeader tone="light" />
+      <PublicHeader tone="dark" />
       <main id="page-content">{children}</main>
       <PublicFooter />
-    </>
+    </div>
   );
 }
 

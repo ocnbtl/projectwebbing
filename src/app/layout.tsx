@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Bodoni_Moda, Bricolage_Grotesque } from "next/font/google";
+import { Manrope, Bodoni_Moda, Bricolage_Grotesque, Gloock } from "next/font/google";
 import { SiteAnalytics } from "@/components/site-analytics";
+import { PublicWaterProvider } from "@/components/public/water-surface";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -23,6 +24,8 @@ const bricolage = Bricolage_Grotesque({
   weight: ["500", "800"],
   display: "swap",
 });
+
+const gloock = Gloock({ variable: "--font-gloock", subsets: ["latin"], weight: "400", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://projectwebbing.vercel.app"),
@@ -47,18 +50,18 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f8f9f8",
+  themeColor: "#0f2334",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${bodoni.variable} ${bricolage.variable}`}
+      className={`${manrope.variable} ${bodoni.variable} ${bricolage.variable} ${gloock.variable}`}
       data-scroll-behavior="smooth"
     >
-      <body>
-        {children}
+      <body id="top">
+        <PublicWaterProvider>{children}</PublicWaterProvider>
         <SiteAnalytics />
       </body>
     </html>
