@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import ts from 'typescript';
+import * as crypto from 'node:crypto';
+function compile(file,dependencies={}){const module={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{module,exports:module.exports,require:name=>{if(name in dependencies)return dependencies[name];throw Error(name);}});return module.exports;}
+const {deliverSmtpInquiry,validSmtpConfig}=compile('src/lib/inquiry-smtp.ts');
+const config={host:'smtp.zoho.com',port:465,user:'sender@example.test',password:'fixture-only',recipient:'studio@example.test'};
+const inquiry={replyTo:'visitor@example.test',brief:'Local fixture only'};
+let calls=0;
+const send=async message=>{calls++;assert.equal(message.to,config.recipient);assert.equal(message.replyTo,inquiry.replyTo);assert.equal(message.disableFileAccess,true);assert.equal(message.disableUrlAccess,true);assert.equal(message.cc,undefined);return {accepted:[config.recipient],rejected:[]};};
+assert.equal(validSmtpConfig(config),true);
+assert.equal((await deliverSmtpInquiry(config,inquiry,send)).status,'accepted');
+assert.equal(calls,1);
+for(const patch of [{host:'attacker.example.test'},{port:25},{password:''},{recipient:'bad\naddress'}])assert.equal((await deliverSmtpInquiry({...config,...patch},inquiry,send)).status,'unverified');
+assert.equal((await deliverSmtpInquiry(config,{...inquiry,replyTo:'visitor@example.test\r\nBcc:x@example.test'},send)).status,'invalid');
+assert.equal(calls,1);
+assert.equal((await deliverSmtpInquiry(config,inquiry,async()=>({accepted:['other@example.test'],rejected:[]}))).status,'failed');
+assert.equal((await deliverSmtpInquiry(config,inquiry,async()=>{throw Error('offline')})).status,'failed');
+const {allowInquiryAttempt}=compile('src/lib/inquiry-rate-limit.ts',{'node:crypto':crypto});
+for(let n=0;n<3;n++)assert.equal(allowInquiryAttempt('fixture-ip','fixture@example.test',1000),true);
+assert.equal(allowInquiryAttempt('other-ip','fixture@example.test',1000),false);
+assert.equal(allowInquiryAttempt('fixture-ip','fixture@example.test',601001),true);
+console.log(JSON.stringify({passed:true,realEmails:0,realNetworkRequests:0,smtpRecipientAndHeaderPolicy:true,rateLimitAndExpiry:true}));
