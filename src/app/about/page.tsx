@@ -3,7 +3,7 @@ import { AboutPage } from "@/components/public/public-pages";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Madagin is a founder-led web studio for businesses ready to show up differently.",
+  description: "Madagin is a design and development studio. We work closely with our clients to create brands and websites that reflect who they are and where they want to go.",
 };
 
 export default function About() {

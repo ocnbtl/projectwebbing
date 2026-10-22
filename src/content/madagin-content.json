@@ -2,6 +2,20 @@
   "version": 1,
   "items": [
     {
+      "id": "project-isitusa",
+      "kind": "project",
+      "title": "Isitusa",
+      "slug": "isitusa",
+      "summary": "From the first idea to an identity, a research platform, and the systems behind it.",
+      "body": "Isitusa helps people explore invasive-species records across the United States. We developed the project from zero to one, bringing brand strategy, naming, a logo, and a custom typeface together with the design and development of the platform.\n\nAn interactive county map makes the research easier to navigate. Visitors can start with a location, explore species, and follow the supporting sources. The identity carries through the map, directory, and research pages.\n\nBehind the public website, our scope includes the backend data and research management system, alongside volunteer and internal workflows. The work connects a clear public experience with the tools needed to maintain and develop it.",
+      "details": "Brand strategy · Identity · Research platform · Internal systems",
+      "coverImageUrl": "/media/projects/isitusa-brand-20261016/desktop.jpg",
+      "publishedOn": "2026-10-16",
+      "status": "published",
+      "createdAt": "2026-10-16T16:00:00.000Z",
+      "updatedAt": "2026-10-16T16:00:00.000Z"
+    },
+    {
       "id": "project-sage-burress",
       "kind": "project",
       "title": "Sage Burress",
@@ -9,11 +23,11 @@
       "summary": "A photographic home for a creative practice that spans modeling, content, and artistry.",
       "body": "Sage Burress works across modeling, content creation, makeup, henna, travel promotions, and face painting. Her website brings that range into one place, with a portfolio and individual pages for each service.\n\nThe opening pairs a personal introduction with photography. A dedicated portfolio gives the images room, while the service navigation helps visitors find the kind of collaboration they have in mind.\n\nA clear contact link gives visitors a route from discovering the work to getting in touch. It is a personal presence with enough structure to support several kinds of creative work.",
       "details": "Personal brand · Creative portfolio",
-      "coverImageUrl": "/media/projects/sage-burress-20260905.jpg",
+      "coverImageUrl": "/media/projects/refresh-20261016/sage-burress-desktop.jpg",
       "publishedOn": "2026-09-05",
       "status": "published",
       "createdAt": "2026-09-05T02:14:04.4390249Z",
-      "updatedAt": "2026-09-05T06:42:03.134Z"
+      "updatedAt": "2026-10-16T16:00:00.000Z"
     },
     {
       "id": "project-masonry-color-corrections",
@@ -23,11 +37,11 @@
       "summary": "Making a specialist service understandable through the masonry work itself.",
       "body": "Masonry Color Corrections works on the color of installed brick, mortar, repairs, and additions. Its website explains a service whose value is often clearest when two surfaces are seen together.\n\nBefore-and-after photography and an interactive comparison put that difference at the center of the page. Service descriptions explain the kinds of matching and staining available, and the gallery gives visitors more examples to explore.\n\nThe estimate path asks for the project location, a description, and useful photographs. That gives a visitor a concrete next step after understanding the work.",
       "details": "Specialist services · Masonry color matching",
-      "coverImageUrl": "/media/projects/masonry-color-corrections-20260905.jpg",
+      "coverImageUrl": "/media/projects/refresh-20261016/masonry-color-corrections-desktop.jpg",
       "publishedOn": "2026-09-05",
       "status": "published",
       "createdAt": "2026-09-05T02:14:04.4390249Z",
-      "updatedAt": "2026-09-05T06:42:03.134Z"
+      "updatedAt": "2026-10-16T16:00:00.000Z"
     },
     {
       "id": "post-before-a-website-rebuild",

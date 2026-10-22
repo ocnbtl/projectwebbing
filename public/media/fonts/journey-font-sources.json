@@ -1,0 +1,35 @@
+{
+  "commit": "23e54b51ddffbc7713c583748e3bd86f62b1fa4a",
+  "fonts": [
+    {
+      "family": "corinthia",
+      "file": "Corinthia-Bold.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/corinthia/Corinthia-Bold.ttf",
+      "license": "corinthia-OFL.txt"
+    },
+    {
+      "family": "pinyonscript",
+      "file": "PinyonScript-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/pinyonscript/PinyonScript-Regular.ttf",
+      "license": "pinyonscript-OFL.txt"
+    },
+    {
+      "family": "greatvibes",
+      "file": "GreatVibes-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/greatvibes/GreatVibes-Regular.ttf",
+      "license": "greatvibes-OFL.txt"
+    },
+    {
+      "family": "librecaslondisplay",
+      "file": "LibreCaslonDisplay-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/librecaslondisplay/LibreCaslonDisplay-Regular.ttf",
+      "license": "librecaslondisplay-OFL.txt"
+    },
+    {
+      "family": "italianno",
+      "file": "Italianno-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/italianno/Italianno-Regular.ttf",
+      "license": "italianno-OFL.txt"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "glyphs": {
+    "M": {
+      "offset": 0,
+      "vertices": 8908,
+      "indicesOffset": 106896,
+      "count": 53436,
+      "width": 1.6324999999999998,
+      "scale": 1.75
+    },
+    "A": {
+      "offset": 213768,
+      "vertices": 7100,
+      "indicesOffset": 298968,
+      "count": 42636,
+      "width": 1.6091666666666669,
+      "scale": 1.75
+    },
+    "D": {
+      "offset": 384240,
+      "vertices": 7816,
+      "indicesOffset": 478032,
+      "count": 46896,
+      "width": 1.4125,
+      "scale": 1.75
+    },
+    "G": {
+      "offset": 571824,
+      "vertices": 8314,
+      "indicesOffset": 671592,
+      "count": 49884,
+      "width": 1.4325,
+      "scale": 1.75
+    },
+    "I": {
+      "offset": 771360,
+      "vertices": 3958,
+      "indicesOffset": 818856,
+      "count": 23736,
+      "width": 0.5225,
+      "scale": 1.75
+    },
+    "N": {
+      "offset": 866328,
+      "vertices": 8898,
+      "indicesOffset": 973104,
+      "count": 53376,
+      "width": 1.505,
+      "scale": 1.75
+    }
+  },
+  "format": "interleaved int16 xyz normal; position normalized * scale; normals normalized"
+}

@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/public/brand-wordmark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { isInternalAuthConfigured } from "@/lib/session";
@@ -24,7 +25,7 @@ export default async function LoginPage({
       </Link>
 
       <section className={styles.login} aria-labelledby="login-title">
-        <div className={styles.wordmark}>MADAGIN</div>
+        <div className={styles.wordmark}><BrandWordmark/></div>
         <div>
           <p className={styles.privateLabel}>Private workspace</p>
           <h1 id="login-title">Owner access.</h1>

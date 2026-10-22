@@ -16,16 +16,15 @@ export const workNeedOptions = [
 
 export const budgetOptions = [
   "Under $5,000",
-  "$5,000–$10,000",
-  "$10,000–$20,000",
-  "$20,000–$40,000",
-  "$40,000+",
-  "Still working it out",
+  "$5,000–$100,000",
+  "$100,000+",
+  "Not sure yet",
 ] as const;
 
 export const timingOptions = [
   "As soon as possible",
-  "Within 1–3 months",
-  "Within 3–6 months",
-  "Flexible",
+  "I’m flexible",
+  "1–3 months",
+  "3–6 months",
+  "6–12 months",
 ] as const;

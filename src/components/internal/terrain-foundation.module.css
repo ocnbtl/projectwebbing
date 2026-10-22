@@ -1,0 +1,19 @@
+.page { min-height: 100svh; color: #fff; background: #172b2d; font-family: var(--font-instrument-sans), sans-serif; }
+.viewport { position: fixed; inset: 0; background: linear-gradient(#10202c44,#10202c66), url('/media/madagin-ridge-approach-v3.png') center / cover; }
+.viewport canvas { width: 100%; height: 100%; }
+.header { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 2rem 3rem; font-size: .85rem; text-shadow: 0 1px 5px #122e36; }
+.header > a:first-child { font-weight: 800; font-size: 1.1rem; letter-spacing: .18em; }
+.header a { color: inherit; text-decoration: none; }
+.caption { position: absolute; z-index: 2; top: 20vh; left: 5vw; max-width: 40rem; text-shadow: 0 2px 24px #071f32; pointer-events: none; }
+.caption > p:first-child { font-size: .7rem; letter-spacing: .18em; }
+.caption h1 { font-family: var(--font-instrument-serif), Georgia, serif; font-weight: 400; font-size: clamp(3.5rem,7vw,7rem); line-height: 1; margin: 1rem 0; }
+.caption p { max-width: 23rem; line-height: 1.5; }
+.controls { position: fixed; z-index: 3; bottom: 5.2rem; left: 3rem; right: 3rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.controls > div { display: flex; flex-wrap: wrap; gap: .35rem; }
+.controls button { background: #102b30c9; border: 1px solid #ffffff66; color: #fff; min-height: 2.8rem; padding: .6rem .9rem; cursor: pointer; font: inherit; font-size: .8rem; backdrop-filter: blur(12px); }
+.controls button[aria-pressed='true'] { color: #183434; background: #f5f6ee; }
+.controls button:disabled { opacity: .45; cursor: default; }
+.controls button:focus-visible, .header a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.note { position: fixed; z-index: 2; bottom: 0; left: 0; right: 0; background: #102226e6; padding: 1.1rem 3rem; font-size: .7rem; line-height: 1.5; color: #d9e4e1; }
+.fallback { position: absolute; inset: 45% 10% auto; text-align: center; background: #112b30ba; padding: 1rem; }
+@media(max-width:700px) { .header { padding: 1.1rem; } .header > span { display: none; } .caption { top: 16vh; right: 1rem; } .controls { left: 1rem; right: 1rem; bottom: 7rem; align-items: end; } .controls button { padding: .5rem .65rem; font-size: .72rem; } .note { padding: 1rem; } }

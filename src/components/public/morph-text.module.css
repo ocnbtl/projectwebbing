@@ -1,0 +1,15 @@
+.morph { position:relative; display:inline-flex; align-items:center; height:1em; line-height:1; }
+.morph svg { display:block; height:1em; overflow:visible; fill:currentColor; fill-rule:evenodd; }
+.label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.morph path { stroke:currentColor; stroke-linejoin:round; paint-order:stroke fill; }
+/* Never filter the readable face. Only this separate outline is masked, so
+   refreshing contrast cannot blank the lettering in Safari's compositor. */
+.face { position:relative; }
+.contrast { display:none; position:absolute; inset:-10px; padding:10px; pointer-events:none; opacity:.92; mask-image:linear-gradient(to bottom,transparent 33.333%,#000 66.667%); -webkit-mask-image:linear-gradient(to bottom,transparent 33.333%,#000 66.667%); mask-size:100% 300%; -webkit-mask-size:100% 300%; mask-position:0 0; -webkit-mask-position:0 0; mask-repeat:no-repeat; transition:mask-position 650ms cubic-bezier(.22,1,.36,1),-webkit-mask-position 650ms cubic-bezier(.22,1,.36,1); }
+.morph[data-contrast-direction] .contrast { display:block; }
+.contrast path { fill:none; stroke:#03090e; stroke-width:8px; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+.morph[data-contrast-stroke="on"] .contrast { mask-position:0 100%; -webkit-mask-position:0 100%; }
+.morph[data-contrast-direction="down"] .contrast { mask-image:linear-gradient(to bottom,#000 33.333%,transparent 66.667%); -webkit-mask-image:linear-gradient(to bottom,#000 33.333%,transparent 66.667%); mask-position:0 100%; -webkit-mask-position:0 100%; }
+.morph[data-contrast-direction="down"][data-contrast-stroke="on"] .contrast { mask-position:0 0; -webkit-mask-position:0 0; }
+@media(prefers-reduced-motion:reduce) { .contrast { transition:none; } }
+@media(forced-colors:active) { .contrast { display:none!important; } }

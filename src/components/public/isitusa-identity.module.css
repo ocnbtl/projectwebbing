@@ -1,0 +1,4 @@
+.identity { display:inline-block; width:4.86em; max-width:100%; vertical-align:middle; line-height:0; }
+.identity[data-full="true"] { width:100%; }
+.identity img { display:block; width:100%; height:auto; object-fit:contain; }
+.identity[data-light="true"] img { filter:brightness(0) invert(1); }

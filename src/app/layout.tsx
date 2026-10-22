@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Bodoni_Moda, Bricolage_Grotesque, Gloock } from "next/font/google";
+import localFont from "next/font/local";
 import { SiteAnalytics } from "@/components/site-analytics";
 import { PublicWaterProvider } from "@/components/public/water-surface";
 import "./globals.css";
@@ -26,9 +27,11 @@ const bricolage = Bricolage_Grotesque({
 });
 
 const gloock = Gloock({ variable: "--font-gloock", subsets: ["latin"], weight: "400", display: "swap" });
+const royal = localFont({ src: "../../public/media/fonts/Caudex-Regular.ttf", variable: "--font-royal", display: "swap" });
+const wordmark = localFont({ src: "../../public/media/fonts/Alice-Regular.ttf", variable: "--font-wordmark", weight: "400", display: "swap" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://projectwebbing.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://madagin.com"),
   title: {
     default: "Madagin",
     template: "%s \u00B7 Madagin",
@@ -50,6 +53,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#0f2334",
 };
 
@@ -57,7 +61,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${bodoni.variable} ${bricolage.variable} ${gloock.variable}`}
+      className={`${manrope.variable} ${bodoni.variable} ${bricolage.variable} ${gloock.variable} ${royal.variable} ${wordmark.variable}`}
       data-scroll-behavior="smooth"
     >
       <body id="top">
@@ -67,3 +71,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+

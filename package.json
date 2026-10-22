@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/prune-deployment-assets.mjs && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -15,18 +15,20 @@
     "@vercel/analytics": "2.0.1",
     "jose": "6.2.8",
     "motion": "13.0.0",
-    "next": "16.3.0",
+    "next": "16.3.8",
+    "nodemailer": "^10.1.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "three": "0.182.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.185.4",
     "eslint": "^9",
-    "eslint-config-next": "16.3.0",
+    "eslint-config-next": "16.3.8",
     "typescript": "^5"
   },
   "packageManager": "pnpm@11.16.0"

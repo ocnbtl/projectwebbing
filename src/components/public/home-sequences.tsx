@@ -1,77 +1,106 @@
 "use client";
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { useWaterMotion } from "./water-surface";
-import { ConnectionPlayground } from "./connection-playground";
-import type { ContentItem } from "@/lib/content-types";
-import styles from "./public-home.module.css";
-import story from "./home-story.module.css";
+import Image from "next/image";
+import {useCallback,useEffect,useRef,useState} from "react";
+import {LiquidControl} from "./liquid-control";
+import {PinkGlassLink} from "./pink-glass-link";
+import {StrategyPhrase} from "./strategy-phrase";
+import {SurfaceEmergence} from "./surface-emergence";
+import {DesignPhrase} from "./design-phrase";
 
-export const servicePhrases = [
-  { service:"Ideas", outcome:"inspire action", note:"A question worth asking. A direction worth pursuing." },
-  { service:"Design", outcome:"rewards curiosity", note:"The more you explore, the more there is to discover." },
-  { service:"Style", outcome:"earns attention", note:"A recognisable point of view, down to the smallest detail." },
-  { service:"Strategy", outcome:"connects dots", note:"What you do, who it is for, and why it matters. Brought into focus." },
-  { service:"Websites", outcome:"build trust", note:"Clear words. Thoughtful decisions. A path that feels natural." },
-  { service:"Experiences", outcome:"spark connection", note:"An encounter becomes something shared." },
-];
+import {ContactJourney} from "./contact-journey";
+import {useHumanText} from "./human-type";
+import {TablerIcon} from "@/components/ui/tabler-icon";
+import {useWaterMotion} from "./water-surface";
+import styles from "./home-story.module.css";
 
-function Demonstration({ index }: { index:number }) {
-  const [active, setActive] = useState(false);
-  const [style, setStyle] = useState(0);
-  const [step, setStep] = useState(0);
-  if (index === 0) return <div className={story.idea} data-spark={active}><button type="button" onClick={() => setActive(v => !v)} aria-pressed={active}>{active ? "In motion." : "What if?"}</button><small>Tap an idea. See where it goes.</small></div>;
-  if (index === 1) return <div className={story.curiosity} onPointerMove={e => { const b=e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty("--x", `${e.clientX-b.left}px`); e.currentTarget.style.setProperty("--y", `${e.clientY-b.top}px`); }} tabIndex={0} onKeyDown={e => { if(e.key==="Enter" || e.key===" ") { e.preventDefault(); setActive(v=>!v); } }} role="button" aria-label="Reveal a different perspective" onClick={()=>setActive(v=>!v)} style={active ? { "--x":"65%", "--y":"35%" } as React.CSSProperties : undefined}><p>Look a little closer.</p><div className={story.reveal}><strong>Oh.</strong></div><small>Move, tap, or press Enter to discover.</small></div>;
-  if (index === 2) return <div className={story.styleDemo}><span className={story.styleSample} data-style={style}>Aa.</span><div className={story.swatches}>{["Composed","Expressive","Fluid"].map((label,i)=><button key={label} type="button" aria-label={label} aria-pressed={style===i} onClick={()=>setStyle(i)}>{i===style ? "✓" : ""}</button>)}</div></div>;
-  if (index === 3) return <div className={story.dots} data-connected={active}><svg viewBox="0 0 420 240" aria-label="Purpose, audience, and direction connected"><line x1="65" y1="150" x2="200" y2="65" /><line x1="200" y1="65" x2="350" y2="155" /><circle cx="65" cy="150" r="6"/><circle cx="200" cy="65" r="6"/><circle cx="350" cy="155" r="6"/><text x="65" y="184" textAnchor="middle">Purpose</text><text x="200" y="42" textAnchor="middle">Audience</text><text x="350" y="189" textAnchor="middle">Direction</text></svg><button type="button" onClick={()=>setActive(v=>!v)} aria-pressed={active}>{active ? "See it differently ↺" : "Connect the dots ↗"}</button></div>;
-  if (index === 4) return <div className={story.browser}><div className={story.browserBar}>A little clarity goes a long way.</div><div className={story.browserBody}><p>{["Make yourself understood.","Make the next step clear.","Make it feel effortless."][step]}</p><span>{["Start with what someone needs to know.","Give each decision a reason.","Good design keeps its promises."][step]}</span><button type="button" onClick={()=>setStep(v=>(v+1)%3)}>{["Find your way","Take the next step","Begin again"][step]} <span aria-hidden="true">↗</span></button></div></div>;
-  return <ConnectionPlayground />;
+export const servicePhrases=[
+ {service:"Design",outcome:"provokes action",kind:"design"},
+ {service:"Style",outcome:"pays attention to the details",kind:"style"},
+ {service:"Experiences",outcome:"bring people closer",kind:"experiences"},
+ {service:"Websites",outcome:"build trust",kind:"websites"},
+ {service:"Strategy",outcome:"makes the next move clear",kind:"strategy"},
+] as const;
+// Client-approved wording supplied by Ocean from Jim's recorded testimonial.
+const jimQuote="We had our website set up and Ocean did a beautiful job. He went beyond my expectation with what was delivered. We just got our first call and it's upwards of a 6 figure bid, I can't believe the results. Life-changing. Pat yourself on the back.";
+function DetailType(){return <span className={styles.detailWord}>detail<span className={styles.adjustedLetter}>s<span className={styles.typeGuides} aria-hidden="true"><i/><b>↔</b><svg viewBox="0 0 24 24"><path d="M4 3v17l5-5 4 7 3-2-4-7h8Z"/></svg></span></span></span>;}
+function DrawnAmpersand(){return <span className={styles.ampersand} role="img" aria-label="and"><svg viewBox="0 0 70 80" aria-hidden="true"><text x="35" y="66" textAnchor="middle" fontFamily="var(--font-royal),serif" fontStyle="normal" fontSize="76">&amp;</text></svg></span>;}
+function CornerFlair(){
+ const ref=useRef<HTMLSpanElement>(null);
+ useEffect(()=>{const el=ref.current,heading=el?.closest('h2');if(!el||!heading)return;
+  const measure=()=>{const ranges=[...heading.querySelectorAll<HTMLElement>('[data-phrase-ink]')].flatMap(node=>{const range=document.createRange();range.selectNodeContents(node);return [...range.getClientRects()];}).filter(r=>r.width>2&&r.height>2);if(!ranges.length)return;
+   const box=heading.getBoundingClientRect(),top=Math.min(...ranges.map(r=>r.top)),firstLine=ranges.filter(r=>Math.abs(r.top-top)<8),left=Math.min(...firstLine.map(r=>r.left)),right=Math.max(...firstLine.map(r=>r.right));
+   const font=getComputedStyle(heading),ctx=document.createElement('canvas').getContext('2d')!;ctx.font=`${font.fontWeight} ${font.fontSize} ${font.fontFamily}`;const metrics=ctx.measureText('Style');
+   const inkInset=Math.max(0,(ranges[0].height-metrics.actualBoundingBoxAscent-metrics.actualBoundingBoxDescent)/2);
+   el.style.setProperty('--flair-left',left-box.left+'px');el.style.setProperty('--flair-right',right-box.left+'px');el.style.setProperty('--flair-top',top-box.top+inkInset+'px');
+   // Phone fans sit just inside the ink corners and fade before the edge.
+   const mobileLeft=Math.max(32,left-8),mobileRight=Math.min(innerWidth-32,right+8);
+   el.style.setProperty('--flair-mobile-top',top-box.top+inkInset+parseFloat(font.fontSize)*.42+'px');
+   el.style.setProperty('--flair-mobile-left',mobileLeft-box.left+'px');
+   el.style.setProperty('--flair-mobile-right',mobileRight-box.left+'px');
+   el.style.setProperty('--flair-left-room',Math.max(0,Math.min(66,mobileLeft-20))+'px');
+   el.style.setProperty('--flair-right-room',Math.max(0,Math.min(66,innerWidth-mobileRight-20))+'px');
+  };const observer=new ResizeObserver(measure);observer.observe(heading);document.fonts.ready.then(measure);heading.addEventListener('animationend',measure);window.addEventListener('resize',measure);measure();return()=>{observer.disconnect();heading.removeEventListener('animationend',measure);window.removeEventListener('resize',measure);};
+ },[]);
+ return <span ref={ref} className={styles.finishFlair} data-sequence-end="true" aria-hidden="true">{Array.from({length:10},(_,n)=><i key={n} style={{'--n':n%5,'--side':n<5?-1:1} as React.CSSProperties}/>)}</span>;
 }
+function ChapterPhrase({phrase,active,onDesignComplete}:{phrase:typeof servicePhrases[number];active:boolean;onDesignComplete:()=>void}){
+ if(phrase.kind==="strategy")return <StrategyPhrase className={styles.phrase} active={active}/>;
+ if(phrase.kind==="design")return <DesignPhrase className={styles.phrase} active={active} onComplete={onDesignComplete}/>;
+ return <h2 id={`${phrase.kind}-title`} className={`${styles.phrase} ${phrase.kind==='style'?styles.styleComposition:''}`} tabIndex={-1}><span className={styles.phraseLead} data-phrase-ink="">{phrase.service} that</span>{" "}{
+  phrase.kind==="style"?<><span className={styles.dragHand} aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 12V5a2 2 0 0 1 4 0v6-3a2 2 0 0 1 4 0v3-1a2 2 0 0 1 4 0v5c0 4-2 6-6 6h-2c-2 0-3-1-4-3l-4-5a2 2 0 0 1 3-2l1 1Z"/></svg></span><span className={styles.styleOutcome} data-phrase-ink="">pays a<span className={styles.joinedTs}>tt</span>ention to the <DetailType/></span><CornerFlair/></>:
+  phrase.kind==="experiences"?<span className={styles.outcome}>bring <span className={styles.closingWords}><span>people</span><span>closer</span></span></span>:
+  <span className={styles.outcome}>{phrase.outcome}</span>}</h2>;
+}
+function TrustAudience({active,onComplete}:{active:boolean;onComplete:()=>void}){const text='with followers, customers, partners, and investors';const {value,complete}=useHumanText(text,active,1860,.70,'audience');useEffect(()=>{if(active&&complete)onComplete();},[complete,active,onComplete]);return <p className={styles.trustAudience} data-audience="" aria-label={text}><span aria-hidden="true">{value}{active&&value.length>0&&!complete?<span className={styles.typeCaret}/>:null}</span></p>;}
+function Testimonials(){
+ const card=useRef<HTMLElement>(null),portrait=useRef<HTMLSpanElement>(null);
+ useEffect(()=>{
+  const figure=card.current,photo=portrait.current;if(!figure||!photo)return;
+  // Measure the aperture from the actual portrait, including wrapped captions.
+  const measure=()=>{const outer=figure.getBoundingClientRect(),inner=photo.getBoundingClientRect();figure.style.setProperty('--portrait-x',`${inner.left-outer.left-figure.clientLeft+inner.width/2}px`);figure.style.setProperty('--portrait-y',`${inner.top-outer.top-figure.clientTop+inner.height/2}px`);figure.style.setProperty('--portrait-radius',`${inner.width/2}px`);};
+  const observer=new ResizeObserver(measure);observer.observe(figure);observer.observe(photo);measure();return()=>observer.disconnect();
+ },[]);
+ return <div className={`${styles.testimonials} ${styles.singleTestimonial}`}>
+ <figure ref={card} className={styles.message} data-message="0"><blockquote>“{jimQuote}”</blockquote><figcaption><span ref={portrait} className={styles.jimPortrait}><Image src="/media/portraits/jim-masonry-color-corrections.png" alt="James Andres from Masonry Color Corrections" width={96} height={96} sizes="(max-width: 500px) 88px, 96px"/></span><a href="https://masonrycolorcorrections.com" target="_blank" rel="noopener noreferrer" aria-label="James Andres from Masonry Color Corrections — visit website (opens in a new tab)"><span><span className={styles.authorName}>James Andres</span><span className={styles.authorCompany}><span>from <span className={styles.authorCompanyName}>Masonry Color Corrections</span></span><TablerIcon name="arrow-up-right" size={22}/></span></span></a></figcaption></figure>
+ </div>;
+}
+export function Capabilities({phase,arrived=true,onAdvance,previewProof,inquiryOpen=false,onNavigationReady,navigationEmerged=false}:{onNavigationReady?:()=>void;navigationEmerged?:boolean;phase:number;arrived?:boolean;onAdvance:(next:number,keyboard?:boolean)=>void;previewProof:boolean;inquiryOpen?:boolean}){
+ const websites=useRef<HTMLElement>(null);const {playing}=useWaterMotion();
+ const [finished,setFinished]=useState<number|null>(null),[read,setRead]=useState(false),[departing,setDeparting]=useState(false),[inquiryEntered,setInquiryEntered]=useState(inquiryOpen);const exitTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
+ const strategyComplete=useCallback(()=>setFinished(5),[]);
+ const designComplete=useCallback(()=>setFinished(1),[]),audienceComplete=useCallback(()=>setFinished(4),[]);
+ const complete=(event:React.AnimationEvent<HTMLElement>)=>{if(inquiryOpen&&(event.target as HTMLElement).dataset.inquiryDeparture==="true")setInquiryEntered(true);if((event.target as HTMLElement).dataset.sequenceEnd==="true")setFinished(phase);};
+ useEffect(()=>()=>clearTimeout(exitTimer.current),[]);
 
-export function Capabilities() {
-  const section = useRef<HTMLElement>(null);
-  const { playing, paused, motion, toggle } = useWaterMotion();
-  const [index, setIndex] = useState(0);
-  const manual = useRef(false);
-  useEffect(() => {
-    if (!motion || !section.current) return;
-    const element=section.current;
-    let frame=0;
-    const update=()=>{ frame=0; if(manual.current) return; const b=element.getBoundingClientRect(); const p=Math.max(0,Math.min(.999,-b.top/Math.max(1,element.offsetHeight-innerHeight))); setIndex(Math.floor(p*6)); };
-    const scroll=()=>{manual.current=false;if(!frame)frame=requestAnimationFrame(update);};
-    window.addEventListener("scroll",scroll,{passive:true}); update();
-    return()=>{window.removeEventListener("scroll",scroll);cancelAnimationFrame(frame);};
-  },[motion]);
-  const phrase=servicePhrases[index];
-  return <section ref={section} id="possibilities" className={story.story} data-playing={playing} aria-label="From an idea to a connection">
-    <div className={story.stage}>
-      <div className={story.topline}><span>From a thought to something felt.</span><button className={story.motion} type="button" disabled={!motion} onClick={toggle} aria-pressed={paused || !motion} aria-label={playing ? "Pause motion" : "Resume motion"}>{playing ? "Ⅱ" : "▷"}</button></div>
-      <div className={story.chapter} data-story-index={index}>
-        <div className={story.copy} key={phrase.service}><h2>{phrase.service} that <em>{phrase.outcome}.</em></h2><p>{phrase.note}</p></div>
-        <div className={story.demo} key={index}><Demonstration index={index}/></div>
-      </div>
-      <nav className={story.chapterNav} aria-label="Explore the story">{servicePhrases.map((p,i)=><button key={p.service} type="button" aria-current={i===index ? "step" : undefined} onClick={()=>{
-        manual.current=true;setIndex(i);
-        const element=section.current;
-        if(motion&&element)window.scrollTo({top:scrollY+element.getBoundingClientRect().top+Math.max(0,element.offsetHeight-innerHeight)*(i+.15)/6,behavior:"instant"});
-      }}>{p.service}</button>)}</nav>
-    </div>
+ useEffect(()=>{if(!inquiryOpen||playing)return;const frame=requestAnimationFrame(()=>setInquiryEntered(true));return()=>cancelAnimationFrame(frame);},[inquiryOpen,playing]);
+ useEffect(()=>{if(phase!==2||!arrived)return;const timer=setTimeout(()=>onNavigationReady?.(),playing?2050:0);return()=>clearTimeout(timer);},[phase,playing,arrived,onNavigationReady]);
+ useEffect(()=>{if(phase!==4||(playing&&finished!==4))return;const timer=setTimeout(()=>setRead(true),playing?1500:0);return()=>clearTimeout(timer);},[phase,playing,finished]);
+ useEffect(()=>{
+  const section=websites.current;if(!section||phase!==4||(playing&&finished!==4))return;const targets=section.querySelectorAll<HTMLElement>('[data-message]');
+  if(!playing){targets.forEach(el=>{el.dataset.revealed='true';});return;}
+  // Reserve a separate start time even when a tall viewport reveals several
+  // cards in one observer delivery. Scrolling never restarts a revealed card.
+  let nextStart=0;const timers:ReturnType<typeof setTimeout>[]=[];
+  const observer=new IntersectionObserver(entries=>{
+   entries.filter(entry=>entry.isIntersecting).sort((a,b)=>Number((a.target as HTMLElement).dataset.message)-Number((b.target as HTMLElement).dataset.message)).forEach(entry=>{
+    const card=entry.target as HTMLElement;observer.unobserve(card);if(card.dataset.revealed==='true')return;
+    const now=performance.now(),start=Math.max(now,nextStart);nextStart=start+480;
+    timers.push(setTimeout(()=>{card.dataset.revealed='true';},start-now));
+   });
+  },{threshold:.16,rootMargin:'0px 0px -14% 0px'});targets.forEach(el=>observer.observe(el));return()=>{observer.disconnect();timers.forEach(clearTimeout);};
+ },[phase,playing,finished]);
+ const finishReading=(keyboard:boolean)=>{if(departing)return;setDeparting(true);window.dispatchEvent(new CustomEvent('madagin:surface-pulse',{detail:{x:.5,y:.6,strength:1.3,duration:1.8}}));exitTimer.current=setTimeout(()=>onAdvance(5,keyboard),playing?380:0);};
+ return <>{servicePhrases.map((phrase,i)=>{
+  if(phase!==i+1)return null;
+  const active=phase===i+1,ready=active&&arrived&&(!playing||finished===phase)&&(phase!==2||navigationEmerged);
+  return <section key={phrase.kind} ref={phrase.kind==='websites'?websites:undefined} id={`chapter-${phrase.kind}`} className={`${styles.scene} ${phrase.kind==='websites'?styles.trustScene:''}`} data-scene={phrase.kind} data-guided-panel={phrase.kind} data-arrived={active&&arrived} data-playing={playing} data-sequence-complete={ready} data-audience-ready={finished===4||!playing} data-departing={departing} data-inquiry={phrase.kind==='strategy'&&inquiryOpen} data-inquiry-entered={phrase.kind==='strategy'&&inquiryEntered} hidden={!active} inert={!active} aria-label={phrase.kind==='strategy'&&inquiryEntered?'Project inquiry':undefined} aria-labelledby={phrase.kind==='strategy'&&inquiryEntered?undefined:`${phrase.kind}-title`} onAnimationEnd={complete}>
+   {!inquiryOpen?<div className={styles.phraseStack} data-inquiry-departure={phrase.kind==="strategy"} aria-hidden={phrase.kind==='strategy'&&inquiryEntered||undefined} inert={phrase.kind==='strategy'&&inquiryEntered}><div className={styles.phraseContents}>{phrase.kind==="strategy"?<SurfaceEmergence visible={active&&arrived} treatment="ripple" duration={1500} onComplete={strategyComplete}><ChapterPhrase phrase={phrase} active={active&&arrived} onDesignComplete={designComplete}/></SurfaceEmergence>:phrase.kind==="websites"?<SurfaceEmergence visible={active&&arrived} duration={1850}><ChapterPhrase phrase={phrase} active={active&&arrived} onDesignComplete={designComplete}/></SurfaceEmergence>:<ChapterPhrase phrase={phrase} active={active&&arrived} onDesignComplete={designComplete}/>}
+    {phrase.kind==='experiences'?<p className={styles.identityLine}><span className={styles.identityBrand}>to your brand</span><DrawnAmpersand/><span className={styles.identityPeople} data-sequence-end="true">to each other</span></p>:null}
+    {phrase.kind==='websites'?<TrustAudience active={active&&arrived} onComplete={audienceComplete}/>:null}
+   </div></div>:null}
+   {phrase.kind==='websites'?<><Testimonials/><div className={styles.singleReadingAdvance} data-reading-advance="" data-departing={departing}><button data-cursor-magnet="" data-cursor-orbit="true" className={styles.doneReading} data-ready={read} disabled={!read||departing} onClick={e=>finishReading(e.detail===0)}>Continue<TablerIcon name="arrow-right" size={24}/></button></div></>:null}
+   {phrase.kind==='strategy'&&inquiryOpen?<div id="inquiry" className={styles.inlineInquiry} aria-label="Plan your project" onAnimationEnd={event=>{if(event.target===event.currentTarget)setInquiryEntered(true);}}><ContactJourney embedded preview={previewProof} active={inquiryEntered||!playing}/></div>:
+    !(phrase.kind==='websites')?<div className={styles.next}>{phrase.kind==='strategy'?<PinkGlassLink href="#inquiry" visible={ready} onAction={keyboard=>{const scene=document.querySelector<HTMLElement>('[data-scene="strategy"]'),stack=scene?.querySelector<HTMLElement>('[data-inquiry-departure]');if(scene&&stack)scene.style.setProperty("--invitation-top",`${stack.getBoundingClientRect().top-scene.getBoundingClientRect().top}px`);onAdvance(6,keyboard);}}>Inquire</PinkGlassLink>:<LiquidControl href={`#chapter-${servicePhrases[i+1]?.kind}`} label={`Continue to ${servicePhrases[i+1]?.service}`} variant={phrase.kind==='design'?'wide':'chapter'} active={ready} onAction={keyboard=>onAdvance(i+2,keyboard)}/>}</div>:null}
   </section>;
-}
-
-export function ProjectDropdown({ project, index }: { project:ContentItem; index:number }) {
-  const [open,setOpen]=useState(false);
-  const panelId=`project-${project.id}`;
-  return <article className={styles.project} data-open={open} data-submerge="">
-    <Link className={styles.projectImage} href={`/projects/${project.slug}`} aria-label={`Explore ${project.title}`}>
-      {project.coverImageUrl ? <>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={project.coverImageUrl} alt={`${project.title} website`} width={1440} height={900} loading="lazy"/>
-      </> : <span>{project.title}</span>}
-      <span className={styles.imageArrow} aria-hidden="true">↗</span>
-    </Link>
-    <div className={styles.projectMeta}><span>Selected study / {String(index+1).padStart(2,"0")}</span><span>{project.details}</span></div>
-    <h3><button className={styles.projectToggle} type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-controls={panelId}><span>{project.title}</span><span className={styles.projectPlus} aria-hidden="true">+</span></button></h3>
-    <div className={styles.projectDisclosure} id={panelId} inert={!open} aria-hidden={!open}><div className={styles.projectInside}><p>{project.summary}</p><Link href={`/projects/${project.slug}`}>Inside the project <span aria-hidden="true">↗</span></Link></div></div>
-  </article>;
+ })}</>;
 }

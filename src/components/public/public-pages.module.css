@@ -565,3 +565,6 @@
 .publicFrame .indexHero > span,.publicFrame .aboutHero > span,.publicFrame .indexCopy > span,.publicFrame .detailHero > span,.publicFrame .detailBody > span,.publicFrame .proofCopy > span,.publicFrame .aboutLabel h2,.publicFrame .nextProject > span:first-child,.publicFrame .indexHero p,.publicFrame .aboutHero p,.publicFrame .detailHero > p { color: #c5d6e4; }
 .publicFrame .indexItem,.publicFrame .aboutMethod article,.publicFrame .aboutStandards article,.publicFrame .projectClosing .nextProject { border-color: #d5e7f448; }
 .publicFrame .proofSection,.publicFrame .aboutStatement,.publicFrame .projectClosing { background: #0b223530; }
+.indexHero.workHero{min-height:0;padding-top:155px;padding-bottom:26px;gap:18px 7vw}.workHero h1{font-size:clamp(36px,4.6vw,72px);max-width:none}.workHero p{font-size:14px;padding-top:0}@media(max-width:800px){.indexHero.workHero{padding-top:155px;gap:16px;padding-bottom:24px}.workHero h1{font-size:39px}.workHero p{font-size:13px}}
+
+.liveWebsite svg,.projectClosing a svg,.contact a svg { display:inline-block; vertical-align:-.2em; }

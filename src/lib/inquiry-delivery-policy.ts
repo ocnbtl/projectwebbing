@@ -1,4 +1,4 @@
-/** Server delivery policy; intentionally not connected to the public form. */
+/** Server delivery policy; all verification gates must pass before any transport. */
 export type InquiryDeliveryConfig = {
   mode: "off" | "webhook";
   recipient: string;
@@ -9,7 +9,7 @@ export type InquiryDeliveryConfig = {
   token: string;
 };
 export type PreparedInquiry = { replyTo: string; brief: string };
-export type InquiryDeliveryResult = { status: "disabled" | "unverified" | "invalid" | "failed" } | { status: "accepted" };
+export type InquiryDeliveryResult = { status: "disabled" | "unverified" | "invalid" | "failed" | "limited" } | { status: "accepted" };
 
 export async function deliverPreparedInquiry(config: InquiryDeliveryConfig, inquiry: PreparedInquiry, transport: typeof fetch): Promise<InquiryDeliveryResult> {
   if (config.mode === "off") return { status: "disabled" };

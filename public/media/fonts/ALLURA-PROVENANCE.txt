@@ -1,0 +1,3 @@
+Allura Regular: https://raw.githubusercontent.com/google/fonts/main/ofl/allura/Allura-Regular.ttf
+License: allura-OFL.txt, downloaded from the same google/fonts repository directory.
+Used only to generate the two opening cursive phrase outlines and pen masks with tools/build-script-lettering.mjs. No new runtime library or externally hosted font request.

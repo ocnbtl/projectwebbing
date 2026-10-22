@@ -1,0 +1,26 @@
+{
+  "source": "Google Fonts",
+  "commit": "23e54b51ddffbc7713c583748e3bd86f62b1fa4a",
+  "assets": [
+    {
+      "file": "Almendra-Bold.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/almendra/Almendra-Bold.ttf",
+      "sha256": "5895ef04d0d56c60083ec302e72db99b952b044ab2b440ee12283649b5edc971"
+    },
+    {
+      "file": "almendra-OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/almendra/OFL.txt",
+      "sha256": "b7eae5e3c3447f70caa14e0c43f5e0d953f54ee59df406f6362863bcee1a0a95"
+    },
+    {
+      "file": "Rye-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/rye/Rye-Regular.ttf",
+      "sha256": "b7edee5e615ae1b6b07e9d030c1309152bf3672a0e8a2a46293e273730f5adba"
+    },
+    {
+      "file": "rye-OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/rye/OFL.txt",
+      "sha256": "399b33eb38cdfc76b8665defa5f81d52e8193d630ad5858c893db6bc20031bc9"
+    }
+  ]
+}

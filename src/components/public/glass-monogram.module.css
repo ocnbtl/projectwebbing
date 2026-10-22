@@ -1,0 +1,14 @@
+.mark { display:block; width:var(--monogram-size,44px); height:var(--monogram-size,44px); position:relative; flex-shrink:0; }
+.mark svg,.optics { display:block; position:absolute; inset:0; width:100%; height:100%; }
+.fallback { overflow:visible; }.optics { opacity:0; pointer-events:none; transition:opacity 240ms; }
+.mark[data-glass-state="ready"] .optics { opacity:1; }.mark[data-glass-state="ready"] .fallback { visibility:hidden; }
+@media(prefers-reduced-motion:reduce) { .optics { transition:none; } }
+@media(forced-colors:active) { .mark .fallback { visibility:visible; }.mark path { fill:LinkText; stroke:none; }.optics { display:none; } }
+
+[data-home-departing="true"] .mark { animation:homeMarkDive 1180ms cubic-bezier(.3,0,.3,1) both; }
+@keyframes homeMarkDive {
+  0% { opacity:1; filter:brightness(1) drop-shadow(0 0 0 #e0f5ff00); transform:none; }
+  35%,65% { opacity:1; filter:brightness(1.16) drop-shadow(0 0 5px #e0f5ff48); transform:none; }
+  100% { opacity:1; filter:brightness(1); transform:none; }
+}
+@media(prefers-reduced-motion:reduce) { [data-home-departing="true"] .mark { animation:none; } }

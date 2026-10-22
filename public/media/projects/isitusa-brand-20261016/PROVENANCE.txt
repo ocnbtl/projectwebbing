@@ -1,0 +1,7 @@
+Source: https://isitusa.com/brand (downloaded 2026-10-16)
+symbol-name.svg: https://isitusa.com/brand/v10/symbol-name.svg?v=1.005
+wordmark.svg: https://isitusa.com/brand/v10/wordmark-green.svg?v=1.005
+full-name.svg: https://isitusa.com/brand/v10/full-name.svg?v=1.004
+InvasiveSerif-Bold.ttf: https://isitusa.com/fonts/invasive-serif/InvasiveSerif-Bold.ttf?v=1.005
+All SVG/font files copied unchanged. White rendering uses CSS without reshaping artwork.
+Website captures: https://isitusa.com/ at1440x1000 and390x844; https://isitusa.com/species at1440x1000. Captured via browser2026-10-16.

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import ts from 'typescript';
+const compile=(path,dependencies={})=>{const module={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{module,exports:module.exports,require:name=>{if(name in dependencies)return dependencies[name];throw Error(name);}});return module.exports;};
+const options=compile('src/lib/inquiry-options.ts');
+const {validInquiry,inquiryBrief,projectOptions}=compile('src/lib/inquiry-form.ts',{'./inquiry-options':options});
+const fixture={stage:[projectOptions[0]],aim:['Something else'],other:'A new service launch',needs:['Search visibility (SEO)'],budget:options.budgetOptions[0],timing:options.timingOptions[2],name:'Preview Reviewer',email:'review@example.com',context:'A focused website revision.'};
+assert.equal(validInquiry(fixture),true);
+for(const input of [null,{}, {...fixture,stage:['unknown']}, {...fixture,needs:['unknown']}, {...fixture,budget:'fake'}, {...fixture,email:'bad\nBcc: second@example.com'}, {...fixture,name:''}, {...fixture,context:' '}, {...fixture,context:'x'.repeat(3001)}, {...fixture,other:'x'.repeat(501)}, {...fixture,timing:null}])assert.equal(validInquiry(input),false);
+assert.ok(inquiryBrief(fixture,true).includes('This saved copy has not been sent.'));
+assert.ok(!inquiryBrief(fixture).includes('This saved copy has not been sent.'));
+assert.ok(inquiryBrief(fixture).includes('Search visibility (SEO)'));
+console.log(JSON.stringify({passed:true,invalidPayloadsRejected:11,realNetworkRequests:0}));
