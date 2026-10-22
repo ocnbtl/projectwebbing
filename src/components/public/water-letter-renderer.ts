@@ -1,173 +1,132 @@
 import * as THREE from "three";
+import { buildGlyphSurface } from "./font-glass-renderer";
+import { aliceSpacing } from "./brand-wordmark-spacing";
+import { aliceLetterFragment } from "./alice-letter-material";
+import { getWaterWake } from "./water-wake";
 
-export type LiquidRenderer = { dispose: () => void; setPaused: (paused: boolean) => void };
+const EMERGENCE_SECONDS = 4.4;
+// A page can contain the hidden landing mark and the footer. Only the visible
+// mark owns the water emitter; an offscreen renderer must not erase its waves.
+let wakeOwner: HTMLElement | null = null;
+export type LiquidRenderer = { dispose: () => void; snapshot: () => string; setPaused: (paused: boolean) => void; setExpanded: (expanded: boolean) => void };
 
-// Shallow optical glass samples the actual Balsa canvas in screen coordinates.
-// No second approximation of the water, shadow planes, or reflected silhouettes.
-export async function createLiquidRenderer(host: HTMLElement, onHover: (index: number | null) => void, signal: AbortSignal): Promise<LiquidRenderer> {
-  type Glyphs = Record<string, { offset: number; vertices: number; indicesOffset: number; count: number; width: number; scale: number }>;
-  const [manifestResponse, geometryResponse] = await Promise.all([
-    fetch("/media/liquid/letters.json", { signal }), fetch("/media/liquid/letters.bin", { signal }),
-  ]);
-  if (!manifestResponse.ok || !geometryResponse.ok) throw new Error("Letter shapes unavailable");
-  const { glyphs } = await manifestResponse.json() as { glyphs: Glyphs };
-  const buffer = await geometryResponse.arrayBuffer();
-  signal.throwIfAborted();
-  const waterCanvas = document.querySelector<HTMLCanvasElement>("[data-water-canvas]");
-  if (!waterCanvas) throw new Error("Water surface unavailable");
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.35));
-  renderer.setClearColor(0x000000, 0);
-  renderer.domElement.setAttribute("aria-hidden", "true");
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
-  function waterTexture() {
-    const value = new THREE.CanvasTexture(waterCanvas!);
-    value.colorSpace = THREE.NoColorSpace;
-    value.minFilter = THREE.LinearFilter; value.magFilter = THREE.LinearFilter; value.generateMipmaps = false;
-    return value;
+export async function createLiquidRenderer(host: HTMLElement, onHover: (index: number | null) => void, signal: AbortSignal, placement: "hero" | "footer" | "nav" = "hero"): Promise<LiquidRenderer> {
+ const mark = host.querySelector<HTMLElement>("[data-brand-wordmark]");
+ const family = getComputedStyle(mark || host).fontFamily.split(",")[0].replace(/["']/g, "").trim();
+ const loaded = await document.fonts.load(`400 100px "${family}"`, "MADAGIN");
+ if (!loaded.length) throw new Error("Alice letterforms unavailable");
+ signal.throwIfAborted();
+ const water = document.querySelector<HTMLCanvasElement>("[data-water-canvas]");
+ if (!water) throw new Error("Water surface unavailable");
+ if (water.dataset.ready !== "true") await new Promise<void>((resolve, reject) => {
+  const clean = () => { window.removeEventListener("madagin:water-ready", ready); signal.removeEventListener("abort", cancel); };
+  const ready = () => { clean(); resolve(); }, cancel = () => { clean(); reject(new DOMException("Aborted", "AbortError")); };
+  window.addEventListener("madagin:water-ready", ready, { once: true }); signal.addEventListener("abort", cancel, { once: true });
+  if (signal.aborted) cancel(); else if (water.dataset.ready === "true") ready();
+ });
+ signal.throwIfAborted();
+ const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
+ renderer.setClearColor(0, 0); renderer.domElement.setAttribute("aria-hidden", "true");
+ const scene = new THREE.Scene(), camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 2); camera.position.z = 1;
+ const makeWater = () => { const t = new THREE.CanvasTexture(water); t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = false; t.colorSpace = THREE.NoColorSpace; return t; };
+ let waterTexture = makeWater(), waterWidth = water.width, waterHeight = water.height;
+ let wake = getWaterWake();
+ const makeWake = () => { const t = new THREE.DataTexture(wake.data, wake.width, wake.height); t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter; t.needsUpdate = true; return t; };
+ let wakeTexture = makeWake();
+ let surface: ReturnType<typeof buildGlyphSurface> | undefined, surfaceWidth = 0;
+ const u = {
+  uSurface: { value: null as THREE.Texture | null }, uWater: { value: waterTexture }, uWaterEdge: { value: 0 }, uWake: { value: wakeTexture },
+  uViewport: { value: new THREE.Vector2() }, uOrigin: { value: new THREE.Vector2() }, uHostSize: { value: new THREE.Vector2() },
+  uLetterSize: { value: new THREE.Vector2() }, uDpr: { value: 1 }, uProgress: { value: 0 },
+  uReveal: { value: placement === "nav" && host.dataset.expanded !== "true" ? 0 : 1 }, uMotionScale: { value: placement === "nav" ? .18 : 1 }, uOpticalBoost: { value: placement === "nav" ? 1.7 : 1 },
+  uPointer: { value: new THREE.Vector2(.5, .5) }, uHover: { value: 0 }, uTime: { value: 0 }, uCuts:{value:new Float32Array(6)},
+ };
+ const material = new THREE.ShaderMaterial({ uniforms: u, transparent: true, toneMapped: false, depthWrite: false,
+  vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader: aliceLetterFragment,
+ });
+ const geometry = new THREE.PlaneGeometry(1, 1), mesh = new THREE.Mesh(geometry, material); scene.add(mesh);
+ const pointer = new THREE.Vector2(-4, -4);
+ let bounds = host.getBoundingClientRect(), letterWidth = 0, letterHeight = 0, left = 0, top = 0;
+ let revealTarget = u.uReveal.value;
+ let frame = 0, elapsed = 0, previous = performance.now(), lastRender = 0, visible = false, paused = false, disposed = false, sampled = "";
+ const sourceMask = () => {
+  if (!surface || !letterWidth || !letterHeight || wakeOwner !== host || !visible) return;
+  wake.setMask(surface.ink, surface.texture.image.width, surface.texture.image.height, { x: left / innerWidth, y: top / innerHeight, width: letterWidth / innerWidth, height: letterHeight / innerHeight });
+ };
+ const releaseWake = () => { if (wakeOwner === host) { wake.setProgress(1); wake.setResting(false); wakeOwner = null; } };
+ const syncPosition = () => {
+  const next = host.getBoundingClientRect();
+  if (Math.abs(next.left - bounds.left) < .2 && Math.abs(next.top - bounds.top) < .2) return;
+  left += next.left - bounds.left; top += next.top - bounds.top; bounds = next;
+  u.uOrigin.value.set(bounds.left, bounds.top); sourceMask();
+ };
+ function resize() {
+  bounds = host.getBoundingClientRect(); if (!bounds.width || !bounds.height) return;
+  letterWidth = placement === "nav" ? bounds.width * 1.1 : placement === "footer" ? bounds.width * .98 : Math.min(bounds.width * .98, bounds.height / .36 * .95); letterHeight = letterWidth * .36;
+  left = bounds.left + (bounds.width - letterWidth) / 2; top = bounds.top + (bounds.height - letterHeight) / 2;
+  renderer.setPixelRatio(placement === "nav" ? Math.min(3,Math.max(2,devicePixelRatio||1)) : Math.min(devicePixelRatio || 1, 2, Math.sqrt(4000000 / (bounds.width * bounds.height))));
+  renderer.setSize(bounds.width, bounds.height); u.uDpr.value = renderer.getPixelRatio();
+  camera.left = -bounds.width / 2; camera.right = bounds.width / 2; camera.top = bounds.height / 2; camera.bottom = -bounds.height / 2; camera.updateProjectionMatrix();
+  mesh.scale.set(letterWidth, letterHeight, 1);
+  u.uViewport.value.set(innerWidth, innerHeight); u.uOrigin.value.set(bounds.left, bounds.top); u.uHostSize.value.set(bounds.width, bounds.height); u.uLetterSize.value.set(letterWidth, letterHeight);
+  if (!surface || Math.abs(surfaceWidth - letterWidth) > 40) {
+   surface?.texture.dispose(); surface = buildGlyphSurface({ family, weight: 400, text: "MADAGIN", pairAdjustments: aliceSpacing }, letterWidth, placement === "nav" ? .005 : .0035);
+   // Pre-filter the small mark's bevel highlights instead of undersampling a
+   // large glyph field into isolated bright pixels at header size.
+   if(placement === "nav") { surface.texture.generateMipmaps=true; surface.texture.minFilter=THREE.LinearMipmapLinearFilter; surface.texture.needsUpdate=true; }
+   surfaceWidth = letterWidth; u.uSurface.value = surface.texture; u.uCuts.value=Float32Array.from(surface.cuts);
   }
-  let texture = waterTexture();
-  let textureWidth = waterCanvas.width, textureHeight = waterCanvas.height;
-  const shared = {
-    uWater: { value: texture }, uTime: { value: 0 },
-    uViewport: { value: new THREE.Vector2(innerWidth, innerHeight) },
-    uOrigin: { value: new THREE.Vector2() }, uHeight: { value: 1 },
-    uDpr: { value: renderer.getPixelRatio() },
-    uEdgeBoost: { value: innerWidth <= 800 ? 2.45 : 1.12 },
-  };
-  const base = new THREE.ShaderMaterial({
-    uniforms: { ...shared, uEmerge: { value: 0 }, uRipple: { value: new THREE.Vector2() }, uHover: { value: 0 } }, transparent: true, toneMapped: false,
-    vertexShader: `varying vec3 vNormal; varying vec3 vView; varying vec3 vPosition;
-      void main(){vec4 p=modelViewMatrix*vec4(position,1.);vNormal=normalize(normalMatrix*normal);vView=normalize(-p.xyz);vPosition=position;gl_Position=projectionMatrix*p;}`,
-    fragmentShader: `uniform sampler2D uWater;uniform vec2 uViewport;uniform vec2 uOrigin;uniform float uHeight;uniform float uDpr;uniform float uTime;uniform float uEmerge;uniform float uEdgeBoost;uniform vec2 uRipple;uniform float uHover;
-      varying vec3 vNormal;varying vec3 vView;varying vec3 vPosition;
-      void main(){
-        vec3 n=normalize(vNormal);vec3 eye=normalize(vView);
-        float edge=pow(1.-abs(dot(n,eye)),2.1);
-        vec2 screen=vec2(gl_FragCoord.x/uDpr+uOrigin.x,uViewport.y-uOrigin.y-uHeight+gl_FragCoord.y/uDpr)/uViewport;
-        float wave=sin(vPosition.x*3.2+uTime*.6)*sin(vPosition.y*4.1-uTime*.4);
-        vec2 bend=n.xy*(.014+edge*.029)+(1.-uEmerge)*vec2(sin(vPosition.y*8.+uTime),wave)*.012;
-        vec2 uv=clamp(screen+bend,vec2(.002),vec2(.998));
-        vec3 behind=texture2D(uWater,uv).rgb;
-        float split=.0013*edge;
-        behind.r=texture2D(uWater,uv+vec2(split,0.)).r;
-        behind.b=texture2D(uWater,uv-vec2(split,0.)).b;
-        vec3 light=normalize(vec3(-.45,.85,1.));
-        float reflected=pow(max(dot(reflect(-light,n),eye),0.),42.);
-        float rim=pow(edge,.65)*(.22+.56*max(dot(n,light),0.));
-        vec3 color=behind*.94+vec3(.075,.105,.13)*(.15+edge*.22);
-        color+=vec3(.76,.89,1.)*(rim*uEdgeBoost+reflected*.68+edge*.055*uEdgeBoost)*uEmerge;
-        color+=vec3(.3,.42,.55)*max(0.,uEdgeBoost-1.2)*.06*uEmerge;
-        float dist=length((vPosition.xy-uRipple)*vec2(1.,1.5));
-        float ripple=(.5+.5*sin(dist*22.-uTime*5.))*exp(-dist*1.6)*uHover;
-        vec3 ink=.52+.38*cos(vec3(0.,2.1,4.2)+uTime*.26+dist*3.2+wave);
-        color=mix(color,ink,ripple*.72);
-        float alpha=smoothstep(0.,.8,uEmerge)*(.89+edge*.11);
-        gl_FragColor=vec4(color,alpha);
-      }`,
-  });
-  const meshes: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[] = [];
-  const positions: number[] = [];
-  let advance = 0;
-  for (const letter of "MADAGIN") {
-    const glyph = glyphs[letter];
-    const packed = new Int16Array(buffer, glyph.offset, glyph.vertices * 6);
-    const vertices = new Float32Array(glyph.vertices * 3), normals = new Float32Array(glyph.vertices * 3);
-    for (let i = 0; i < glyph.vertices; i++) for (let c = 0; c < 3; c++) {
-      vertices[i * 3 + c] = packed[i * 6 + c] / 32767 * glyph.scale;
-      normals[i * 3 + c] = packed[i * 6 + c + 3] / 32767;
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3)); geometry.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
-    geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(buffer, glyph.indicesOffset, glyph.count), 1));
-    const material = base.clone(); Object.assign(material.uniforms, shared);
-    const mesh = new THREE.Mesh(geometry, material); mesh.scale.set(1, 1.85, .16);
-    positions.push(advance + glyph.width / 2); meshes.push(mesh); scene.add(mesh);
-    // Optical pairs: diagonals nest more closely; I needs breathing room.
-    const gaps = [.23, .18, .20, .15, .31, .32, 0];
-    advance += glyph.width + gaps[meshes.length - 1];
-  }
-  base.dispose();
-  const wordWidth = advance;
-  positions.forEach((x, i) => { meshes[i].position.x = x - wordWidth / 2; });
-  const pointer = new THREE.Vector2(-4, -4), raycaster = new THREE.Raycaster();
-  let hovering: number | null = null;
-  let visible = true, paused = false, disposed = false;
-  let frame = 0, elapsed = 0, previous = performance.now(), lastDraw = 0, sampledFrame = "";
-  function updateOrigin() {
-    const bounds = host.getBoundingClientRect(); shared.uOrigin.value.set(bounds.left, bounds.top);
-    shared.uHeight.value = bounds.height; shared.uViewport.value.set(innerWidth, innerHeight);
-    shared.uEdgeBoost.value = innerWidth <= 800 ? 2.45 : 1.12;
-  }
-  function syncWaterTexture() {
-    if (waterCanvas!.width !== textureWidth || waterCanvas!.height !== textureHeight) {
-      texture.dispose(); texture = waterTexture(); shared.uWater.value = texture;
-      textureWidth = waterCanvas!.width; textureHeight = waterCanvas!.height;
-    }
-    if (waterCanvas!.dataset.frame !== sampledFrame) { texture.needsUpdate = true; sampledFrame = waterCanvas!.dataset.frame || ""; }
-  }
-  function resize() {
-    const width = host.clientWidth, height = host.clientHeight;
-    if (!width || !height) return;
-    renderer.setSize(width, height); camera.aspect = width / height;
-    const distance = wordWidth / (2 * Math.tan(THREE.MathUtils.degToRad(14)) * camera.aspect) * 1.035;
-    camera.position.set(0, .7, Math.max(7, distance)); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
-    updateOrigin(); syncWaterTexture(); renderer.render(scene, camera);
-  }
-  function point(event: PointerEvent) {
-    if (event.pointerType === "touch") return;
-    const b = host.getBoundingClientRect(); pointer.set((event.clientX - b.left) / b.width * 2 - 1, -(event.clientY - b.top) / b.height * 2 + 1);
-  }
-  function leave() { pointer.set(-4, -4); hovering = null; onHover(null); }
-  function pose(still = false) {
-    meshes.forEach((mesh, i) => {
-      const t = Math.max(0, elapsed - i * .045);
-      const emerge = still ? 1 : THREE.MathUtils.smoothstep(t, 0, 1.6);
-      mesh.material.uniforms.uEmerge.value = emerge;
-      mesh.position.y = (1 - emerge) * -.48 + (still ? 0 : Math.sin(elapsed * .48 + i * .6) * .022);
-      mesh.rotation.x = -.045 - (1 - emerge) * .09; mesh.rotation.y = still ? 0 : Math.sin(elapsed * .27 + i) * .006;
-    });
-  }
-  function draw() {
-    // WebGL textures must be reallocated after the source canvas changes size.
-    syncWaterTexture();
-    updateOrigin(); shared.uTime.value = elapsed; pose(paused);
-    raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(meshes)[0];
-    const next = hit ? meshes.indexOf(hit.object as typeof meshes[number]) : null;
-    if (next !== hovering) { hovering = next; onHover(next); }
-    meshes.forEach((mesh, i) => {
-      mesh.material.uniforms.uHover.value += ((i === next ? 1 : 0) - mesh.material.uniforms.uHover.value) * .075;
-      if (hit && i === next) {
-        const local = mesh.worldToLocal(hit.point.clone());
-        mesh.material.uniforms.uRipple.value.lerp(new THREE.Vector2(local.x, local.y), .23);
-      }
-    });
-    renderer.render(scene, camera); host.dataset.frames = String(Number(host.dataset.frames || 0) + 1);
-  }
-  function loop(now: number) {
-    frame = 0; if (disposed || paused || !visible || document.hidden) return;
-    frame = requestAnimationFrame(loop);
-    if (now-lastDraw < 1000/60) return;
-    lastDraw=now;
-    elapsed += Math.min((now - previous) / 1000, .1); previous = now; draw();
-  }
-  function wake() { previous = performance.now(); if (!frame && !paused && visible && !document.hidden && !disposed) frame = requestAnimationFrame(loop); }
-  const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; wake(); }, { rootMargin: "40px" });
-  const resizer = new ResizeObserver(resize);
-  host.append(renderer.domElement); pose(); resize(); host.dataset.ready = "true";
-  observer.observe(host); resizer.observe(host);
-  host.addEventListener("pointermove", point); host.addEventListener("pointerleave", leave);
-  window.addEventListener("scroll", leave, { passive: true }); document.addEventListener("visibilitychange", wake); wake();
-  return {
-    setPaused(value) { paused = value; if (value) { cancelAnimationFrame(frame); frame = 0; draw(); leave(); } else wake(); },
-    dispose() {
-      disposed = true; cancelAnimationFrame(frame); observer.disconnect(); resizer.disconnect();
-      host.removeEventListener("pointermove", point); host.removeEventListener("pointerleave", leave);
-      window.removeEventListener("scroll", leave); document.removeEventListener("visibilitychange", wake);
-      meshes.forEach(mesh => { mesh.geometry.dispose(); mesh.material.dispose(); }); texture.dispose();
-      renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); delete host.dataset.ready;
-    },
-  };
+  const nextWake = getWaterWake(); if (nextWake !== wake) { wake = nextWake; wakeTexture.dispose(); wakeTexture = makeWake(); u.uWake.value = wakeTexture; }
+  sourceMask(); host.dataset.fit = `${letterWidth.toFixed(1)}×${letterHeight.toFixed(1)}`;
+  draw(0);
+ }
+ function point(event: PointerEvent) { if (event.pointerType !== "touch") pointer.set((event.clientX - left) / letterWidth, 1 - (event.clientY - top) / letterHeight); }
+ function leave() { pointer.set(-4, -4); onHover(null); }
+ function draw(dt: number) {
+  if (!surface) return;
+  if (water!.width !== waterWidth || water!.height !== waterHeight) { waterTexture.dispose(); waterTexture = makeWater(); waterWidth = water!.width; waterHeight = water!.height; u.uWater.value = waterTexture; }
+  u.uWaterEdge.value=Number(water!.dataset.waterEdge||0);
+  if (sampled !== water!.dataset.frame) { waterTexture.needsUpdate = true; sampled = water!.dataset.frame || ""; }
+  wakeTexture.needsUpdate = true;
+  const progress = placement === "nav" || paused ? 1 : Math.min(1, elapsed / EMERGENCE_SECONDS);
+  if (wakeOwner === host && visible) { wake.setProgress(progress); wake.setResting(!paused && progress === 1,placement==='footer'?.22:1); }
+  u.uReveal.value = paused ? revealTarget : u.uReveal.value + (revealTarget - u.uReveal.value) * (1 - Math.exp(-dt * 6));
+  if (Math.abs(revealTarget-u.uReveal.value)<.0005) u.uReveal.value=revealTarget;
+  u.uProgress.value = progress; u.uTime.value = paused ? 0 : placement==='nav' ? performance.now()/1000 : elapsed;
+  const x = Math.floor(pointer.x * surface.texture.image.width), y = Math.floor((1 - pointer.y) * surface.texture.image.height);
+  const over = x >= 0 && x < surface.texture.image.width && y >= 0 && y < surface.texture.image.height && surface.ink[(y * surface.texture.image.width + x) * 4 + 3] > 32;
+  u.uHover.value += ((over && !paused ? 1 : 0) - u.uHover.value) * (1 - Math.exp(-dt * 7));
+  if (over) u.uPointer.value.lerp(pointer, 1 - Math.exp(-dt * 12));
+  renderer.render(scene, camera);
+  host.dataset.frames = String(Number(host.dataset.frames || 0) + 1); host.dataset.emergence = String(progress); host.dataset.wakeRevision = String(wake.revision);
+  if(progress>=.73&&host.dataset.introducing!=="true"){host.dataset.introducing="true";host.dispatchEvent(new Event("madagin:wordmark-introducing"));}
+  if (progress === 1 && host.dataset.emerged !== "true") { host.dataset.emerged = "true"; host.dispatchEvent(new Event("madagin:wordmark-emerged")); }
+ }
+ function loop(now: number) {
+  frame = 0; if (disposed || paused || !visible || document.hidden) return;
+  if (now - lastRender < 1000 / (placement === "nav" ? 30 : 60)) { frame = requestAnimationFrame(loop); return; }
+  lastRender = now;
+  const dt = Math.max(0, Math.min((now - previous) / 1000, .05)); previous = now; elapsed += dt;
+  if (placement !== "hero") syncPosition();
+  draw(dt); frame = requestAnimationFrame(loop);
+ }
+ function start() { previous = performance.now(); if (!frame && !paused && visible && !document.hidden && !disposed) frame = requestAnimationFrame(loop); }
+ const observer = new IntersectionObserver(([entry]) => {
+  visible = entry.isIntersecting;
+  if (visible) { if (placement !== "nav") wakeOwner = host; resize(); sourceMask(); draw(0); }
+  else releaseWake();
+  start();
+ }, { threshold: .08 });
+ const scroll = () => { if (visible && placement !== "hero" && paused) { syncPosition(); draw(0); } };
+ const resizer = new ResizeObserver(resize);
+ host.append(renderer.domElement); host.dataset.brandFont = "Alice"; resize(); host.dataset.ready = "true";
+ observer.observe(host); resizer.observe(host); host.addEventListener("pointermove", point); host.addEventListener("pointerleave", leave);
+ document.addEventListener("visibilitychange", start); window.addEventListener("scroll", scroll, { passive: true }); start();
+ return {
+  snapshot() { draw(0); return renderer.domElement.toDataURL(); },
+  setExpanded(value) { revealTarget=value?1:0; if(paused){u.uReveal.value=revealTarget;draw(0);}else start(); },
+  setPaused(value) { paused = value; if (value) { cancelAnimationFrame(frame); frame = 0; elapsed = EMERGENCE_SECONDS; if (wakeOwner === host) wake.settle(); draw(0); leave(); } else start(); },
+  dispose() { disposed = true; cancelAnimationFrame(frame); observer.disconnect(); resizer.disconnect(); host.removeEventListener("pointermove", point); host.removeEventListener("pointerleave", leave); document.removeEventListener("visibilitychange", start); window.removeEventListener("scroll", scroll); releaseWake(); geometry.dispose(); material.dispose(); surface?.texture.dispose(); waterTexture.dispose(); wakeTexture.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); delete host.dataset.ready; },
+ };
 }

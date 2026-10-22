@@ -1,0 +1,40 @@
+{
+  "id": "madagin-ridge-field-v1",
+  "grid": 321,
+  "bounds": [
+    -310.0,
+    310.0,
+    -315.0,
+    285.0
+  ],
+  "channels": [
+    "height",
+    "authority",
+    "drainage",
+    "baselineHeight"
+  ],
+  "baselineCommit": "7536e49f76b352bfb3faab46d78174426455fda7",
+  "sourceSha256": "1c73d38004fa26eeba80b0a9e1bdd317b097eb007cebe53bcf76f39149e0bcec",
+  "sourceUrl": "https://chs.coast.noaa.gov/htdata/raster2/elevation/NCEI_ninth_Topobathy_Hawaii_9428/tiles/ncei19_n22x25_w159x75_2021v1.tif",
+  "sourceCrop": {
+    "centerLonLat": [
+      -159.6708,
+      22.15328
+    ],
+    "widthMeters": 1550.0,
+    "depthMeters": 1500.0
+  },
+  "method": "Bilinear CUDEM crop minus Gaussian 26-sample low pass; negative residual bounded smoothly to -22/0 m, inland authority; retained accepted public base. Authored hybrid, not actual Kalalau geography.",
+  "reliefRange": [
+    -20.96528204746466,
+    -0.0
+  ],
+  "adjustedEcology": 1471,
+  "additionalCanopy": 4093,
+  "drainageEdges": 100105,
+  "dryDrainageOnly": true,
+  "note": "D8 contributing area supports surface/ecology moisture. It is not an added visible stream or a claim of connected whole-world hydrology.",
+  "surfaceSha256": "7c3be5a325dd39b829b50ef1ee14b08fe0626b18db695fb7aa6c2bdc926c946d",
+  "surfaceBytes": 1648656,
+  "ecologySha256": "effa7aa7841d686eb3477b79bb0a88a37fea89058a4472f1ce4bd5e73ab8baa1"
+}

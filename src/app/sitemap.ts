@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getContentItems } from "@/lib/content";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://projectwebbing.vercel.app";
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://madagin.com";
   const [projects, posts] = await Promise.all([
     getContentItems({ kind: "project" }),
     getContentItems({ kind: "post" }),

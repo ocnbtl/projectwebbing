@@ -1,0 +1,40 @@
+# Publish the web application only. Research, private notes, source tools, and
+# local review artifacts are deliberately absent from deployment uploads.
+/*
+!/src
+!/src/**
+!/public
+!/public/**
+!/package.json
+!/pnpm-lock.yaml
+!/pnpm-workspace.yaml
+!/next.config.ts
+!/tsconfig.json
+!/next-env.d.ts
+!/eslint.config.mjs
+!/vercel.json
+!/scripts
+/scripts/*
+!/scripts/prune-deployment-assets.mjs
+/public/media/portraits/illustrative-clients.png
+# Local world-lab research is not part of the public site. Keep JSON imports
+# available to the compiler, but omit the large experimental media payloads.
+/public/world/**/*.bin
+/public/world/**/*.f32
+/public/world/**/*.glb
+/public/world/**/*.gltf
+/public/world/**/*.hdr
+/public/world/**/*.jpeg
+/public/world/**/*.jpg
+/public/world/**/*.png
+/public/world/**/*.webp
+/public/world/**/*.u16
+/public/world/**/*.json
+!/public/world/napali-catchment-v1/route.json
+!/public/world/napali-catchment-v1/manifest.json
+!/public/world/napali-catchment-v1/surface.json
+!/public/world/napali-catchment-v1/streams.json
+!/public/world/ridge-field-v1/manifest.json
+!/public/world/foundation-noaa-v1/manifest.json
+!/public/world/foundation-surface-v2/manifest.json
+/public/media/madagin-mountain-journey-v1.mp4

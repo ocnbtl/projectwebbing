@@ -1,3 +1,27 @@
-.surface { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(111deg, #0f2334, #264964 37%, #245b80 58%, #092333); }
+/* This is page scenery, not a viewport-attached UI panel. WebKit excludes
+   negative-z viewport backgrounds from its fixed-container toolbar color
+   extension. The public body's isolated stacking context keeps it visible. */
+.surface { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow-anchor:none; background: linear-gradient(111deg, #0f2334, #264964 37%, #245b80 58%, #092333); }
+.field { position:absolute; inset:0; }
 .surface canvas { display: block; width: 100%; height: 100%; }
 .surface canvas:not([data-ready="true"]) { visibility: hidden; }
+/* Real overscan pixels stay inside the document, including its opening lead-in.
+   Clip to the page so tracking never creates a growing scrollable tail. */
+.surface[data-page-water="true"] { position:absolute; overflow:clip; }
+.surface[data-page-water="true"] .field {
+ top:calc(-1 * var(--water-overscan));
+ bottom:auto;
+ height:calc(var(--water-viewport-height,100lvh) + 2 * var(--water-overscan));
+ transform:translateY(var(--water-scroll-y,0px));
+}
+.surface[data-scroll-water="true"] .field {
+ animation:waterPageTrack linear both;
+ animation-timeline:scroll(root block);
+}
+@keyframes waterPageTrack {
+ from { transform:translateY(0); }
+ to { transform:translateY(var(--water-scroll-range,0px)); }
+}
+@media(forced-colors:active) { .surface { background:Canvas; }.surface canvas { display:none; } }
+
+:global(html[data-water-transition]) .surface[data-scroll-water="true"] .field { animation:none; transform:translateY(var(--water-scroll-y,0px)); }

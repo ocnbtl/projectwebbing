@@ -1,0 +1,54 @@
+{
+  "source": "https://github.com/google/fonts",
+  "commit": "23e54b51ddffbc7713c583748e3bd86f62b1fa4a",
+  "fonts": [
+    {
+      "family": "caudex",
+      "file": "Caudex-Bold.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/caudex/Caudex-Bold.ttf",
+      "license": "caudex-OFL.txt"
+    },
+    {
+      "family": "gloock",
+      "file": "Gloock-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/gloock/Gloock-Regular.ttf",
+      "license": "gloock-OFL.txt"
+    },
+    {
+      "family": "italiana",
+      "file": "Italiana-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/italiana/Italiana-Regular.ttf",
+      "license": "italiana-OFL.txt"
+    },
+    {
+      "family": "cormorantunicase",
+      "file": "CormorantUnicase-Medium.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/cormorantunicase/CormorantUnicase-Medium.ttf",
+      "license": "cormorantunicase-OFL.txt"
+    },
+    {
+      "family": "forum",
+      "file": "Forum-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/forum/Forum-Regular.ttf",
+      "license": "forum-OFL.txt"
+    },
+    {
+      "family": "prata",
+      "file": "Prata-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/prata/Prata-Regular.ttf",
+      "license": "prata-OFL.txt"
+    },
+    {
+      "family": "marcellus",
+      "file": "Marcellus-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/marcellus/Marcellus-Regular.ttf",
+      "license": "marcellus-OFL.txt"
+    },
+    {
+      "family": "tenorsans",
+      "file": "TenorSans-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/23e54b51ddffbc7713c583748e3bd86f62b1fa4a/ofl/tenorsans/TenorSans-Regular.ttf",
+      "license": "tenorsans-OFL.txt"
+    }
+  ]
+}

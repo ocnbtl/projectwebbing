@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { BrandName } from "./brand-wordmark";
+import {TablerIcon} from "@/components/ui/tabler-icon";
 import { PublicFooter, PublicHeader } from "@/components/public/public-chrome";
-import { method, promise, standards, studioIntroduction } from "@/lib/brand";
+import { ProjectShowcase } from "./project-showcase";
+import {StudioAbout} from "./studio-about";
+import {IsitusaIdentity} from "./isitusa-identity";
+
+import { projectCapture } from "@/content/portfolio-assets";
 import { getProjectPresentation } from "@/content/project-presentations";
 import type { ContentItem, ContentKind } from "@/lib/content-types";
 import { getPublishedContentItem } from "@/lib/content";
@@ -19,11 +25,11 @@ function routeFor(kind: ContentKind) {
   return kind === "project" ? "projects" : "blog";
 }
 
-function PublicFrame({ children }: { children: React.ReactNode }) {
+function PublicFrame({ children, activeDestination }: { children: React.ReactNode;activeDestination?:"projects"|"about"|"blog" }) {
   return (
     <div className={styles.publicFrame}>
       <a className="skip-link" href="#page-content">Skip to content</a>
-      <PublicHeader tone="dark" />
+      <PublicHeader tone="dark" activeDestination={activeDestination}/>
       <main id="page-content">{children}</main>
       <PublicFooter />
     </div>
@@ -43,7 +49,7 @@ export function ContentIndex({
   return (
     <PublicFrame>
       <header className={styles.indexHero}>
-        <span>Madagin / {projects ? "Projects" : "Blog"}</span>
+        <span><BrandName /> / {projects ? "Projects" : "Blog"}</span>
         <h1>{projects ? "Work with a point of view." : "From the studio."}</h1>
         <p>
           {projects
@@ -99,9 +105,9 @@ export async function ContentDetail({ item }: { item: ContentItem }) {
         <header className={styles.detailHero}>
           <Link href={`/${route}`}>Back to {projects ? "projects" : "the blog"}</Link>
           <span>{item.details || formatDate(item.publishedOn)}</span>
-          <h1>{item.title}</h1>
+          <h1>{item.slug==='isitusa'?<IsitusaIdentity full/>:item.title}</h1>
           <p>{item.summary}</p>
-          {presentation ? <a className={styles.liveWebsite} href={presentation.website} target="_blank" rel="noopener noreferrer">Visit {presentation.domain} <span aria-hidden="true">↗</span></a> : null}
+          {presentation ? <a className={styles.liveWebsite} href={presentation.website} target="_blank" rel="noopener noreferrer">Visit {presentation.domain} <span aria-hidden="true"><TablerIcon name="arrow-up-right" size={18}/></span></a> : null}
         </header>
         {item.coverImageUrl ? (
           // Publishing accepts committed /media paths and public HTTPS images.
@@ -111,7 +117,7 @@ export async function ContentDetail({ item }: { item: ContentItem }) {
           null
         )}
         <div className={styles.detailBody}>
-          <span>{projects ? "Project story" : "Madagin note"}</span>
+          <span>{projects ? "Project story" : <><BrandName /> note</>}</span>
           <div>{(presentation ? paragraphs.slice(0, 1) : paragraphs).map((paragraph, index) => <p key={`${item.id}-${index}`}>{paragraph}</p>)}</div>
         </div>
         {presentation ? <>
@@ -123,82 +129,36 @@ export async function ContentDetail({ item }: { item: ContentItem }) {
             </div>
             <figure>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/media/projects/proof-20260905/${item.slug}-detail.jpg`} width={1440} height={1000} alt={presentation.detailAlt} loading="lazy" />
+              <img src={projectCapture(item.slug, "detail")} width={1440} height={1000} alt={presentation.detailAlt} loading="lazy" />
               <figcaption>{presentation.detailCaption}</figcaption>
             </figure>
           </section>
           <section className={`${styles.proofSection} ${styles.mobileProof}`} aria-labelledby={`${item.slug}-mobile`}>
             <figure>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/media/projects/proof-20260905/${item.slug}-mobile.jpg`} width={390} height={844} alt={`${item.title} website opening at a mobile viewport.`} loading="lazy" />
-              <figcaption>Website views captured September 2026.</figcaption>
+              <img src={projectCapture(item.slug, "mobile")} width={390} height={844} alt={`${item.title} website opening at a mobile viewport.`} loading="lazy" />
+              <figcaption>Website views captured October 16, 2026.</figcaption>
             </figure>
             <div className={styles.proofCopy}>
               <span>02 / On a smaller screen</span>
               <h2 id={`${item.slug}-mobile`}>{presentation.mobileTitle}</h2>
               <p>{presentation.mobileCopy}</p>
-              <a className={styles.liveWebsite} href={presentation.website} target="_blank" rel="noopener noreferrer">Explore the live website <span aria-hidden="true">↗</span></a>
+              <a className={styles.liveWebsite} href={presentation.website} target="_blank" rel="noopener noreferrer">Explore the live website <span aria-hidden="true"><TablerIcon name="arrow-up-right" size={18}/></span></a>
             </div>
           </section>
           <section className={styles.projectClosing} aria-labelledby="project-next-step">
-            <div><span>Your next website</span><h2 id="project-next-step">What needs to change?</h2><p>Tell me where the business is now, and what the website needs to do next.</p><Link href="/contact">Start a project brief <span aria-hidden="true">↗</span></Link></div>
-            {nextProject ? <Link className={styles.nextProject} href={`/projects/${nextProject.slug}`}><span>Another project</span><strong>{nextProject.title}</strong><span aria-hidden="true">→</span></Link> : null}
+            <div><span>Your next website</span><h2 id="project-next-step">What needs to change?</h2><p>Tell me where the business is now, and what the website needs to do next.</p><Link href="/contact">Start a project brief <span aria-hidden="true"><TablerIcon name="arrow-up-right" size={18}/></span></Link></div>
+            {nextProject ? <Link className={styles.nextProject} href={`/projects/${nextProject.slug}`}><span>Another project</span><strong>{nextProject.title}</strong><span aria-hidden="true"><TablerIcon name="arrow-right" size={28}/></span></Link> : null}
           </section>
         </> : <section className={styles.projectClosing} aria-labelledby="note-next-step">
-          <div><span>Your next website</span><h2 id="note-next-step">Start with what needs to change.</h2><p>Use the project brief to put the first questions in one place.</p><Link href="/contact">Prepare your project brief <span aria-hidden="true">→</span></Link></div>
+          <div><span>Your next website</span><h2 id="note-next-step">Start with what needs to change.</h2><p>Use the project brief to put the first questions in one place.</p><Link href="/contact">Prepare your project brief <span aria-hidden="true"><TablerIcon name="arrow-right" size={18}/></span></Link></div>
         </section>}
       </article>
     </PublicFrame>
   );
 }
 
-export function AboutPage() {
-  return (
-    <PublicFrame>
-      <header className={styles.aboutHero}>
-        <span>Madagin / About</span>
-        <h1>A studio built around the whole picture.</h1>
-        <p>{promise}</p>
-      </header>
-
-      <section className={styles.aboutStatement}>
-        <p>{studioIntroduction}</p>
-      </section>
-
-      <section className={styles.aboutMethod} aria-labelledby="about-method-title">
-        <div className={styles.aboutLabel}>
-          <h2 id="about-method-title">The work</h2>
-        </div>
-        <div>
-          {method.map((step, index) => (
-            <article key={step.name}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <h3>{step.name}</h3>
-              <p>{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.aboutStandards} aria-labelledby="standards-title">
-        <h2 id="standards-title">What the site has to become</h2>
-        <div>
-          {standards.map((standard) => (
-            <article key={standard.name}>
-              <h3>{standard.name}</h3>
-              <p>{standard.question}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.contact} id="contact" aria-labelledby="contact-title">
-        <h2 id="contact-title">What needs to change?</h2>
-        <div>
-          <p>If the business has moved forward and the website hasn&apos;t, tell me what changed.</p>
-          <Link href="/contact">Start your brief</Link>
-        </div>
-      </section>
-    </PublicFrame>
-  );
+export function WorkPage({items}:{items:ContentItem[]}) {
+ return <PublicFrame activeDestination="projects"><h1 className="sr-only">Work by Madagin</h1><ProjectShowcase projects={items.map(item=>({...item,hasViews:!!getProjectPresentation(item.slug)}))}/></PublicFrame>;
 }
+export function AboutPage(){return <PublicFrame activeDestination="about"><StudioAbout/></PublicFrame>;}

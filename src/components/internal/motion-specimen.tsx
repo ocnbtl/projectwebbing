@@ -1,4 +1,6 @@
 "use client";
+import { BrandWordmark } from "@/components/public/brand-wordmark";
+
 
 import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
@@ -28,7 +30,7 @@ export function MotionSpecimen() {
             ease: [0.77, 0, 0.175, 1],
           }}
         >
-          MADAGIN
+          <BrandWordmark/>
         </motion.span>
       </div>
       <div className={styles.motionControls}>

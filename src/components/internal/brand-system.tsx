@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/public/brand-wordmark";
 import { method, palette, promise, standards, unresolvedIdentity } from "@/lib/brand";
 import { MotionSpecimen } from "./motion-specimen";
 import styles from "./brand-system.module.css";
@@ -62,8 +63,8 @@ export function BrandSystem() {
             <p>abcdefghijklmnopqrstuvwxyz / 0123456789</p>
           </div>
           <div className={styles.plasterSpecimen}>
-            <span>Plaster / Display only</span>
-            <p>MADAGIN</p>
+            <span>Alice / Identity</span>
+            <p><BrandWordmark/></p>
           </div>
         </div>
       </section>

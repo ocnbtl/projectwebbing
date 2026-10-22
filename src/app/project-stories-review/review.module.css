@@ -1,0 +1,16 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem 2rem;
+  padding: 1rem clamp(1.25rem, 3.4vw, 3.5rem);
+  background: #0e2130;
+  color: #fcfcfc;
+  font-size: 0.85rem;
+}
+.bar > span { font-weight: 700; }
+.bar nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+.bar a { display: inline-flex; align-items: center; min-height: 2.75rem; color: inherit; text-underline-offset: 0.3rem; }
+.bar a[aria-current] { color: #bce8ff; }
+.preview img { min-height: 0; height: auto; object-fit: contain; }

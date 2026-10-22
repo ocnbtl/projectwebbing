@@ -1,0 +1,93 @@
+.about {
+  width: min(1400px, 88%);
+  margin-inline: auto;
+  color: #f3f7fa;
+}
+.opening {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+  min-height: 90svh;
+  padding-block: clamp(140px, 17svh, 190px) 90px;
+}
+.copy {
+  width: 94%;
+  max-width: 58ch;
+  font-size: clamp(17px, 1.3vw, 19px);
+  line-height: 1.8;
+  color: #e1ebf3;
+  text-wrap: pretty;
+}
+.copy p { margin: 0; }
+.copy p + p { margin-top: 24px; }
+.capability {
+  cursor:pointer;
+  font-weight: 700;
+  color: var(--capability-color);
+  -webkit-text-fill-color: var(--capability-color);
+}
+.capability:focus-visible { outline:1px solid #f9dce8; outline-offset:4px; border-radius:2px; }
+.capabilityUnit { white-space:nowrap; }
+.capabilityWord { display:inline-grid; vertical-align:baseline; }
+.capabilityPunctuation { color:#e1ebf3; -webkit-text-fill-color:#e1ebf3; font-weight:400; }
+/* Reserve the heaviest glyph width so the paragraph never reflows on hover. */
+.capabilityMeasure { grid-area:1 / 1; padding-inline:.03em; font-weight:800; visibility:hidden; user-select:none; }
+.capabilityInk {
+  grid-area:1 / 1;
+  transform-origin:50% 64%;
+  font-weight:700;
+  justify-self:center;
+  -webkit-text-stroke:0;
+  text-shadow:none;
+  transition:transform 680ms cubic-bezier(.22,.8,.22,1),
+    font-weight 680ms cubic-bezier(.22,.8,.22,1);
+}
+.capability[data-capability="brand"] { --capability-color: #e66b00; }
+.capability[data-capability="direction"] { --capability-color: #ff70ad; }
+.capability[data-capability="web"] { --capability-color: #ef3c2d; }
+.capability[data-capability="systems"] { --capability-color: #2da970; }
+.capability[data-capability="search"] { --capability-color: #efbd36; }
+@media (hover: hover) {
+  .capability:hover .capabilityInk {
+    font-weight:800;
+    transform:scale(1.04,1.14);
+  }
+}
+.visual { min-width: 0; }
+@media (max-width: 900px) {
+  .opening { grid-template-columns: 1fr; gap: 16px; padding-block: 140px 40px; }
+  .introduction { max-width: 690px; }
+  .copy { width:100%; }
+  .visual { width: min(620px, 100%); justify-self: center; }
+}
+@media (max-width: 480px) {
+  .opening { padding-top: calc(96px + env(safe-area-inset-top,0px)); gap: 8px; align-content:start; min-height:0; }
+  .copy {
+    font-size:clamp(15px,4vw,16px);
+    line-height:1.75;
+    text-align:left;
+    hyphens:manual;
+  }
+  .desktopBreak { display:none; }
+  .copy p { text-wrap:pretty; }
+  .copy .closingCopy { width:100%; text-wrap:pretty; }
+  .closingTail { white-space:nowrap; }
+  .copy p + p { margin-top: 22px; }
+}
+/* Reserve each word's resting width on phones. Its ink can squeeze on tap
+   without moving the surrounding sentence or changing the paragraph height. */
+@media (max-width:480px) {
+  .capabilityUnit { white-space:nowrap; }
+  .capabilityWord { display:inline-grid; position:relative; }
+  .capabilityMeasure { display:block; font-weight:700; padding:0; }
+  .capabilityInk { position:absolute; inset:0; }
+  .capability:hover .capabilityInk { font-weight:700; transform:none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .capabilityInk { transition:none; }
+  .capability:hover .capabilityInk { transform:none; }
+}
+
+@media(prefers-reduced-motion:no-preference) { .about[data-entered="false"] { visibility:hidden; } }
+

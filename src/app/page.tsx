@@ -1,12 +1,7 @@
 import { PublicHome } from "@/components/public/public-home";
-import { getContentItems } from "@/lib/content";
-
 export const dynamic = "force-dynamic";
-
-export default async function Home() {
-  const [projects, posts] = await Promise.all([
-    getContentItems({ kind: "project" }),
-    getContentItems({ kind: "post" }),
-  ]);
-  return <PublicHome posts={posts} projects={projects} />;
+export default function Home() {
+  // Illustrative proof is review material only, never a production claim.
+  const previewProof = process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview";
+  return <PublicHome previewProof={previewProof}/>;
 }

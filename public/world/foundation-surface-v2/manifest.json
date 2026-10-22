@@ -1,0 +1,68 @@
+{
+  "id": "worldcover-kauai-surface-v2",
+  "source": "ESA WorldCover Sentinel-2 10m Annual Composite, 2021 RGB",
+  "sourceUrl": "https://titiler.terrascope.be/wms?service=WMS&request=GetMap&version=1.3.0&layers=esa-worldcover-s2rgbnir-10m-2021-v2_tcc&styles=&crs=EPSG:4326&bbox=22.120,-159.724,22.224,-159.584&width=1680&height=1248&format=image/png&time=2021-01-01",
+  "sourceSha256": "9421f4e4c7e70e8c1e2f3b032680fdcbe8de42d3718beab5d4d7322478a2f75c",
+  "sourceBytes": 2618037,
+  "documentation": "https://esa-worldcover.org/en/data-access",
+  "licenseEvidence": "https://registry.opendata.aws/esa-worldcover-vito-composites/",
+  "license": "CC-BY-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "\u00a9 ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium",
+  "bounds": {
+    "west": -159.724,
+    "south": 22.12,
+    "east": -159.584,
+    "north": 22.224
+  },
+  "sourcePixelSizeDegrees": 8.34e-05,
+  "wmsVersion": "1.3.0",
+  "wmsAxisOrder": "EPSG:4326 latitude, longitude; pixels cover the requested bounds, north at top",
+  "sourceDimensions": [
+    1680,
+    1248
+  ],
+  "terrainSha256": "0c22ac8c61be79115e4dce97638c7fe02e60126fe15b53f566704215787fa1d4",
+  "sunDirection": [
+    -0.5907740994,
+    0.6828455464,
+    -0.429776597
+  ],
+  "skyRotationY": 3.141592653589793,
+  "lighting": "Authored fixed daylight; terrain ray visibility and sky access use the unchanged NOAA field",
+  "responseChannels": {
+    "r": "sky access",
+    "g": "direct sun visibility",
+    "b": "RGB-inferred vegetation material blend"
+  },
+  "modifications": [
+    "WMS true-color presentation",
+    "WebP encoding and compact resize",
+    "separate NOAA-derived lighting and RGB material response"
+  ],
+  "limits": [
+    "Annual median composite, not current photography",
+    "Includes source illumination and possible cloud/composite artifacts; not measured albedo",
+    "10m nominal imagery; no close-range or tree-species accuracy claim",
+    "Authored lighting, water, and camera motion; no complete public journey parity"
+  ],
+  "geometrySegments": {
+    "desktop": 768,
+    "compact": 256
+  },
+  "shadowedLandSamples": 26805,
+  "outputs": {
+    "surface.webp": {
+      "sha256": "a448b21e48872a3e5961103e8d4c78e397620269e8b5bbcf6a821b665ec0603d",
+      "bytes": 456976
+    },
+    "surface-compact.webp": {
+      "sha256": "0e0401f50a4effb48eeb4d7d8cbba0a6675f491b20c1045e976cd7125866b3c8",
+      "bytes": 126616
+    },
+    "response.png": {
+      "sha256": "103c655287a12cf75bc7fc71a57ddbeb45d8a5d03e47b8d1705d95d7ff71d4c7",
+      "bytes": 1159427
+    }
+  }
+}

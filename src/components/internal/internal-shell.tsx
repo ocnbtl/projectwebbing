@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/public/brand-wordmark";
 import Link from "next/link";
 import { logout } from "@/app/internal/login/actions";
 import { InternalNav } from "./internal-nav";
@@ -11,7 +12,7 @@ export function InternalShell({ children }: { children: React.ReactNode }) {
       </a>
       <aside className={styles.sidebar}>
         <Link className={styles.wordmark} href="/internal" aria-label="Madagin internal home">
-          MADAGIN
+          <BrandWordmark/>
         </Link>
         <InternalNav />
         <div className={styles.sidebarFoot}>
@@ -29,7 +30,7 @@ export function InternalShell({ children }: { children: React.ReactNode }) {
       <div className={styles.mobileHeader}>
         <div className={styles.mobileTop}>
           <Link className={styles.wordmark} href="/internal">
-            MADAGIN
+            <BrandWordmark/>
           </Link>
           <div className={styles.mobileActions}>
             <Link href="/">Site <span aria-hidden="true">{"\u2197"}</span></Link>

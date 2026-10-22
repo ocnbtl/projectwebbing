@@ -52,11 +52,33 @@ select {
   font: inherit;
 }
 
-body:has([data-public-water]) { background: #0f2334; }
+/* Paint Safari's root/overscroll area in the same ground as the water. */
+html:has([data-public-water]), body:has([data-public-water]) { background: #0f2334; }
+/* Contain the negative water layer above the body's ground, without making a
+   transformed containing block for fixed navigation or the water renderer. */
+body:has([data-public-water]) { position:relative; min-height:100svh; min-height:100dvh; isolation:isolate; }
+@media (any-pointer: coarse), (max-width: 900px) {
+  body:has([data-public-water]) {
+    --water-page-edge: 96px;
+    --water-overscan: 160px;
+    padding-top: var(--water-page-edge);
+    padding-bottom: var(--water-overscan);
+    /* Real page pixels beyond both edges, even during the one-screen intro. */
+    min-height: calc(100dvh + var(--water-page-edge) + var(--water-overscan));
+  }
+}
+@media (scripting: none) {
+  body:has([data-public-water]) { padding-top:0; min-height:100dvh; }
+}
 body:has([data-public-water]) :focus-visible { outline-color: #d7eaff; }
-body:has([data-public-water]) ::selection { background: #d7e8f5; color: #0f2334; }
+body:has([data-public-water]) ::selection { background: #f9dce8; color: #000; text-shadow: none; }
 
 textarea { font: inherit; }
+
+/* The native pointer stays available until the glass lens has a mouse position. */
+@media (any-pointer: fine) and (any-hover: hover) and (forced-colors: none) {
+  html[data-glass-cursor], html[data-glass-cursor] * { cursor: none !important; }
+}
 
 button,
 a {
@@ -64,8 +86,9 @@ a {
 }
 
 ::selection {
-  background: var(--pearl-gardenia);
-  color: var(--black);
+  background: #f9dce8;
+  color: #000;
+  text-shadow: none;
 }
 
 :focus-visible {
@@ -103,3 +126,17 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+.sr-only { position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+/* Alice is the brand face; body and interface typography retain their roles. */
+.brand-wordmark,.brand-name { font-family:var(--font-wordmark),Georgia,serif; font-weight:400; font-synthesis:none; }
+.brand-wordmark { display:inline-flex; align-items:baseline; white-space:nowrap; letter-spacing:0; font-kerning:none; }
+.brand-wordmark > span { display:inline-block; }
+
+/* Keep centred chapters fixed when a long review or form introduces scrolling. */
+html { scrollbar-gutter:stable; }
+
+@media(prefers-reduced-motion:no-preference) {
+ [data-water-content][data-route-ready="false"]:not([data-route="/"]) > div > main { opacity:0; }
+}
+
+@media(any-pointer:coarse),(max-width:900px) { html:has([data-public-water]) { overscroll-behavior-y:none; } }

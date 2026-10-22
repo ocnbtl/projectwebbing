@@ -1,0 +1,45 @@
+{
+  "id": "noaa-kauai-foundation-v1",
+  "source": "NOAA CUDEM Hawaii 2021, n22x25_w159x75",
+  "sourceUrl": "https://chs.coast.noaa.gov/htdata/raster2/elevation/NCEI_ninth_Topobathy_Hawaii_9428/tiles/ncei19_n22x25_w159x75_2021v1.tif",
+  "sourceSha256": "1c73d38004fa26eeba80b0a9e1bdd317b097eb007cebe53bcf76f39149e0bcec",
+  "sourceBytes": 196364773,
+  "metadataUrl": "https://chs.coast.noaa.gov/htdata/raster2/elevation/NCEI_ninth_Topobathy_Hawaii_9428/cudem_HI_m9428_met_forHumans.html",
+  "horizontalCrs": "EPSG:4326",
+  "verticalDatum": "Mean Sea Level; GeoTIFF EPSG:5714",
+  "sourceGridDegrees": [
+    3.086419749173235e-05,
+    3.086419749173927e-05
+  ],
+  "sourceAccuracyBoundary": "Nominal 1/9 arc-second grid. Mixed source surveys and interpolation; not uniform lidar resolution or accuracy.",
+  "bounds": {
+    "west": -159.724,
+    "south": 22.12,
+    "east": -159.584,
+    "north": 22.224
+  },
+  "grid": 1025,
+  "width": 14432.383866687713,
+  "depth": 11577.279999999912,
+  "sampleSpacingMeters": [
+    14.09412486981222,
+    11.305937499999914
+  ],
+  "offset": -2048,
+  "scale": 0.06250095368886854,
+  "encoding": "unsigned 16-bit little-endian, row-major north to south",
+  "elevationRange": [
+    -1390.91552734375,
+    1298.4666748046875
+  ],
+  "quantizationMaxErrorMeters": 0.031585693359375,
+  "elevationSha256": "0c22ac8c61be79115e4dce97638c7fe02e60126fe15b53f566704215787fa1d4",
+  "landSamples": 608523,
+  "underwaterSamples": 442102,
+  "geometryBudget": {
+    "desktopTriangles": 2097152,
+    "compactTriangles": 131072
+  },
+  "materialProvenance": "Original deterministic slope/noise habitat color and eight-direction sky-access field. No aerial imagery or surveyed vegetation claims.",
+  "status": "Local terrain foundation prototype; not a public replacement, complete journey, photoreal acceptance, or navigation product."
+}

@@ -14,6 +14,15 @@ type ProjectPresentation = {
 };
 
 const presentations: Record<string, ProjectPresentation> = {
+  isitusa: {
+    website: "https://isitusa.com", domain: "isitusa.com",
+    detailTitle: "From a place to the evidence.",
+    detailCaption: "The public species directory brings descriptions, categories, and records together.",
+    detailAlt: "Isitusa’s species directory with search, category filters, and research summaries.",
+    mobileTitle: "A national resource, close at hand.",
+    mobileCopy: "Place search and map controls adapt to a smaller screen. Visitors can explore a county, browse species, and follow the research from their phone.",
+    next: { slug: "sage-burress", title: "Sage Burress" },
+  },
   "sage-burress": {
     website: "https://sageburress.com",
     domain: "sageburress.com",
@@ -32,7 +41,7 @@ const presentations: Record<string, ProjectPresentation> = {
     detailAlt: "Masonry Color Corrections’ gallery website showing a masonry project and its before-and-after comparison.",
     mobileTitle: "From understanding the service to starting a project.",
     mobileCopy: "The opening explains the masonry problem in plain language. A visible estimate link gives visitors a next step, while the examples let the work make the case.",
-    next: { slug: "sage-burress", title: "Sage Burress" },
+    next: { slug: "isitusa", title: "Isitusa" },
   },
 };
 

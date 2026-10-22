@@ -1,0 +1,43 @@
+.control { display:block; width:72px; height:72px; flex-shrink:0; border-radius:50%; position:relative; color:#edf6fd; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:filter 500ms,transform 600ms,opacity 500ms; }
+.control[data-active="false"] { opacity:0; visibility:hidden; pointer-events:none; }
+.control > svg { width:100%; height:100%; overflow:visible; position:relative; }
+.control > .icon { position:absolute; width:72px; height:72px; left:50%; top:50%; transform:translate(-50%,-50%); }
+.control[data-variant="hero"] .ring { transition:stroke-opacity 300ms; }
+.control[data-variant="hero"]:is(:hover,:focus-visible) .ring { stroke-opacity:.94; }
+/* Lock-on feedback belongs to the outer cursor; the glass stays quiet inside. */
+.control[data-variant="hero"] .rippleFill { background:radial-gradient(ellipse at 25% 15%,#f3fbff15,transparent 60%); backdrop-filter:blur(1.5px) saturate(1.25); }
+.ring,.stem { fill:none; stroke:currentColor; stroke-width:1.1; stroke-linecap:round; stroke-linejoin:round; }.ring { stroke-opacity:.68; }.stem { stroke-width:1.35; }.arrow { transform-origin:36px 36px; }
+.control[data-playing="true"][data-revealed="false"] :is(.ring,.stem) { stroke-dasharray:1; stroke-dashoffset:1; }
+.control[data-playing="true"][data-revealed="false"] > svg { visibility:hidden; }
+.control[data-playing="true"][data-revealed="false"] .rippleFill { opacity:0; }
+.control[data-playing="true"][data-active="true"][data-revealed="true"] :is(.ring,.stem) { animation:draw 1450ms cubic-bezier(.45,0,.2,1) 100ms both; }
+.control[data-playing="true"][data-active="true"][data-revealed="true"] .rippleFill { animation:glass 1450ms 100ms both; }
+.rippleFill { position:absolute; inset:7px; border-radius:inherit; overflow:hidden; isolation:isolate; background:#e9f7ff08; }
+.control[data-busy="true"]:not([data-variant="up"]) { transform:scale(1.18); filter:blur(6px); opacity:0; pointer-events:none; }
+.control[data-variant="wide"] { width:min(360px,78vw); height:72px; border-radius:100px; }
+.control[data-variant="wide"] .rippleFill { background:transparent; }
+.control[data-variant="wide"] .ring { transition:stroke-opacity 350ms; }
+.control[data-variant="wide"]:is(:hover,:focus-visible) .ring { stroke-opacity:.95; }
+.control[data-variant="up"] .arrow { transform:rotate(180deg); transition:transform 700ms cubic-bezier(.16,1,.3,1); }
+.control[data-variant="up"] .ring { animation:none!important; stroke-dasharray:1; stroke-dashoffset:1; transition:stroke-dashoffset 750ms; }
+.control[data-variant="up"] .stem { animation:none!important; }
+.control[data-variant="up"]:is(:hover,:focus-visible) .ring { stroke-dashoffset:0; }
+.control[data-variant="up"][data-busy="true"] .arrow { transform:rotate(540deg); }
+@keyframes draw { from { stroke-dasharray:1; stroke-dashoffset:1; } to { stroke-dasharray:1; stroke-dashoffset:0; } }
+@keyframes glass { from { opacity:0; } to { opacity:1; } }
+@media(max-width:800px) { .control { width:62px; height:62px; }.control > .icon { width:62px; height:62px; }.control[data-variant="wide"] { height:62px; } }
+@media(prefers-reduced-motion:reduce) { .control,.control * { animation:none!important; transition:none!important; }.control .ring,.control .stem { stroke-dashoffset:0; } }
+.continueLabel { position:absolute; inset:0; display:grid; place-items:center; font:14px var(--font-manrope),sans-serif; color:inherit; letter-spacing:0; pointer-events:none; }
+.control[data-variant="wide"] { text-decoration:none; }
+
+.control { -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
+.control:focus-visible { outline:none; }
+.control > svg { pointer-events:none; }
+.control::after { content:""; position:absolute; inset:-5px; border:1px solid #e9f7ffb3; border-radius:50%; opacity:0; pointer-events:none; transition:opacity 250ms; }
+.control:focus-visible::after { opacity:1; }
+@media(hover:none),(pointer:coarse) {
+ .control[data-pressed="true"]::after { opacity:1; animation:touchOrbit 1600ms ease-in-out infinite; }
+ .control[data-variant="wide"]::after { border-radius:100px; animation:none; }
+}
+@keyframes touchOrbit { 0%,100% { transform:rotate(0); border-radius:46% 54% 50% 50%; } 50% { transform:rotate(70deg); border-radius:53% 47% 46% 54%; } }
+@media(prefers-reduced-motion:reduce) { .control::after { animation:none!important; } }
